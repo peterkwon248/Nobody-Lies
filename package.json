@@ -1,0 +1,14 @@
+{
+  "name": "nobody-lies",
+  "version": "0.1.0",
+  "private": true,
+  "description": "노바디 라이즈 — 추리 게임",
+  "workspaces": [
+    "engine"
+  ],
+  "scripts": {
+    "build": "npm run typecheck -w engine && npm run verify -w engine",
+    "typecheck": "npm run typecheck -w engine",
+    "verify": "npm run verify -w engine"
+  }
+}

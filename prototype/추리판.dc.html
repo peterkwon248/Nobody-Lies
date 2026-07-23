@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/app.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+<script src="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
+<style>
+.pb-piece { position:absolute; user-select:none; touch-action:none; }
+.pb-wrap ::-webkit-scrollbar { width:10px; height:10px; }
+.pb-wrap ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:5px; }
+.pb-piece > .pb-card { transition:box-shadow .12s, border-color .12s; }
+.pb-piece:hover > .pb-card { border-color:var(--fg-4); }
+.pb-zone { position:absolute; top:0; bottom:0; width:22px; z-index:8; }
+.pb-zone-l { left:-8px; } .pb-zone-r { right:-8px; }
+.pb-zone:hover .pb-handle { opacity:1; }
+.pb-piece:hover .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-handle { opacity:.42; transition:opacity .12s; }
+.pb-draw:hover { background:var(--bg-elevated) !important; }
+.pb-grip { opacity:0; transition:opacity .12s; }
+.pb-box:hover .pb-grip { opacity:1; }
+.pb-lbl { background:transparent; border:none; outline:none; box-shadow:none; color:var(--fg-2); font:600 15px var(--font-sans); width:140px; border-radius:4px; padding:1px 4px; }
+</style>
+</helmet>
+<div data-surface="vector" style="height:100vh;background:var(--bg-app);display:flex;flex-direction:column;font-family:var(--font-sans);overflow:hidden">
+  <div style="padding:12px 20px 10px;flex:none;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <div class="v-ui" style="color:var(--fg)">상황판</div>
+    <span class="v-meta" style="color:var(--fg-4)">{{ hint }}</span>
+    <span style="flex:1"></span>
+    <div style="position:relative">
+      <span class="{{ addChip }}" onClick="{{ onToggleAdd }}" style="cursor:pointer">＋ 생성</span>
+      <sc-if value="{{ addOpen }}"><div class="v-menu" style="position:absolute;right:0;top:30px;z-index:40;min-width:170px">
+        <sc-for list="{{ tools }}" as="tl" hint-placeholder-count="4"><div class="v-menu-item" onClick="{{ tl.onPick }}"><span style="{{ tl.dot }}"></span>{{ tl.label }}</div></sc-for>
+      </div></sc-if>
+    </div>
+    <span class="{{ tlChip }}" onClick="{{ onToggleTl }}" style="cursor:pointer">타임라인</span>
+    <span class="{{ mapLockChip }}" onClick="{{ onToggleMapLock }}" style="cursor:pointer" title="화면 이동·줌 잠금">화면 고정</span>
+    <div style="display:flex;align-items:center;gap:2px;margin-left:2px">
+      <button class="iconbtn" onClick="{{ onZoomOut }}">−</button><span class="v-micro" style="color:var(--fg-4);width:36px;text-align:center">{{ zoomPct }}</span><button class="iconbtn" onClick="{{ onZoomIn }}">+</button><button class="iconbtn" onClick="{{ onFit }}" style="width:auto;padding:0 8px;font-size:11px">전체 보기</button><button class="iconbtn" onClick="{{ onHome }}" title="초기 화면" style="width:auto;padding:0 8px;font-size:11px">홈</button><button class="iconbtn" onClick="{{ onReset }}" title="빈 판으로 초기화" style="width:auto;padding:0 8px;font-size:11px;color:var(--label-red)">초기화</button>
+    </div>
+  </div>
+
+  <div class="pb-wrap" style="flex:1;display:flex;min-height:0">
+    <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ true }}"><div style="width:186px;flex:none;border-right:1px solid var(--border);background:var(--bg-sidebar);overflow:auto;padding:0 10px 20px">
+      <div style="position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:9px 2px 8px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);margin-bottom:10px">
+        <span class="v-micro" style="color:var(--fg-3);text-transform:uppercase;letter-spacing:.05em">{{ drawerTitle }}</span>
+        <span style="flex:1"></span>
+        <div onClick="{{ onToggleDrawer }}" title="서랍 닫기" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid var(--border-strong);background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px;flex:none">‹</div>
+      </div>
+      <sc-for list="{{ drawer }}" as="sec" hint-placeholder-count="4"><div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><span style="{{ sec.dot }}"></span><span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ sec.title }}</span><span style="flex:1"></span></div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <sc-if value="{{ sec.locked }}"><div style="padding:8px 10px;border:1px dashed var(--border-strong);border-radius:var(--r-sm);color:var(--fg-4);font-size:11px;line-height:1.5">{{ sec.lockedHint }}</div></sc-if>
+          <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="3"><div class="pb-draw" onClick="{{ it.onAdd }}" style="{{ it.rowStyle }}"><span class="v-meta" style="color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.label }}</span><span style="flex:1"></span><sc-if value="{{ it.placed }}"><span style="{{ it.badgeStyle }}">{{ it.count }}</span></sc-if></div></sc-for>
+        </div>
+      </div></sc-for>
+    </div></sc-if>
+    <sc-if value="{{ drawerClosed }}" hint-placeholder-val="{{ false }}"><div onClick="{{ onToggleDrawer }}" title="서랍 열기" style="position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:20;width:16px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);border-left:none;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px">›</div></sc-if>
+
+    <div style="position:relative;flex:1;overflow:hidden;background:var(--bg-subtle);touch-action:none;cursor:{{ canvasCursor }}" onPointerDown="{{ onBgDown }}" onPointerMove="{{ onCanvasMove }}" onPointerUp="{{ onCanvasUp }}">
+      <div data-canvas style="{{ worldStyle }}">
+        <sc-if value="{{ timelineOn }}">
+          <div style="position:absolute;left:0;top:{{ tlBandTop }};width:15000px;height:56px;border-bottom:1px dashed var(--border-strong);background:var(--bg-subtle)">
+            <span class="v-micro" style="position:absolute;left:10px;top:7px;color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em">시간 →</span>
+            <span onClick="{{ onAddTime }}" onPointerDown="{{ tlStop }}" style="position:absolute;left:70px;top:6px;font-size:11px;color:var(--accent);cursor:pointer">＋시간</span>
+            <sc-for list="{{ markers }}" as="tk" hint-placeholder-count="4"><div style="{{ tk.wrapStyle }}" onPointerDown="{{ tk.onDown }}">
+              <span onClick="{{ tk.onHi }}" onPointerDown="{{ tk.stop }}" style="{{ tk.tickStyle }}" title="시간 강조"></span>
+              <input value="{{ tk.label }}" onChange="{{ tk.onLabel }}" onPointerDown="{{ tk.stop }}" style="{{ tk.inputStyle }}" />
+              <sc-if value="{{ tk.selected }}"><sc-if value="{{ tk.locked }}"><span title="시간축 고정됨" style="font-size:10px;color:var(--fg-4)">🔒</span></sc-if><sc-if value="{{ tk.notLocked }}"><span onClick="{{ tk.onDel }}" onPointerDown="{{ tk.stop }}" title="삭제" style="font-size:10px;color:var(--label-red);cursor:pointer">삭제</span></sc-if></sc-if>
+            </div></sc-for>
+          </div>
+          <sc-for list="{{ markers }}" as="tk" hint-placeholder-count="0"><sc-if value="{{ tk.guideStyle }}"><div style="{{ tk.guideStyle }}"></div></sc-if></sc-for>
+        </sc-if>
+
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="0"><div class="pb-box" style="{{ g.boxStyle }}">
+          <sc-if value="{{ g.isVenn }}"><span style="{{ g.circleL }}"></span><span style="{{ g.circleR }}"></span></sc-if>
+          <sc-if value="{{ g.empty }}"><span style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font:700 22px var(--font-sans);color:var(--fg);opacity:.07;pointer-events:none">비어 있음</span></sc-if>
+          <sc-if value="{{ g.isTl }}"><sc-for list="{{ g.tlTicks }}" as="tk" hint-placeholder-count="4"><div style="{{ tk.style }}"><span style="{{ tk.tickStyle }}"></span><span style="{{ tk.labelStyle }}">{{ tk.label }}</span></div></sc-for></sc-if>
+          <span class="pb-grip" onPointerDown="{{ g.onMoveDown }}" title="이동" style="position:absolute;left:-2px;top:-2px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:move;color:var(--fg-4);font-size:10px;z-index:2">⠿</span>
+          <div style="{{ g.labelWrapStyle }}">
+            <input value="{{ g.label }}" onChange="{{ g.onLabel }}" onPointerDown="{{ g.stop }}" style="{{ g.labelStyle }}" />
+          </div>
+          <span class="pb-grip" onPointerDown="{{ g.onResizeDown }}" title="크기" style="position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:nwse-resize;color:var(--fg-4);font-size:11px;z-index:2">◢</span>
+        </div></sc-for>
+        <sc-if value="{{ tempGroup.show }}"><div style="{{ tempGroup.style }}"></div></sc-if>
+        <sc-if value="{{ marquee }}"><div style="{{ marquee.style }}"></div></sc-if>
+
+        <svg width="2600" height="1600" style="position:absolute;left:0;top:0;pointer-events:none">
+          <sc-for list="{{ strings }}" as="s" hint-placeholder-count="0"><line x1="{{ s.x1 }}" y1="{{ s.y1 }}" x2="{{ s.x2 }}" y2="{{ s.y2 }}" style="{{ s.lineStyle }}"></line></sc-for>
+          <sc-if value="{{ liveLine.show }}"><line x1="{{ liveLine.x1 }}" y1="{{ liveLine.y1 }}" x2="{{ liveLine.x2 }}" y2="{{ liveLine.y2 }}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"></line></sc-if>
+        </svg>
+        <sc-for list="{{ strings }}" as="s" hint-placeholder-count="0"><div onClick="{{ s.onEdit }}" style="{{ s.labelStyle }}">{{ s.relLabel }}</div></sc-for>
+
+        <sc-for list="{{ labels }}" as="lb" hint-placeholder-count="0"><div class="pb-piece" style="{{ lb.wrapStyle }}" onPointerDown="{{ lb.onDown }}">
+          <input value="{{ lb.text }}" onChange="{{ lb.onText }}" onPointerDown="{{ lb.stopIfEdit }}" placeholder="라벨" class="pb-lbl" style="{{ lb.inputStyle }}" />
+          <sc-if value="{{ lb.selected }}"><span onClick="{{ lb.onDel }}" onPointerDown="{{ lb.delStop }}" title="삭제" style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:var(--r-sm);background:var(--bg-elevated);border:1px solid var(--border-strong);color:var(--label-red);cursor:pointer;font:600 11px var(--font-sans);flex:none">삭제</span></sc-if>
+        </div></sc-for>
+
+        <sc-for list="{{ pieces }}" as="p" hint-placeholder-count="6"><div class="{{ p.wrapCls }}" style="{{ p.wrapStyle }}" onPointerDown="{{ p.onDown }}" onClick="{{ p.onClick }}">
+          <sc-if value="{{ p.tierDot }}"><div class="pb-card" style="{{ p.dotStyle }}" title="{{ p.label }}">{{ p.ini }}</div></sc-if>
+          <sc-if value="{{ p.tierChip }}"><div class="pb-card" style="{{ p.chipStyle }}">
+            <sc-if value="{{ p.isPerson }}"><span style="{{ p.avStyle }}">{{ p.ini }}</span></sc-if>
+            <sc-if value="{{ p.notPersonChip }}"><span style="{{ p.chipDot }}">{{ p.ini }}</span></sc-if>
+            <span class="v-ui" style="color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px">{{ p.label }}</span>
+          </div></sc-if>
+          <sc-if value="{{ p.tierFull }}"><div class="pb-card" style="{{ p.cardStyle }}">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+              <span style="width:7px;height:7px;border-radius:2px;background:{{ p.typeColor }};flex:none"></span>
+              <span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ p.typeLabel }}</span>
+              <sc-if value="{{ p.laned }}"><span class="v-micro" style="color:var(--accent)">· {{ p.timeLabel }}</span></sc-if>
+            </div>
+            <sc-if value="{{ p.isMemo }}"><textarea value="{{ p.text }}" onChange="{{ p.onText }}" onPointerDown="{{ p.stopDown }}" placeholder="메모…" style="width:100%;min-height:40px;resize:none;background:transparent;border:none;outline:none;color:var(--fg);font:500 12px var(--font-sans);line-height:1.5"></textarea></sc-if>
+            <sc-if value="{{ p.notMemo }}"><div style="display:flex;align-items:center;gap:8px">
+              <sc-if value="{{ p.isPerson }}"><span style="{{ p.avStyle }}">{{ p.ini }}</span></sc-if>
+              <sc-if value="{{ p.isEvidence }}"><span style="width:24px;height:24px;border-radius:5px;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.4"><path d="{{ p.icon }}"></path></svg></span></sc-if>
+              <div style="min-width:0"><div class="v-ui" style="color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</div><sc-if value="{{ p.hasSub }}"><div class="v-micro" style="color:var(--fg-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</div></sc-if></div>
+            </div></sc-if>
+            <sc-if value="{{ p.isQuote }}"><div class="v-meta" style="color:var(--fg-2);font-style:italic;line-height:1.55;margin-top:7px">{{ p.quote }}</div></sc-if>
+          </div></sc-if>
+          <sc-if value="{{ p.pinned }}"><span title="고정됨" style="position:absolute;left:-5px;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:9px;z-index:9">📌</span></sc-if>
+          <span class="pb-zone pb-zone-l"><span class="pb-handle" onPointerDown="{{ p.onPortInDown }}" title="연결 입력" style="{{ p.portInStyle }}"></span></span>
+          <span class="pb-zone pb-zone-r"><span class="pb-handle" onPointerDown="{{ p.onHandleDown }}" title="끌어서 연결" style="{{ p.handleStyle }}"></span></span>
+        </div></sc-for>
+
+        <sc-if value="{{ toolbar.show }}"><div style="{{ toolbar.style }}">
+          <sc-for list="{{ toolbar.actions }}" as="a" hint-placeholder-count="2"><span onClick="{{ a.onClick }}" onPointerDown="{{ a.stop }}" style="{{ a.style }}">{{ a.label }}</span></sc-for>
+        </div></sc-if>
+
+        <sc-if value="{{ detail.open }}"><div style="{{ detail.style }}" onPointerDown="{{ detail.stop }}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:8px;height:8px;border-radius:2px;background:{{ detail.color }};flex:none"></span><span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ detail.typeLabel }}</span><span style="flex:1"></span><span onClick="{{ detail.onClose }}" onPointerDown="{{ detail.stop }}" style="cursor:pointer;color:var(--fg-4);font-size:12px">✕</span></div>
+          <div class="v-title" style="color:var(--fg);margin-bottom:4px">{{ detail.label }}</div>
+          <sc-if value="{{ detail.hasSub }}"><div class="v-meta" style="color:var(--fg-3);margin-bottom:8px">{{ detail.sub }}</div></sc-if>
+          <sc-if value="{{ detail.hasClaim }}"><div class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">{{ detail.claimLabel }}</div><div class="v-meta" style="color:var(--fg-2);line-height:1.6;margin-bottom:10px">{{ detail.claim }}</div></sc-if>
+          <sc-if value="{{ detail.hasClues }}"><div class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">{{ detail.cluesLabel }}</div><div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px"><sc-for list="{{ detail.clues }}" as="cl" hint-placeholder-count="1"><div style="display:flex;gap:6px"><span style="color:var(--accent);flex:none">·</span><span class="v-meta" style="color:var(--fg-2)">{{ cl }}</span></div></sc-for></div></sc-if>
+          <sc-if value="{{ detail.hasBody }}"><div class="v-meta" style="color:var(--fg-2);line-height:1.6">{{ detail.body }}</div></sc-if>
+          <sc-if value="{{ detail.hasSlots }}"><div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);padding-top:9px;margin-top:2px"><sc-for list="{{ detail.slots }}" as="sl" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px"><span class="v-micro" style="color:var(--fg-4);width:36px;flex:none">{{ sl.label }}</span><sc-if value="{{ sl.filled }}"><span class="v-meta" style="color:var(--fg-2)">{{ sl.text }}</span></sc-if><sc-if value="{{ sl.empty }}"><span style="flex:1;border-bottom:1px dashed var(--border-strong)"></span><span class="v-micro" style="color:var(--fg-4);flex:none">{{ detail.unknownLabel }}</span></sc-if></div></sc-for></div></sc-if>
+          <sc-if value="{{ detail.hasFull }}"><div style="border-top:1px solid var(--border);margin-top:10px;padding-top:9px"><div onClick="{{ detail.onToggleFull }}" style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg-3);font-size:12px;font-weight:500"><span style="display:inline-block;transform:{{ detail.fullChevron }};transition:transform .12s">▸</span>{{ detail.fullLabel }}</div><sc-if value="{{ detail.fullOpen }}"><div class="v-meta" style="color:var(--fg-2);line-height:1.7;margin-top:8px;max-height:220px;overflow-y:auto;white-space:pre-wrap">{{ detail.fullText }}</div></sc-if></div></sc-if>
+        </div></sc-if>
+
+        <sc-if value="{{ relPicker.open }}"><div class="v-menu" style="{{ relPicker.style }}" onPointerDown="{{ relPicker.stop }}">
+          <sc-for list="{{ relPicker.opts }}" as="o" hint-placeholder-count="5"><div class="v-menu-item" onClick="{{ o.onPick }}"><span style="{{ o.dot }}"></span>{{ o.label }}</div></sc-for>
+          <div class="panel-sep" style="margin:4px 0"></div><div class="v-menu-item" onClick="{{ relPicker.onDelete }}" style="color:var(--label-red)">연결 삭제</div>
+        </div></sc-if>
+      </div>
+
+      <div onPointerDown="{{ minimap.onDown }}" onPointerMove="{{ minimap.onMove }}" onPointerUp="{{ minimap.onUp }}" style="position:absolute;right:12px;bottom:12px;width:150px;height:100px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-app);overflow:hidden;touch-action:none;cursor:pointer">
+        <sc-for list="{{ minimap.dots }}" as="d" hint-placeholder-count="6"><span style="{{ d.style }}"></span></sc-for>
+        <div style="{{ minimap.viewport }}"></div>
+      </div>
+      <sc-if value="{{ mselBar }}"><div onPointerDown="{{ mselBar.stop }}" style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:6px 8px 6px 14px">
+        <span class="v-ui" style="color:var(--fg);font-size:12px">{{ mselBar.count }}개 {{ mselBar.word }}</span>
+        <span onClick="{{ mselBar.onBlock }}" style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--accent);color:var(--fg-on-accent);font-size:12px;font-weight:600;cursor:pointer">{{ mselBar.label }}</span>
+      </div></sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;seed&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{ cards?: any[], revealedEvidence?: Record&lt;string,boolean&gt; }&quot;}}">
+class Component extends DCLogic {
+  REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
+  LANES = ['전날 밤','새벽 3시','3–8시','오전'];
+  CARDS = [
+    { id:'sakura', kind:'person', label:'미야와키 사쿠라', sub:'산장지기 · 산장 거주', ini:'쿠', c1:'#F2994A', c2:'#EB5757' },
+    { id:'wonyoung', kind:'person', label:'장원영', sub:'아이돌 · 불참', ini:'원', c1:'#F2C94C', c2:'#F2994A' },
+    { id:'yuri', kind:'person', label:'조유리', sub:'가수 · 아침 도착', ini:'리', c1:'#4CB782', c2:'#2D9CDB' },
+    { id:'burner', kind:'evidence', label:'대포폰', sub:'별채에서 발견', icon:'M5 2.5h6v11H5z M7 12h2' },
+    { id:'note', kind:'evidence', label:'위장 유서', sub:'금고 열쇠 동봉', icon:'M4 2.5h6l2.5 2.5v9H4z M9.5 2.5v3H12' },
+    { id:'co', kind:'evidence', label:'일산화탄소', sub:'부검 · 직접 사인', icon:'M8 13c3 0 4-2 4-4 0-3-4-6-4-6S4 6 4 9c0 2 1 4 4 4z' },
+    { id:'q1', kind:'quote', label:'사쿠라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
+    { id:'q2', kind:'quote', label:'원영 진술', quote:'"새벽 3시쯤 채원 언니한테 전화가 왔어요."' },
+    { id:'q3', kind:'quote', label:'사쿠라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
+  ];
+  KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'} ];
+  get cards(){ const seed=this.props&&this.props.seed; if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.CARDS; }
+  get revEvidence(){ const seed=this.props&&this.props.seed; if(seed&&seed.revealedEvidence) return seed.revealedEvidence; return null; }
+  TOOLS = [ {t:'box',label:'박스 (영역)'}, {t:'venn',label:'교집합 (벤다이어그램)'}, {t:'memo',label:'메모'}, {t:'label',label:'텍스트 라벨'} ];
+  state = {
+    dragId:null, dragKind:null, dragOff:{x:0,y:0}, moved:false, sel:null, detailId:null,
+    pan:{x:0,y:0}, zoom:1, panning:false, panStart:null, drawShape:null,
+    connectDrag:null, connectMode:false, connectFrom:null, pins:{},
+    tool:null, addOpen:false, timelineOn:true, hlTimeId:null, drawerOpen:true, axisLock:false, mapLock:false,
+    times:[{id:'t1',x:225,label:'전날 밤'},{id:'t2',x:675,label:'새벽 3시'},{id:'t3',x:1125,label:'3–8시'},{id:'t4',x:1575,label:'오전'}],
+    placed:{ sakura:{x:120,y:150}, burner:{x:120,y:340}, q1:{x:380,y:150}, m1:{x:660,y:340} },
+    memoText:{ m1:'별채↔본채 10분인데 사망 창이 5시간 → 왕복 가능?', m2:'원영 새벽 3시 통화 — 기지국상 원거리 확인' },
+    memoOrder:['m1','m2'], labels:[],
+    strings:[ {a:'sakura',b:'burner',rel:'same'} ], groups:[], binds:[], relPicker:null, size:{}, progress:1,
+    msel:[], marquee:null,
+  };
+  sizeOf(id){ return this.state.size[id]||'full'; }
+  cardW(id){ const z=this.sizeOf(id); return z==='dot'?32:(z==='chip'?128:200); }
+  cycleSize(id){ const o={full:'chip',chip:'full'}; this.setState({size:Object.assign({},this.state.size,{[id]:o[this.sizeOf(id)]||'chip'})}); }
+  centerOf(id){ const p=this.state.placed[id]; return {x:p.x+this.cardW(id)/2, y:p.y+this.cardH(id)/2}; }
+  regionMembers(g){ return Object.keys(this.state.placed).filter(id=>{ if(!this.card(id))return false; const c=this.centerOf(id); return c.x>=g.x&&c.x<=g.x+g.w&&c.y>=g.y&&c.y<=g.y+g.h; }); }
+  inVennOverlap(g,id){ if(g.shape!=='venn')return false; const c=this.centerOf(id); const rx=g.w*0.32,ry=g.h*0.5,cyv=g.y+g.h/2; const lcx=g.x+g.w*0.32,rcx=g.x+g.w*0.68; const inL=((c.x-lcx)*(c.x-lcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; const inR=((c.x-rcx)*(c.x-rcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; return inL&&inR; }
+  baseId(id){ return id.split('#')[0]; }
+  card(id){ if(this.state.memoText[id]!==undefined) return {id,kind:'memo',label:'메모',text:this.state.memoText[id]}; return this.cards.find(c=>c.id===this.baseId(id)); }
+  toWorld(e){ const r=(this._canvas||document.querySelector('[data-canvas]')).getBoundingClientRect(); return {x:(e.clientX-r.left-this.state.pan.x)/this.state.zoom, y:(e.clientY-r.top-this.state.pan.y)/this.state.zoom}; }
+  componentDidMount(){ this._canvas=document.querySelector('[data-canvas]'); const seed=this.props&&this.props.seed; if(seed&&seed.cards&&seed.cards.length){ this.setState({placed:{},strings:[],memoText:{},memoOrder:[],labels:[],groups:[],sel:null,detailId:null,relPicker:null}); } this._onKey=(e)=>{ const t=document.activeElement,tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA')return; if((e.key==='Delete'||e.key==='Backspace')&&this.state.sel){ e.preventDefault(); this.deleteSel(); } }; window.addEventListener('keydown',this._onKey); }
+  componentWillUnmount(){ window.removeEventListener('keydown',this._onKey); }
+  cardH(id){ const z=this.sizeOf(id); if(z==='dot')return 32; if(z==='chip')return 34; const d=this.card(id); return (d&&d.kind==='quote')?96:64; }
+  onPieceDown(id,e){ if(this.state.connectMode){ e.stopPropagation(); return; } if(e.shiftKey){ let m=this.state.msel.slice(); if(m.length===0&&this.state.sel&&this.state.sel.kind==='piece'&&this.state.sel.id!==id) m=[this.state.sel.id]; const i=m.indexOf(id); if(i>=0)m.splice(i,1); else m.push(id); this.setState({msel:m,sel:null}); e.stopPropagation(); return; } if(this.state.pins&&this.state.pins[id]){ this.setState({sel:{kind:'piece',id},dragId:null}); e.stopPropagation(); return; } const bnd=this.bindOf(id); if(bnd){ const w=this.toWorld(e),offs={}; bnd.mem.forEach(mid=>{ if(this.state.placed[mid]) offs[mid]={x:w.x-this.state.placed[mid].x,y:w.y-this.state.placed[mid].y}; }); this.setState({dragId:id,dragKind:'multi',multiOff:offs,moved:false,msel:bnd.mem.slice(),sel:{kind:'bind',id:bnd.id}}); e.stopPropagation(); return; } const pos=this.state.placed[id],w=this.toWorld(e); if(this.state.msel.length>1&&this.state.msel.indexOf(id)>=0){ const offs={}; this.state.msel.forEach(mid=>{ if(this.state.placed[mid]) offs[mid]={x:w.x-this.state.placed[mid].x,y:w.y-this.state.placed[mid].y}; }); this.setState({dragId:id,dragKind:'multi',multiOff:offs,moved:false}); e.stopPropagation(); return; } this.setState({dragId:id,dragKind:'piece',dragOff:{x:w.x-pos.x,y:w.y-pos.y},moved:false,msel:[]}); e.stopPropagation(); }
+  onLabelDown(id,e){ if(this.state.pins&&this.state.pins[id]){ this.setState({sel:{kind:'label',id},dragId:null}); e.stopPropagation(); return; } const lb=this.state.labels.find(x=>x.id===id),w=this.toWorld(e); this.setState({dragId:id,dragKind:'label',dragOff:{x:w.x-lb.x,y:w.y-lb.y},moved:false}); e.stopPropagation(); }
+  onGroupMoveDown(id,e){ if(this.state.pins&&this.state.pins[id]){ this.setState({sel:{kind:'group',id},dragId:null}); e.stopPropagation(); return; } const g=this.state.groups.find(x=>x.id===id),w=this.toWorld(e); const childG=this.state.groups.filter(x=>x.id!==id&&x.x>=g.x-2&&x.y>=g.y-2&&x.x+x.w<=g.x+g.w+2&&x.y+x.h<=g.y+g.h+2).map(x=>x.id); const mem={}; this.regionMembers(g).forEach(i=>mem[i]=1); childG.forEach(cid=>{ const cg=this.state.groups.find(x=>x.id===cid); this.regionMembers(cg).forEach(i=>mem[i]=1); }); this._carry=Object.keys(mem); this._carryG=childG; this.setState({dragId:id,dragKind:'group-move',dragOff:{x:w.x-g.x,y:w.y-g.y},moved:false}); e.stopPropagation(); }
+  onGroupResizeDown(id,e){ if(this.state.pins&&this.state.pins[id]){ this.setState({sel:{kind:'group',id}}); e.stopPropagation(); return; } this.setState({dragId:id,dragKind:'group-resize',moved:true,sel:{kind:'group',id}}); e.stopPropagation(); }
+  togglePin(id){ const p=Object.assign({},this.state.pins||{}); if(p[id]) delete p[id]; else p[id]=true; this.setState({pins:p}); }
+  makeBlock(){ const m=this.state.msel.filter(id=>this.state.placed[id]); if(m.length<2)return; this.setState({binds:this.state.binds.concat([{id:'b'+Date.now(),mem:m}]),msel:[],sel:{kind:'bind',id:'b'+Date.now()}}); }
+  bindOf(id){ return (this.state.binds||[]).find(b=>b.mem.indexOf(id)>=0); }
+  unbind(bid){ this.setState({binds:this.state.binds.filter(b=>b.id!==bid),sel:null}); }
+  onHandleDown(id,e){ const w=this.toWorld(e); this.setState({connectDrag:{from:id,cx:w.x,cy:w.y}}); e.stopPropagation(); }
+  onCanvasMove(e){ const s=this.state,w=this.toWorld(e);
+    if(s.dragId){ if(!s.moved) this.setState({moved:true}); if(s.dragKind==='time'){ this.setState({times:s.times.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(40,w.x-s.dragOff.x)}):x)}); } else if(s.dragKind==='multi'){ const np=Object.assign({},s.placed); s.msel.forEach(mid=>{ const o=s.multiOff[mid]; if(o&&np[mid]) np[mid]={x:Math.max(0,w.x-o.x),y:Math.max(0,w.y-o.y)}; }); this.setState({placed:np}); } else if(s.dragKind==='label'){ this.setState({labels:s.labels.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}):x)}); } else if(s.dragKind==='group-move'){ const g=s.groups.find(x=>x.id===s.dragId); const nx=Math.max(0,w.x-s.dragOff.x),ny=Math.max(0,w.y-s.dragOff.y),dx=nx-g.x,dy=ny-g.y; const mem=this._carry||[]; const cg=this._carryG||[]; const np=Object.assign({},s.placed); mem.forEach(id=>{ if(np[id]) np[id]={x:np[id].x+dx,y:np[id].y+dy}; }); this.setState({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{x:nx,y:ny}):(cg.indexOf(x.id)>=0?Object.assign({},x,{x:x.x+dx,y:x.y+dy}):x)),placed:np}); } else if(s.dragKind==='group-resize'){ this.setState({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{w:Math.max(80,w.x-x.x),h:Math.max(60,w.y-x.y)}):x)}); } else { this.setState({placed:Object.assign({},s.placed,{[s.dragId]:{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}})}); } return; }
+    if(s.connectDrag){ this.setState({connectDrag:Object.assign({},s.connectDrag,{cx:w.x,cy:w.y})}); return; }
+    if(s.marquee){ this.setState({marquee:Object.assign({},s.marquee,{x2:w.x,y2:w.y})}); return; }
+    if(s.panning){ this.setState({pan:this.clampPan(e.clientX-s.panStart.x,e.clientY-s.panStart.y)}); return; }
+    if(s.drawShape){ this.setState({drawShape:Object.assign({},s.drawShape,{x2:w.x,y2:w.y})}); return; }
+  }
+  onCanvasUp(e){ const s=this.state;
+    if(s.dragId){ const wasBind=this.bindOf(s.dragId); if(!s.moved){ const k=s.dragKind==='group-move'?'group':s.dragKind; this.setState({sel:wasBind?{kind:'bind',id:wasBind.id}:{kind:k,id:s.dragId},dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); } else this.setState({dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); return; }
+    if(s.connectDrag){ const w=this.toWorld(e); let hit=null; Object.keys(s.placed).forEach(id=>{ if(id===s.connectDrag.from||!this.card(id))return; const p=s.placed[id]; if(w.x>=p.x&&w.x<=p.x+this.cardW(id)&&w.y>=p.y&&w.y<=p.y+this.cardH(id)) hit=id; }); if(hit){ const from=s.connectDrag.from,pa=s.placed[from],pb=s.placed[hit],rest=s.strings.filter(x=>!((x.a===from&&x.b===hit)||(x.a===hit&&x.b===from))); this.setState({connectDrag:null,strings:rest.concat([{a:from,b:hit,rel:'related'}]),relPicker:{a:from,b:hit,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22}}); } else this.setState({connectDrag:null}); return; }
+    if(s.panning){ this.setState({panning:false,panStart:null}); return; }
+    if(s.marquee){ const mq=s.marquee,x0=Math.min(mq.x1,mq.x2),y0=Math.min(mq.y1,mq.y2),x1=Math.max(mq.x1,mq.x2),y1=Math.max(mq.y1,mq.y2); const hit=Object.keys(s.placed).filter(id=>{ if(!this.card(id))return false; const p=s.placed[id]; return p.x+this.cardW(id)>=x0&&p.x<=x1&&p.y+this.cardH(id)>=y0&&p.y<=y1; }); this.setState({marquee:null,msel:hit,sel:null}); return; }
+    if(s.drawShape){ const g=s.drawShape,tl=g.shape==='timeline',x=Math.min(g.x1,g.x2),y=Math.min(g.y1,g.y2),rawW=Math.abs(g.x2-g.x1),rawH=Math.abs(g.y2-g.y1),tiny=rawW<40&&rawH<30,wd=tl?(rawW<200?320:rawW):(tiny?220:rawW),ht=tl?52:(tiny?140:rawH); this.setState({groups:s.groups.concat([{id:'g'+Date.now(),x,y,w:wd,h:ht,shape:g.shape,label:g.shape==='venn'?'교집합':(tl?'타임라인':'용의선상'),anchor:null}]), drawShape:null, tool:null, sel:{kind:'group',id:null}}); return; }
+  }
+  onBgDown(e){ const s=this.state;
+    if(s.tool==='box'||s.tool==='venn'||s.tool==='timeline'){ const w=this.toWorld(e); this.setState({drawShape:{x1:w.x,y1:w.y,x2:w.x,y2:w.y,shape:s.tool},sel:null}); return; }
+    if(s.tool==='memo'){ const w=this.toWorld(e); const id='m'+Date.now(); this.setState({memoText:Object.assign({},s.memoText,{[id]:''}),memoOrder:s.memoOrder.concat([id]),placed:Object.assign({},s.placed,{[id]:{x:w.x,y:w.y}}),tool:null,sel:{kind:'piece',id}}); return; }
+    if(s.tool==='label'){ const w=this.toWorld(e); const id='l'+Date.now(); this.setState({labels:s.labels.concat([{id,x:w.x,y:w.y,text:''}]),tool:null,sel:{kind:'label',id}}); return; }
+    if(s.connectMode){ this.setState({connectFrom:null,relPicker:null,sel:null}); return; }
+    if(e.shiftKey&&!s.mapLock){ const w=this.toWorld(e); this.setState({marquee:{x1:w.x,y1:w.y,x2:w.x,y2:w.y},sel:null,msel:[],detailId:null}); return; }
+    if(s.mapLock){ this.setState({hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]}); return; }
+    this.setState({panning:true,panStart:{x:e.clientX-s.pan.x,y:e.clientY-s.pan.y},hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]});
+  }
+  onPieceClick(id){ if(!this.state.connectMode) return; const f=this.state.connectFrom; if(!f){ this.setState({connectFrom:id}); return; } if(f===id){ this.setState({connectFrom:null}); return; } const pa=this.state.placed[f],pb=this.state.placed[id],rest=this.state.strings.filter(x=>!((x.a===f&&x.b===id)||(x.a===id&&x.b===f))); this.setState({strings:rest.concat([{a:f,b:id,rel:'related'}]),relPicker:{a:f,b:id,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22},connectFrom:null}); }
+  setRel(rel){ const rp=this.state.relPicker; if(!rp)return; const rest=this.state.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))); this.setState({strings:rest.concat([{a:rp.a,b:rp.b,rel}]),relPicker:null}); }
+  delRel(){ const rp=this.state.relPicker; this.setState({strings:this.state.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))),relPicker:null}); }
+  freshId(base){ if(!this.state.placed[base]) return base; let n=2; while(this.state.placed[base+'#'+n]) n++; return base+'#'+n; }
+  addPiece(id){ const nid=this.freshId(id); this.setState({placed:Object.assign({},this.state.placed,{[nid]:{x:300+Math.random()*160,y:180+Math.random()*180}}),sel:{kind:'piece',id:nid}}); }
+  dupPiece(id){ const d=this.card(id),p=this.state.placed[id]; if(!p)return; if(d.kind==='memo'){ const nid='m'+Date.now(); this.setState({memoText:Object.assign({},this.state.memoText,{[nid]:d.text}),memoOrder:this.state.memoOrder.concat([nid]),placed:Object.assign({},this.state.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); return; } const nid=this.freshId(this.baseId(id)); this.setState({placed:Object.assign({},this.state.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); }
+  removePiece(id){ const p=Object.assign({},this.state.placed); delete p[id]; this.setState({placed:p,strings:this.state.strings.filter(s=>s.a!==id&&s.b!==id)}); }
+  newMemo(){ const id='m'+Date.now(); this.setState({memoText:Object.assign({},this.state.memoText,{[id]:''}),memoOrder:this.state.memoOrder.concat([id]),placed:Object.assign({},this.state.placed,{[id]:{x:320+Math.random()*120,y:200+Math.random()*140}}),sel:{kind:'piece',id}}); }
+  deleteSel(){ const sel=this.state.sel; if(!sel)return; if(sel.kind==='piece') this.removePiece(sel.id); else if(sel.kind==='label') this.setState({labels:this.state.labels.filter(x=>x.id!==sel.id)}); else if(sel.kind==='group') this.setState({groups:this.state.groups.filter(x=>x.id!==sel.id)}); this.setState({sel:null,detailId:null}); }
+  setZoom(z){ if(this.state.mapLock)return; this.setState({zoom:Math.max(0.5,Math.min(1.6,z))}); }
+  clampPan(x,y){ return { x:Math.min(40,x), y:Math.min(40,y) }; }
+  laneIdx(x){ return Math.max(0,Math.min(3,Math.floor(x/450))); }
+  bandOf(cx){ const ts=this.state.times.slice().sort((a,b)=>a.x-b.x); if(!ts.length)return null; let owner=ts[0].id; for(const t of ts){ if(cx>=t.x-90) owner=t.id; } return owner; }
+  onTimeDown(id,e){ const t=this.state.times.find(x=>x.id===id),w=this.toWorld(e); this.setState({dragId:id,dragKind:'time',dragOff:{x:w.x-t.x,y:0},moved:false}); e.stopPropagation(); }
+  addTime(){ const xs=this.state.times.map(t=>t.x),nx=(xs.length?Math.max.apply(null,xs):200)+250; const id='t'+Date.now(); this.setState({times:this.state.times.concat([{id,x:nx,label:'새 시간'}]),sel:{kind:'time',id}}); }
+  delTime(id){ this.setState({times:this.state.times.filter(t=>t.id!==id),sel:null,hlTimeId:this.state.hlTimeId===id?null:this.state.hlTimeId}); }
+  renderVals(){
+    const s=this.state;
+    const ln=(this.props&&this.props.lang)||'ko';
+    const placedIds=Object.keys(s.placed).filter(id=>this.card(id));
+    const cx={},cy={}; placedIds.forEach(id=>{ cx[id]=s.placed[id].x+90; cy[id]=s.placed[id].y+26; });
+    const selP=s.sel&&s.sel.kind==='piece'?s.sel.id:null;
+    const vennHot={}; s.groups.forEach(g=>{ if(g.shape==='venn') placedIds.forEach(id=>{ if(this.inVennOverlap(g,id)) vennHot[id]=true; }); });
+    const _selBind=(s.sel&&s.sel.kind==='bind')?(s.binds||[]).find(x=>x.id===s.sel.id):null; const _bindMem=_selBind?_selBind.mem:[];
+    const pieces=placedIds.map(id=>{ const d=this.card(id); if(!d) return null; const pos=s.placed[id],selc=s.connectFrom===id,seld=selP===id; const cxw=pos.x+this.cardW(id)/2; const laned=s.timelineOn&&pos.y<56; const own=laned?this.bandOf(cxw):null; const tmk=own?s.times.find(t=>t.id===own):null; const tl=tmk?tmk.label:''; const hot=s.hlTimeId!==null&&laned&&own===s.hlTimeId; const dim=s.hlTimeId!==null&&laned&&own!==s.hlTimeId; const sz=this.sizeOf(id); const vh=vennHot[id];
+      const typeColor=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':(d.kind==='quote'?(d.spk||'var(--fg-3)'):'var(--fg-3)')));
+      const inBind=_bindMem.indexOf(id)>=0; const on=selc||seld||hot||vh||inBind||(s.msel.indexOf(id)>=0); const bd=on?'var(--accent)':'var(--border-strong)';
+      return { id, tierFull:sz==='full',tierChip:sz==='chip',tierDot:sz==='dot', notPersonChip:d.kind!=='person',
+        isPerson:d.kind==='person',isEvidence:d.kind==='evidence',isQuote:d.kind==='quote',isMemo:d.kind==='memo',notMemo:d.kind!=='memo',
+        label:d.label,sub:d.sub||'',hasSub:!!d.sub,ini:d.ini||(d.kind==='memo'?'메':(d.kind==='quote'?'\u201C':'')),icon:d.icon,quote:d.quote||'',text:d.text||'',
+        typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),typeColor,laned,timeLabel:tl,
+        avStyle:{width:'24px',height:'24px',borderRadius:'5px',flex:'none',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 10px var(--font-sans)',color:'#0A0A0B',background:'linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'},
+        chipStyle:{display:'flex',alignItems:'center',gap:'7px',width:'128px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'6px 9px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
+        chipDot:{width:'16px',height:'16px',borderRadius:d.kind==='person'?'50%':'4px',flex:'none',background:typeColor,color:'#0A0A0B',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 9px var(--font-sans)'},
+        dotStyle:{width:'28px',height:'28px',borderRadius:d.kind==='person'?'50%':'6px',background:d.kind==='person'?('linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'):typeColor,border:'2px solid '+(on?'var(--accent)':'var(--bg-app)'),boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)',display:'flex',alignItems:d.kind==='quote'?'flex-start':'center',justifyContent:'center',font:(d.kind==='quote'?'700 22px':'700 10px')+' var(--font-sans)',lineHeight:d.kind==='quote'?'20px':'1',color:'#0A0A0B'},
+        wrapCls:'pb-piece'+((selc||seld)?' pb-sel':''),
+        pinned:!!(s.pins&&s.pins[id]),
+        wrapStyle:{left:pos.x+'px',top:pos.y+'px',zIndex:(selc||seld)?20:5,cursor:s.connectMode?'crosshair':((s.pins&&s.pins[id])?'default':'grab'),opacity:dim?0.32:1,transition:'opacity .15s'},
+        cardStyle:{width:'200px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'9px 11px 10px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
+        handleStyle:{position:'absolute',right:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
+        portInStyle:{position:'absolute',left:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
+        onPortInDown:(e)=>this.onHandleDown(id,e),
+        onDown:(e)=>this.onPieceDown(id,e), onClick:()=>this.onPieceClick(id), onHandleDown:(e)=>this.onHandleDown(id,e),
+        onText:(e)=>this.setState({memoText:Object.assign({},s.memoText,{[id]:e.target.value})}), stopDown:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } };
+    }).filter(Boolean);
+    const portR=(id)=>({x:s.placed[id].x+this.cardW(id),y:s.placed[id].y+this.cardH(id)/2}), portL=(id)=>({x:s.placed[id].x,y:s.placed[id].y+this.cardH(id)/2});
+    const rp=s.relPicker;
+    const strings=s.strings.filter(st=>s.placed[st.a]&&s.placed[st.b]).map(st=>{ const active=rp&&((rp.a===st.a&&rp.b===st.b)||(rp.a===st.b&&rp.b===st.a)); const r=active?{label:this.REL[st.rel].label,color:'var(--accent)'}:(this.REL[st.rel]||this.REL.same); const pa=portR(st.a),pb=portL(st.b); const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+      return { x1:pa.x,y1:pa.y,x2:pb.x,y2:pb.y,color:r.color,lineStyle:{stroke:r.color,strokeWidth:1.5,strokeDasharray:'5 4'},relLabel:r.label,labelStyle:{position:'absolute',left:mx+'px',top:my+'px',transform:'translate(-50%,-50%)',zIndex:6,background:'var(--bg-subtle)',border:'1px solid '+r.color,color:r.color,borderRadius:'var(--r-pill)',padding:'1px 8px',fontSize:'10px',fontWeight:600,cursor:'pointer'},onEdit:()=>{ this.setState({relPicker:{a:st.a,b:st.b,x:mx,y:my}}); } }; });
+    const cd=s.connectDrag; const cdp=cd?portR(cd.from):null; const liveLine={show:!!cd,x1:cdp?cdp.x:0,y1:cdp?cdp.y:0,x2:cd?cd.cx:0,y2:cd?cd.cy:0};
+    const placedSet={}; placedIds.forEach(id=>placedSet[id]=1);
+    const revEv=this.revEvidence;
+    const drawer=this.KINDS.map(kd=>{ let ids=kd.k==='memo'?s.memoOrder.slice():this.cards.filter(c=>c.kind===kd.k).map(c=>c.id);
+      if(kd.k==='evidence'&&revEv) ids=ids.filter(id=>revEv[id]);
+      const locked=kd.k==='evidence'&&ids.length===0;
+      return { title:kd.title, isMemo:kd.k==='memo', onNew:()=>this.newMemo(), locked, lockedHint:'조사 전 · 없음',
+        dot:{width:'7px',height:'7px',borderRadius:kd.k==='person'?'50%':'2px',flex:'none',background:kd.k==='person'?'var(--fg-3)':(kd.k==='evidence'?'var(--accent)':(kd.k==='memo'?'#F2C94C':'var(--fg-3)'))},
+        items:ids.map(id=>{ const d=this.card(id); const cnt=Object.keys(s.placed).filter(pid=>this.baseId(pid)===id).length; const placed=cnt>0;
+          return { label:d.kind==='memo'?((d.text||'빈 메모').slice(0,16)):d.label, placed, count:cnt, onAdd:()=>this.addPiece(id),
+            rowStyle:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 8px',border:'1px solid '+(placed?'var(--accent)':'var(--border-strong)'),borderRadius:'var(--r-sm)',cursor:'pointer',background:placed?'var(--accent-soft)':'transparent'},
+            badgeStyle:{fontSize:'10px',fontWeight:700,color:'var(--fg-on-accent)',background:'var(--accent)',borderRadius:'var(--r-pill)',padding:'0 6px',flex:'none'} }; }) }; });
+    const ds=s.drawShape,tempGroup={show:!!ds,style:ds?{position:'absolute',left:Math.min(ds.x1,ds.x2)+'px',top:Math.min(ds.y1,ds.y2)+'px',width:Math.abs(ds.x2-ds.x1)+'px',height:Math.abs(ds.y2-ds.y1)+'px',border:'1.5px dashed var(--accent)',borderRadius:ds.shape==='venn'?'var(--r-md)':'var(--r-md)',background:'var(--accent-soft)',zIndex:1}:{}};
+    const selG=s.sel&&s.sel.kind==='group'?s.sel.id:null;
+    const groups=s.groups.map(g=>{ const isVenn=g.shape==='venn',isTl=g.shape==='timeline'; const sg=selG===g.id; const cbc=sg?'var(--accent)':'var(--border-strong)';
+      const boxStyle=isVenn?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',background:'transparent',zIndex:1}:isTl?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',borderTop:'1.5px '+(sg?'solid ':'dashed ')+cbc,background:'transparent',zIndex:1}:{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',border:'1.5px '+(sg?'solid ':'dashed ')+cbc,borderRadius:'var(--r-md)',background:'rgba(255,255,255,.02)',zIndex:1};
+      const circ={position:'absolute',top:'0',width:'64%',height:'100%',borderRadius:'50%',border:'1.5px dashed '+cbc,background:'rgba(76,141,255,.04)'};
+      const an=g.anchor?this.card(g.anchor):null,anColor=an?(an.kind==='person'?an.c1:'var(--accent)'):null;
+      const tlTicks=isTl?this.LANES.map((lb,i)=>({label:lb,style:{position:'absolute',left:((i+0.5)/this.LANES.length*100)+'%',top:'2px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'},tickStyle:{width:'1px',height:'7px',background:'var(--border-strong)'},labelStyle:{color:'var(--fg-4)',fontSize:'10px',whiteSpace:'nowrap'}})):[];
+      return { label:g.label, isVenn, isTl, notTl:!isTl, empty:!isTl&&this.regionMembers(g).length===0, boxStyle, circleL:Object.assign({},circ,{left:'0'}), circleR:Object.assign({},circ,{right:'0'}), tlTicks,
+        hasAnchor:!!an, anchorIni:an?(an.ini||'"'):'', anchorLabel:an?an.label:'', anchorColor:anColor,
+        anchorSlotStyle:{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'16px',height:'16px',borderRadius:'4px',border:an?'none':'1px dashed var(--border-strong)',background:an?('linear-gradient(135deg,'+anColor+','+anColor+')'):'transparent',color:'#0A0A0B',font:'700 9px var(--font-sans)',cursor:'pointer',flex:'none'},
+        onClearAnchor:()=>this.setState({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{anchor:null}):x)}),
+        labelWrapStyle:{position:'absolute',left:isVenn?'50%':(isTl?'8px':'18px'),top:'-11px',transform:isVenn?'translateX(-50%)':'none',display:'flex',alignItems:'center',gap:'5px',background:'var(--bg-subtle)',padding:'0 4px'},
+        labelStyle:{background:'transparent',border:'none',outline:'none',boxShadow:'none',color:an?anColor:'var(--fg-3)',font:'600 11px var(--font-sans)',padding:0,maxWidth:'140px'},
+        stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onLabel:(e)=>this.setState({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{label:e.target.value}):x)}),onMoveDown:(e)=>this.onGroupMoveDown(g.id,e),onResizeDown:(e)=>this.onGroupResizeDown(g.id,e) }; });
+    const selL=s.sel&&s.sel.kind==='label'?s.sel.id:null;
+    const labels=s.labels.map(lb=>({text:lb.text,selected:selL===lb.id,onDel:()=>{ this.setState({labels:s.labels.filter(x=>x.id!==lb.id),sel:null}); },delStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },wrapStyle:{left:lb.x+'px',top:lb.y+'px',zIndex:4,display:'flex',alignItems:'center',gap:'4px',cursor:'grab'},inputStyle:{background:selL===lb.id?'var(--accent-soft)':'transparent',pointerEvents:selL===lb.id?'auto':'none'},onDown:(e)=>this.onLabelDown(lb.id,e),stopIfEdit:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onText:(e)=>this.setState({labels:s.labels.map(x=>x.id===lb.id?Object.assign({},x,{text:e.target.value}):x)})}));
+    const markers=s.times.slice().sort((a,b)=>a.x-b.x).map(t=>{ const sel=s.sel&&s.sel.kind==='time'&&s.sel.id===t.id; const active=s.hlTimeId===t.id; return { id:t.id, label:t.label, selected:sel,
+      onDown:(e)=>this.onTimeDown(t.id,e), onHi:()=>this.setState({hlTimeId:active?null:t.id}),
+      onLabel:(e)=>this.setState({times:s.times.map(x=>x.id===t.id?Object.assign({},x,{label:e.target.value}):x)}),
+      onDel:()=>this.delTime(t.id), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); }, locked:false, notLocked:true,
+      wrapStyle:{position:'absolute',left:t.x+'px',top:'8px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',cursor:'grab',zIndex:sel?12:6},
+      tickStyle:{width:'2px',height:'11px',background:active?'var(--accent)':'var(--border-strong)'},
+      inputStyle:{background:sel?'var(--accent-soft)':'transparent',border:'none',outline:'none',textAlign:'center',color:active?'var(--accent)':'var(--fg-3)',font:(active?'600':'500')+' 12px var(--font-sans)',width:'72px',pointerEvents:sel?'auto':'none',borderRadius:'4px'},
+      guideStyle:active?{position:'absolute',left:t.x+'px',top:'56px',width:'1px',height:'1544px',background:'var(--accent-soft)',pointerEvents:'none',zIndex:0}:null }; });
+    const relPicker={open:!!rp,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:rp?{position:'absolute',left:rp.x+'px',top:rp.y+'px',zIndex:30,minWidth:'150px'}:{},onDelete:()=>this.delRel(),opts:Object.keys(this.REL).map(k=>({label:this.REL[k].label,onPick:()=>this.setRel(k),dot:{width:'9px',height:'9px',borderRadius:'3px',flex:'none',background:this.REL[k].color}}))};
+    let toolbar={show:false,style:{},actions:[]};
+    if(s.sel){ let ex,ey,acts=[]; const pinned=!!(s.pins&&s.pins[s.sel.id]); const abtn=(label,fn,danger)=>({label,onClick:fn,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{cursor:'pointer',fontSize:'12px',fontWeight:500,color:danger?'var(--label-red)':'var(--fg-2)',padding:'0 4px'}});
+      const pinBtn=abtn(pinned?'고정 해제':'고정',()=>this.togglePin(s.sel.id));
+      if(s.sel.kind==='piece'){ const p=s.placed[s.sel.id],d=this.card(s.sel.id); if(p){ ex=p.x; ey=p.y; acts.push(abtn(this.sizeOf(s.sel.id)==='chip'?'크게':'작게',()=>this.cycleSize(s.sel.id))); if(d.kind!=='memo') acts.push(abtn('상세',()=>this.setState({detailId:s.sel.id,detailFull:false}))); acts.push(abtn('복제',()=>this.dupPiece(s.sel.id))); acts.push(pinBtn); acts.push(abtn('삭제',()=>this.deleteSel(),true)); } }
+      else if(s.sel.kind==='label'){ ex=undefined; }
+      else if(s.sel.kind==='group'){ const g=s.groups.find(x=>x.id===s.sel.id); if(g){ ex=g.x; ey=g.y; acts.push(pinBtn); acts.push(abtn('삭제',()=>this.deleteSel(),true)); } }
+      if(ex!==undefined) toolbar={show:true,actions:acts,style:{position:'absolute',left:ex+'px',top:(ey-34)+'px',zIndex:25,display:'flex',alignItems:'center',gap:'10px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-sm)',boxShadow:'var(--shadow-popover)',padding:'5px 9px'}};
+    }
+    let detail={open:false,style:{}};
+    if(s.detailId&&s.placed[s.detailId]){ const d=this.card(s.detailId),p=s.placed[s.detailId]; const tc=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':'var(--fg-3)'));
+      detail={open:true,color:tc,typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),label:d.label,sub:d.sub||'',hasSub:!!d.sub,body:d.quote||d.text||'',hasBody:!!(d.quote||d.text),claim:d.claim||'',hasClaim:!!d.claim,claimLabel:ln==='ko'?'본인 주장':'Own claim',clues:d.clues||[],hasClues:!!(d.clues&&d.clues.length),cluesLabel:ln==='ko'?'발견된 단서':'Found clues',slots:d.slots||[],hasSlots:!!(d.slots&&d.slots.length),unknownLabel:ln==='ko'?'미확인':'Unknown',hasFull:!!d.fullStmt,fullText:d.fullStmt||'',fullOpen:!!s.detailFull,fullChevron:s.detailFull?'rotate(90deg)':'rotate(0deg)',fullLabel:ln==='ko'?'진술 원문':'Full statement',onToggleFull:()=>this.setState({detailFull:!s.detailFull}),onClose:()=>this.setState({detailId:null}),stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{position:'absolute',left:(p.x+this.cardW(s.detailId)+10)+'px',top:p.y+'px',zIndex:35,width:'240px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-md)',boxShadow:'var(--shadow-modal)',padding:'14px 16px'}}; }
+    const scX=150/2600,scY=100/1600,dots=placedIds.map(id=>({style:{position:'absolute',left:(s.placed[id].x*scX)+'px',top:(s.placed[id].y*scY)+'px',width:'5px',height:'5px',borderRadius:'50%',background:this.card(id).kind==='person'?'var(--accent)':'var(--fg-3)'}}));
+    const mmMap=(e)=>{ const el=e.currentTarget.getBoundingClientRect(); const mx=(e.clientX-el.left)/scX, my=(e.clientY-el.top)/scY; return this.clampPan(-(mx*s.zoom)+350, -(my*s.zoom)+260); };
+    const minimap={dots,onDown:(e)=>{ if(s.mapLock)return; this._mmDrag=true; this.setState({pan:mmMap(e)}); },onMove:(e)=>{ if(this._mmDrag&&!s.mapLock) this.setState({pan:mmMap(e)}); },onUp:()=>{ this._mmDrag=false; },viewport:{pointerEvents:'none',position:'absolute',left:((-s.pan.x/s.zoom)*scX)+'px',top:((-s.pan.y/s.zoom)*scY)+'px',width:((700/s.zoom)*scX)+'px',height:((520/s.zoom)*scY)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)'}};
+    const tool=s.tool;
+    return { drawer,pieces,strings,liveLine,groups,tempGroup,labels,markers,onAddTime:()=>this.addTime(),tlStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },relPicker,minimap,toolbar,detail,timelineOn:s.timelineOn,
+      worldStyle:{position:'absolute',left:0,top:0,width:'2600px',height:'1600px',transformOrigin:'0 0',transform:'translate('+s.pan.x+'px,'+s.pan.y+'px) scale('+s.zoom+')'},
+      tlBandTop: (s.mapLock?0:((-s.pan.y)/s.zoom))+'px',
+      canvasCursor: tool?'copy':(s.panning?'grabbing':'default'),
+      addChip:'v-chip'+(s.addOpen||tool?' active':''), addOpen:s.addOpen, onToggleAdd:()=>this.setState({addOpen:!s.addOpen,tool:null}),
+      tools:this.TOOLS.map(t=>({label:t.label,onPick:()=>this.setState({tool:t.t,addOpen:false}),dot:{width:'8px',height:'8px',borderRadius:t.t==='venn'?'50%':'2px',flex:'none',background:'var(--fg-3)'}})),
+      connChip:'v-chip'+(s.connectMode?' active':''), onToggleConn:()=>this.setState({connectMode:!s.connectMode,connectFrom:null,tool:null}),
+      tlChip:'v-chip'+(s.timelineOn?' active':''), onToggleTl:()=>this.setState({timelineOn:!s.timelineOn,hlTimeId:null}),
+      mapLockChip:'v-chip'+(s.mapLock?' active':''), onToggleMapLock:()=>this.setState({mapLock:!s.mapLock,panning:false}),
+      drawerOpen:s.drawerOpen, drawerClosed:!s.drawerOpen, drawerTitle: ln==='ko'?'자료':'Sources', onToggleDrawer:()=>this.setState({drawerOpen:!s.drawerOpen}),
+      hint: tool?'클릭/드래그해 배치':(s.connectMode?(s.connectFrom?'이을 두 번째 카드를 누르세요':'연결할 첫 카드를 누르세요'):'클릭=선택 · 드래그=이동 · 우측 점 끌어 연결 · 빈 곳=이동'),
+      zoomPct:Math.round(s.zoom*100)+'%',onZoomIn:()=>this.setZoom(s.zoom+0.15),onZoomOut:()=>this.setZoom(s.zoom-0.15),
+      onHome:()=>this.setState({zoom:1,pan:{x:40,y:40}}),
+      onFit:()=>{ const ids=placedIds; if(!ids.length){ this.setState({zoom:1,pan:{x:0,y:0}}); return; } let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const p=s.placed[id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+this.cardW(id)); y1=Math.max(y1,p.y+this.cardH(id)); }); const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2,z=Math.max(0.5,Math.min(1.3,Math.min(700/bw,520/bh))); this.setState({zoom:z,pan:{x:-(x0-pad)*z+40,y:-(y0-pad)*z+40}}); },
+      onReset:()=>this.setState({placed:{},memoText:{},memoOrder:[],labels:[],groups:[],strings:[],times:this.state.times,sel:null,detailId:null,relPicker:null,pan:{x:0,y:0},zoom:1}),
+      onBgDown:(e)=>this.onBgDown(e),onCanvasMove:(e)=>this.onCanvasMove(e),onCanvasUp:(e)=>this.onCanvasUp(e),
+      marquee: s.marquee?{ style:{position:'absolute',left:Math.min(s.marquee.x1,s.marquee.x2)+'px',top:Math.min(s.marquee.y1,s.marquee.y2)+'px',width:Math.abs(s.marquee.x2-s.marquee.x1)+'px',height:Math.abs(s.marquee.y2-s.marquee.y1)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)',zIndex:30,pointerEvents:'none'} }:null,
+      bindBox: null,
+      mselBar: (s.sel&&s.sel.kind==='bind'&&(this.state.binds||[]).find(b=>b.id===s.sel.id))?{ bind:true, word:'결속', label:'해제', clearLabel:'선택 해제', count:((this.state.binds||[]).find(b=>b.id===s.sel.id)||{mem:[]}).mem.length, onBlock:()=>this.unbind(s.sel.id), onClear:()=>this.setState({sel:null}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } } : (s.msel.length>=2?{ word:'선택', label:'묶기', clearLabel:'해제', count:s.msel.length, onBlock:()=>this.makeBlock(), onClear:()=>this.setState({msel:[]}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } }:null) };
+  }
+}
+</script>
+</body>
+</html>

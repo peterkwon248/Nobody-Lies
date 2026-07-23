@@ -1,0 +1,8 @@
+# 작업 기계가 여러 대이므로 줄바꿈을 고정한다. 안 그러면
+# 큰 단일 파일(추리게임.dc.html, _ds_bundle.js)이 기계를 옮길 때마다
+# 전체가 바뀐 것으로 보인다.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.napkin binary

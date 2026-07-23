@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+<script src="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
+<style>
+  body { margin:0; background:var(--bg-app); color:var(--fg-2); font-family:'Pretendard','Inter',sans-serif; }
+  a { color:var(--accent); text-decoration:none; } a:hover { color:var(--fg); }
+  .doc { max-width:920px; margin:0 auto; padding:56px 40px 100px; }
+  .doc h1 { font-size:28px; font-weight:700; color:var(--fg); letter-spacing:-.02em; margin:0 0 6px; }
+  .doc h2 { font-size:19px; font-weight:600; color:var(--fg); letter-spacing:-.01em; margin:48px 0 4px; padding-top:20px; border-top:1px solid var(--border); }
+  .doc h3 { font-size:14px; font-weight:600; color:var(--fg); margin:22px 0 8px; }
+  .doc p { font-size:14px; line-height:1.7; margin:8px 0; }
+  .doc li { font-size:14px; line-height:1.7; }
+  .doc code { font-family:'SFMono-Regular',ui-monospace,monospace; font-size:12.5px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:4px; padding:1px 5px; color:var(--fg); }
+  .doc table { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; }
+  .doc th { text-align:left; font-weight:600; color:var(--fg-3); padding:7px 10px; border-bottom:1px solid var(--border-strong); font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  .doc td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--fg-2); vertical-align:top; line-height:1.55; }
+  .doc td b { color:var(--fg); font-weight:600; }
+  .note { background:var(--accent-soft); border:1px solid var(--accent); border-radius:var(--r-md); padding:12px 16px; margin:14px 0; }
+  .note p { margin:4px 0; color:var(--fg); }
+  .sw { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:middle; margin-right:6px; }
+</style>
+</helmet>
+
+<div class="doc">
+  <div style="font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Nobody Lies · 노바디 라이즈</div>
+  <h1>화면 인벤토리 — 개발 인계</h1>
+  <p style="color:var(--fg-3)">이 문서는 "무엇이 어떻게 생겼는가"만 다룹니다. 게임 규칙·판정·채점·검증·사건 데이터 구조는 별도 문서. 값은 <b style="color:var(--fg-2)">실제 구현 기준</b>이며 브리프와 다를 경우 실제 값을 적었습니다. 단일 파일 <code>추리게임.dc.html</code> + 자식 <code>추리판.dc.html</code>(상황판).</p>
+
+  <h2>1. 화면 목록 · 사이드바 위치와 순서</h2>
+  <p>좌측 사이드바(<code>.sidebar</code>, 폭 232px)는 캡션으로 3그룹. 순서는 위→아래.</p>
+  <table>
+    <tr><th style="width:130px">그룹</th><th style="width:150px">항목</th><th>화면 / view 키</th></tr>
+    <tr><td>(최상단)</td><td><b>홈</b></td><td>홈으로 나감 (앱 셸 밖)</td></tr>
+    <tr><td>사건</td><td>사건 개요</td><td><code>view:'overview'</code> — 프롤로그 전문 + 브리핑</td></tr>
+    <tr><td>사건</td><td>보고서</td><td><code>view:'narrative'</code> — 서술 모드 단독(목록/보드 미노출)</td></tr>
+    <tr><td>단서</td><td>진술</td><td><code>view:'statements'</code> — 원문 단독(정독)</td></tr>
+    <tr><td>단서</td><td>용의자</td><td><code>view:'profile'</code></td></tr>
+    <tr><td>단서</td><td>현장</td><td><code>view:'map'</code> — 평면도/도식 토글</td></tr>
+    <tr><td>단서</td><td>관계 그래프</td><td><code>view:'graph'</code> — <code>buildGraph</code>. 게임이 그리는 <b>확정</b> 관계망(실선 간선)</td></tr>
+    <tr><td>단서</td><td>상황판</td><td><code>view:'board'</code> — 자식 DC <code>추리판</code>. 플레이어 자유 배치 <b>판단</b> 캔버스(점선 연결)</td></tr>
+    <tr><td>도구</td><td>조사 기록</td><td><code>view:'log'</code></td></tr>
+    <tr><td>도구</td><td>메모</td><td><code>view:'memo'</code></td></tr>
+    <tr><td>도구</td><td>표기 안내</td><td><code>view:'reference'</code> — 상태 레퍼런스</td></tr>
+    <tr><td>(최하단)</td><td>포기</td><td>확인 다이얼로그 → 홈</td></tr>
+  </table>
+  <p><b>사이드바에 없는 화면</b> — 진입 흐름(프롤로그 <code>stage:'prolog'</code> → 브리핑 <code>'brief'</code> → 진술 정독 <code>'read'</code> → 자유 <code>'free'</code>), 홈/사건 상세(앱 셸 밖), 결말(<code>buildResult</code>, 제출 후). 우측 <b>디테일 패널</b>(폭 340px)은 탭: 진술 / 조사 기록 / 메모.</p>
+  <p><b>모바일(&lt;820px)</b> — 좌측 나비 숨김, 하단 탭바(<code>bottomNav</code>) + 더보기, 우측 패널은 하단 시트로.</p>
+
+  <h2>2. 화면별 컴포넌트 (renderVals 빌더 기준)</h2>
+  <table>
+    <tr><th style="width:190px">빌더 / 컴포넌트</th><th>역할</th></tr>
+    <tr><td><code>buildSections</code></td><td>보고서 장(章) 아코디언. 장별 공란(blank) 트리거·드롭다운·확보단어 선택.</td></tr>
+    <tr><td><code>buildStatements</code></td><td>진술 원문 정독. 좌측 레일(132–172px) + 본문. 접힘 행: 아바타·이름·성별연령·직업·관계칩·미리보기.</td></tr>
+    <tr><td><code>segsFor</code></td><td>텍스트를 하이라이트 구간으로 분할(진술·프롤로그·추가진술 공용). 드래그 선택 툴바 <code>selTb</code>.</td></tr>
+    <tr><td><code>buildFloorplan</code></td><td>현장 평면도. 공간 박스·고정물·인물 마커·시간 세그먼티드·현장 조사 기록(narrations).</td></tr>
+    <tr><td><code>buildGrid</code></td><td>주장 대조 격자(현장 "도식" 탭). 행=인물, 열=시간대.</td></tr>
+    <tr><td><code>buildProfiles</code> / <code>buildProfileDetail</code></td><td>용의자 카드 격자 + 상세(주장·발견 단서·미확인 슬롯·verdict 칩).</td></tr>
+    <tr><td><code>buildGraph</code> (관계 그래프)</td><td><code>view:'graph'</code>. 게임이 그리는 <b>확정</b> 관계망 — 노드+간선, 실선. 조사로만 간선 등장(추측 안 그림).</td></tr>
+    <tr><td><code>추리판</code> (상황판)</td><td><code>view:'board'</code> 자식 DC. 플레이어 자유 배치 <b>판단</b> 캔버스 — 점선 연결.</td></tr>
+    <tr><td><code>buildInvestigation</code></td><td>조사 기록 목록. 물증 나온 항목은 클릭 시 물증 카드.</td></tr>
+    <tr><td><code>buildMemos</code></td><td>메모 저장소(단일). 2열 그리드·정렬(최신/대상)·검색·수집함 토글·층위 라벨.</td></tr>
+    <tr><td><code>buildRef</code></td><td>표기 안내(상태 레퍼런스) — 핸드오프 문서.</td></tr>
+    <tr><td><code>buildOverview</code></td><td>사건 개요. 프롤로그 산문(드래그 인용) + 브리핑 표(항목별 인용·복사).</td></tr>
+    <tr><td>물증 카드(<code>openTerm</code>)</td><td>발견·기록 2필드 좌측라벨 2단. 확장(메시지/문서)은 하단 덧붙임.</td></tr>
+    <tr><td>인용 팝오버(<code>quotePicker</code>)</td><td>수집함 2개+일 때 "어느 메모에" 선택 모달.</td></tr>
+  </table>
+
+  <h2>3. 컴포넌트별 상태 (표기 안내 기준 + 누락분)</h2>
+  <h3>보고서 장(章)</h3>
+  <p>잠김(번호만 · 제목/라벨/유형/개수 가림) · 열림 · <b>완성</b>(자동, 잠김) · <b>완성 · 재개봉 사용됨</b>. 재개봉 1회. 실시간 채점·모순 경고 없음(최종 제출만 확정).</p>
+  <h3>공란(blank)</h3>
+  <p>비어 있음 · 채움. 완성 전까지 자유 수정. 닫힘후보=드롭다운, 확보후보=단어창고.</p>
+  <h3>하이라이트 (드래그) — 4종</h3>
+  <p><span class="sw" style="background:#4C8DFF"></span><b>표시</b>(중립·azure) · <span class="sw" style="background:var(--status-review)"></span><b>확인</b> · <span class="sw" style="background:var(--status-progress)"></span><b>의심</b> · <span class="sw" style="background:var(--label-red)"></span><b>모순</b>. 표시는 툴바 첫 위치·원탭, 재선택 후 나머지 3종으로 승급. 배경 30–32% + 밑줄 2px. 툴바: 4마크 · ✕지우기 · 인용 · 복사.</p>
+  <h3>격자 셀 마킹 — 3종 (유지)</h3>
+  <p>확인 · 의심 · 모순. (하이라이트와 색 어휘 공유, 표시 없음.)</p>
+  <h3>메모</h3>
+  <p>수집함 <b>인용 모으는 중 / 인용 모으기</b>(메모별 독립 토글) · 인용 카드 층위(<b>주장</b>·azure / <b>확정</b>·green) · 대상 지정/미지정 · 검색 결과 있음/없음 · 편집/읽기. 제목 필드 없음(번호 #N + 본문 전체 검색).</p>
+  <h3>물증 카드</h3>
+  <p>기본(발견·기록) / 확장 있음(메시지·문서 하단 덧붙임). 기록은 3인칭 관찰만.</p>
+  <h3>평면도 공간·고정물</h3>
+  <p>미조사 / 조사됨 / 빈손(색 구분) · 미공개(<code>availableAfter</code>, 예: 별채는 1장 완성 전 지도에 없음, 공개 시 "공개" 칩). 인물 마커=인물 색 점.</p>
+  <h3>프로필</h3>
+  <p>신규 배지(열람 시 소거) · 발견 단서 유무 · 미확인 슬롯 · verdict 칩(플레이어 표기). 유죄 판정·레드헤링 시각 구분 없음.</p>
+  <h3>provenance 배지 (전역)</h3>
+  <p>"N장 완성으로 공개/갱신" — 진술 추가문단·사건 개요(사망시각 갱신+취소선)·평면도 후공개 공간에 영구 표시. + 사이드바 안 읽음 점(<code>state.unread</code>).</p>
+
+  <h2>4. 실제 토큰 값</h2>
+  <h3>게임 전용 색 (<code>[data-surface="vector"]</code> 스코프)</h3>
+  <table>
+    <tr><th style="width:190px">토큰</th><th>값 / 매핑</th></tr>
+    <tr><td><code>--g-confirm</code></td><td><span class="sw" style="background:var(--status-review)"></span>= <code>--status-review</code> (green)</td></tr>
+    <tr><td><code>--g-suspect</code></td><td><span class="sw" style="background:var(--status-progress)"></span>= <code>--status-progress</code> (amber)</td></tr>
+    <tr><td><code>--g-contradict</code></td><td><span class="sw" style="background:var(--label-red)"></span>= <code>--label-red</code></td></tr>
+    <tr><td>표시(flag)</td><td><span class="sw" style="background:#4C8DFF"></span><code>--accent</code> #4C8DFF. 하이라이트 bg <code>rgba(76,141,255,.30)</code></td></tr>
+    <tr><td>장 완성 배경</td><td><code>--g-lock-bg rgba(76,183,130,.12)</code>, keyframe <code>gSettle</code></td></tr>
+    <tr><td>인물 색</td><td>예나 <span class="sw" style="background:#4C8DFF"></span>#4C8DFF · 유진 <span class="sw" style="background:#BB6BD9"></span>#BB6BD9 · 사쿠라 <span class="sw" style="background:#F2994A"></span>#F2994A · 유리 <span class="sw" style="background:#4CB782"></span>#4CB782 · 원영 <span class="sw" style="background:#F2C94C"></span>#F2C94C</td></tr>
+  </table>
+  <p style="color:var(--fg-3)">기저 색/서피스/보더는 Vector 토큰 그대로: <code>--bg-app #08090A</code>, <code>--bg-sidebar #0B0C0D</code>, <code>--bg-elevated #18191B</code>, 텍스트 램프 <code>#F7F8F8 / #C9CCD1 / #8A8F98 / #62666D</code>. 반경 4/6/8/12/pill.</p>
+
+  <h3>서체 크기 · 행간 — 읽기 표면 vs UI 표면</h3>
+  <table>
+    <tr><th>표면</th><th style="width:90px">크기</th><th style="width:70px">행간</th><th>비고</th></tr>
+    <tr><td><b>진술 본문</b>(정독)</td><td>16px</td><td>1.85</td><td>레일 172px · gap 20 · max 1000 · 폭 52ch</td></tr>
+    <tr><td><b>프롤로그</b></td><td>16px</td><td>1.9</td><td>max 640, 카드 없음</td></tr>
+    <tr><td><b>결말 서사</b></td><td>16px</td><td>~1.85</td><td>프롤로그와 동일 조판</td></tr>
+    <tr><td>보고서 산문</td><td>~15–16px</td><td>1.7–1.8</td><td>중간 밀도</td></tr>
+    <tr><td>격자 셀</td><td>13px</td><td>—</td><td>조밀, 최소폭 720</td></tr>
+    <tr><td>프로필</td><td>13–14px</td><td>1.5</td><td>조밀</td></tr>
+    <tr><td>조사 기록 본문</td><td>14px</td><td>1.8</td><td>읽기성</td></tr>
+    <tr><td>디테일 패널(전체)</td><td>13.5px</td><td>1.85</td><td>표시만=13/1.7</td></tr>
+    <tr><td>레일·라벨·micro</td><td>11–12px</td><td>1.6</td><td></td></tr>
+  </table>
+  <div class="note"><p>✔ <b>읽기/UI 서체 차이 유지됨.</b> 진술·프롤로그·결말은 16px·행간 넓게, 격자·프로필·조사기록은 13–14px·조밀. 브리프 4.2/9.5 조판 값과 일치.</p></div>
+
+  <h3>레이아웃 · 반응형</h3>
+  <table>
+    <tr><th style="width:200px">항목</th><th>값</th></tr>
+    <tr><td>반응형 분기점</td><td><b><code>&lt;820px</code></b> = isNarrow (<code>.app</code> clientWidth 기준, ResizeObserver)</td></tr>
+    <tr><td>좌 사이드바 / 우 패널</td><td>232px / 340px</td></tr>
+    <tr><td>현장·격자·그래프 컨테이너</td><td>max-width 1100px, 평면도 aspect 16/10</td></tr>
+    <tr><td>진술 정독</td><td>max 1000 · 레일 172 · gap 20</td></tr>
+    <tr><td>조사 기록 / 표기 안내</td><td>max 720 · 중앙정렬</td></tr>
+    <tr><td>메모 그리드</td><td>2열(narrow 1열)</td></tr>
+  </table>
+
+  <h2>5. Vector DS 사용분 vs 신규</h2>
+  <table>
+    <tr><th style="width:50%">Vector DS 그대로</th><th>이 게임에서 신규</th></tr>
+    <tr><td>셸(<code>.app/.sidebar/.main/.tabbar</code>), nav-item, 세그먼티드, 스크롤바, <code>Button</code>(x-import), 모달/scrim, 색·서피스·보더·반경·타이포(<code>.v-*</code>) 토큰</td><td><code>--g-*</code> 상태색, 하이라이트 4종, 보고서 장 아코디언, 주장 대조 격자, 평면도(좌표 자동), 물증 카드 2단, 메모 수집함/팝오버, 진술 정독 조판, provenance 배지, 인물 색 세트, 상황판(<code>추리판</code>)</td></tr>
+  </table>
+  <p>토큰은 전부 <code>var(--*)</code> 참조, 신규는 <code>[data-surface="vector"]</code> 스코프에만 추가. 새 토큰 체계 없음.</p>
+
+  <h2>6. 미완성 · 임시 · 죽은 코드</h2>
+  <table>
+    <tr><th style="width:200px">항목</th><th>상태</th></tr>
+    <tr><td>분석보조 5라벨 · checkBtn/resetBtn/msgFail · quoteTargetId</td><td><b>정리 완료</b>(삭제). 폐기 기능 잔재였음.</td></tr>
+    <tr><td><code>quoteTargetId</code> state</td><td>제거됨(→ <code>quotePins</code>).</td></tr>
+    <tr><td>분석 보조 라벨 5종</td><td>제거됨(자동 분석 금지 원칙).</td></tr>
+    <tr><td><code>viewOpts.timelineSort</code></td><td><b>유지</b> — 시간순 정렬 버튼은 폐기했으나 gridSort 칩 잔재가 아직 이 플래그를 읽음(state 필요). 완전 제거 시 gridSort 칩까지 정리.</td></tr>
+    <tr><td>미사용 라벨(<code>secLocked·secLockedHint</code>)</td><td><b>유지</b> — 잠긴 장 UI에서 실제 참조 중(죽은 코드 아님). <code>checkBtn·resetBtn·msgFail</code>은 제거함.</td></tr>
+    <tr><td>인물명(예나·유진·사쿠라·유리·원영·채원)</td><td>실존명 임시. 상업 출시 시 교체.</td></tr>
+    <tr><td>몽타주 초상 / 관계 그래프 보너스 트리거</td><td>v1.5. v1은 인물 색만.</td></tr>
+    <tr><td>인용 팝오버 excerpt</td><td>메모 본문 첫 줄 발췌(제목 필드 없음) — 의도된 임시 라벨.</td></tr>
+  </table>
+
+  <h2>특히 확인 요청 4건</h2>
+  <div class="note">
+    <p><b>① 격자 열 머리 ↔ 지도 시간</b> — <b>독립.</b> 열 머리는 정적 라벨이며 클릭해도 지도 시간이 바뀌지 않습니다. 시간 이동은 평면도 위 별도 세그먼티드에서만(격자는 "도식" 탭, 평면도는 "평면도" 탭 — 동시 표시 안 함). 과거의 "열 클릭 → 지도 점프"는 제거됨.</p>
+    <p><b>② 격자 빈 셀</b> — <b>"언급 없음"</b> (<code>ui.noClaim</code>). — 아님. 침묵=은폐 메커니즘을 드러내기 위함.</p>
+    <p><b>③ 조사 결과 자동 표시</b> — <b>없음.</b> 격자는 <code>CLAIMS</code>(고정 주장) + <code>CLAIM_REVEALS</code>(항 완성 시 주장 추가 + 신규 배지)만 반영. 조사로 물증을 얻어도 셀에 자동 마킹하지 않음 → 제거한 모순 경고의 부활 아님. 셀 마킹은 플레이어만.</p>
+    <p><b>④ 읽기/UI 서체 차이</b> — 유지됨(위 4장 표 참조).</p>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+<script src="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
+<style>
+  body { margin:0; background:var(--bg-app); color:var(--fg); font-family:'Pretendard','Inter',sans-serif; }
+  a { color:var(--accent); text-decoration:none; } a:hover { color:var(--fg); }
+</style>
+</helmet>
+
+<section style="padding:40px 44px 64px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">Turn 1</span>
+    <span class="v-caption" style="color:var(--fg-3)">디테일뷰 하이라이트 가독성</span>
+  </div>
+  <div class="v-h1" style="color:var(--fg);margin:0 0 10px;letter-spacing:-.02em">디테일뷰 3안 비교</div>
+  <div class="v-body" style="color:var(--fg-3);max-width:700px;line-height:1.6;margin-bottom:32px">우측 디테일 패널(≈340px) 안에서 하이라이트가 어떻게 읽히는지 비교. <a href="#1a">1a</a> 현행 / <a href="#1b">1b</a> 옵션1(본문 밝기·크기·행간↑) / <a href="#1c">1c</a> 옵션1+3(표시만 보기 — 마크한 구절만 모아 표시). 파랑=표시·초록=확인·앰버=의심.</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start">
+
+    <!-- 1a -->
+    <div id="1a" style="flex:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">1a</span><span class="v-ui" style="color:var(--fg);font-weight:600">현행</span></div>
+      <div style="width:340px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-app);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:-10px">진술</span><span style="font-size:12px;color:var(--fg-4)">조사 기록</span><span style="font-size:12px;color:var(--fg-4)">메모</span></div>
+        <div style="padding:14px">
+          <div style="display:flex;align-items:center;gap:7px;padding:2px 0 10px"><span style="width:3px;height:20px;background:#4C8DFF;border-radius:2px"></span><span style="width:20px;height:20px;border-radius:5px;background:#4C8DFF;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px sans-serif">예</span><span style="font-size:13px;font-weight:600;color:var(--fg)">최예나</span></div>
+          <sc-for list="{{ paras }}" as="p" hint-placeholder-count="3"><p style="margin:0 0 7px;font-size:12.5px;line-height:1.7;color:var(--fg-3);text-wrap:pretty"><sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="1"><span style="{{ s.hlA }}">{{ s.t }}</span></sc-for></p></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1b -->
+    <div id="1b" style="flex:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">1b</span><span class="v-ui" style="color:var(--fg);font-weight:600">옵션1 · 밝기·크기·행간↑</span></div>
+      <div style="width:340px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-app);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:-10px">진술</span><span style="font-size:12px;color:var(--fg-4)">조사 기록</span><span style="font-size:12px;color:var(--fg-4)">메모</span></div>
+        <div style="padding:14px">
+          <div style="display:flex;align-items:center;gap:7px;padding:2px 0 10px"><span style="width:3px;height:20px;background:#4C8DFF;border-radius:2px"></span><span style="width:20px;height:20px;border-radius:5px;background:#4C8DFF;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px sans-serif">예</span><span style="font-size:13px;font-weight:600;color:var(--fg)">최예나</span></div>
+          <sc-for list="{{ paras }}" as="p" hint-placeholder-count="3"><p style="margin:0 0 12px;font-size:13.5px;line-height:1.85;color:var(--fg-2);text-wrap:pretty"><sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="1"><span style="{{ s.hlB }}">{{ s.t }}</span></sc-for></p></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c -->
+    <div id="1c" style="flex:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">1c</span><span class="v-ui" style="color:var(--fg);font-weight:600">옵션1+3 · 표시만 보기</span></div>
+      <div style="width:340px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-app);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border)"><span style="font-size:12px;font-weight:600;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:-10px">진술</span><span style="font-size:12px;color:var(--fg-4)">조사 기록</span><span style="font-size:12px;color:var(--fg-4)">메모</span></div>
+        <div style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 12px">
+            <div style="display:flex;align-items:center;gap:7px"><span style="width:3px;height:20px;background:#4C8DFF;border-radius:2px"></span><span style="width:20px;height:20px;border-radius:5px;background:#4C8DFF;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 10px sans-serif">예</span><span style="font-size:13px;font-weight:600;color:var(--fg)">최예나</span></div>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 9px">표시만 <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M5 8h6M7 12h2"></path></svg></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ marks }}" as="m" hint-placeholder-count="3"><div style="display:flex;gap:9px;align-items:flex-start"><span style="width:3px;align-self:stretch;border-radius:2px;background:{{ m.color }};flex:none;min-height:20px"></span><span style="font-size:13px;line-height:1.7;color:var(--fg-2)">{{ m.t }}</span></div></sc-for>
+          </div>
+        </div>
+      </div>
+      <div class="v-meta" style="color:var(--fg-4);margin-top:14px;max-width:340px;line-height:1.6">마크 안 한 문장은 접히고, 표시·확인·의심·모순한 구절만 색 레일과 함께 남습니다. 브리프의 "하이라이트 모아보기".</div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  DATA = [
+    [ {t:'요즘에는 소속사에서 춤 레슨을 하고있어요. 채원이가 오랜만에 지인들 모은다길래 초대 받아서 왔어요. 제가 도착했을때에 딱 마침 유진이도 도착해서 오랜만에 인사를 나누고 있었는데, '},
+      {t:'창밖으로 무슨 연기같은게 나오고 있더라구요', k:'flag'},
+      {t:'. 저는 또 채원이가 워낙 요리도 못하고 하니까 뭐 태워먹었나 싶었는데.'} ],
+    [ {t:'문 열자마자 보인건 화로 같은데 피워져있는 연탄이랑 자욱한 연기.. 그리고 창가에도 붙어있는 '},
+      {t:'테이프가 보이더라구요', k:'suspect'},
+      {t:'. 유진이랑 마음이 통했는지 서로 들어가는걸 말리게 됐어요.'} ],
+    [ {t:'하지만 채원이는 이미.. 숨을 쉬고 있지 않았어요. '},
+      {t:'몸도 싸늘하게 식어있는걸 보니까 죽은지 좀 된 것 같더라구요', k:'confirm'},
+      {t:'.'} ],
+  ];
+  BG = { flag:'rgba(76,141,255,.30)', confirm:'rgba(76,183,130,.30)', suspect:'rgba(242,201,76,.32)' };
+  UL = { flag:'var(--accent)', confirm:'var(--g-confirm)', suspect:'var(--g-suspect)' };
+  hl(k, thick) {
+    if (!k) return {};
+    return { background:this.BG[k], boxShadow:'inset 0 -'+(thick||2)+'px 0 '+this.UL[k], borderRadius:'2px', padding:'0.5px 0' };
+  }
+  renderVals() {
+    const paras = this.DATA.map(segs => ({
+      segs: segs.map(s => ({ t:s.t, hlA:this.hl(s.k,2), hlB:this.hl(s.k,2.5) })),
+    }));
+    const marks = [];
+    this.DATA.forEach(segs => segs.forEach(s => { if (s.k) marks.push({ t:s.t, color:this.UL[s.k] }); }));
+    return { paras, marks };
+  }
+}
+</script>
+</body>
+</html>

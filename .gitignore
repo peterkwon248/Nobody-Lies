@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
+
+# OMC 런타임 상태는 기계마다 다르므로 커밋하지 않는다.
+# 단 worklog 는 before-work / after-work 가 기계 사이를 오갈 때 읽는
+# 유일한 인계 파일이므로 반드시 커밋한다.
+.omc/*
+!.omc/worklog/
+
+# 기계별 로컬 권한 설정. .claude/settings.json 은 공유해도 된다.
+.claude/settings.local.json

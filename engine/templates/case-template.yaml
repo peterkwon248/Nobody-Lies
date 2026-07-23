@@ -1,0 +1,333 @@
+# =====================================================================
+#  Nobody Lies · 사건 저작 템플릿
+# =====================================================================
+#  위에서 아래로 순서대로 채운다. 순서가 중요하다.
+#  숨은 범죄에서 동기가 나오고, 인물 배치에서 기회가 나온다.
+#  거꾸로 채우면 반드시 다시 쓰게 된다.
+#
+#  다 채우면:  tsx src/cli.ts --case my-case.yaml
+#  검증기가 통과 여부와 난이도를 알려준다.
+# =====================================================================
+
+meta:
+  id: my-case
+  title: 사건 제목
+  scale: campaign          # campaign | daily
+  budget: 5                # 조사 예산. daily는 3, campaign은 5~6
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 1. 숨은 범죄 (L1)
+# ─────────────────────────────────────────────────────────────────────
+#  살인 밑에 깔린 다른 사건. 이것이 동기의 원천이고,
+#  무고한 사람들에게 각자의 비밀을 줘서 전원을 수상하게 만든다.
+#
+#  이 층이 없으면 용의자들이 전부 밋밋해진다.
+#  makesSuspicious 가 true 인 인물이 최소 3명이어야 레드 헤링이 작동한다.
+
+hidden_crime:
+  type: trafficking        # trafficking | embezzlement | blackmail | fraud | cover_up
+  alias: 가명              # 주범이 쓰던 이름. 정체 밝히기가 핵심 공란이 된다
+  description: |
+    한 문단으로. 무엇이 오갔고 누가 무엇을 했는지.
+
+  roles:
+    # ringleader   주범. 대개 살인범
+    # accomplice   공범. 피해자가 여기인 경우가 많다
+    # coerced      협박·약점 잡힌 피해자
+    # investigator 추적하던 사람
+    # unaware      무관
+    person_a: ringleader
+    victim:    accomplice
+    person_b:  coerced
+    person_c:  investigator
+    person_d:  investigator
+    person_e:  investigator
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 2. 살인 (L2)
+# ─────────────────────────────────────────────────────────────────────
+#  동기는 반드시 L1에서 파생되어야 한다.
+#  "폭로 위기" "분배금 다툼" "입막음" 같은 형태.
+
+murder:
+  culprit: person_a
+  victim: victim
+
+  motive:
+    kind: exposure_risk    # exposure_risk | money_dispute | silencing | revenge
+    description: 한 줄로
+
+  trick:
+    type: staged_suicide   # staged_suicide | locked_room | alibi_fabrication
+                           # body_moved | identity_swap | delayed_mechanism
+    props: []              # 트릭에 실제로 쓴 물건
+    staging: []            # 위장하려고 심어둔 것
+
+    # ★ 필수 ★  트릭의 허점.
+    #   허점이 없으면 플레이어가 파고들 지점이 없다.
+    #   그리고 이 허점은 반드시 누군가의 진술에 위화감 형태로 심어야 한다.
+    #   예: "자살할 사람이 왜 손님들을 불렀을까?"
+    flaw: 
+
+  window: [t0300, t0800]   # 사망 추정 구간
+  actual: t0400            # 실제 범행 시각
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 3. 무대
+# ─────────────────────────────────────────────────────────────────────
+#  walk 는 도보 분. 기회 판정의 핵심 수치다.
+#  범인만 현장에 접근 가능하도록 거리를 설계한다.
+
+locations:
+  - id: main
+    name: 본채
+    walk: { annex: 10 }
+  - id: annex
+    name: 별채
+    walk: { main: 10 }
+    available_after: 1     # 처음엔 존재를 모른다. 1장 확인 후 공개
+
+time_slots:
+  - { id: t0300, label: 새벽 3시 }
+  - { id: t0400, label: 새벽 4시 }
+  - { id: t0800, label: 오전 8시 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 4. 인물과 배치
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 이 게임에서 범인을 특정하는 것은 동기가 아니라 기회다. ★
+#  동기는 여러 명이 갖는다(레드 헤링). 기회는 범인만 가져야 한다.
+#
+#  presence 가 진실의 원본이다.
+#  무고한 사람의 진술은 여기서 자동 도출되므로 참이 보장된다.
+#  진술을 손으로 쓰지 않는다.
+
+people:
+  - id: person_a
+    name: 이름
+    age: 30
+    job: 직업
+    presence:
+      - { slot: t0300, at: main }
+      - { slot: t0400, at: room }     # ← 범행
+      - { slot: t0800, at: annex }
+
+  - id: person_b
+    name: 이름
+    age: 29
+    job: 직업
+    presence:
+      - { slot: t0800, at: main }     # 아침 도착 = 기회 없음
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 5. 범인의 거짓말
+# ─────────────────────────────────────────────────────────────────────
+#  무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다.
+#  거짓말은 범인만 한다.
+#
+#  ★ 반박 규칙 ★
+#  각 거짓말은 아래 둘 중 하나를 만족해야 한다.
+#    (a) 물증이 반박한다              ← 가장 강력. 권장
+#    (b) 2인 이상의 독립된 진술이 반박한다
+#
+#  1인의 진술로만 반박되면, 그 사람을 범인으로 가정했을 때
+#  반박이 사라져서 정답이 둘이 된다.
+
+lies:
+  - claim: 새벽 내내 별채에서 잤다
+    refuted_by: [e_burner_phone]      # 물증 id 또는 인물 id 2개 이상
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 6. 물증
+# ─────────────────────────────────────────────────────────────────────
+
+evidence:
+  - id: e_burner_phone
+    desc: 대포폰
+    where: { place: annex }           # place | belongings | body | scene
+    reveals: [f_a_is_alias]
+
+  - id: e_note
+    desc: 유서
+    where: { belongings: person_a }
+    staging: true                     # 범인이 심어둔 위장물
+    reveals: [f_a_means]
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 7. 사실 (Fact)
+# ─────────────────────────────────────────────────────────────────────
+#  검증기의 원자 단위. 유죄는 motive ∧ opportunity ∧ means 로 판정된다.
+#
+#  revealed_by 가 비어 있으면 진술에서 무료로 얻는 사실.
+#
+#  ★ 핵심 사실은 획득 경로가 2개 이상이어야 한다. ★
+#  경로가 하나뿐이면 그 조사를 안 고른 플레이어는 영영 막힌다.
+
+facts:
+  - id: f_a_opportunity
+    kind: opportunity        # opportunity | no_opportunity | motive | means
+                             # identity | contradiction | context
+    subject: person_a
+    content: 별채는 도보 10분. 새벽까지 현장에 있었음
+    revealed_by: []          # 무료
+
+  - id: f_a_is_alias
+    kind: identity
+    subject: person_a
+    content: person_a = 가명의 정체
+    revealed_by: [e_burner_phone, e_text]   # 경로 2개 ✓
+
+  - id: f_a_motive
+    kind: motive
+    subject: person_a
+    content: 폭로 임박
+    revealed_by: []
+    requires: [f_a_is_alias]
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 8. 조사 행동
+# ─────────────────────────────────────────────────────────────────────
+#  salience = 플레이어가 초반에 이 행동을 고를 성향 (0~1)
+#
+#  ★ 범인의 salience 를 낮게 설계한다. ★
+#  가장 수상해 보이는 사람이 범인이면 게임이 안 된다.
+#  동기가 선명한 사람, 최초 발견자의 salience 를 높게 둔다.
+#
+#  available_after = 이 장을 확인해야 조사 대상이 열린다.
+#  초반 선택지를 줄여 탐색을 좁히는 장치.
+
+actions:
+  - id: a_bel_b
+    label: 소지품 검사 · person_b
+    cost: 1
+    gives: [e_threat]
+    salience: 0.9
+    yield: redherring        # solution | redherring | exclusion | empty
+
+  - id: a_search_annex
+    label: 별채 수색
+    cost: 1
+    gives: [e_burner_phone]
+    salience: 0.3
+    available_after: 1
+    boosted_by:
+      - { fact: f_alias_exists, amount: 0.4 }
+    yield: solution
+
+  - id: a_autopsy
+    label: 시신 정밀 검사
+    cost: 2
+    gives: [e_body]
+    salience: 0.7
+    yield: exclusion
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 9. 보고서 — 장과 공란
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 공란 라벨은 아래 고정 어휘에서만 고른다. ★
+#  어휘는 고정, 구성은 가변이다.
+#  구성까지 고정하면 플레이어가 구조만 보고 반전을 예측한다.
+#
+#  사용 가능한 어휘:
+#    인물 · 장소 · 시각 · 도구 · 동기 · 정체 · 은폐수단 · 위장물
+#    공범 · 마지막목격자 · 접촉수단 · 은닉처 · 사인 · 물품 · 협박대상
+#
+#  candidates:
+#    closed     처음부터 목록이 알려짐 (인물·장소·시각) → 드롭다운
+#    discovered 조사로 발견해야 후보에 추가 → 확보 단어
+#
+#  ★ 각 장은 그 시점의 가용 정보만으로 확정 가능해야 한다. ★
+#  3장을 확정해야 나오는 정보가 있어야 3장이 풀린다면 교착이다.
+
+report:
+  chapters:
+    - order: 1
+      title: 도착과 발견
+      unlock_after: null            # 첫 장
+      blanks:
+        - { label: 인물, candidates: closed, answer: person_b }
+        - { label: 인물, candidates: closed, answer: person_c }
+        - { label: 장소, candidates: closed, answer: room }
+      # 이 장을 확인하면 공개되는 것
+      reveals:
+        facts: [f_cause_of_death]
+        actions: [a_search_annex]
+        narrows_window: [t0300, t0500]     # 사망 추정 축소
+        add_claims:
+          - speaker: person_c
+            content: 그러고 보니 새벽에 밖에서 인기척이 났어요
+        # ★ 추가 진술 규칙 ★
+        #   자기 비밀은 말하지 않는다.
+        #   남에 대해서, 또는 사건 전반에 대해서만 말한다.
+        #   탐색을 줄이되 추론을 대신하지 않는다.
+
+    - order: 2
+      title: 사인과 현장
+      unlock_after: 1
+      blanks:
+        - { label: 사인, candidates: discovered, answer: 일산화탄소 }
+        - { label: 도구, candidates: discovered, answer: 연탄 }
+        - { label: 은폐수단, candidates: discovered, answer: 테이프 }
+        - { label: 위장물, candidates: discovered, answer: 유서 }
+
+    - order: 5
+      title: 범인과 동기
+      unlock_after: 4
+      blanks:
+        - { label: 인물, candidates: closed, answer: person_a }
+        - { label: 동기, candidates: discovered, answer: 폭로 임박 }
+        - { label: 정체, candidates: discovered, answer: 가명 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# 10. 산문
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 프롤로그 절대 규칙 ★
+#  프롤로그는 브리핑과 진술에 이미 있는 사실만 다룬다. 새 정보는 0.
+#  분위기 살리려고 "그녀는 위험한 일에 연루되어 있었다" 한 줄 넣으면
+#  조사로 얻어야 할 정보가 무료로 풀리고 난이도가 무너진다.
+#
+#  트릭의 허점을 복선으로 심는 것은 허용된다. 이미 진술에 있는 정보이므로.
+#
+#  분량: campaign 3~4문단 / daily 2~3문장
+
+prologue: |
+  
+
+#  진술 산문. claims 는 엔진이 presence 에서 도출하므로
+#  여기에는 말투와 성격만 담는다. 사실을 새로 쓰지 않는다.
+#  화자는 무명의 수사관이므로 진술은 전부 용의자의 목소리다.
+
+voices:
+  person_a:
+    tone: 능청스럽고 태평함
+  person_b:
+    tone: 불안하고 말이 빠름
+
+
+# =====================================================================
+#  제출 전 자가 점검
+# =====================================================================
+#  [ ] 기회가 성립하는 인물이 범인 한 명뿐인가
+#  [ ] 동기가 있어 보이는 인물이 3명 이상인가 (레드 헤링)
+#  [ ] 범인의 salience 가 낮은가
+#  [ ] 트릭에 flaw 가 있고, 누군가의 진술에 심겨 있는가
+#  [ ] 모든 거짓말이 물증 또는 2인 이상으로 반박되는가
+#  [ ] 핵심 사실의 획득 경로가 2개 이상인가
+#  [ ] 1장이 조사 없이 확정 가능한가
+#  [ ] 각 장이 그 시점 가용 정보로 확정 가능한가
+#  [ ] 프롤로그에 새 정보가 없는가
+#  [ ] 공란 라벨이 전부 고정 어휘인가
+#
+#  검증기가 이 중 상당수를 자동 검사한다. 통과 후 난이도를 확인하고,
+#  기대 경로 + 1 ≤ 예산 인지 본다.
+# =====================================================================

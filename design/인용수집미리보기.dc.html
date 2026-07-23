@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+<script src="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
+<style>
+  body { margin:0; background:var(--bg-app); color:var(--fg); font-family:'Pretendard','Inter',sans-serif; }
+  a { color:var(--accent); text-decoration:none; } a:hover { color:var(--fg); }
+</style>
+</helmet>
+
+<section style="padding:40px 44px 64px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">Turn 1</span>
+    <span class="v-caption" style="color:var(--fg-3)">인용 모으기 · 다중 수집함 + 선택 팝오버</span>
+  </div>
+  <div class="v-h1" style="color:var(--fg);margin:0 0 10px;letter-spacing:-.02em">다중 수집함 인용</div>
+  <div class="v-body" style="color:var(--fg-3);max-width:680px;line-height:1.6;margin-bottom:14px">오른쪽 메모들의 <b style="color:var(--fg-2);font-weight:600">인용 모으기</b>를 켜고 끄면서, 왼쪽 진술에서 <b style="color:var(--fg-2);font-weight:600">인용</b>을 눌러 동작을 확인하세요. 켜진 수집함 개수에 따라 달라집니다.</div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px">
+    <span style="font-size:12px;color:var(--fg-3)">0개 → 새 메모 생성</span><span style="color:var(--fg-5)">·</span>
+    <span style="font-size:12px;color:var(--fg-3)">1개 → 그 메모에 바로 누적</span><span style="color:var(--fg-5)">·</span>
+    <span style="font-size:12px;color:var(--fg-3)">2개+ → 선택 팝오버</span>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start">
+
+    <!-- 진술 + 인용 -->
+    <div style="flex:none;width:440px">
+      <div class="v-ui" style="color:var(--fg-4);margin-bottom:10px">진술 · 최예나</div>
+      <div style="position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:18px 18px 20px;background:var(--bg-app)">
+        <p style="margin:0;font-size:15px;line-height:1.85;color:var(--fg-2);text-wrap:pretty">제가 도착했을때에 딱 마침 유진이도 도착해서 오랜만에 인사를 나누고 있었는데, <span style="background:rgba(76,141,255,.30);box-shadow:inset 0 -2px 0 var(--accent);border-radius:2px;padding:0.5px 0">창밖으로 무슨 연기같은게 나오고 있더라구요</span>. 저는 또 채원이가 워낙 요리도 못하고 하니까 뭐 태워먹었나 싶었는데.</p>
+
+        <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+          <div style="display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--shadow-popover);padding:4px">
+            <span style="display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);font:600 12px sans-serif;color:var(--accent)"><span style="width:9px;height:9px;border-radius:3px;background:var(--accent)"></span>표시</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);font:600 12px sans-serif;color:var(--g-confirm)"><span style="width:9px;height:9px;border-radius:3px;background:var(--g-confirm)"></span>확인</span>
+            <span style="width:1px;height:18px;background:var(--border-strong);margin:0 2px"></span>
+            <span onClick="{{ onQuoteClick }}" title="인용" style="display:inline-flex;width:28px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:{{ quoteIconColor }};background:{{ quoteIconBg }}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5"></path></svg></span>
+            <span title="복사" style="display:inline-flex;width:28px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="5" width="8" height="8" rx="1"></rect><path d="M3 10V3h7"></path></svg></span>
+          </div>
+        </div>
+
+        <sc-if value="{{ showPicker }}">
+          <div style="position:absolute;left:18px;top:calc(100% - 34px);width:280px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--shadow-popover);padding:6px;z-index:5">
+            <div class="v-micro" style="color:var(--fg-4);padding:6px 8px 8px">어느 메모에 담을까요?</div>
+            <sc-for list="{{ pinnedList }}" as="pm" hint-placeholder-count="2"><div onClick="{{ pm.onPick }}" style="display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:var(--r-sm);cursor:pointer" style-hover="background:var(--bg-active)">
+              <span style="width:20px;height:20px;border-radius:5px;background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;justify-content:center;font:600 10px sans-serif;flex:none">{{ pm.num }}</span>
+              <span style="font-size:13px;color:var(--fg-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pm.title }}</span>
+            </div></sc-for>
+            <div style="height:1px;background:var(--border);margin:5px 4px"></div>
+            <div onClick="{{ onPickNew }}" style="display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:var(--r-sm);cursor:pointer;color:var(--accent)" style-hover="background:var(--bg-active)">
+              <span style="width:20px;height:20px;border-radius:5px;border:1px dashed var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></span>
+              <span style="font-size:13px;font-weight:600">새 메모로</span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div class="v-meta" style="color:var(--fg-4);margin-top:12px;line-height:1.6;min-height:20px">{{ statusText }}</div>
+    </div>
+
+    <!-- 메모 목록 -->
+    <div style="flex:none;width:340px">
+      <div class="v-ui" style="color:var(--fg-4);margin-bottom:10px">메모 · 수집함 {{ pinnedCount }}개 켜짐</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ memos }}" as="m" hint-placeholder-count="3"><div style="{{ m.cardStyle }}">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+            <span style="width:22px;height:22px;border-radius:5px;background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;justify-content:center;font:600 11px sans-serif;flex:none">{{ m.num }}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--fg);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.title }}</span>
+            <span onClick="{{ m.onToggle }}" style="{{ m.pinStyle }}"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3h8M4 3v4l3 2-3 2v2h8v-2l-3-2 3-2V3"></path></svg>{{ m.pinLabel }}</span>
+          </div>
+          <div style="font-size:12.5px;line-height:1.6;color:var(--fg-3);white-space:pre-wrap">{{ m.body }}</div>
+        </div></sc-for>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    pinned: { m1: true, m3: true },
+    showPicker: false,
+    memos: {
+      m1: { num: '#1', title: '화로·테이프 정황', body: '"창가에도 붙어있는 테이프가 보이더라구요" — 최예나' },
+      m2: { num: '#2', title: '사쿠라 동선 의문', body: '별채 10분 거리. 새벽 음주 후 계속 수면 주장.' },
+      m3: { num: '#3', title: '새벽 3시 전화', body: '"새벽3시쯤에 채원언니한테 전화" — 장원영' },
+    },
+    flash: null,
+  };
+  order = ['m1', 'm2', 'm3'];
+  pinnedIds() { return this.order.filter(id => this.state.pinned[id]); }
+  togglePin(id) {
+    const p = Object.assign({}, this.state.pinned);
+    if (p[id]) delete p[id]; else p[id] = true;
+    this.setState({ pinned: p, showPicker: false });
+  }
+  onQuote() {
+    const pins = this.pinnedIds();
+    if (pins.length >= 2) { this.setState({ showPicker: true }); return; }
+    if (pins.length === 1) { this.pickInto(pins[0]); return; }
+    this.flashMsg('새 메모가 생성되고 인용이 담겼습니다.');
+  }
+  pickInto(id) {
+    const memos = JSON.parse(JSON.stringify(this.state.memos));
+    memos[id].body = memos[id].body + '\n"창밖으로 무슨 연기같은게…" — 최예나';
+    this.setState({ memos, showPicker: false });
+    this.flashMsg(memos[id].num + ' ' + this.state.memos[id].title + '에 인용이 담겼습니다.');
+  }
+  flashMsg(t) { clearTimeout(this._t); this._t = setTimeout(() => this.setState({ flash: null }), 2600); this.setState({ flash: t }); }
+  pinChip(on) {
+    const base = 'display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;border-radius:var(--r-pill);padding:3px 9px;cursor:pointer;flex:none;';
+    return base + (on ? 'color:var(--accent);background:var(--accent-soft);border:1px solid transparent' : 'color:var(--fg-4);background:transparent;border:1px solid var(--border-strong)');
+  }
+  renderVals() {
+    const pins = this.pinnedIds(), n = pins.length;
+    const memos = this.order.map(id => {
+      const m = this.state.memos[id], on = !!this.state.pinned[id];
+      return { num: m.num, title: m.title, body: m.body, onToggle: () => this.togglePin(id),
+        pinStyle: this.pinChip(on), pinLabel: on ? '인용 모으는 중' : '인용 모으기',
+        cardStyle: { border: '1px solid ' + (on ? 'var(--accent)' : 'var(--border)'), borderRadius: 'var(--r-md)', padding: '13px 15px', background: on ? 'var(--accent-soft)' : 'transparent' } };
+    });
+    const pinnedList = pins.map(id => ({ num: this.state.memos[id].num, title: this.state.memos[id].title, onPick: () => this.pickInto(id) }));
+    const status = this.state.flash || (n === 0 ? '수집함 0개 — 인용하면 새 메모가 만들어집니다.' : n === 1 ? ('수집함 1개 — 인용이 ' + this.state.memos[pins[0]].num + '에 바로 쌓입니다.') : ('수집함 ' + n + '개 — 인용하면 어디에 담을지 고릅니다.'));
+    return {
+      memos, pinnedList, pinnedCount: n,
+      showPicker: this.state.showPicker && n >= 2,
+      onQuoteClick: () => this.onQuote(), onPickNew: () => { this.setState({ showPicker: false }); this.flashMsg('새 메모가 생성되고 인용이 담겼습니다.'); },
+      statusText: status,
+      quoteIconColor: n > 0 ? 'var(--accent)' : 'var(--fg-3)',
+      quoteIconBg: n > 0 ? 'var(--accent-soft)' : 'transparent',
+    };
+  }
+}
+</script>
+</body>
+</html>

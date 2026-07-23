@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+<link rel="stylesheet" href="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+<script src="_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
+<style>
+  body { margin:0; background:var(--bg-app); color:var(--fg); font-family:'Pretendard','Inter',sans-serif; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { color:var(--fg); }
+  .chev { color:var(--fg-4); flex:none; }
+</style>
+</helmet>
+
+<section style="padding:40px 44px 64px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px;letter-spacing:.02em">Turn 1</span>
+    <span class="v-caption" style="color:var(--fg-3)">진술 행 · 현행 vs 제안</span>
+  </div>
+  <div class="v-h1" style="color:var(--fg);margin:0 0 10px;letter-spacing:-.02em">진술 접힌 행 비교</div>
+  <div class="v-body" style="color:var(--fg-3);max-width:680px;line-height:1.6;margin-bottom:34px">왼쪽 <a href="#1a">1a</a>는 현행, 오른쪽 <a href="#1b">1b</a>는 제안(관계칩 확대·2줄 분리 + 거주/방문 톤 구분). 제안은 <b style="color:var(--fg-2);font-weight:600">사쿠라 '산장 거주'</b>가 "밤새 현장에 있던 사람"으로 즉시 읽히도록 톤을 달리했습니다(확정 사실 · 기회 판별의 출발점).</div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+    <!-- 1a 현행 -->
+    <div id="1a" style="flex:none;width:520px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">1a</span>
+        <span class="v-ui" style="color:var(--fg);font-weight:600">현행</span>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ rows }}" as="p" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border)">
+            <span style="width:3px;align-self:stretch;background:{{ p.color }};border-radius:2px;flex:none"></span>
+            <span style="{{ p.avA }}">{{ p.ini }}</span>
+            <span style="font-size:14px;font-weight:600;color:var(--fg);flex:none">{{ p.name }}</span>
+            <span style="font-size:12px;color:var(--fg-3);flex:none">{{ p.metaInline }}</span>
+            <span style="{{ p.chipA }}">{{ p.rel }}</span>
+            <span style="font-size:13px;color:var(--fg-3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.claim }}</span>
+            <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 6l4 4 4-4"></path></svg>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 1b 제안 -->
+    <div id="1b" style="flex:none;width:560px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px">1b</span>
+        <span class="v-ui" style="color:var(--fg);font-weight:600">제안 · 관계칩 확대 + 거주/방문 톤</span>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ rows }}" as="p" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:13px;padding:15px 14px;border-bottom:1px solid var(--border)">
+            <span style="width:3px;align-self:stretch;background:{{ p.color }};border-radius:2px;flex:none"></span>
+            <span style="{{ p.avB }}">{{ p.ini }}</span>
+            <span style="display:flex;flex-direction:column;gap:3px;min-width:150px;flex:none">
+              <span style="font-size:15px;font-weight:600;color:var(--fg)">{{ p.name }}</span>
+              <span style="font-size:12px;color:var(--fg-4)">{{ p.metaSub }}</span>
+            </span>
+            <span style="{{ p.chipB }}">{{ p.rel }}</span>
+            <span style="font-size:13px;color:var(--fg-3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.claim }}</span>
+            <svg class="chev" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 6l4 4 4-4"></path></svg>
+          </div>
+        </sc-for>
+      </div>
+      <div class="v-meta" style="color:var(--fg-4);margin-top:16px;line-height:1.6;max-width:520px">
+        <span style="color:var(--fg-2)">톤 규칙</span> — 산장 거주(채운 앰버)=밤새 현장 / 아침 도착(중립 외곽선)=방문 / 불참(점선)=부재. 색이 아니라 <b style="color:var(--fg-2);font-weight:600">채움 강도</b>로 존재감을 구분해 특정 인물을 '수상하게' 보이게 하지 않습니다. (아이콘은 확정 시 DS 아이콘킷으로 추가)
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  PEOPLE = [
+    { id:'yena', name:'최예나', ini:'예', age:31, job:'댄스 강사', rel:'아침 도착', kind:'arrive', color:'#4C8DFF', claim:'요즘에는 소속사에서 춤 레슨을 하고있어요.' },
+    { id:'yujin', name:'안유진', ini:'유', age:27, job:'아이돌', rel:'아침 도착', kind:'arrive', color:'#BB6BD9', claim:'저는 아직도 아이돌을 하고있어요.' },
+    { id:'sakura', name:'미야와키 사쿠라', ini:'쿠', age:32, job:'산장지기', rel:'산장 거주', kind:'onsite', color:'#F2994A', claim:'저는 지금 아이돌 하다가 망하고 공적인 일을 하고 싶지 않아서…' },
+    { id:'yuri', name:'조유리', ini:'리', age:29, job:'가수', rel:'아침 도착', kind:'arrive', color:'#4CB782', claim:'저는 아직 가수생활을 하고있어요.' },
+    { id:'wonyoung', name:'장원영', ini:'원', age:26, job:'아이돌', rel:'불참·늦게 출발', kind:'absent', color:'#F2C94C', claim:'새벽3시쯤에 채원언니한테 전화가 왔어요.' },
+  ];
+  av(p, size) {
+    return `width:${size}px;height:${size}px;border-radius:6px;flex:none;display:inline-flex;align-items:center;justify-content:center;font:600 ${Math.round(size*0.42)}px/1 'Pretendard',sans-serif;color:#fff;background:${p.color}`;
+  }
+  chipA() {
+    return 'font-size:11px;font-weight:600;color:var(--fg-2);background:rgba(255,255,255,.06);border-radius:999px;padding:2px 8px;flex:none;white-space:nowrap';
+  }
+  chipBStr(kind) {
+    const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:999px;padding:5px 12px;flex:none;white-space:nowrap;';
+    if (kind === 'onsite') return base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)';
+    if (kind === 'absent') return base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)';
+    return base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)';
+  }
+  chipObj(kind) {
+    const base = { display:'inline-flex', alignItems:'center', gap:'5px', fontSize:'12.5px', fontWeight:600, borderRadius:'999px', padding:'5px 11px', flex:'none', whiteSpace:'nowrap' };
+    if (kind === 'onsite') return Object.assign(base, { color:'#F2994A', background:'rgba(242,153,74,.16)', border:'1px solid rgba(242,153,74,.35)' });
+    if (kind === 'absent') return Object.assign(base, { color:'var(--fg-3)', background:'transparent', border:'1px dashed var(--border-strong)' });
+    return Object.assign(base, { color:'var(--fg-2)', background:'transparent', border:'1px solid var(--border-strong)' });
+  }
+  iconEl(kind) {
+    const paths = { onsite:['M2 7l6-4.5L14 7','M3.5 6.5V13h9V6.5'], arrive:['M9 2h4v12H9','M2 8h7','M6 5l3 3-3 3'], absent:['M13 8.5A5 5 0 1 1 7.5 3a4 4 0 0 0 5.5 5.5z'] }[kind] || [];
+    return React.createElement('svg', { width:13, height:13, viewBox:'0 0 16 16', fill:'none', stroke:'currentColor', strokeWidth:1.5, strokeLinecap:'round', strokeLinejoin:'round' }, paths.map((d,i)=>React.createElement('path',{key:i,d})));
+  }
+  chipEl(kind, label) {
+    return React.createElement('span', { style: this.chipObj(kind) }, this.iconEl(kind), label);
+  }
+  renderVals() {
+    const rows = this.PEOPLE.map(p => ({
+      name: p.name, ini: p.ini, color: p.color, rel: p.rel, claim: p.claim,
+      metaInline: '여 · ' + p.age + ' · ' + p.job,
+      metaSub: '여 · ' + p.age + ' · ' + p.job,
+      avA: this.av(p, 24), avB: this.av(p, 34),
+      chipA: this.chipA(), chipB: this.chipBStr(p.kind),
+    }));
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>
