@@ -72,8 +72,8 @@ murder:
     #   예: "자살할 사람이 왜 손님들을 불렀을까?"
     flaw: 
 
-  window: [t0300, t0800]   # 사망 추정 구간
-  actual: t0400            # 실제 범행 시각
+  window: t2               # 사망 추정 구간 = isWindow 슬롯 (아래 time_slots)
+  actual: t2               # 실제 범행 시각. 범인 presence 가 이 슬롯에 현장(scene)
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -81,20 +81,34 @@ murder:
 # ─────────────────────────────────────────────────────────────────────
 #  walk 는 도보 분. 기회 판정의 핵심 수치다.
 #  범인만 현장에 접근 가능하도록 거리를 설계한다.
+#  at_lodge=false 는 산장 밖(off-site) — 사망 시간대에 여기 있으면 기회가 없다.
+#  scene: true 는 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 검증 실패한다.
 
 locations:
   - id: main
     name: 본채
+    at_lodge: true
     walk: { annex: 10 }
+  - id: room
+    name: 피해자의 방
+    at_lodge: true
+    scene: true            # 사건 현장
   - id: annex
     name: 별채
+    at_lodge: true
     walk: { main: 10 }
     available_after: 1     # 처음엔 존재를 모른다. 1장 확인 후 공개
+  - id: home
+    name: 자택 (현장 밖)
+    at_lodge: false        # off-site — 무고한 자의 알리바이
 
+# 슬롯 4개 권장. 하나에 window: true (사망 추정). 격자의 열이 된다.
+# 어휘를 열로 고정하면 진술 격자가 사건마다 같은 모양이라 UI 가 단순해진다.
 time_slots:
-  - { id: t0300, label: 새벽 3시 }
-  - { id: t0400, label: 새벽 4시 }
-  - { id: t0800, label: 오전 8시 }
+  - { id: t0, label: 전날 밤 }
+  - { id: t1, label: 새벽 3시 }
+  - { id: t2, label: 새벽 3–8시, window: true }
+  - { id: t3, label: 오전 }
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -104,25 +118,38 @@ time_slots:
 #  동기는 여러 명이 갖는다(레드 헤링). 기회는 범인만 가져야 한다.
 #
 #  presence 가 진실의 원본이다.
-#  무고한 사람의 진술은 여기서 자동 도출되므로 참이 보장된다.
-#  진술을 손으로 쓰지 않는다.
+#  무고한 사람의 진술은 여기서 자동 도출되므로 참이 보장된다 — claim 을 쓰지 않는다.
+#
+#  ★ 범인만 claim 을 쓴다 ★
+#    claim = 위치 진술. presence(진실)와 다른 알리바이 거짓말.
+#    범인은 사망 시간대(window)에 현장에 있었지만 다른 곳에 있었다고 진술한다.
+#    이 거짓말이 없으면 잡을 것이 없다(검증 실패).
+#    무고한 자는 claim 을 생략한다 → 진술 = presence, 거짓이 섞일 수 없다.
 
 people:
+  # 범인 — presence(진실) + claim(거짓말)
   - id: person_a
     name: 이름
     age: 30
     job: 직업
     presence:
-      - { slot: t0300, at: main }
-      - { slot: t0400, at: room }     # ← 범행
-      - { slot: t0800, at: annex }
+      - { slot: t0, at: main }
+      - { slot: t1, at: main }
+      - { slot: t2, at: room }        # ← 범행. window 슬롯에 현장
+      - { slot: t3, at: annex }
+    claim:                            # 알리바이: 새벽부터 별채에 있었다고 진술
+      - { slot: t0, at: main }
+      - { slot: t1, at: annex }       # 거짓 (진실은 main)
+      - { slot: t2, at: annex }       # 거짓 (진실은 room = 현장)
+      - { slot: t3, at: annex }
 
+  # 무고 — presence 만. 진술은 도출된다
   - id: person_b
     name: 이름
     age: 29
     job: 직업
     presence:
-      - { slot: t0800, at: main }     # 아침 도착 = 기회 없음
+      - { slot: t3, at: main }        # 아침 도착 = 기회 없음. 앞 슬롯은 미확인
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -266,7 +293,7 @@ report:
       reveals:
         facts: [f_cause_of_death]
         actions: [a_search_annex]
-        narrows_window: [t0300, t0500]     # 사망 추정 축소
+        narrows_window: [t2, t2]     # 사망 추정 축소 (window 슬롯 기준)
         add_claims:
           - speaker: person_c
             content: 그러고 보니 새벽에 밖에서 인기척이 났어요

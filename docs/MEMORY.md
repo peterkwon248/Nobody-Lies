@@ -173,7 +173,24 @@ npm run build
 
    산문·표시 라벨의 `대포폰`(조사 결과 카드, 관계 그래프 노드, 평면도 마커, `김선생` 출처 설명)은 그대로 뒀다. 후보 목록이 아니라 자연어 지칭이라 오답을 유발하지 않는다.
 
-4. **`presence → 진술 주장 도출`이 어디에도 구현돼 있지 않음** — `SYSTEM-DECISIONS.md` §7이 "코드가 담당(전부)"에 올린 항목이고 `templates/README.md`가 "무고한 사람은 거짓말하지 않는다를 보장하는 유일한 방법"이라고 못박았는데, 검증기에 도출 함수가 없고 프로토타입은 `CLAIMS`/`CLAIM_LOC`를 손으로 쓴다. 엔진 `presence`는 무고한 4명 전원 `{t0800, main}` 한 줄뿐인 스텁이고 슬롯 어휘도 다르다(엔진 `t0300/t0330/t0400/t0500/t0800` vs 프로토타입 `t0~t3`).
+4. ~~**`presence → 진술 주장 도출` 미구현**~~ — **해소됨 (2026-07-24). Option A(추가 계층, guilt 로직 불변).**
+
+   `presence`가 죽은 데이터였다 — 스키마에 있는데 검증기가 한 번도 안 읽었고, 무고한 4명은 전원 `{t0800, main}` 스텁, opportunity 는 손으로 쓴 fact(`f_*_opp`/`f_*_no`)에서 나왔다. `templates/README.md`가 "무고한 사람은 거짓말하지 않는다를 보장하는 유일한 방법"이라 못박은 도출이 없었다.
+
+   **아키텍처** (`types.ts` + `deriver.ts` + `verifier.ts` §6.6):
+   - `presence` = 진실 위치, `Person.claim` = 위치 진술. **claim 오버라이드가 없으면 진술 = presence** — 손으로 안 쓰므로 무고한 자에게 거짓이 섞일 수 없다. 범인만 claim(알리바이 거짓말)을 선언
+   - `deriver.ts`: `claimGrid(p) = p.claim ?? p.presence`, `tellsTruth(p) = !p.claim`
+   - `Case.slots`(4슬롯 레지스트리, `isWindow`) + `Case.locations`(장소, `atLodge`) + `incident.scene` 신설
+   - 검증기 §6.6 검사 3종: (i) presence/claim 슬롯·장소 참조 무결성 (ii) 무고한 자가 사망 시간대에 현장에 없는가 — 있으면 기회 발생 → 유일성 붕괴 (iii) 범인이 window 에서 위치를 거짓말하는가 — 반박할 거짓이 존재해야 함
+   - 음성 테스트 4종 전부 물어 확인: 무고한 자 현장 배치 / 범인 claim 제거 / 범인 claim=진실 / 미등록 슬롯
+
+   **결정 (사용자 승인)**:
+   - **슬롯 어휘: 프로토타입 4슬롯(`t0~t3`) 정본.** 엔진 5슬롯(`t0300~t0800`) 폐기 — 격자는 플레이어가 보는 것과 같아야 하고, window 내부 이동은 범인 presence(진실)에만 담는다. `narrowsWindow`는 sub-slot 정밀도가 없어 window(`t2`)를 가리키고 축소 서사는 narration 이 담음
+   - **opportunity 는 여전히 손 fact.** presence 에서 도출하지 않는다(Option B는 보류). guilt 판정·"기대 5회"가 손 fact에서 나오므로 건드리면 난이도가 미검증 영역으로 간다. presence 계층은 **추가로만** — 격자 생성 + 무고 보장. 빌드 재검증 결과 난이도 hard·기대 5회 **불변** 확인
+
+   **프로토타입은 편집 없음** — `CLAIMS`/`CLAIM_LOC`/`LOCATIONS`(scene·offsite 표식)가 엔진 도출 모델과 이미 완전 일치한다(엔진 데이터를 프로토타입 claim에서 역설계했으므로). 이제 엔진이 이 데이터를 정본으로 쥐고 도출·검증한다. CLI 에 진술 격자 출력 추가
+
+   **남은 것 (Option B, 보류)**: opportunity 를 presence 에서 도출해 손 fact(`f_*_opp`/`f_*_no`)를 없애기. 이 계층이 플레이테스트로 검증된 뒤 별도 리팩터. 그때 slots 의 `atLodge`/window 로 기회를 자동 판정하면 생성기가 opportunity 를 손으로 안 써도 된다.
 
 ---
 

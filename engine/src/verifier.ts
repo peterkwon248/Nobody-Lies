@@ -272,6 +272,58 @@ export function verify(c: Case): VerifyResult {
           `${ch.order}장 '${b.answer}'(확보 후보)이 어떤 물증으로도 확보되지 않는다 — 채울 수 없어 막힌다`,
         )
 
+  // 6.6 presence → 진술 도출 무결성
+  //
+  // 무고한 자의 진술은 presence 에서 도출된다(claim 오버라이드 없음). 손으로
+  // 쓰지 않으므로 거짓이 섞일 수 없다. 이 검사는 그 도출 모델이 성립하는지 본다:
+  //   (i)  presence·claim 의 슬롯·장소가 레지스트리에 있는가 (참조 무결성)
+  //   (ii) 무고한 자가 사망 시간대에 현장에 없는가 (있으면 기회가 생겨 유일성 붕괴)
+  //   (iii)범인이 위치를 거짓말하는가 (반박할 거짓이 존재해야 함)
+  const slotIds = new Set(c.slots.map((s) => s.id))
+  const locIds = new Set(c.locations.map((l) => l.id))
+  const windowSlots = new Set(c.slots.filter((s) => s.isWindow).map((s) => s.id))
+  const scene = c.incident.scene
+
+  for (const p of c.people)
+    for (const cell of [...p.presence, ...(p.claim ?? [])]) {
+      if (!slotIds.has(cell.slot))
+        errors.push(`'${p.name}'의 진술/위치 슬롯 '${cell.slot}'이 slots 레지스트리에 없다`)
+      if (!locIds.has(cell.location))
+        errors.push(`'${p.name}'의 진술/위치 장소 '${cell.location}'이 locations 레지스트리에 없다`)
+    }
+
+  if (windowSlots.size === 0)
+    warnings.push('사망 시간대(isWindow) 슬롯이 없다 — 기회 판별의 기준이 없다')
+  if (!scene) warnings.push('incident.scene 이 없다 — 무고한 자의 현장 부재를 검사할 수 없다')
+
+  if (scene)
+    for (const p of c.people) {
+      if (p.id === c.culprit) continue
+      const atScene = p.presence.some((cell) => windowSlots.has(cell.slot) && cell.location === scene)
+      if (atScene)
+        errors.push(
+          `무고한 '${p.name}'이 사망 시간대에 현장(${scene})에 있다 — 진술 도출상 기회가 생겨 유일성이 무너진다`,
+        )
+    }
+
+  const culpritP = c.people.find((p) => p.id === c.culprit)
+  if (culpritP) {
+    if (!culpritP.claim)
+      errors.push(
+        `범인 '${culpritP.name}'에게 claim(위치 진술)이 없다 — 진실만 말하면 반박할 거짓이 없다`,
+      )
+    else if (windowSlots.size > 0) {
+      const trueAt = new Map(culpritP.presence.map((cell) => [cell.slot, cell.location]))
+      const liesInWindow = culpritP.claim.some(
+        (cell) => windowSlots.has(cell.slot) && trueAt.get(cell.slot) !== cell.location,
+      )
+      if (!liesInWindow)
+        errors.push(
+          `범인 '${culpritP.name}'의 진술이 사망 시간대 진실 위치와 같다 — 알리바이 거짓말이 없어 잡을 수 없다`,
+        )
+    }
+  }
+
   // 7. 부문 분포
   const domainCount: Record<string, number> = { 물증: 0, 정황: 0, 심증: 0 }
   for (const ch of c.chapters)

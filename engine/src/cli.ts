@@ -1,5 +1,6 @@
 import { mountainLodge } from './cases/mountain-lodge.js'
 import { verify } from './verifier.js'
+import { claimGrid, tellsTruth, trueLocationAt } from './deriver.js'
 
 const c = mountainLodge
 const r = verify(c)
@@ -17,6 +18,25 @@ console.log('  ' + '-'.repeat(50))
 console.log('  ' + w('인물', 20) + '동기   기회   수단   판정')
 for (const g of r.guiltTable)
   console.log(`  ${w(name(g.person), 20)}${mk(g.motive)}      ${mk(g.opportunity)}      ${mk(g.means)}      ${g.guilty ? '유죄' : ''}`)
+
+// 진술 격자 — presence 에서 도출된다. 범인만 진실과 다르게 말한다(★ = 거짓)
+console.log('\n  진술 격자  (도출: 무고=진실 / 범인=거짓말)')
+console.log('  ' + '-'.repeat(50))
+{
+  const locLabel = (id: string) => c.locations.find((l) => l.id === id)?.label ?? id
+  console.log('  ' + w('인물', 24) + c.slots.map((s) => w(s.label, 12)).join(''))
+  for (const p of c.people) {
+    const grid = claimGrid(p)
+    const cells = c.slots.map((s) => {
+      const said = grid.find((g) => g.slot === s.id)?.location
+      if (!said) return w('·', 12)
+      const truth = trueLocationAt(p, s.id)
+      const lie = !tellsTruth(p) && truth !== undefined && truth !== said
+      return w(locLabel(said) + (lie ? ' ★' : ''), 12)
+    })
+    console.log(`  ${w(name(p.id) + (tellsTruth(p) ? '' : ' (범인)'), 24)}${cells.join('')}`)
+  }
+}
 
 console.log('\n  장 구성')
 console.log('  ' + '-'.repeat(50))

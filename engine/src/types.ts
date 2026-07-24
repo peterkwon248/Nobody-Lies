@@ -27,13 +27,40 @@ export type BlankLabel =
   | '은폐수단' | '위장물' | '마지막목격자'
   | '접촉수단' | '은닉처' | '사인' | '물품' | '협박대상'
 
+export type PresenceCell = { slot: SlotId; location: LocationId }
+
 export type Person = {
   id: PersonId
   name: string
   age: number
   job: string
   hiddenRole: HiddenRole
-  presence: { slot: SlotId; location: LocationId }[]
+  /** 진실 위치. 누가 언제 어디 있었는지. 부분적일 수 있다(미확인 슬롯 = 격자 공란) */
+  presence: PresenceCell[]
+  /**
+   * 위치 진술. 진실(presence)과 다르게 말할 때만 선언한다.
+   * 없으면 진술 = presence — 무고한 자는 거짓말하지 않으므로 진술이 도출된다.
+   * 이것이 "무고한 사람은 거짓말하지 않는다"를 보장하는 유일한 방법이다:
+   * 손으로 쓰지 않으므로 실수로 거짓이 섞일 수 없다.
+   * 범인은 여기에 알리바이 거짓말(위치)을 담는다.
+   */
+  claim?: PresenceCell[]
+}
+
+/** 시간 슬롯. 순서는 배열 순서. 격자의 열이 된다 */
+export type Slot = {
+  id: SlotId
+  label: string
+  /** 사망 추정 시간대. 범인의 위치 거짓말이 이 슬롯에서 결정적이다 */
+  isWindow?: boolean
+}
+
+/** 장소. 격자·평면도의 위치 어휘 */
+export type Location = {
+  id: LocationId
+  label: string
+  /** 산장 부지 안인가. 부지 밖(off-site)은 사건 현장 접근이 불가능하다 */
+  atLodge: boolean
 }
 
 export type Fact = {
@@ -199,7 +226,13 @@ export type Case = {
     /** 사건의 대상. 사람이 아닐 수도 있다 */
     subject: string
     description: string
+    /** 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 기회가 생긴다 */
+    scene?: LocationId
   }
+  /** 시간 슬롯 레지스트리. 진술 격자의 열 */
+  slots: Slot[]
+  /** 장소 레지스트리. presence·claim·공란의 위치 어휘 */
+  locations: Location[]
   /** 문장의 출처. LLM 생성분은 파일에 고정된다 */
   prose?: {
     source: 'authored' | 'template' | 'llm'

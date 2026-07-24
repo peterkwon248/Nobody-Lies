@@ -13,30 +13,62 @@ export const mountainLodge: Case = {
     kind: 'homicide',
     subject: 'chaewon',
     description: '산장 장기 투숙 중이던 소설가가 위장 자살로 살해됨',
+    scene: 'room',
   },
   prose: { source: 'authored' },
   victim: 'chaewon',
   culprit: 'sakura',
 
+  // 시간 슬롯 4개. 프로토타입 격자와 동일 어휘 (정본)
+  slots: [
+    { id: 't0', label: '전날 밤' },
+    { id: 't1', label: '새벽 3시' },
+    { id: 't2', label: '새벽 3–8시', isWindow: true },
+    { id: 't3', label: '오전' },
+  ],
+
+  // 장소. atLodge=false 는 산장 밖 — 사망 시간대 현장 접근 불가
+  locations: [
+    { id: 'main', label: '본채', atLodge: true },
+    { id: 'room', label: '채원의 방', atLodge: true },
+    { id: 'annex', label: '별채', atLodge: true },
+    { id: 'approach', label: '진입로', atLodge: true },
+    { id: 'home', label: '자택', atLodge: false },
+  ],
+
   people: [
     {
       id: 'sakura', name: '미야와키 사쿠라', age: 32, job: '산장지기',
       hiddenRole: 'ringleader',
+      // 진실: 새벽까지 본채에서 피해자와 음주 → 사망 시간대에 방(현장) → 별채
       presence: [
-        { slot: 't0300', location: 'main' },
-        { slot: 't0330', location: 'annex' },
-        { slot: 't0400', location: 'room' },
-        { slot: 't0800', location: 'annex' },
+        { slot: 't0', location: 'main' },
+        { slot: 't1', location: 'main' },
+        { slot: 't2', location: 'room' },
+        { slot: 't3', location: 'annex' },
+      ],
+      // 알리바이 거짓말: 새벽부터 별채에서 잤다고 진술한다 (t1·t2 위치 위조)
+      claim: [
+        { slot: 't0', location: 'main' },
+        { slot: 't1', location: 'annex' },
+        { slot: 't2', location: 'annex' },
+        { slot: 't3', location: 'annex' },
       ],
     },
+    // 무고한 넷 — claim 없음. presence 를 그대로 진술한다 (거짓 불가)
     { id: 'yena', name: '최예나', age: 31, job: '댄스 강사', hiddenRole: 'investigator',
-      presence: [{ slot: 't0800', location: 'main' }] },
+      presence: [{ slot: 't3', location: 'main' }] },
     { id: 'yujin', name: '안유진', age: 27, job: '아이돌', hiddenRole: 'investigator',
-      presence: [{ slot: 't0800', location: 'main' }] },
+      presence: [{ slot: 't3', location: 'main' }] },
     { id: 'yuri', name: '조유리', age: 29, job: '가수', hiddenRole: 'coerced',
-      presence: [{ slot: 't0800', location: 'main' }] },
+      presence: [{ slot: 't3', location: 'main' }] },
     { id: 'wonyoung', name: '장원영', age: 26, job: '아이돌', hiddenRole: 'investigator',
-      presence: [{ slot: 't0800', location: 'main' }] },
+      // 자택에서 전화 수신·늦잠 → 늦게 이동 중. 산장 밖이라 기회 없음
+      presence: [
+        { slot: 't1', location: 'home' },
+        { slot: 't2', location: 'home' },
+        { slot: 't3', location: 'approach' },
+      ] },
   ],
 
   trick: {
@@ -193,7 +225,7 @@ export const mountainLodge: Case = {
       requiresFacts: ['f_last_seen', 'f_wy_call'],
       blanks: [
         { label: '마지막목격자', candidates: 'closed', answer: 'sakura' },
-        { label: '시각', candidates: 'closed', answer: 't0300' },
+        { label: '시각', candidates: 'closed', answer: 't1' },
         { label: '장소', candidates: 'closed', answer: 'main' },
         { label: '인물', candidates: 'closed', answer: 'wonyoung' },
       ],
@@ -261,7 +293,9 @@ export const mountainLodge: Case = {
     {
       trigger: { on: 'action', actionId: 'a_autopsy' },
       yield: 'narrow',
-      narrowsWindow: ['t0300', 't0500'],
+      // 4슬롯 정본에선 window(t2, 3–8시) 내부의 3–5시 축소를 슬롯으로 표현하지 않는다.
+      // 축소의 서사는 narration 이 담고, 슬롯은 window 를 가리킨다.
+      narrowsWindow: ['t2', 't2'],
       narration: '부검 결과 사망 시각이 새벽 3시에서 5시 사이로 좁혀졌다.',
       surface: 'overview',
     },
