@@ -212,26 +212,29 @@ export const mountainLodge: Case = {
     },
     {
       order: 4, title: '감춰진 사건',
-      requiresFacts: ['f_alias_exists', 'f_sakura_is_alias'],
+      // f_sakura_is_alias 는 5장으로 옮겼다. 정체를 알아야 열리는 장에서
+      // 그 정체를 답으로 쓰는 구조였고, 범인 지목(5장)이 형식적이 된다.
+      requiresFacts: ['f_alias_exists'],
       blanks: [
         { label: '물품', candidates: 'discovered', answer: '마약' },
         { label: '정체', candidates: 'discovered', answer: '김선생' },
         { label: '협박대상', candidates: 'closed', answer: 'yuri' },
-        { label: '인물', candidates: 'closed', answer: 'sakura' },
+        { label: '인물', candidates: 'closed', answer: 'wonyoung' },
       ],
       epilogueOrder: 4,
-      epilogue: '그 산장에는 마약이 흐르고 있었다. 유통을 쥔 것은 김선생이라는 이름의 누군가였고, 유리는 그 이름에 붙들려 있었다. 김선생은, 사쿠라였다.',
+      epilogue: '그 산장에는 마약이 흐르고 있었다. 유통을 쥔 것은 김선생이라는 이름의 누군가였고, 유리는 그 이름에 붙들려 있었다. 며칠 전, 원영이 그 실체를 캐묻기 시작한 참이었다.',
     },
     {
       order: 5, title: '범인과 동기',
-      requiresFacts: ['f_sakura_motive', 'f_sakura_opp'],
+      // 정체 폭로(사쿠라 = 김선생)는 여기가 클라이맥스다.
+      requiresFacts: ['f_sakura_is_alias', 'f_sakura_motive', 'f_sakura_opp'],
       blanks: [
         { label: '인물', candidates: 'closed', answer: 'sakura', isAccusation: true },
         { label: '동기', candidates: 'discovered', answer: '폭로 임박' },
         { label: '은닉처', candidates: 'discovered', answer: '별채 대포폰' },
       ],
       epilogueOrder: 5,
-      epilogue: '채원이 모든 것을 털어놓으려 하자, 사쿠라는 폭로가 임박했음을 알았다. 새벽, 그는 별채에서 연탄을 들고 본채로 향했다. 증거는 별채의 대포폰 안에 잠들어 있었다.',
+      epilogue: '김선생은, 사쿠라였다. 채원이 모든 것을 털어놓으려 하자 사쿠라는 폭로가 임박했음을 알았다. 새벽, 그는 별채에서 연탄을 들고 본채로 향했다. 증거는 별채의 대포폰 안에 잠들어 있었다.',
     },
   ],
 
