@@ -1,4 +1,4 @@
-import type { Case, Action, FactId, VerifyResult, GuiltCheck } from './types.js'
+import type { Case, Action, FactId, EvidenceId, VerifyResult, GuiltCheck } from './types.js'
 import { DOMAIN_OF } from './types.js'
 
 /**
@@ -243,8 +243,28 @@ export function verify(c: Case): VerifyResult {
   const decoyRatio = c.reveals.length ? decoys.length / c.reveals.length : 0
 
   // 6.5 discovered 공란의 답이 실제로 확보 가능한가
+  //
+  // 물증이 목록에 존재하는 것만으로는 부족하다. 그 물증이 실제로 조사로
+  // 도달 가능해야 한다 — 어떤 action.gives 에 등장하거나 atScene(현장 자유)
+  // 이어야 한다. 도달 불가한 물증의 yieldsTerms 는 확보할 수 없다.
+  // (이 검사가 약하면 '주는 조사가 없는 물증'이 확보 단어를 공짜로 통과시켜
+  //  프로토타입과 어긋난 채로 green 이 뜬다.)
+  const reachableEvidence = new Set<EvidenceId>()
+  for (const a of c.actions) a.gives.forEach((e) => reachableEvidence.add(e))
+  for (const e of c.evidence) if (e.atScene) reachableEvidence.add(e.id)
+
   const obtainableTerms = new Set<string>()
-  for (const e of c.evidence) (e.yieldsTerms ?? []).forEach((t) => obtainableTerms.add(t))
+  for (const e of c.evidence)
+    if (reachableEvidence.has(e.id))
+      (e.yieldsTerms ?? []).forEach((t) => obtainableTerms.add(t))
+
+  // 확보 단어를 주지만 도달 불가한 물증은 데이터 오류로 잡는다
+  for (const e of c.evidence)
+    if ((e.yieldsTerms?.length ?? 0) > 0 && !reachableEvidence.has(e.id))
+      errors.push(
+        `물증 '${e.id}'(${e.description})이 확보 단어를 주지만 어떤 조사로도 나오지 않는다 — atScene 표식이 빠졌거나 조사에 연결되지 않았다`,
+      )
+
   for (const ch of c.chapters)
     for (const b of ch.blanks)
       if (b.candidates === 'discovered' && !obtainableTerms.has(b.answer))

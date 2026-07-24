@@ -1369,7 +1369,7 @@ class Component extends DCLogic {
     '유산 상속': { fk: '기록 정황', dk: '기록에 관련 정황이 있었다.', fe: 'Record context', de: 'Related context appeared in records.' },
   };
   termIconPath(w) { return this.ICONS[w] || 'M4 4h8v8H4z'; }
-  TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '마약'], 'belongings:sakura': ['유서'], 'belongings:yuri': ['치정'] };
+  TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:yuri': ['치정'] };
   PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '채원의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
   INV_ACTIONS = [{ id: 'belongings', k: 'actBelong', cost: 1, mode: 'person' }, { id: 'search', k: 'actSearch', cost: 1, mode: 'place' }, { id: 'phone', k: 'actPhone', cost: 1, mode: 'person' }, { id: 'alibi', k: 'actAlibi', cost: 1, mode: 'pair' }, { id: 'autopsy', k: 'actAutopsy', cost: 2, mode: 'none' }, { id: 'fixture', k: 'actFixture', cost: 1, mode: 'fixture' }];
   PROLOG = ['산길 끝에 산장이 하나 있다. 김채원은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.', '분위기를 바꿔보려 했는지, 채원은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.', '그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.', '문이 열렸을 때, 김채원은 이미 숨을 쉬지 않았다.'];
@@ -1551,7 +1551,7 @@ class Component extends DCLogic {
   targetKey(action, targets) { const a = this.INV_ACTIONS.find(x => x.id === action); if (a.mode === 'none') return 'body'; if (a.mode === 'pair') return targets.slice().sort().join('+'); return targets[0]; }
   resultFor(a, k) {
     const M = {
-      'search:annex': { type: 'solution', tKo: '대포폰 발견', tEn: 'Burner phone', dKo: '별채 서랍에서 발신 전용 대포폰. \u2018김선생\u2019 명의 거래 메시지가 남아 있다.', dEn: 'A burner phone in the annex drawer, with dealing messages under the alias \u201cKim.\u201d', ev: 'annexPhone' },
+      'search:annex': { type: 'solution', tKo: '대포폰 발견', tEn: 'Burner phone', dKo: '별채 게임기 뒤에서 발신 전용 대포폰. \u2018김선생\u2019 명의 거래 메시지가 남아 있다.', dEn: 'A burner phone behind the annex game console, with dealing messages under the alias \u201cKim.\u201d', ev: 'annexPhone' },
       'belongings:sakura': { type: 'solution', tKo: '유서 초안과 금고 열쇠', tEn: 'Draft note & safe key', dKo: '사쿠라의 짐에서 김채원 명의 유서 초안과 금고 열쇠가 나왔다. 위장에 쓰인 물건이다.', dEn: 'A forged draft note in Chae-won\u2019s name and a safe key, found in Sakura\u2019s things.' },
       'autopsy:body': { type: 'solution', tKo: '일산화탄소 중독 확정', tEn: 'CO poisoning confirmed', dKo: '사인은 일산화탄소 중독. 외상과 약물 반응은 없다. 사망 추정이 새벽 3~5시로 좁혀졌다.', dEn: 'Cause of death is CO poisoning; no wounds or drugs. The window narrows to 03:00\u201305:00.' },
       'belongings:wonyoung': { type: 'solution', tKo: '\u2018김선생\u2019 추적 메모', tEn: 'Trace on \u201cKim\u201d', dKo: '원영의 폰에 유통망 우두머리를 추적한 정황과 김선생 번호가 남아 있다.', dEn: 'Won-young\u2019s phone holds a trace on the ring\u2019s head and Kim\u2019s number.', ev: 'annexPhone' },
@@ -1696,7 +1696,7 @@ class Component extends DCLogic {
   REVEALS = {
     s1: { narrow: true, yield: 'narrow', targets: ['search:annex'], statements: [{ pid: 'yujin', y: 'flavor', text: '자살할 사람이 우리를 왜 불렀을까요? 초대장은 전날 밤에야 급하게 돌았어요.' }] },
     s3: { yield: 'decoy', statements: [{ pid: 'wonyoung', y: 'path', text: '유진 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요.' }, { pid: 'yuri', y: 'decoy', text: '아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요.' }] },
-    s4: { yield: 'path', terms: ['폭로 임박'], statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 쿠라 언니 쪽이었죠.' }] },
+    s4: { yield: 'path', statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 쿠라 언니 쪽이었죠.' }] },
   };
   CLAIM_REVEALS = {
     s3: [{ pid: 'yuri', tid: 't1', ko: '통화 중 (본인 주장)', en: 'On a call (claim)' }],

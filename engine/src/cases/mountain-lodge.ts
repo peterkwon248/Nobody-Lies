@@ -65,13 +65,15 @@ export const mountainLodge: Case = {
     { id: 'e_yena_info', description: '예나 소지품 — 연습생 제보' },
     { id: 'e_yujin_patch', description: '파스', foundAt: '안유진 소지품',
       record: '개봉된 어깨용 파스 한 통. 처방전은 없었고 구매처를 묻자 대답하지 않았다.' },
-    { id: 'e_receipt', description: '연탄 영수증 — 구매자는 별채 거주자', yieldsTerms: ['연탄'] },
+    // 영수증의 값은 '구매자 = 별채 거주자'라는 경로 단서(reveals 로 공개)이지
+    // '연탄'이라는 단어가 아니다. 연탄은 현장에서 이미 확보되므로 중복을 뺀다.
+    { id: 'e_receipt', description: '연탄 영수증 — 구매자는 별채 거주자' },
     { id: 'e_tape', description: '테이프', foundAt: '채원의 방 · 방문과 창가',
       record: '문틈과 창문 가장자리가 안쪽에서 막혀 있었다. 폭 5cm 청테이프를 두 겹으로 겹쳐 붙였다.',
-      yieldsTerms: ['테이프'] },
+      atScene: true, yieldsTerms: ['테이프'] },
     { id: 'e_briquette', description: '연탄', foundAt: '채원의 방 · 화로',
       record: '두 장이 완전히 탔고 재만 남았다. 화로는 방 한가운데로 옮겨져 있었다.',
-      yieldsTerms: ['연탄'] },
+      atScene: true, yieldsTerms: ['연탄'] },
     { id: 'e_time', description: '정밀 사망 시각', yieldsTerms: ['일산화탄소 중독'] },
     { id: 'e_yuri_call', description: '유리 통화내역 — 새벽 피해자와 통화' },
     { id: 'e_wy_call_log', description: '원영 통화내역 — 새벽 3시 수신' },

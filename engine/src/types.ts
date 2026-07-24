@@ -69,6 +69,12 @@ export type Evidence = {
     lines: { side?: 'in' | 'out'; at?: string; text: string }[]
   }
   isStaging?: boolean
+  /**
+   * 현장 자유 물증. 조사 없이 처음부터 열람 가능하다 (진술·현장에서 무료).
+   * 어떤 action.gives 에도 없으면서 확보 단어를 주는 물증은 이 표식이 있어야
+   * 검증기가 "확보 가능"으로 인정한다. 없으면 도달 불가로 판정한다.
+   */
+  atScene?: boolean
   /** 이 물증을 확보하면 확보 단어에 추가되는 후보들 */
   yieldsTerms?: string[]
 }
