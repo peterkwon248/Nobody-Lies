@@ -13,3 +13,7 @@ Thumbs.db
 
 # 기계별 로컬 권한 설정. .claude/settings.json 은 공유해도 된다.
 .claude/settings.local.json
+
+# bkit 세션 런타임 상태. 기계마다 다르므로 커밋하지 않는다.
+**/.bkit-memory.json
+**/.pdca-status.json
