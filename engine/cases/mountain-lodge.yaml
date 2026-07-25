@@ -1,0 +1,554 @@
+# =====================================================================
+#  산장 살인사건 — 골든 케이스
+# =====================================================================
+#  이 파일이 사건의 정본이다. 검증: npm run verify
+#  저작법은 ../templates/README.md, 빈 서식은 ../templates/case-template.yaml
+#
+#  실제 오프라인 플레이 기록: 조사 4~5회로 해결
+# =====================================================================
+
+id: mountain-lodge
+title: 산장 살인사건
+scale: campaign
+# 2026-07-24 플레이테스트 후 5 → 6.
+# 필수 3 · 오라클 4 · 탐욕 7(레드 헤링 셋을 먼저 다 밟는 경로).
+# 6이면 레드 헤링 하나까지는 감당하고 둘부터 실패한다 — 그 선이 의도다.
+budget: 6
+
+incident:
+  kind: homicide
+  subject: chaewon
+  description: 산장 장기 투숙 중이던 소설가가 위장 자살로 살해됨
+
+prose:
+  source: authored
+
+# 진술 정독만으로 확보되는 단어. 조사가 필요 없다.
+# 지안의 진술이 테이프를, 프롤로그와 발견 정황이 연탄(화로)을 이미 말한다.
+# 이것이 없으면 1장(조사 없이 확정돼야 하는 장)의 은폐수단 공란을 채울 수 없어
+# 시작하자마자 막힌다.
+seed_terms: [테이프, 연탄]
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  프롤로그
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 브리핑과 진술에 이미 있는 사실만 다룬다. 새 정보는 0. ★
+#  분위기 살리려고 "그녀는 위험한 일에 연루되어 있었다" 한 줄 넣으면
+#  조사로 얻어야 할 정보가 무료로 풀리고 난이도가 무너진다.
+#  트릭의 허점을 복선으로 심는 것은 허용된다 — 이미 진술에 있는 정보이므로.
+#
+#  문장은 "한 줄" 또는 { ko: …, en: … }. en 이 없으면 번역 전이다.
+
+prologue:
+  - 산길 끝에 산장이 하나 있다. 윤다인은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.
+  - 분위기를 바꿔보려 했는지, 다인은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.
+  - 그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.
+  - 문이 열렸을 때, 윤다인은 이미 숨을 쉬지 않았다.
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  시간 축
+# ─────────────────────────────────────────────────────────────────────
+#  presence · claims · 시각 공란이 이 어휘만 쓴다.
+#  진술 격자의 열이기도 하므로 너무 잘게 쪼개지 않는다.
+
+timeline:
+  - { id: t0, label: 전날 밤 }
+  - { id: t1, label: 새벽 3시 }
+  - { id: t2, label: 새벽 3~8시, window: true }
+  - { id: t3, label: 오전 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  인물과 동선
+# ─────────────────────────────────────────────────────────────────────
+#  presence = 실제 동선(진실). claims = 진술에서 주장하는 동선.
+#
+#  ★ claims 를 적지 않으면 presence 와 같다. ★
+#  즉 "무고한 사람은 거짓말하지 않는다"가 규약이 아니라 기본값이다.
+#  거짓말은 명시적으로 적어야 하고, 검증기가 범인 외에는 적지 못하게 막는다.
+#
+#  실존 인물명은 쓰지 않는다. (2026-07-24 교체 완료)
+
+people:
+  - id: sakura
+    name: 문세라
+    age: 32
+    job: 산장지기
+    hidden_role: ringleader
+    presence:
+      - { slot: t0, at: main }
+      - { slot: t1, at: annex }
+      - { slot: t2, at: room }     # ← 범행
+      - { slot: t3, at: room }     # ← 발견 소동이 끝날 때까지 문 뒤에 있었다
+    claims:
+      - { slot: t0, at: main }
+      - { slot: t1, at: annex }
+      - { slot: t2, at: annex }    # ← 거짓말
+      - { slot: t3, at: annex }    # ← 거짓말
+
+  - id: yena
+    name: 서지안
+    age: 31
+    job: 댄스 강사
+    hidden_role: investigator
+    presence:
+      - { slot: t3, at: main }
+
+  - id: yujin
+    name: 한유빈
+    age: 27
+    job: 아이돌
+    hidden_role: investigator
+    presence:
+      - { slot: t3, at: main }
+
+  - id: yuri
+    name: 오나경
+    age: 29
+    job: 가수
+    hidden_role: coerced
+    presence:
+      - { slot: t3, at: main }
+
+  - id: wonyoung
+    name: 백리원
+    age: 26
+    job: 아이돌
+    hidden_role: investigator
+    presence:
+      - { slot: t1, at: home }
+      - { slot: t2, at: home }
+      - { slot: t3, at: approach }
+
+victim: chaewon
+culprit: sakura
+
+# ─────────────────────────────────────────────────────────────────────
+#  트릭
+# ─────────────────────────────────────────────────────────────────────
+#  트릭은 이름표가 아니라 계약이다. 아키타입마다 요구하는 부품이 다르고
+#  검증기가 강제한다. 생성기도 같은 계약을 채워서 만든다.
+#
+#  ★ illusion = 플레이어가 처음 믿게 되는 것 ★
+#    각각 broken_by 가 반드시 하나 이상 있어야 한다.
+#    깨지지 않는 인상이 하나라도 있으면 플레이어는 진실에 도달할 수 없다.
+#
+#  ★ exit = 범인이 현장을 떠난 방법 ★
+#    staged_suicide·locked_room 은 현장이 닫혀 있다고 주장하므로 필수다.
+#    2026-07-24 플레이테스트에서 터진 구멍이 정확히 이 부품의 부재였다.
+
+trick:
+  # 실제 추리물의 트릭은 대개 조합이다. 여기도 둘이 겹쳐 있다 —
+  # 유서·밀폐(위장 자살) + 드라이아이스로 사망 시각 위장(알리바이 위조)
+  types: [staged_suicide, alibi_fabrication]
+  props: [e_briquette, e_tape, e_dryice]
+  staging: [e_note]
+
+  illusions:
+    - id: il_suicide
+      kind: death
+      impression: 스스로 목숨을 끊었다
+      made_by: [e_note, e_tape]
+      broken_by: [e_note, e_tape_inside]
+
+    - id: il_time
+      kind: time
+      impression: 발견 직전에 죽었다
+      # 연탄 연기는 이미 다 빠진 상태였고, 발견 시점의 '연기'는 드라이아이스다
+      made_by: [e_dryice]
+      broken_by: [e_time, e_hearth_cold]
+
+    - id: il_absent
+      kind: absence
+      impression: 범인은 밤새 별채에 있었다
+      made_by: []
+      broken_by: [e_receipt, e_burner]
+
+  # 문 뒤에 숨어 있다가, 발견자들이 테이프를 떼고 화로를 끄는 사이 빠져나가
+  # 별채로 돌아갔다. '별채에서 잤다'는 주장이 여기서 나온다.
+  exit:
+    slot: t3
+    method: 발견 소동 중 문 뒤에서 이탈해 별채로
+    enabled_by: [e_dryice]
+    broken_by: [e_receipt, e_dryice]
+
+  flaw:
+    text: 자살할 사람이 왜 그날 손님들을 초대했는가
+    # 허점은 반드시 실제로 심긴 자리를 가리킨다.
+    # 자유 텍스트로 두면 작가 머릿속에만 있는 허점을 적을 수 있다.
+    planted_in: [yujin, e_victim_phone]
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  물증
+# ─────────────────────────────────────────────────────────────────────
+#  record 는 3인칭 관찰만 적는다.
+#  '위조' '가명' '밀폐' 같은 목적·기능 판정어 금지 — 그것은 플레이어의 결론이다.
+#
+#  yields_terms = 이 물증을 확보하면 확보 단어에 들어오는 후보.
+#  discovered 공란은 여기 있는 단어로만 채울 수 있다.
+
+evidence:
+  - id: e_burner
+    description: 별채 대포폰
+    found_at: 별채 · 게임기 뒤
+    record: 저장된 번호는 하나. 이름 없이 '선생'이라고만 적혀 있었다.
+    extra:
+      kind: messages
+      lines:
+        - { side: in,  at: 11월 3일,  text: 이번이 마지막이에요 }
+        - { side: out, at: 11월 3일,  text: 그건 네가 정하는 게 아니야 }
+        - { side: in,  at: 11월 12일, text: 다인 언니한테 다 말할 거예요 }
+    yields_terms: [별채 대포폰, 김선생, 폭로 임박]
+
+  - id: e_safes
+    description: 별채 금고 두 개
+
+  - id: e_note
+    description: 유서
+    found_at: 문세라 소지품
+    record: 한 장짜리 손글씨. 서명은 윤다인. 책상의 원고 메모와 필체가 일치하지 않았다.
+    is_staging: true
+    yields_terms: [유서]
+
+  - id: e_key
+    description: 금고 열쇠
+
+  - id: e_wy_text
+    description: 리원 문자 — 가명의 정체
+    yields_terms: [김선생, 마약, 폭로 임박]
+
+  - id: e_yuri_threat
+    description: 나경 문자 — 협박
+    yields_terms: [마약, 치정]
+
+  - id: e_yena_info
+    description: 지안 소지품 — 연습생 제보
+
+  - id: e_yujin_patch
+    description: 파스
+    found_at: 한유빈 소지품
+    record: 개봉된 어깨용 파스 한 통. 처방전은 없었고 구매처를 묻자 대답하지 않았다.
+
+  - id: e_receipt
+    description: 타다 만 영수증
+    found_at: 다인의 방 · 화로 재 속
+    record: 연탄 두 장. 구매처는 산 아래 상회였고, 발행 시각이 전날 오후로 찍혀 있었다.
+    yields_terms: [연탄, 영수증]
+
+  # 발견 시점의 '연기'를 만든 것. 연탄 연기는 그때 이미 다 빠진 상태였다.
+  - id: e_dryice
+    description: 화로 바닥의 물자국
+    found_at: 다인의 방 · 화로
+    record: 재 아래 바닥에 둥근 물자국이 남아 있었다. 연탄재는 그 위에 덮여 있었다.
+    yields_terms: [물자국]
+
+  - id: e_tape
+    description: 테이프
+    found_at: 다인의 방 · 방문과 창가
+    record: 문틈과 창문 가장자리가 안쪽에서 막혀 있었다. 폭 5cm 청테이프를 두 겹으로 겹쳐 붙였다.
+    yields_terms: [테이프]
+
+  - id: e_briquette
+    description: 연탄
+    found_at: 다인의 방 · 화로
+    record: 두 장이 완전히 탔고 재만 남았다. 화로는 방 한가운데로 옮겨져 있었다.
+    yields_terms: [연탄]
+
+  - id: e_time
+    description: 정밀 사망 시각
+    yields_terms: [일산화탄소 중독]
+
+  - id: e_yuri_call
+    description: 나경 통화내역 — 새벽 피해자와 통화
+
+  - id: e_wy_call_log
+    description: 리원 통화내역 — 새벽 3시 수신
+
+  - id: e_mutual
+    description: 지안과 유빈의 상호 보증
+    record: 두 사람이 말한 도착 시각이 서로 맞물렸다. 진입로 폐쇄회로에도 함께 찍혔다.
+
+  # 레드 헤링으로 의심을 산 인물은 자기 진술 말고 물증으로도 닫아야 한다.
+  # 그를 범인으로 가정하면 자기 말은 거짓이 되어 배제가 통째로 사라지기 때문이다.
+  - id: e_yuri_alibi
+    description: 나경의 동선 확인
+    record: 산 아래 상회의 결제 기록과 도착 시각이 이어졌다.
+
+  - id: e_hearth_cold
+    description: 화로가 식은 정도
+
+  - id: e_tape_inside
+    description: 테이프가 안쪽에서 붙여짐
+
+  - id: e_victim_phone
+    description: 피해자 휴대폰 — 초대 메시지 발신 기록
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  사실
+# ─────────────────────────────────────────────────────────────────────
+#  검증기의 원자 단위. 유죄 = motive ∧ opportunity ∧ means.
+#  revealed_by 가 비어 있으면 진술에서 무료로 얻는다.
+#  ★ 핵심 사실은 획득 경로가 2개 이상이어야 한다 ★ — 하나뿐이면 그 조사를
+#  안 고른 플레이어가 영영 막힌다. 검증기가 강제한다.
+
+facts:
+  # 무료 · 진술에서
+  # 쉼표가 들어간 값은 반드시 인용한다 — flow 스타일 { } 안에서 쉼표는 구분자다
+  - { id: f_sakura_opp, kind: opportunity, subject: sakura,
+      content: "별채는 도보 10분, 새벽까지 피해자와 동석", revealed_by: [] }
+  - { id: f_yena_no,  kind: no_opportunity, subject: yena,  content: 오전 8시 도착, revealed_by: [] }
+  - { id: f_yujin_no, kind: no_opportunity, subject: yujin, content: 오전 8시 도착, revealed_by: [] }
+  - { id: f_yuri_no,  kind: no_opportunity, subject: yuri,  content: 장을 보고 아침 도착, revealed_by: [] }
+  - { id: f_wy_no,    kind: no_opportunity, subject: wonyoung, content: "늦잠, 가장 늦게 도착", revealed_by: [] }
+  - { id: f_last_seen, kind: context, subject: sakura,
+      content: 새벽 3시까지 본채에서 피해자와 음주, revealed_by: [] }
+  - { id: f_wy_call, kind: context, subject: wonyoung,
+      content: 새벽 3시 피해자의 전화를 받음, revealed_by: [] }
+
+  # 1장 확인 후 무료 공개
+  - { id: f_cause, kind: context, subject: chaewon,
+      content: "외상 없음, 일산화탄소 중독", revealed_by: [], available_after: 1 }
+
+  # 유료
+  - id: f_alias_exists
+    kind: context
+    subject: sakura
+    content: 가명을 쓰는 유통책이 존재한다
+    revealed_by: [e_yuri_threat, e_yena_info, e_wy_text]
+  - id: f_sakura_is_alias
+    kind: identity
+    subject: sakura
+    content: 세라 = 가명의 주인
+    revealed_by: [e_burner, e_wy_text]
+  - id: f_sakura_means
+    kind: means
+    subject: sakura
+    content: 유서 위조, 금고 열쇠, 연탄 구매
+    revealed_by: [e_note, e_key, e_receipt]
+  - id: f_sakura_motive
+    kind: motive
+    subject: sakura
+    content: 분배금 다툼 + 폭로 임박
+    revealed_by: []
+    requires: [f_sakura_is_alias]
+
+  # 레드 헤링 — 무고한 사람의 비밀. 수상해 보이지만 살인과 무관하다
+  # 배제의 두 번째 층 — 물증이 받친다. 1장이 조사 없이 확정되어야 하므로
+  # 위의 무료 배제는 그대로 두고, 확인 사실을 따로 얹는다.
+  - { id: f_yena_ok,  kind: no_opportunity, subject: yena,  content: 도착 시각 상호 일치, revealed_by: [e_mutual] }
+  - { id: f_yujin_ok, kind: no_opportunity, subject: yujin, content: 도착 시각 상호 일치, revealed_by: [e_mutual] }
+  - { id: f_yuri_ok,  kind: no_opportunity, subject: yuri,  content: 결제 기록과 도착 시각이 이어짐, revealed_by: [e_yuri_alibi] }
+
+  - { id: f_yuri_secret,  kind: context, subject: yuri,  content: 협박당하는 중,   revealed_by: [e_yuri_threat] }
+  - { id: f_yena_secret,  kind: context, subject: yena,  content: 출처 추적 중,    revealed_by: [e_yena_info] }
+  - { id: f_yujin_secret, kind: context, subject: yujin, content: 피해자를 의심 중, revealed_by: [e_yujin_patch] }
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  조사
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 범인의 salience 를 낮게 둔다 ★
+#  가장 수상해 보이는 사람이 범인이면 게임이 안 된다.
+#  여기서는 레드 헤링(나경 .9 · 지안 .8 · 유빈 .75)이 해답 조사(별채 .3 ·
+#  세라 .35 · 리원 .5)보다 높다 — 눈에 띄는 것부터 찍는 플레이어는 실패하고
+#  추론한 플레이어는 4~5회에 푼다. 의도된 설계다.
+
+actions:
+  - { id: a_yuri,  label: 소지품 검사 · 오나경, cost: 1, gives: [e_yuri_threat],  salience: 0.9,  yield: redherring }
+  - { id: a_yena,  label: 소지품 검사 · 서지안, cost: 1, gives: [e_yena_info],    salience: 0.8,  yield: redherring }
+  - { id: a_yujin, label: 소지품 검사 · 한유빈, cost: 1, gives: [e_yujin_patch],  salience: 0.75, yield: redherring }
+
+  # 사인은 부검으로만 확보된다 = 필수 조사. 비용 2면 여유가 0이 되어 1로 내렸다
+  - { id: a_autopsy, label: 시신 정밀 검사, cost: 1, gives: [e_time], salience: 0.7, yield: exclusion }
+
+  # 영수증의 2번째 경로. 핵심 물증은 경로가 둘 이상이어야 한다
+  - { id: a_briquette, label: 연탄 수색, cost: 1, gives: [e_receipt],
+      salience: 0.6, available_after: 2, yield: solution }
+  - id: a_wy
+    label: 소지품 검사 · 백리원
+    cost: 1
+    gives: [e_wy_text]
+    salience: 0.5
+    boosted_by: [{ fact: f_alias_exists, amount: 0.45 }]
+    yield: solution
+  - id: a_sakura
+    label: 소지품 검사 · 문세라
+    cost: 1
+    gives: [e_note, e_key]
+    salience: 0.35
+    boosted_by: [{ fact: f_sakura_is_alias, amount: 0.5 }]
+    yield: solution
+  - id: a_annex
+    label: 별채 수색
+    cost: 1
+    gives: [e_burner, e_safes]
+    salience: 0.3
+    available_after: 1
+    boosted_by: [{ fact: f_alias_exists, amount: 0.4 }]
+    yield: solution
+
+  # 통화내역
+  - { id: a_ph_yuri,  label: 통화내역 조회 · 오나경, cost: 1, gives: [e_yuri_call],   salience: 0.5,  yield: exclusion }
+  - { id: a_ph_wy,    label: 통화내역 조회 · 백리원, cost: 1, gives: [e_wy_call_log], salience: 0.45, yield: exclusion }
+  - { id: a_ph_sakura, label: 통화내역 조회 · 문세라, cost: 1, gives: [], salience: 0.3,  yield: empty }
+  - { id: a_ph_yena,  label: 통화내역 조회 · 서지안, cost: 1, gives: [], salience: 0.35, yield: empty }
+  - { id: a_ph_yujin, label: 통화내역 조회 · 한유빈, cost: 1, gives: [], salience: 0.3,  yield: empty }
+
+  # 알리바이 대조
+  - { id: a_alibi_yy, label: 알리바이 대조 · 서지안 × 한유빈, cost: 1, gives: [e_mutual], salience: 0.4, yield: exclusion }
+  - { id: a_alibi_yr, label: 알리바이 대조 · 오나경 × 한유빈, cost: 1, gives: [e_yuri_alibi], salience: 0.3, yield: exclusion }
+
+  # 장소
+  # 화로에 트릭의 핵심 셋이 몰려 있다 — 영수증(시각) · 물자국(가짜 연기) · 식은 정도
+  - { id: a_hearth,  label: 화로 조사,      cost: 1, gives: [e_hearth_cold, e_dryice, e_receipt], salience: 0.55, yield: solution }
+  - { id: a_window,  label: 문틈과 창가 조사, cost: 1, gives: [e_tape_inside], salience: 0.45, yield: exclusion }
+  - { id: a_kitchen, label: 주방 수색,      cost: 1, gives: [], salience: 0.2,  yield: empty }
+  - { id: a_living,  label: 거실 수색,      cost: 1, gives: [], salience: 0.25, yield: empty }
+  - { id: a_storage, label: 창고 수색,      cost: 1, gives: [], salience: 0.2,  yield: empty }
+  - { id: a_drive,   label: 진입로 수색,    cost: 1, gives: [], salience: 0.15, yield: empty }
+
+  # 피해자
+  - { id: a_victim_bel, label: 소지품 검사 · 피해자, cost: 1, gives: [e_victim_phone], salience: 0.5, yield: exclusion }
+  - { id: a_manuscript, label: 원고 조사, cost: 1, gives: [], salience: 0.25, yield: empty }
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  보고서 — 장과 공란
+# ─────────────────────────────────────────────────────────────────────
+#  장 순서 = 의존성 순서다. 사건 시간순과 다를 수 있고, 결말에서는
+#  epilogue_order 로 재배열된다.
+#
+#  opening = 장이 열릴 때 뜨는 절차 한 줄. 서술자 3인칭.
+#  ★ 제목이 말하는 것 이상을 말하면 안 된다 ★ — 답이나 조사 방향 금지.
+#  전부 쓰거나 전부 비우거나 둘 중 하나다(검증기가 강제). 일부만 쓰면
+#  그 유무 자체가 신호가 된다.
+
+chapters:
+  - order: 1
+    title: 도착과 발견
+    opening: 다섯 사람의 말은 모두 들었다. 먼저 그날 아침, 방문이 열리기까지를 적는다.
+    requires_facts: [f_yena_no, f_yujin_no, f_yuri_no]
+    blanks:
+      - { label: 인물,   candidates: closed,     answer: yujin }
+      - { label: 인물,   candidates: closed,     answer: yena }
+      - { label: 장소,   candidates: closed,     answer: room }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프 }
+    epilogue_order: 1
+    epilogue: >-
+      그날 아침, 요리를 돕기로 한 사람과 뒤이어 도착한 사람이
+      다인의 방에서 새어 나오는 연기를 보았다.
+
+  - order: 2
+    title: 마지막 정황
+    opening: 방 안의 일은 정리됐다. 남은 것은 그 전날 밤이었다.
+    requires_facts: [f_last_seen, f_wy_call]
+    blanks:
+      - { label: 마지막목격자, candidates: closed, answer: sakura }
+      - { label: 시각,       candidates: closed, answer: t1 }
+      - { label: 장소,       candidates: closed, answer: main }
+      - { label: 인물,       candidates: closed, answer: wonyoung }
+    epilogue_order: 2
+    epilogue: >-
+      마지막으로 다인을 본 것은 세라였다. 새벽 3시, 두 사람은 본채에 함께 있었다.
+      같은 시각, 리원의 전화가 울렸다.
+
+  - order: 3
+    title: 사인과 현장
+    opening: 그날 밤의 자리는 채워졌다. 그러나 죽음이 어떻게 왔는지는 아직 한 줄도 적히지 않았다.
+    requires_facts: [f_cause, f_sakura_means]
+    blanks:
+      - { label: 사인,     candidates: discovered, answer: 일산화탄소 중독 }
+      - { label: 도구,     candidates: discovered, answer: 연탄 }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프 }
+      - { label: 위장물,   candidates: discovered, answer: 유서 }
+    epilogue_order: 3
+    epilogue: >-
+      사인은 일산화탄소 중독이었다. 화로의 연탄이 방을 채웠고, 문틈의 테이프가
+      공기를 막았다. 머리맡의 유서는 그럴듯했지만, 그 손으로 쓴 것이 아니었다.
+
+  - order: 4
+    title: 감춰진 사건
+    opening: 현장은 설명됐다. 그러나 설명된 것은 방법뿐이었다.
+    requires_facts: [f_alias_exists, f_sakura_is_alias]
+    blanks:
+      - { label: 물품,     candidates: discovered, answer: 마약 }
+      - { label: 정체,     candidates: discovered, answer: 김선생 }
+      - { label: 협박대상, candidates: closed,     answer: yuri }
+      - { label: 인물,     candidates: closed,     answer: wonyoung }
+      - { label: 인물,     candidates: closed,     answer: sakura }
+    epilogue_order: 4
+    epilogue: >-
+      그 산장에는 마약이 흐르고 있었다. 유통을 쥔 것은 김선생이라는 이름의
+      누군가였고, 나경은 그 이름에 붙들려 있었다. 리원은 며칠 전부터 그 이름을
+      캐고 있었다. 김선생은, 세라였다.
+
+  - order: 5
+    title: 범인과 동기
+    opening: 이제 이름을 적는다. 그리고 그 이름이 왜 그래야 했는지도.
+    requires_facts: [f_sakura_motive, f_sakura_opp]
+    blanks:
+      - { label: 인물,   candidates: closed,     answer: sakura, is_accusation: true }
+      - { label: 동기,   candidates: discovered, answer: 폭로 임박 }
+      - { label: 은닉처, candidates: discovered, answer: 별채 대포폰 }
+    epilogue_order: 5
+    epilogue: >-
+      다인이 모든 것을 털어놓으려 하자, 세라는 폭로가 임박했음을 알았다.
+      새벽, 그는 별채에서 연탄을 들고 본채로 향했다.
+      증거는 별채의 대포폰 안에 잠들어 있었다.
+
+reopen_per_chapter: 1
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  정보 공개
+# ─────────────────────────────────────────────────────────────────────
+#  트리거는 둘뿐이다 — 장 완성, 조사 실행. 공란 단위 트리거는 잠금과 충돌한다.
+#
+#  yield: path 결정적 / narrow 좁힘 / decoy 참이지만 무관 / flavor 분위기
+#  ★ decoy 는 fact 를 주면 안 된다 ★ — 주는 순간 필수 경로가 되어 함정이 아니게 된다.
+#
+#  ⚠ 미해결: 장 완성 공개가 1·2·3장에 있는데 프로토타입은 1·2·4장이다.
+#     전환 4번 중 하나는 도착물이 0개다. 인터루드 구현 전에 맞춰야 한다.
+#     (docs/MEMORY.md 「그 밖의 미해결」 참조)
+
+reveals:
+  - trigger: { on: chapterComplete, chapter_order: 1 }
+    yield: path
+    facts: [f_cause]
+    actions: [a_annex]
+    surface: overview
+    # 두 가지가 동시에 도착한다. 어느 쪽도 먼저 놓거나 강조하지 않는다 —
+    # 순서가 곧 '다음에 필요한 것' 신호가 되면 유용도 누설이다
+    narration: >-
+      이른 오후, 부검 예비 소견이 올라왔다.
+      그리고 본채에서 도보 십 분 거리에 별채가 하나 더 있다는 것을 뒤늦게 들었다.
+
+  - trigger: { on: chapterComplete, chapter_order: 2 }
+    yield: decoy
+    surface: statement
+    add_claims:
+      - { speaker: yuri, content: 새벽에 다인 언니가 저한테도 전화를 했었어요, target: statement }
+    narration: 마지막 정황을 정리하자, 오나경이 머뭇거리며 덧붙였다.
+
+  - trigger: { on: action, action_id: a_autopsy }
+    yield: narrow
+    surface: overview
+    # 격자 슬롯은 t2(3~8시)가 최소 단위다. 3~5시라는 정밀도는 narration 이 갖는다
+    narrows_window: [t1, t2]
+    narration: 부검 결과 사망 시각이 새벽 3시에서 5시 사이로 좁혀졌다.
+
+  - trigger: { on: chapterComplete, chapter_order: 3 }
+    yield: decoy
+    surface: statement
+    add_claims:
+      - { speaker: yena, content: 나경 걔가 요즘 돈 문제로 힘들다고 했었어요, target: statement }
+    narration: 현장 정리가 끝나자 서지안이 조심스레 말을 보탰다.
+
+  - trigger: { on: action, action_id: a_briquette }
+    yield: path
+    surface: map
+    narration: 연탄에서 나온 영수증. 구매자는 별채 거주자였다.
