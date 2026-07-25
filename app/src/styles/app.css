@@ -552,45 +552,108 @@ body {
 }
 
 /* ── 보고서 ──────────────────────────────────────────────────────────
-   공란은 문장 안에 있다. 목록 조판을 쓰지 않는다.
+   프로토타입 `추리게임.dc.html` 185~245행에서 옮겼다. 수치는 눈대중이 아니라 원본 값이다.
 
    ★ 여기에 유용도·정오답에 따른 스타일을 만들지 말 것 ★
    채워진 공란은 전부 같게 생긴다. 맞았는지는 최종 채점에서만 말한다. */
 
+/* 문서 헤더 — 항목 번호·필드 라벨·문서 헤더만 가져온다.
+   종이 질감·타자기 서체·도장·얼룩 금지 (design-brief §조판) */
+.nl-doc {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.nl-doc-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.nl-doc-title {
+  color: var(--fg);
+  letter-spacing: 0.02em;
+}
+
+.nl-doc-no {
+  color: var(--fg-4);
+  font-size: 12px;
+}
+
+.nl-doc-fields {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.nl-doc-field {
+  flex: 1 1 33%;
+  min-width: 150px;
+  padding: 9px 16px;
+  border-right: 1px solid var(--border);
+}
+
+.nl-doc-field:last-child {
+  border-right: none;
+}
+
+.nl-doc-k {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+
+.nl-doc-v {
+  color: var(--fg);
+}
+
+/* 장 카드. 지금 쓰는 장만 테두리가 진하다 — 상태이지 강조가 아니다 */
 .nl-chapter {
   border: 1px solid var(--border);
   border-radius: var(--r-md, 8px);
   padding: 18px 20px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  background: transparent;
+  transition: background 0.3s var(--ease, ease);
+}
+
+.nl-chapter-open {
+  border-color: var(--border-strong);
+}
+
+.nl-chapter-collapsed {
+  padding: 13px 18px;
 }
 
 .nl-chapter-locked {
   display: flex;
   align-items: center;
-  gap: 12px;
-  opacity: 0.45;
-}
-
-.nl-chapter-done {
-  background: var(--bg-subtle);
+  gap: 10px;
+  padding: 13px 18px;
+  opacity: 0.6;
 }
 
 .nl-chapter-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  cursor: pointer;
 }
 
 .nl-chapter-num {
   color: var(--fg-4);
-  font-size: 13px;
+  min-width: 30px;
   flex: none;
 }
 
 /* 장이 열릴 때의 절차 한 줄. 제목이 말하는 것 이상을 말하지 않는다 */
 .nl-chapter-opening {
-  margin: 0 0 14px;
+  margin: 14px 0 0;
   color: var(--fg-4);
   font-size: 13px;
   line-height: 1.7;
@@ -598,73 +661,89 @@ body {
 }
 
 .nl-chapter-report {
-  margin: 0;
   font-size: 15px;
-  line-height: 2.15;
+  line-height: 2.25;
   color: var(--fg-2);
-  word-break: keep-all;
+  margin: 16px 0 0;
   text-wrap: pretty;
+  word-break: keep-all;
 }
+
+.nl-chapter-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--fg-4);
+}
+
+.nl-chapter-foot .linklike {
+  margin-left: auto;
+}
+
+/* ── 공란 세 상태 ────────────────────────────────────────────────────
+   빈칸은 상자가 아니라 **점선 밑줄**이다 — 문장 안의 빈칸이지 입력 위젯이 아니다.
+   셋 다 프로토타입의 계산된 스타일 그대로다. */
 
 .nl-blank-wrap {
   position: relative;
-  white-space: nowrap;
+  display: inline-block;
+  vertical-align: baseline;
 }
 
 .nl-blank {
-  appearance: none;
-  font: inherit;
-  font-size: 14px;
-  padding: 1px 10px;
+  display: inline-block;
   margin: 0 1px;
-  border-radius: 5px;
-  border: 1px dashed var(--border-strong);
-  background: var(--bg-input);
+}
+
+.nl-blank-empty {
+  min-width: 58px;
+  text-align: center;
+  border-bottom: 1.5px dashed var(--fg-4);
   color: var(--fg-4);
+  padding: 0 9px 2px;
   cursor: pointer;
+  font-size: 12px;
+  font-weight: var(--fw-medium, 500);
+  border-radius: 4px 4px 0 0;
 }
 
-.nl-blank:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--fg-3);
+.nl-blank-fill {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: var(--fw-semi, 600);
+  padding: 1px 9px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  border: 1px solid transparent;
 }
 
-/* 채워진 공란. 정답 여부와 무관하게 전부 같게 생긴다 */
-.nl-blank-filled {
-  border-style: solid;
-  border-color: var(--border-strong);
-  background: transparent;
+/* 완성된 장의 답. 편집할 수 없으므로 accent 를 벗는다 */
+.nl-blank-lock {
+  background: var(--bg-elevated-2);
   color: var(--fg);
-}
-
-.nl-blank:disabled {
-  cursor: default;
-  border-style: solid;
-  opacity: 0.85;
+  font-weight: var(--fw-semi, 600);
+  padding: 1px 9px;
+  border-radius: var(--r-sm, 6px);
 }
 
 .nl-picker {
   position: absolute;
   left: 0;
   top: calc(100% + 4px);
-  z-index: 40;
-  min-width: 150px;
+  z-index: 41;
+  min-width: 170px;
   max-height: 260px;
   overflow: auto;
-  display: block;
-  white-space: normal;
+}
+
+.nl-picker-head {
+  padding: 4px 8px 6px;
+  color: var(--fg-4);
 }
 
 .nl-picker-item {
-  display: block;
   cursor: pointer;
-  padding: 6px 10px;
-  font-size: 13px;
-  border-radius: 4px;
-}
-
-.nl-picker-item:hover {
-  background: var(--bg-hover);
 }
 
 .nl-picker-clear {
@@ -674,7 +753,7 @@ body {
 }
 
 .nl-picker-empty {
-  display: block;
-  padding: 8px 10px;
+  padding: 8px;
   color: var(--fg-4);
+  line-height: 1.5;
 }

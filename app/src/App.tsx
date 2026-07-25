@@ -74,14 +74,13 @@ export default function App() {
 
   /**
    * 재개봉. 장당 1회.
-   * **이미 공개된 정보는 회수하지 않는다** — 되돌렸다고 진행이 막히면 안 된다.
+   *
+   * **완성을 되돌리는 것이 아니라 답을 고칠 기회다.** `solved` 에서 빼지 않는다 —
+   * 빼면 그 장의 공란을 하나 지우는 순간 뒷장이 다시 잠기고, **이미 공개된 정보를
+   * 회수하는 셈**이 된다 (`HANDOFF-TO-CODE.md` §5.2).
    */
   const reopen = (order: number) =>
-    setProgress((p) => ({
-      ...p,
-      reopensUsed: { ...p.reopensUsed, [order]: true },
-      solved: p.solved.filter((i) => c!.chapters[i]?.order !== order),
-    }))
+    setProgress((p) => ({ ...p, reopensUsed: { ...p.reopensUsed, [order]: true } }))
 
   const markRead = (person: string) =>
     setProgress((p) =>

@@ -1,6 +1,7 @@
 import { TopBar } from '../components/TopBar'
 import { Mark } from '../components/Mark'
 import type { CaseProgress } from '../state/stores'
+import { CAMPAIGN } from '../case/catalog'
 
 /**
  * 홈 — 콘텐츠 3층 구조(캠페인 / 일일 사건 / 워크샵)의 진입점.
@@ -20,15 +21,6 @@ import type { CaseProgress } from '../state/stores'
 
 const TAGLINE = '모든 진술을 의심하라'
 
-/** 캠페인 30개가 목표지만 지금 존재하는 사건은 하나다. 나머지는 자리만 보여준다 */
-const CAMPAIGN = [
-  { num: '01', id: 'mountain-lodge', title: '산장 살인사건', est: '40–60분', diff: 'hard' },
-  { num: '02', id: null, title: '사건 02', est: '30–40분', diff: 'normal' },
-  { num: '03', id: null, title: '사건 03', est: '40–60분', diff: 'hard' },
-  { num: '04', id: null, title: '사건 04', est: '20–30분', diff: 'easy' },
-  { num: '05', id: null, title: '사건 05', est: '30–40분', diff: 'normal' },
-  { num: '06', id: null, title: '사건 06', est: '40–60분', diff: 'hard' },
-]
 
 export function Home({
   progress,
