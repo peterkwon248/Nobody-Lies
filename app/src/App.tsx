@@ -9,6 +9,7 @@ import { Home } from './screens/Home'
 import { CaseDetail } from './screens/CaseDetail'
 import { Prologue } from './screens/Prologue'
 import { Briefing } from './screens/Briefing'
+import { Statements } from './screens/Statements'
 import { TopBar } from './components/TopBar'
 
 const CASE_ID = 'mountain-lodge'
@@ -37,10 +38,32 @@ export default function App() {
   const [progress, setProgress] = useState<CaseProgress>(() =>
     load('progress', CASE_ID, newProgress(CASE_ID)),
   )
-  // 주석은 아직 쓰이지 않지만 저장소를 처음부터 나눠둔다 — 나중에 나누면 저장 구조를 뜯는다
-  const [annotations] = useState<PlayerAnnotations>(() =>
+  const [annotations, setAnnotations] = useState<PlayerAnnotations>(() =>
     load('annotations', CASE_ID, emptyAnnotations()),
   )
+
+  /**
+   * 인물별 메모. 층위는 **주장** — 진술에 붙은 메모이므로 확정(물증)과 구분해 적어둔다.
+   * 모순 경고를 없앴으므로 확정과 주장의 대조를 플레이어가 혼자 해야 하고,
+   * 그 대조가 일어나는 자리가 여기다 (`HANDOFF-TO-CODE.md` §6).
+   */
+  const setMemo = (person: string, content: string) =>
+    setAnnotations((a) => {
+      const rest = a.notes.filter((n) => n.target !== person)
+      return {
+        ...a,
+        notes: content.trim()
+          ? [...rest, { id: `memo:${person}`, content, target: person, source: '주장' as const }]
+          : rest,
+      }
+    })
+
+  const markRead = (person: string) =>
+    setProgress((p) =>
+      p.statementsRead.includes(person)
+        ? p
+        : { ...p, statementsRead: [...p.statementsRead, person] },
+    )
 
   useEffect(() => {
     loadCase(CASE_ID).then(setCase, (e: Error) => setError(e.message))
@@ -89,18 +112,29 @@ export default function App() {
       return <Prologue c={c} onDone={() => go('brief')} onHome={() => setRoute('home')} />
     case 'brief':
       return <Briefing c={c} onDone={() => go('read')} onHome={() => setRoute('home')} />
+    case 'read':
+      return (
+        <Statements
+          c={c}
+          read={progress.statementsRead}
+          annotations={annotations}
+          onMemo={setMemo}
+          onRead={markRead}
+          onDone={() => go('free')}
+          onHome={() => setRoute('home')}
+        />
+      )
     default:
       return (
         <div className="nl-fs">
           <TopBar title={c.title} onBack={() => setRoute('home')} />
           <div className="nl-fs-body">
             <div className="nl-brief">
-              <div className="v-h1" style={{ marginBottom: 6 }}>진술 정독</div>
+              <div className="v-h1" style={{ marginBottom: 6 }}>보고서</div>
               <div className="v-body nl-brief-sub">
-                진술 원문이 아직 사건 파일에 없습니다. 프로토타입에 하드코딩돼 있고,
-                산문 이관(A-2)이 끝나야 이 화면이 섭니다.
+                진술을 다 읽었습니다. 다음은 보고서 화면(5장 20공란)과 인게임 사이드바입니다 — 아직 만들지 않았습니다.
               </div>
-              <button className="nl-btn" onClick={() => go('prologue')}>프롤로그부터 다시</button>
+              <button className="nl-btn" onClick={() => go('read')}>진술 다시 읽기</button>
             </div>
           </div>
         </div>

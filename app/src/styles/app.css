@@ -399,3 +399,119 @@ body {
 .nl-btn-wide {
   width: 100%;
 }
+
+/* ── 진술 정독 ───────────────────────────────────────────────────────
+   층위는 **주장**이다. 확정(브리핑·물증)과 시각을 섞지 않는다 — 따옴표 대신
+   인물색 레일을 쓰고, 게임은 어떤 판정도 하지 않는다.
+
+   ★ 거짓말하는 사람의 진술도 나머지 넷과 완전히 동일하게 생겨야 한다 ★
+   여기에 조건부 스타일을 하나라도 만들면 CSS 가 범인을 가리킨다. */
+
+.nl-read {
+  max-width: 640px;
+  width: 100%;
+}
+
+.nl-read-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.nl-read-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 22px 24px;
+  background: var(--bg-subtle);
+}
+
+.nl-read-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.nl-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+  color: #0b0c0d;
+}
+
+/* 인물색 레일 = 주장 층의 표시. 내용의 중요도가 아니라 화자를 가리킨다 */
+.nl-read-p {
+  margin: 0 0 14px;
+  padding-left: 14px;
+  border-left: 2px solid;
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--fg-2);
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+.nl-read-memo-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 6px;
+  color: var(--fg-4);
+}
+
+.nl-read-memo {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 6px);
+  padding: 8px 10px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.nl-read-memo:focus {
+  outline: none;
+  border-color: var(--border-focus, var(--accent));
+}
+
+.nl-read-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.nl-read-dots {
+  display: flex;
+  gap: 7px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nl-read-dots .nl-dot {
+  width: 7px;
+  height: 7px;
+  cursor: pointer;
+}
+
+.nl-dot-read {
+  background: var(--fg-4);
+  opacity: 0.5;
+}
+
+.nl-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
