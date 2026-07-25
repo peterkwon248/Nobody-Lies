@@ -1,4 +1,5 @@
 import type { Case } from '@engine/types'
+import { TopBar } from '../components/TopBar'
 
 /**
  * 사건 브리핑 — 진입 흐름 2단계. 피해자·사망 추정·현장 상태의 **사실 요약**.
@@ -15,50 +16,60 @@ export function Briefing({ c, onDone }: { c: Case; onDone: () => void }) {
   const scene = c.locations.find((l) => l.id === c.incident.scene)
 
   return (
-    <div className="screen screen-doc">
-      <header className="doc-head">
-        <div className="doc-kicker">사건 브리핑</div>
-        <h1 className="doc-title">{c.title}</h1>
-      </header>
+    <div className="nl-fs">
+      <TopBar title={c.title} />
 
-      <dl className="doc-fields">
-        <Field
-          label="피해자"
-          value={victim ? [victim.name, victim.age, victim.job].filter(Boolean).join(' · ') : c.victim}
-        />
-        <Field label="사망 추정" value={window?.label ?? '미확정'} />
-        <Field label="현장" value={scene?.label ?? '미확정'} />
-        <Field label="개요" value={c.incident.description} wide />
-      </dl>
+      <div className="nl-fs-body">
+        <div className="nl-brief">
+          <div className="nl-brief-head">
+            <span className="nl-fs-mark" aria-hidden="true" />
+            <span className="v-ui" style={{ color: 'var(--fg-3)' }}>{c.title}</span>
+          </div>
 
-      <section className="doc-section">
-        <h2 className="doc-h2">관계인 {c.people.length}</h2>
-        <ul className="doc-people">
-          {c.people.map((p) => (
-            <li key={p.id} className="doc-person">
-              <span className="doc-person-name">{p.name}</span>
-              <span className="doc-person-meta">
-                {p.age} · {p.job}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <div className="v-h1" style={{ marginBottom: 6 }}>사건 브리핑</div>
+          <div className="v-body nl-brief-sub">확인된 사실만 적혀 있습니다.</div>
 
-      <div className="doc-foot">
-        <button className="reader-next" onClick={onDone}>
-          진술 정독
-        </button>
+          <div className="nl-brief-rows">
+            <Row
+              k="피해자"
+              v={victim ? [victim.name, victim.age, victim.job].filter(Boolean).join(' · ') : c.victim}
+            />
+            <Row k="사망 추정" v={window?.label ?? '미확정'} />
+            <Row k="현장" v={scene?.label ?? '미확정'} />
+            <Row k="개요" v={c.incident.description} />
+          </div>
+
+          <div className="nl-brief-rows">
+            {c.people.map((p) => (
+              <div key={p.id} className="nl-brief-row">
+                <span className="v-meta nl-brief-k">관계인</span>
+                <span className="v-body nl-brief-v nl-brief-person">
+                  <span>{p.name}</span>
+                  <span className="v-micro" style={{ color: 'var(--fg-4)' }}>
+                    {p.age} · {p.job}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <button className="nl-btn nl-btn-primary nl-btn-wide" onClick={onDone}>
+            진술 정독
+          </button>
+          <div className="v-meta nl-brief-note">
+            다섯 사람의 진술을 모두 읽어야 보고서 1장이 열립니다.
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function Field({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
+function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className={wide ? 'doc-field doc-field-wide' : 'doc-field'}>
-      <dt className="doc-label">{label}</dt>
-      <dd className="doc-value">{value}</dd>
+    <div className="nl-brief-row">
+      <span className="v-meta nl-brief-k">{k}</span>
+      <span className="v-body nl-brief-v">{v}</span>
     </div>
   )
 }

@@ -5,24 +5,35 @@ import {
   emptyAnnotations, load, newProgress, save,
   type CaseProgress, type PlayerAnnotations, type Stage,
 } from './state/stores'
+import { Home } from './screens/Home'
+import { CaseDetail } from './screens/CaseDetail'
 import { Prologue } from './screens/Prologue'
 import { Briefing } from './screens/Briefing'
+import { TopBar } from './components/TopBar'
 
 const CASE_ID = 'mountain-lodge'
 
 /**
- * 진입 흐름 — `design-brief.md` §4.01. **화면 순서가 곧 게임 구조다.**
+ * 앱 셸과 라우팅.
  *
  * ```
- * 프롤로그 → 브리핑 → 진술 정독 → (1장 해금) → 자유 진행
+ * 홈 → 사건 상세 → 플레이(프롤로그 → 브리핑 → 진술 정독 → 자유 진행)
  * ```
  *
- * 서술문(보고서)은 첫 화면이 아니다. 진술을 읽기 전에는 어떤 공란도 채울 수 없고,
- * 답을 알 수 없는 문제를 먼저 보여주면 방향 감각을 잃는다.
+ * **진입 흐름 단계에는 사이드바가 없다.** 프로토타입도 그렇다 —
+ * `isIntro = route === 'play' && stage !== 'free'` 이고 그동안 화면은 전체화면
+ * 표면이다. 사이드바는 자유 진행에 들어가야 나온다. 산문과 문서의 레지스터를
+ * 분리하는 장치이므로 그대로 옮긴다.
+ *
+ * `route` 는 화면 상태라 저장하지 않는다. 저장되는 것은 `progress.stage` 이고
+ * 홈의 「이어하기」가 그 값으로 복원한다.
  */
+type Route = 'home' | 'detail' | 'play'
+
 export default function App() {
   const [c, setCase] = useState<Case | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [route, setRoute] = useState<Route>('home')
   const [progress, setProgress] = useState<CaseProgress>(() =>
     load('progress', CASE_ID, newProgress(CASE_ID)),
   )
@@ -41,8 +52,37 @@ export default function App() {
   const go = (stage: Stage) =>
     setProgress((p) => ({ ...p, stage, status: p.status === 'unplayed' ? 'in_progress' : p.status }))
 
-  if (error) return <div className="screen screen-doc"><p className="doc-value">{error}</p></div>
-  if (!c) return <div className="screen" />
+  if (error) {
+    return (
+      <div className="nl-fs">
+        <TopBar title="노바디 라이즈" />
+        <div className="nl-fs-body"><p className="v-body">{error}</p></div>
+      </div>
+    )
+  }
+  if (!c) return <div className="nl-fs" />
+
+  if (route === 'home') {
+    return (
+      <Home
+        progress={progress}
+        caseTitle={c.title}
+        onOpen={() => setRoute('detail')}
+        onResume={() => setRoute('play')}
+      />
+    )
+  }
+
+  if (route === 'detail') {
+    return (
+      <CaseDetail
+        c={c}
+        progress={progress}
+        onBack={() => setRoute('home')}
+        onStart={() => { go(progress.stage); setRoute('play') }}
+      />
+    )
+  }
 
   switch (progress.stage) {
     case 'prologue':
@@ -51,19 +91,17 @@ export default function App() {
       return <Briefing c={c} onDone={() => go('read')} />
     default:
       return (
-        <div className="screen screen-doc">
-          <header className="doc-head">
-            <div className="doc-kicker">다음 단계</div>
-            <h1 className="doc-title">진술 정독</h1>
-          </header>
-          <p className="doc-value">
-            진술 원문이 아직 사건 파일에 없다. 프로토타입에 하드코딩돼 있고,
-            산문 이관(A-2)이 끝나야 이 화면이 선다.
-          </p>
-          <div className="doc-foot">
-            <button className="reader-next" onClick={() => go('prologue')}>
-              프롤로그부터 다시
-            </button>
+        <div className="nl-fs">
+          <TopBar title={c.title} onBack={() => setRoute('home')} />
+          <div className="nl-fs-body">
+            <div className="nl-brief">
+              <div className="v-h1" style={{ marginBottom: 6 }}>진술 정독</div>
+              <div className="v-body nl-brief-sub">
+                진술 원문이 아직 사건 파일에 없습니다. 프로토타입에 하드코딩돼 있고,
+                산문 이관(A-2)이 끝나야 이 화면이 섭니다.
+              </div>
+              <button className="nl-btn" onClick={() => go('prologue')}>프롤로그부터 다시</button>
+            </div>
           </div>
         </div>
       )

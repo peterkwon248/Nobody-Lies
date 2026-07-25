@@ -1,5 +1,6 @@
 import type { Case } from '@engine/types'
 import { Reader } from '../components/Reader'
+import { TopBar } from '../components/TopBar'
 import { ko } from '../case/loadCase'
 
 /**
@@ -12,24 +13,16 @@ import { ko } from '../case/loadCase'
  * 그 규칙은 **사건 파일**이 지킨다. 이 화면은 담긴 것을 그대로 읽을 뿐이다.
  */
 export function Prologue({ c, onDone }: { c: Case; onDone: () => void }) {
+  // 프롤로그가 없는 사건도 있다(일일 사건 등). 흐름을 막지 않는다
   const paragraphs = (c.prologue ?? []).map(ko).filter(Boolean)
-
-  if (paragraphs.length === 0) {
-    // 프롤로그가 없는 사건도 있다(일일 사건 등). 흐름을 막지 않는다
-    return (
-      <Screen>
-        <Reader paragraphs={[c.incident.description]} onDone={onDone} doneLabel="사건 브리핑" />
-      </Screen>
-    )
-  }
+  const body = paragraphs.length ? paragraphs : [c.incident.description]
 
   return (
-    <Screen>
-      <Reader paragraphs={paragraphs} onDone={onDone} doneLabel="사건 브리핑" />
-    </Screen>
+    <div className="nl-fs">
+      <TopBar title={c.title} />
+      <div className="nl-fs-body">
+        <Reader kicker={c.title} paragraphs={body} onDone={onDone} doneLabel="계속" />
+      </div>
+    </div>
   )
-}
-
-function Screen({ children }: { children: React.ReactNode }) {
-  return <div className="screen screen-prose">{children}</div>
 }
