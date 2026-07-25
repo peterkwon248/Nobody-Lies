@@ -3,6 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#08090A">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#08090A"></rect>
+    <g fill="none" stroke="#4C8DFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="545" cy="360" r="150"></circle>
+      <line x1="655" y1="470" x2="790" y2="605"></line>
+    </g>
+    <g stroke="#62666D" stroke-width="16" stroke-linecap="round">
+      <line x1="470" y1="330" x2="620" y2="330"></line>
+      <line x1="470" y1="390" x2="600" y2="390"></line>
+    </g>
+  </svg>
+</template>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -37,6 +50,24 @@
 [data-surface="vector"] *::-webkit-scrollbar-thumb:hover { background: var(--fg-4); }
 [data-surface="vector"] *::-webkit-scrollbar-corner { background: transparent; }
 [data-surface="vector"] * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* ===== inlined board (pb-*) styles ===== */
+.pb-piece { position:absolute; user-select:none; touch-action:none; }
+.pb-wrap ::-webkit-scrollbar { width:10px; height:10px; }
+.pb-wrap ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:5px; }
+.pb-piece > .pb-card { transition:box-shadow .12s, border-color .12s; }
+.pb-piece:hover > .pb-card { border-color:var(--fg-4); }
+.pb-zone { position:absolute; top:0; bottom:0; width:22px; z-index:8; }
+.pb-zone-l { left:-8px; } .pb-zone-r { right:-8px; }
+.pb-zone:hover .pb-handle { opacity:1; }
+.pb-piece:hover .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-handle { opacity:.42; transition:opacity .12s; }
+.pb-draw:hover { background:var(--bg-elevated) !important; }
+.pb-grip { opacity:0; transition:opacity .12s; }
+.pb-box:hover .pb-grip { opacity:1; }
+.pb-lbl { background:transparent; border:none; outline:none; box-shadow:none; color:var(--fg-2); font:600 15px var(--font-sans); width:140px; border-radius:4px; padding:1px 4px; }
 </style>
 </helmet>
 <div class="app" data-surface="vector">
@@ -454,18 +485,32 @@
           <sc-if value="{{ mapPlanMode }}" hint-placeholder-val="{{ true }}">
           <div class="segmented" style="margin-bottom:16px"><sc-for list="{{ floor.times }}" as="tm" hint-placeholder-count="4"><div onClick="{{ tm.onClick }}" style="{{ tm.style }}">{{ tm.label }}</div></sc-for></div>
           <div style="position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden">
-            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <sc-for list="{{ floor.walks }}" as="w" hint-placeholder-count="2"><line x1="{{ w.x1 }}" y1="{{ w.y1 }}" x2="{{ w.x2 }}" y2="{{ w.y2 }}" stroke="var(--border-strong)" stroke-width="0.4" stroke-dasharray="1.5 1.5"></line></sc-for>
+            <svg viewBox="0 0 1000 625" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+              <defs><pattern id="fpHatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="9" stroke="var(--border)" stroke-width="1"></line></pattern></defs>
+              <sc-for list="{{ floor.sRoomFills }}" as="r" hint-placeholder-count="3"><rect x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" fill="{{ r.fill }}"></rect></sc-for>
+              <sc-for list="{{ floor.sHatch }}" as="r" hint-placeholder-count="1"><rect x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" fill="url(#fpHatch)" stroke="var(--border)" stroke-width="1" rx="4"></rect></sc-for>
+              <sc-for list="{{ floor.sOffsite }}" as="r" hint-placeholder-count="1"><rect x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" fill="none" stroke="var(--border-strong)" stroke-width="1.2" stroke-dasharray="6 5" rx="6"></rect></sc-for>
+              <sc-for list="{{ floor.sWalk }}" as="w" hint-placeholder-count="2"><line x1="{{ w.x1 }}" y1="{{ w.y1 }}" x2="{{ w.x2 }}" y2="{{ w.y2 }}" stroke="var(--border-strong)" stroke-width="1.4" stroke-dasharray="6 5"></line></sc-for>
+              <sc-for list="{{ floor.sPoche }}" as="p" hint-placeholder-count="2"><path d="{{ p.d }}" fill="none" stroke="{{ p.color }}" stroke-width="{{ p.width }}" stroke-linejoin="miter"></path></sc-for>
+              <sc-for list="{{ floor.sWalls }}" as="w" hint-placeholder-count="4"><line x1="{{ w.x1 }}" y1="{{ w.y1 }}" x2="{{ w.x2 }}" y2="{{ w.y2 }}" stroke="var(--fg-3)" stroke-width="4.5"></line></sc-for>
+              <sc-for list="{{ floor.sDoorErase }}" as="d" hint-placeholder-count="0"><line x1="{{ d.x1 }}" y1="{{ d.y1 }}" x2="{{ d.x2 }}" y2="{{ d.y2 }}" stroke="var(--bg-subtle)" stroke-width="7"></line></sc-for>
+              <sc-for list="{{ floor.sDoorLeaf }}" as="d" hint-placeholder-count="0"><line x1="{{ d.x1 }}" y1="{{ d.y1 }}" x2="{{ d.x2 }}" y2="{{ d.y2 }}" stroke="var(--fg-3)" stroke-width="1.4"></line></sc-for>
+              <sc-for list="{{ floor.sDoorArc }}" as="d" hint-placeholder-count="0"><path d="{{ d.d }}" fill="none" stroke="var(--fg-4)" stroke-width="1.3"></path></sc-for>
+              <sc-for list="{{ floor.sWin }}" as="w" hint-placeholder-count="0"><line x1="{{ w.x1 }}" y1="{{ w.y1 }}" x2="{{ w.x2 }}" y2="{{ w.y2 }}" stroke="var(--accent)" stroke-width="1.8"></line></sc-for>
+              <g stroke="var(--fg-4)" stroke-width="1.4"><line x1="{{ floor.scale.x }}" y1="{{ floor.scale.y }}" x2="{{ floor.scale.x2 }}" y2="{{ floor.scale.y }}"></line><line x1="{{ floor.scale.x }}" y1="{{ floor.scale.yt1 }}" x2="{{ floor.scale.x }}" y2="{{ floor.scale.yt2 }}"></line><line x1="{{ floor.scale.x2 }}" y1="{{ floor.scale.yt1 }}" x2="{{ floor.scale.x2 }}" y2="{{ floor.scale.yt2 }}"></line></g>
             </svg>
-            <sc-for list="{{ floor.walks }}" as="w" hint-placeholder-count="2"><span style="position:absolute;left:{{ w.mx }}%;top:{{ w.my }}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px">{{ w.label }}</span></sc-for>
+            <sc-for list="{{ floor.sWalk }}" as="w" hint-placeholder-count="2"><span style="position:absolute;left:{{ w.mx }}%;top:{{ w.my }}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px">{{ w.label }}</span></sc-for>
             <sc-for list="{{ floor.locs }}" as="l" hint-placeholder-count="4"><div style="{{ l.boxStyle }}" onClick="{{ l.onSearch }}">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:auto"><span style="font-size:11px;color:{{ l.nameColor }}">{{ l.name }}</span><sc-if value="{{ l.isNew }}"><span style="font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px">{{ l.revealNote }}</span></sc-if><span style="flex:1"></span><span style="{{ l.statusStyle }}">{{ l.statusLabel }}</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:{{ l.nameColor }}">{{ l.name }}</span><sc-if value="{{ l.isNew }}"><span style="font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px">{{ l.revealNote }}</span></sc-if><span style="flex:1"></span><sc-if value="{{ l.primary }}"><span style="{{ l.statusStyle }}">{{ l.statusLabel }}</span></sc-if></div>
               <sc-if value="{{ l.hasClues }}"><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"><sc-for list="{{ l.clues }}" as="c" hint-placeholder-count="1"><span style="display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="{{ c.iconPath }}"></path></svg>{{ c.label }}</span></sc-for></div></sc-if>
             </div></sc-for>
-            <sc-for list="{{ floor.fixtures }}" as="f" hint-placeholder-count="0"><span onClick="{{ f.onRun }}" style="{{ f.markStyle }}"><sc-if value="{{ f.iconPath }}"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="{{ f.iconPath }}"></path></svg></sc-if></span></sc-for>
+            <sc-for list="{{ floor.fixtures }}" as="f" hint-placeholder-count="0"><span onClick="{{ f.onRun }}" style="{{ f.markStyle }}"><sc-if value="{{ f.body }}"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" stroke-width="3" stroke-linecap="round"></path></svg></sc-if><sc-if value="{{ f.iconPath }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="{{ f.iconPath }}"></path></svg></sc-if></span></sc-for>
             <sc-for list="{{ floor.fixtures }}" as="f" hint-placeholder-count="0"><span style="{{ f.labelStyle }}">{{ f.name }}</span></sc-for>
             <sc-for list="{{ floor.personMarkers }}" as="pm" hint-placeholder-count="5"><span title="{{ pm.name }}" style="{{ pm.style }}"></span></sc-for>
             <sc-for list="{{ floor.personMarkers }}" as="pm" hint-placeholder-count="5"><span style="{{ pm.labelStyle }}">{{ pm.name }}</span></sc-for>
+            <sc-for list="{{ floor.doorLabels }}" as="dr" hint-placeholder-count="3"><span style="position:absolute;left:{{ dr.left }}%;top:{{ dr.top }}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--fg-3);background:var(--bg-subtle);padding:0 3px;z-index:5">{{ dr.label }}</span></sc-for>
+            <sc-for list="{{ floor.winLabels }}" as="wl" hint-placeholder-count="3"><span style="position:absolute;left:{{ wl.left }}%;top:{{ wl.top }}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--accent);background:var(--bg-subtle);padding:0 3px;z-index:5">{{ wl.label }}</span></sc-for>
+            <span style="position:absolute;left:{{ floor.scaleLabel.left }}%;top:{{ floor.scaleLabel.top }}%;font-size:10px;color:var(--fg-4);z-index:5">{{ floor.scaleText }}</span>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px">
             <sc-for list="{{ floor.dotLegend }}" as="lg" hint-placeholder-count="5"><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)"><span style="width:10px;height:10px;border-radius:50%;background:{{ lg.color }}"></span>{{ lg.name }}</span></sc-for>
@@ -535,7 +580,138 @@
       <!-- ============ RELATIONSHIP GRAPH ============ -->
       <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0">
-          <dc-import name="추리판" seed="{{ boardSeed }}" on-jump="{{ boardJump }}" hint-size="100%,100%"></dc-import>
+<div data-surface="vector" style="height:100vh;background:var(--bg-app);display:flex;flex-direction:column;font-family:var(--font-sans);overflow:hidden">
+  <div style="padding:12px 20px 10px;flex:none;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <div class="v-ui" style="color:var(--fg)">상황판</div>
+    <span class="v-meta" style="color:var(--fg-4)">{{ pb.hint }}</span>
+    <span style="flex:1"></span>
+    <div style="position:relative">
+      <span class="{{ pb.addChip }}" onClick="{{ pb.onToggleAdd }}" style="cursor:pointer">＋ 생성</span>
+      <sc-if value="{{ pb.addOpen }}"><div class="v-menu" style="position:absolute;right:0;top:30px;z-index:40;min-width:170px">
+        <sc-for list="{{ pb.tools }}" as="tl" hint-placeholder-count="4"><div class="v-menu-item" onClick="{{ tl.onPick }}"><span style="{{ tl.dot }}"></span>{{ tl.label }}</div></sc-for>
+      </div></sc-if>
+    </div>
+    <span class="{{ pb.tlChip }}" onClick="{{ pb.onToggleTl }}" style="cursor:pointer">타임라인</span>
+    <span class="{{ pb.mapLockChip }}" onClick="{{ pb.onToggleMapLock }}" style="cursor:pointer" title="화면 이동·줌 잠금">화면 고정</span>
+    <div style="display:flex;align-items:center;gap:2px;margin-left:2px">
+      <button class="iconbtn" onClick="{{ pb.onZoomOut }}">−</button><span class="v-micro" style="color:var(--fg-4);width:36px;text-align:center">{{ pb.zoomPct }}</span><button class="iconbtn" onClick="{{ pb.onZoomIn }}">+</button><button class="iconbtn" onClick="{{ pb.onFit }}" style="width:auto;padding:0 8px;font-size:11px">전체 보기</button><button class="iconbtn" onClick="{{ pb.onHome }}" title="초기 화면" style="width:auto;padding:0 8px;font-size:11px">홈</button><button class="iconbtn" onClick="{{ pb.onReset }}" title="빈 판으로 초기화" style="width:auto;padding:0 8px;font-size:11px;color:var(--label-red)">초기화</button>
+    </div>
+  </div>
+
+  <div class="pb-wrap" style="flex:1;display:flex;min-height:0">
+    <sc-if value="{{ pb.drawerOpen }}" hint-placeholder-val="{{ true }}"><div style="width:186px;flex:none;border-right:1px solid var(--border);background:var(--bg-sidebar);overflow:auto;padding:0 10px 20px">
+      <div style="position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:9px 2px 8px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);margin-bottom:10px">
+        <span class="v-micro" style="color:var(--fg-3);text-transform:uppercase;letter-spacing:.05em">{{ pb.drawerTitle }}</span>
+        <span style="flex:1"></span>
+        <div onClick="{{ pb.onToggleDrawer }}" title="서랍 닫기" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid var(--border-strong);background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px;flex:none">‹</div>
+      </div>
+      <sc-for list="{{ pb.drawer }}" as="sec" hint-placeholder-count="4"><div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><span style="{{ sec.dot }}"></span><span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ sec.title }}</span><span style="flex:1"></span></div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <sc-if value="{{ sec.locked }}"><div style="padding:8px 10px;border:1px dashed var(--border-strong);border-radius:var(--r-sm);color:var(--fg-4);font-size:11px;line-height:1.5">{{ sec.lockedHint }}</div></sc-if>
+          <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="3"><div class="pb-draw" onClick="{{ it.onAdd }}" style="{{ it.rowStyle }}"><span class="v-meta" style="color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.label }}</span><span style="flex:1"></span><sc-if value="{{ it.placed }}"><span style="{{ it.badgeStyle }}">{{ it.count }}</span></sc-if></div></sc-for>
+        </div>
+      </div></sc-for>
+    </div></sc-if>
+    <sc-if value="{{ pb.drawerClosed }}" hint-placeholder-val="{{ false }}"><div onClick="{{ pb.onToggleDrawer }}" title="서랍 열기" style="position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:20;width:16px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);border-left:none;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px">›</div></sc-if>
+
+    <div style="position:relative;flex:1;overflow:hidden;background:var(--bg-subtle);touch-action:none;cursor:{{ pb.canvasCursor }}" onPointerDown="{{ pb.onBgDown }}" onPointerMove="{{ pb.onCanvasMove }}" onPointerUp="{{ pb.onCanvasUp }}">
+      <div data-canvas style="{{ pb.worldStyle }}">
+        <sc-if value="{{ pb.timelineOn }}">
+          <div style="position:absolute;left:0;top:{{ pb.tlBandTop }};width:15000px;height:56px;border-bottom:1px dashed var(--border-strong);background:var(--bg-subtle)">
+            <span class="v-micro" style="position:absolute;left:10px;top:7px;color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em">시간 →</span>
+            <span onClick="{{ pb.onAddTime }}" onPointerDown="{{ pb.tlStop }}" style="position:absolute;left:70px;top:6px;font-size:11px;color:var(--accent);cursor:pointer">＋시간</span>
+            <sc-for list="{{ pb.markers }}" as="tk" hint-placeholder-count="4"><div style="{{ tk.wrapStyle }}" onPointerDown="{{ tk.onDown }}">
+              <span onClick="{{ tk.onHi }}" onPointerDown="{{ tk.stop }}" style="{{ tk.tickStyle }}" title="시간 강조"></span>
+              <input value="{{ tk.label }}" onChange="{{ tk.onLabel }}" onPointerDown="{{ tk.stop }}" style="{{ tk.inputStyle }}" />
+              <sc-if value="{{ tk.selected }}"><sc-if value="{{ tk.locked }}"><span title="시간축 고정됨" style="font-size:10px;color:var(--fg-4)">🔒</span></sc-if><sc-if value="{{ tk.notLocked }}"><span onClick="{{ tk.onDel }}" onPointerDown="{{ tk.stop }}" title="삭제" style="font-size:10px;color:var(--label-red);cursor:pointer">삭제</span></sc-if></sc-if>
+            </div></sc-for>
+          </div>
+          <sc-for list="{{ pb.markers }}" as="tk" hint-placeholder-count="0"><sc-if value="{{ tk.guideStyle }}"><div style="{{ tk.guideStyle }}"></div></sc-if></sc-for>
+        </sc-if>
+
+        <sc-for list="{{ pb.groups }}" as="g" hint-placeholder-count="0"><div class="pb-box" style="{{ g.boxStyle }}">
+          <sc-if value="{{ g.isVenn }}"><span style="{{ g.circleL }}"></span><span style="{{ g.circleR }}"></span></sc-if>
+          <sc-if value="{{ g.empty }}"><span style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font:700 22px var(--font-sans);color:var(--fg);opacity:.07;pointer-events:none">비어 있음</span></sc-if>
+          <sc-if value="{{ g.isTl }}"><sc-for list="{{ g.tlTicks }}" as="tk" hint-placeholder-count="4"><div style="{{ tk.style }}"><span style="{{ tk.tickStyle }}"></span><span style="{{ tk.labelStyle }}">{{ tk.label }}</span></div></sc-for></sc-if>
+          <span class="pb-grip" onPointerDown="{{ g.onMoveDown }}" title="이동" style="position:absolute;left:-2px;top:-2px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:move;color:var(--fg-4);font-size:10px;z-index:2">⠿</span>
+          <div style="{{ g.labelWrapStyle }}">
+            <input value="{{ g.label }}" onChange="{{ g.onLabel }}" onPointerDown="{{ g.stop }}" style="{{ g.labelStyle }}" />
+          </div>
+          <span class="pb-grip" onPointerDown="{{ g.onResizeDown }}" title="크기" style="position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:nwse-resize;color:var(--fg-4);font-size:11px;z-index:2">◢</span>
+        </div></sc-for>
+        <sc-if value="{{ pb.tempGroup.show }}"><div style="{{ pb.tempGroup.style }}"></div></sc-if>
+        <sc-if value="{{ pb.marquee }}"><div style="{{ pb.marquee.style }}"></div></sc-if>
+
+        <svg width="2600" height="1600" style="position:absolute;left:0;top:0;pointer-events:none">
+          <sc-for list="{{ pb.strings }}" as="s" hint-placeholder-count="0"><line x1="{{ s.x1 }}" y1="{{ s.y1 }}" x2="{{ s.x2 }}" y2="{{ s.y2 }}" style="{{ s.lineStyle }}"></line></sc-for>
+          <sc-if value="{{ pb.liveLine.show }}"><line x1="{{ pb.liveLine.x1 }}" y1="{{ pb.liveLine.y1 }}" x2="{{ pb.liveLine.x2 }}" y2="{{ pb.liveLine.y2 }}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"></line></sc-if>
+        </svg>
+        <sc-for list="{{ pb.strings }}" as="s" hint-placeholder-count="0"><div onClick="{{ s.onEdit }}" style="{{ s.labelStyle }}">{{ s.relLabel }}</div></sc-for>
+
+        <sc-for list="{{ pb.labels }}" as="lb" hint-placeholder-count="0"><div class="pb-piece" style="{{ lb.wrapStyle }}" onPointerDown="{{ lb.onDown }}">
+          <input value="{{ lb.text }}" onChange="{{ lb.onText }}" onPointerDown="{{ lb.stopIfEdit }}" placeholder="라벨" class="pb-lbl" style="{{ lb.inputStyle }}" />
+          <sc-if value="{{ lb.selected }}"><span onClick="{{ lb.onDel }}" onPointerDown="{{ lb.delStop }}" title="삭제" style="display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:var(--r-sm);background:var(--bg-elevated);border:1px solid var(--border-strong);color:var(--label-red);cursor:pointer;font:600 11px var(--font-sans);flex:none">삭제</span></sc-if>
+        </div></sc-for>
+
+        <sc-for list="{{ pb.pieces }}" as="p" hint-placeholder-count="6"><div class="{{ p.wrapCls }}" style="{{ p.wrapStyle }}" onPointerDown="{{ p.onDown }}" onClick="{{ p.onClick }}">
+          <sc-if value="{{ p.tierDot }}"><div class="pb-card" style="{{ p.dotStyle }}" title="{{ p.label }}">{{ p.ini }}</div></sc-if>
+          <sc-if value="{{ p.tierChip }}"><div class="pb-card" style="{{ p.chipStyle }}">
+            <sc-if value="{{ p.isPerson }}"><span style="{{ p.avStyle }}">{{ p.ini }}</span></sc-if>
+            <sc-if value="{{ p.notPersonChip }}"><span style="{{ p.chipDot }}">{{ p.ini }}</span></sc-if>
+            <span class="v-ui" style="color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px">{{ p.label }}</span>
+          </div></sc-if>
+          <sc-if value="{{ p.tierFull }}"><div class="pb-card" style="{{ p.cardStyle }}">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+              <span style="width:7px;height:7px;border-radius:2px;background:{{ p.typeColor }};flex:none"></span>
+              <span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ p.typeLabel }}</span>
+              <sc-if value="{{ p.laned }}"><span class="v-micro" style="color:var(--accent)">· {{ p.timeLabel }}</span></sc-if>
+            </div>
+            <sc-if value="{{ p.isMemo }}"><textarea value="{{ p.text }}" onChange="{{ p.onText }}" onPointerDown="{{ p.stopDown }}" placeholder="메모…" style="width:100%;min-height:40px;resize:none;background:transparent;border:none;outline:none;color:var(--fg);font:500 12px var(--font-sans);line-height:1.5"></textarea></sc-if>
+            <sc-if value="{{ p.notMemo }}"><div style="display:flex;align-items:center;gap:8px">
+              <sc-if value="{{ p.isPerson }}"><span style="{{ p.avStyle }}">{{ p.ini }}</span></sc-if>
+              <sc-if value="{{ p.isEvidence }}"><span style="width:24px;height:24px;border-radius:5px;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.4"><path d="{{ p.icon }}"></path></svg></span></sc-if>
+              <div style="min-width:0"><div class="v-ui" style="color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</div><sc-if value="{{ p.hasSub }}"><div class="v-micro" style="color:var(--fg-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</div></sc-if></div>
+            </div></sc-if>
+            <sc-if value="{{ p.isQuote }}"><div class="v-meta" style="color:var(--fg-2);font-style:italic;line-height:1.55;margin-top:7px">{{ p.quote }}</div></sc-if>
+          </div></sc-if>
+          <sc-if value="{{ p.pinned }}"><span title="고정됨" style="position:absolute;left:-5px;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:9px;z-index:9">📌</span></sc-if>
+          <span class="pb-zone pb-zone-l"><span class="pb-handle" onPointerDown="{{ p.onPortInDown }}" title="연결 입력" style="{{ p.portInStyle }}"></span></span>
+          <span class="pb-zone pb-zone-r"><span class="pb-handle" onPointerDown="{{ p.onHandleDown }}" title="끌어서 연결" style="{{ p.handleStyle }}"></span></span>
+        </div></sc-for>
+
+        <sc-if value="{{ pb.toolbar.show }}"><div style="{{ pb.toolbar.style }}">
+          <sc-for list="{{ pb.toolbar.actions }}" as="a" hint-placeholder-count="2"><span onClick="{{ a.onClick }}" onPointerDown="{{ a.stop }}" style="{{ a.style }}">{{ a.label }}</span></sc-for>
+        </div></sc-if>
+
+        <sc-if value="{{ pb.detail.open }}"><div style="{{ pb.detail.style }}" onPointerDown="{{ pb.detail.stop }}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="width:8px;height:8px;border-radius:2px;background:{{ pb.detail.color }};flex:none"></span><span class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em">{{ pb.detail.typeLabel }}</span><span style="flex:1"></span><span onClick="{{ pb.detail.onClose }}" onPointerDown="{{ pb.detail.stop }}" style="cursor:pointer;color:var(--fg-4);font-size:12px">✕</span></div>
+          <div class="v-title" style="color:var(--fg);margin-bottom:4px">{{ pb.detail.label }}</div>
+          <sc-if value="{{ pb.detail.hasSub }}"><div class="v-meta" style="color:var(--fg-3);margin-bottom:8px">{{ pb.detail.sub }}</div></sc-if>
+          <sc-if value="{{ pb.detail.hasClaim }}"><div class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">{{ pb.detail.claimLabel }}</div><div class="v-meta" style="color:var(--fg-2);line-height:1.6;margin-bottom:10px">{{ pb.detail.claim }}</div></sc-if>
+          <sc-if value="{{ pb.detail.hasClues }}"><div class="v-micro" style="color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">{{ pb.detail.cluesLabel }}</div><div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px"><sc-for list="{{ pb.detail.clues }}" as="cl" hint-placeholder-count="1"><div style="display:flex;gap:6px"><span style="color:var(--accent);flex:none">·</span><span class="v-meta" style="color:var(--fg-2)">{{ cl }}</span></div></sc-for></div></sc-if>
+          <sc-if value="{{ pb.detail.hasBody }}"><div class="v-meta" style="color:var(--fg-2);line-height:1.6">{{ pb.detail.body }}</div></sc-if>
+          <sc-if value="{{ pb.detail.hasSlots }}"><div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);padding-top:9px;margin-top:2px"><sc-for list="{{ pb.detail.slots }}" as="sl" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px"><span class="v-micro" style="color:var(--fg-4);width:36px;flex:none">{{ sl.label }}</span><sc-if value="{{ sl.filled }}"><span class="v-meta" style="color:var(--fg-2)">{{ sl.text }}</span></sc-if><sc-if value="{{ sl.empty }}"><span style="flex:1;border-bottom:1px dashed var(--border-strong)"></span><span class="v-micro" style="color:var(--fg-4);flex:none">{{ pb.detail.unknownLabel }}</span></sc-if></div></sc-for></div></sc-if>
+          <sc-if value="{{ pb.detail.hasFull }}"><div style="border-top:1px solid var(--border);margin-top:10px;padding-top:9px"><div onClick="{{ pb.detail.onToggleFull }}" style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg-3);font-size:12px;font-weight:500"><span style="display:inline-block;transform:{{ pb.detail.fullChevron }};transition:transform .12s">▸</span>{{ pb.detail.fullLabel }}</div><sc-if value="{{ pb.detail.fullOpen }}"><div class="v-meta" style="color:var(--fg-2);line-height:1.7;margin-top:8px;max-height:220px;overflow-y:auto;white-space:pre-wrap">{{ pb.detail.fullText }}</div></sc-if></div></sc-if>
+        </div></sc-if>
+
+        <sc-if value="{{ pb.relPicker.open }}"><div class="v-menu" style="{{ pb.relPicker.style }}" onPointerDown="{{ pb.relPicker.stop }}">
+          <sc-for list="{{ pb.relPicker.opts }}" as="o" hint-placeholder-count="5"><div class="v-menu-item" onClick="{{ o.onPick }}"><span style="{{ o.dot }}"></span>{{ o.label }}</div></sc-for>
+          <div class="panel-sep" style="margin:4px 0"></div><div class="v-menu-item" onClick="{{ pb.relPicker.onDelete }}" style="color:var(--label-red)">연결 삭제</div>
+        </div></sc-if>
+      </div>
+
+      <div onPointerDown="{{ pb.minimap.onDown }}" onPointerMove="{{ pb.minimap.onMove }}" onPointerUp="{{ pb.minimap.onUp }}" style="position:absolute;right:12px;bottom:12px;width:150px;height:100px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-app);overflow:hidden;touch-action:none;cursor:pointer">
+        <sc-for list="{{ pb.minimap.dots }}" as="d" hint-placeholder-count="6"><span style="{{ d.style }}"></span></sc-for>
+        <div style="{{ pb.minimap.viewport }}"></div>
+      </div>
+      <sc-if value="{{ pb.mselBar }}"><div onPointerDown="{{ pb.mselBar.stop }}" style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:6px 8px 6px 14px">
+        <span class="v-ui" style="color:var(--fg);font-size:12px">{{ pb.mselBar.count }}개 {{ pb.mselBar.word }}</span>
+        <span onClick="{{ pb.mselBar.onBlock }}" style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--accent);color:var(--fg-on-accent);font-size:12px;font-weight:600;cursor:pointer">{{ pb.mselBar.label }}</span>
+      </div></sc-if>
+    </div>
+  </div>
+</div>
         </div>
       </sc-if>
 
@@ -1104,6 +1280,18 @@ class Component extends DCLogic {
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
+    pb: {
+    dragId:null, dragKind:null, dragOff:{x:0,y:0}, moved:false, sel:null, detailId:null,
+    pan:{x:0,y:0}, zoom:1, panning:false, panStart:null, drawShape:null,
+    connectDrag:null, connectMode:false, connectFrom:null, pins:{},
+    tool:null, addOpen:false, timelineOn:true, hlTimeId:null, drawerOpen:true, axisLock:false, mapLock:false,
+    times:[{id:'t1',x:225,label:'전날 밤'},{id:'t2',x:675,label:'새벽 3시'},{id:'t3',x:1125,label:'3–8시'},{id:'t4',x:1575,label:'오전'}],
+    placed:{},
+    memoText:{},
+    memoOrder:[], labels:[],
+    strings:[], groups:[], binds:[], relPicker:null, size:{}, progress:1,
+    msel:[], marquee:null,
+    },
   };
 
   DICT = {
@@ -1143,7 +1331,7 @@ class Component extends DCLogic {
       briefTitle: '사건 브리핑', briefSub: '읽기 전 확인', startRead: '진술 읽기 시작', briefNote: '5명의 진술을 먼저 읽습니다. 다 읽으면 1장이 열립니다.',
       skipRead: '건너뛰기', memoLabel: '메모', memoPh: '이 진술에서 눈에 띄는 점\u2026', prev: '이전', next: '다음', openNarrative: '보고서 열기',
       actBelong: '소지품 검사', actSearch: '장소 수색', actPhone: '통화내역 조회', actAlibi: '알리바이 대조', actAutopsy: '시신 정밀 검사', actFixture: '고정물 조사',
-      invRemaining: '잔여 조사', invExec: '조사 실행', invLogTitle: '조사 기록', invEmptyLog: '아직 수행한 조사가 없습니다. 왼쪽에서 행동을 골라 실행하세요.', sealRecord: '항 완성',
+      invRemaining: '잔여 조사', invExec: '조사 실행', invLogTitle: '조사 기록', invEmptyLog: '아직 수행한 조사가 없습니다. 왼쪽에서 행동을 골라 실행하세요.', sealRecord: '장 완성',
       invPickAction: '행동을 선택하세요', invPickPerson: '인물 선택', invPickPlace: '장소 선택', invPickPair: '두 인물 선택', invNoTarget: '대상 없음',
       reasonBudget: '잔여 부족', reasonUsed: '이미 사용함', resSolution: '결정적 단서', resRed: '무고한 자의 비밀', resExcl: '용의자 배제', resEmpty: '아무것도 없음', resEmptyTag: '배제 정보',
       cost: '비용', invHint: '조사 예산은 5. 시신 정밀 검사만 2가 든다.', invDone: '조사 완료',
@@ -1233,9 +1421,9 @@ class Component extends DCLogic {
     { id: 'wonyoung', name: '장원영', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'Absent, left late', jobKo: '아이돌', jobEn: 'Idol', claimKo: '새벽 3시 피해자의 전화를 받고 늦잠 후 늦게 출발했다고 진술.', ini: '원', color: '#F2C94C', c1: '#F2C94C', c2: '#F2994A' },
   ];
   CLUE_MAP = {
-    'search:annex': [{ p: 'sakura', slot: 'motive', ko: '마약 유통망 \u2018김선생\u2019 정체 (대포폰)' }],
+    'search:annex': [{ p: 'sakura', slot: 'motive', ko: '마약 유통망 \u2018김선생\u2019 거래 기록 (별채 대포폰)' }],
     'belongings:sakura': [{ p: 'sakura', slot: 'means', ko: '위장용 유서 초안·금고 열쇠' }],
-    'belongings:wonyoung': [{ p: 'wonyoung', slot: 'motive', ko: '\u2018김선생\u2019 추적 정황' }],
+    'belongings:wonyoung': [{ p: 'wonyoung', slot: 'motive', ko: '\u2018김선생\u2019 추적 정황' }, { p: 'sakura', slot: 'motive', ko: '추적 중이던 번호와 일치하는 연락처' }],
     'phone:wonyoung': [{ p: 'wonyoung', slot: 'opportunity', ko: '새벽 3시 통화·기지국상 원거리' }],
     'alibi:yujin+yuri': [{ p: 'yuri', slot: 'opportunity', ko: '동선 일치 \u2014 사망 시간대 접근 불가' }, { p: 'yujin', slot: 'opportunity', ko: '예나·유리와 동선 일치' }],
     'alibi:yena+yujin': [{ p: 'yena', slot: 'opportunity', ko: '도착 시각 상호 일치' }, { p: 'yujin', slot: 'opportunity', ko: '예나와 도착 시각 일치' }],
@@ -1268,7 +1456,7 @@ class Component extends DCLogic {
   ];
   FIXTURES = [
     { id: 'hearth', ko: '화로', en: 'Brazier', loc: 'room', x: 46, y: 52, icon: '연탄' },
-    { id: 'window', ko: '창문', en: 'Window', loc: 'room', x: 62, y: 47, icon: '테이프' },
+    { id: 'window', ko: '테이프', en: 'Tape', loc: 'room', x: 62, y: 47, icon: '테이프' },
     { id: 'safe', ko: '금고', en: 'Safe', loc: 'main', x: 34, y: 62, icon: '유서' },
     { id: 'body', ko: '시신', en: 'Body', loc: 'room', x: 54, y: 60, icon: '', body: true },
   ];
@@ -1295,13 +1483,14 @@ class Component extends DCLogic {
     b12: { kind: 'vPerson', src: 'person', ans: '장원영', par: '은/는' },
     b13: { kind: 'vItem', src: 'collected', ans: '마약', par: '이/가' },
     b14: { kind: 'vIdentity', src: 'collected', ans: '김선생', par: null },
-    b15: { kind: 'vTarget', src: 'person', ans: '김채원', par: null },
+    b15: { kind: 'vTarget', src: 'person', ans: '조유리', par: null },
     b16: { kind: 'vPerson', src: 'person', ans: '장원영', par: '이/가' },
     b17: { kind: 'vPerson', src: 'person', ans: '미야와키 사쿠라', par: null, nominate: true },
     b18: { kind: 'vMotive', src: 'collected', ans: '폭로 임박', par: '(으)로' },
     b19: { kind: 'vHideout', src: 'collected', ans: '별채 대포폰', par: null },
+    b20: { kind: 'vPerson', src: 'person', ans: '미야와키 사쿠라', par: null },
   };
-  SEC_BLANKS = { s1: ['b1', 'b2', 'b3', 'b4'], s2: ['b5', 'b6', 'b7', 'b8'], s3: ['b9', 'b10', 'b11', 'b12'], s4: ['b13', 'b14', 'b15', 'b16'], s5: ['b17', 'b18', 'b19'] };
+  SEC_BLANKS = { s1: ['b1', 'b2', 'b3', 'b4'], s2: ['b5', 'b6', 'b7', 'b8'], s3: ['b9', 'b10', 'b11', 'b12'], s4: ['b13', 'b14', 'b15', 'b16', 'b20'], s5: ['b17', 'b18', 'b19'] };
 
   SECTIONS = [
     { id: 's1', num: 1, tKo: '도착과 발견', tEn: 'Arrival & discovery', parts: [
@@ -1314,7 +1503,7 @@ class Component extends DCLogic {
       { text: '부검 결과 직접 사인은 ' }, { b: 'b5' }, { text: '으로 확인됐다. 범인은 화로에 ' }, { b: 'b6' }, { text: ' 피워 방을 채우고, 문과 창을 ' }, { b: 'b7' }, { text: ' 밀폐했다. 그리고 자살로 위장하기 위해 현장에 ' }, { b: 'b8' }, { text: ' 놓아두었다.' },
     ] },
     { id: 's4', num: 4, tKo: '감춰진 사건', tEn: 'The hidden crime', parts: [
-      { text: '별채에서 발견된 ' }, { b: 'b13' }, { text: ' 사건의 이면을 드러냈다. 그것은 마약 유통망 ' }, { b: 'b14' }, { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: '의 입을 막으려 했고, 며칠 전 ' }, { b: 'b16' }, { text: ' 그 실체를 캐묻기 시작한 참이었다.' },
+      { text: '산장에 흘러들던 ' }, { b: 'b13' }, { text: ' 사건의 이면을 드러냈다. 그것은 마약 유통망 ' }, { b: 'b14' }, { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: '의 입을 막으려 했고, 며칠 전 ' }, { b: 'b16' }, { text: ' 그 실체를 캐묻기 시작한 참이었다.' }, { text: ' 그리고 그 이름의 주인은 ' }, { b: 'b20' }, { text: '였다.' },
     ] },
     { id: 's5', num: 5, tKo: '범인과 동기', tEn: 'Culprit & motive', parts: [
       { text: '모든 정황이 한 사람을 가리켰다. 진범은 ' }, { b: 'b17' }, { text: '. 그는 조직이 드러나는 것을 막으려는 ' }, { b: 'b18' }, { text: ' 김채원을 살해했고, 증거를 ' }, { b: 'b19' }, { text: '에 감췄다.' },
@@ -1322,7 +1511,7 @@ class Component extends DCLogic {
   ];
 
   CAND = { person: ['최예나', '안유진', '미야와키 사쿠라', '조유리', '장원영', '김채원'], place: ['본채', '채원의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
-  COLLECTED_POOL = ['테이프', '연탄', '일산화탄소 중독', '유서', '대포폰', '김선생', '마약', '폭로 임박', '별채 대포폰', '수면제', '둔기', '치정', '유산 상속'];
+  COLLECTED_POOL = ['테이프', '연탄', '일산화탄소 중독', '유서', '김선생', '마약', '폭로 임박', '별채 대포폰', '수면제', '둔기', '치정', '유산 상속'];
   SEED_TERMS = ['테이프', '연탄'];
   ICONS = {
     '테이프': 'M3 6h10v4H3z M5 6l6 4',
@@ -1340,7 +1529,7 @@ class Component extends DCLogic {
     '둔기': 'M4 12l5-5 M9 7l3-3 1 1-3 3z',
     '치정': 'M8 13S3 9.5 3 6.2A2.2 2.2 0 018 5a2.2 2.2 0 015 1.2C13 9.5 8 13 8 13z',
     '유산 상속': 'M4 6h8v7H4z M6 6V4h4v2 M6.5 9h3',
-    '화로': 'M4 4h8v8H4z M6.5 4v8 M9.5 4v8 M4 6.5h8 M4 9.5h8',
+    '화로': 'M3.5 8h9 M4.5 8c.5 2.5 1.8 3.5 3.5 3.5s3-1 3.5-3.5 M5.5 11.5l-1 1.5 M10.5 11.5l1 1.5 M8 3c1.3 1.4 1.3 2.8 0 4.2C6.7 5.8 6.7 4.4 8 3z',
     '창문': 'M3 3h10v10H3z M8 3v10 M3 8h10',
     '금고': 'M3 3h10v10H3z M10 8a2 2 0 11-4 0 2 2 0 014 0z M11 5.5v.1M11 10.5v.1',
     '책상': 'M2.5 5.5h11 M4 5.5v7 M12 5.5v7 M2.5 9h11',
@@ -1359,11 +1548,10 @@ class Component extends DCLogic {
     '테이프': { fk: '채원의 방 · 방문·창가', dk: '문틈과 창문 가장자리가 안쪽에서 발라져 있었다.', fe: "Chae-won's room · door & window", de: 'The door and window edges were taped over from the inside.' },
     '연탄': { fk: '채원의 방 · 화로', dk: '방 안 화로에서 타고 있었다.', fe: "Chae-won's room · brazier", de: 'It was burning in a brazier inside the room.' },
     '일산화탄소 중독': { fk: '시신 정밀 검사', dk: '외상은 없고, 혈중 일산화탄소 농도가 높았다.', fe: 'Detailed autopsy', de: 'No external wounds; blood carbon-monoxide levels were high.' },
-    '유서': { fk: '본채 금고', dk: '완성되지 않은 초안이었고, 필체가 원고와 달랐다.', fe: 'Main house · safe', de: 'An unfinished draft; the handwriting differed from the manuscript.' },
-    '대포폰': { fk: '별채 수색', dk: '가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.', fe: 'Annex search', de: 'No subscriber on record; only one number was saved.' },
-    '김선생': { fk: '별채 수색 · 대포폰 기록', dk: '여러 기록에 반복 등장하는 호칭이었다.', fe: 'Annex search · phone logs', de: 'A name that recurs across several records.' },
-    '마약': { fk: '수색 · 소지품', dk: '작은 봉지 여러 개로 나뉘어 있었다.', fe: 'Search · belongings', de: 'Divided into several small bags.' },
-    '폭로 임박': { fk: '진술·기록 정황', dk: '진술과 기록에 관련 정황이 남아 있었다.', fe: 'Statements & records', de: 'Related traces remained in statements and records.' },
+    '유서': { fk: '소지품 검사 · 미야와키 사쿠라', dk: '완성되지 않은 초안이었고, 필체가 원고와 달랐다.', fe: 'Belongings · Sakura', de: 'An unfinished draft; the handwriting differed from the manuscript.' },
+    '김선생': { fk: '별채 수색 · 소지품 검사', dk: '여러 기록에 반복 등장하는 호칭이었다.', fe: 'Annex search · belongings', de: 'A name that recurs across several records.' },
+    '마약': { fk: '소지품 검사', dk: '작은 봉지 여러 개로 나뉘어 있었다.', fe: 'Belongings search', de: 'Divided into several small bags.' },
+    '폭로 임박': { fk: '별채 수색 · 소지품 검사', dk: '기록에 남은 메시지가 같은 시점을 가리켰다.', fe: 'Annex search · belongings', de: 'Messages in the records pointed to the same moment.' },
     '별채 대포폰': { fk: '별채 수색', dk: '별채 안쪽에 놓여 있던 또 다른 선불폰이었다.', fe: 'Annex search', de: 'Another prepaid phone, set inside the annex.' },
     '수면제': { fk: '수색 · 소지품', dk: '소지품에서 나온 약물이었다.', fe: 'Search · belongings', de: 'A drug found among belongings.' },
     '둔기': { fk: '현장 주변', dk: '현장 주변에 있던 단단한 물체였다.', fe: 'Around the scene', de: 'A hard object found near the scene.' },
@@ -1371,9 +1559,9 @@ class Component extends DCLogic {
     '유산 상속': { fk: '기록 정황', dk: '기록에 관련 정황이 있었다.', fe: 'Record context', de: 'Related context appeared in records.' },
   };
   termIconPath(w) { return this.ICONS[w] || 'M4 4h8v8H4z'; }
-  TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['대포폰', '별채 대포폰', '김선생', '마약'], 'belongings:sakura': ['유서'], 'belongings:yuri': ['치정'] };
+  TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:yuri': ['마약', '치정'] };
   PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '채원의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
-  INV_ACTIONS = [{ id: 'belongings', k: 'actBelong', cost: 1, mode: 'person' }, { id: 'search', k: 'actSearch', cost: 1, mode: 'place' }, { id: 'phone', k: 'actPhone', cost: 1, mode: 'person' }, { id: 'alibi', k: 'actAlibi', cost: 1, mode: 'pair' }, { id: 'autopsy', k: 'actAutopsy', cost: 2, mode: 'none' }, { id: 'fixture', k: 'actFixture', cost: 1, mode: 'fixture' }];
+  INV_ACTIONS = [{ id: 'belongings', k: 'actBelong', cost: 1, mode: 'person' }, { id: 'search', k: 'actSearch', cost: 1, mode: 'place' }, { id: 'phone', k: 'actPhone', cost: 1, mode: 'person' }, { id: 'alibi', k: 'actAlibi', cost: 1, mode: 'pair' }, { id: 'autopsy', k: 'actAutopsy', cost: 1, mode: 'none' }, { id: 'fixture', k: 'actFixture', cost: 1, mode: 'fixture' }];
   PROLOG = ['산길 끝에 산장이 하나 있다. 김채원은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.', '분위기를 바꿔보려 했는지, 채원은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.', '그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.', '문이 열렸을 때, 김채원은 이미 숨을 쉬지 않았다.'];
   CASES = [
     { n: 1, real: true, titleKo: '산장 살인사건', titleEn: 'The Mountain Lodge', diff: 'hard', estKo: '40\u201360분', estEn: '40\u201360 min' },
@@ -1431,6 +1619,191 @@ class Component extends DCLogic {
     document.addEventListener('click', this._onDocClick, true);
   }
   componentWillUnmount() { window.removeEventListener('resize', this._onResize); if (this._ro) this._ro.disconnect(); document.removeEventListener('click', this._onDocClick, true); }
+
+  PB_REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
+  PB_LANES = ['전날 밤','새벽 3시','3–8시','오전'];
+  PB_CARDS = [
+    { id:'sakura', kind:'person', label:'미야와키 사쿠라', sub:'산장지기 · 산장 거주', ini:'쿠', c1:'#F2994A', c2:'#EB5757' },
+    { id:'wonyoung', kind:'person', label:'장원영', sub:'아이돌 · 불참', ini:'원', c1:'#F2C94C', c2:'#F2994A' },
+    { id:'yuri', kind:'person', label:'조유리', sub:'가수 · 아침 도착', ini:'리', c1:'#4CB782', c2:'#2D9CDB' },
+    { id:'burner', kind:'evidence', label:'대포폰', sub:'별채에서 발견', icon:'M5 2.5h6v11H5z M7 12h2' },
+    { id:'note', kind:'evidence', label:'위장 유서', sub:'금고 열쇠 동봉', icon:'M4 2.5h6l2.5 2.5v9H4z M9.5 2.5v3H12' },
+    { id:'co', kind:'evidence', label:'일산화탄소', sub:'부검 · 직접 사인', icon:'M8 13c3 0 4-2 4-4 0-3-4-6-4-6S4 6 4 9c0 2 1 4 4 4z' },
+    { id:'q1', kind:'quote', label:'사쿠라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
+    { id:'q2', kind:'quote', label:'원영 진술', quote:'"새벽 3시쯤 채원 언니한테 전화가 왔어요."' },
+    { id:'q3', kind:'quote', label:'사쿠라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
+  ];
+  PB_KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'} ];
+  get PB_cards(){ const seed=this.buildBoardSeed(); if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.PB_CARDS; }
+  get PB_revEvidence(){ const seed=this.buildBoardSeed(); if(seed&&seed.revealedEvidence) return seed.revealedEvidence; return null; }
+  PB_TOOLS = [ {t:'box',label:'박스 (영역)'}, {t:'venn',label:'교집합 (벤다이어그램)'}, {t:'memo',label:'메모'}, {t:'label',label:'텍스트 라벨'} ];
+  PB_sizeOf(id){ return this.state.pb.size[id]||'full'; }
+  PB_cardW(id){ const z=this.PB_sizeOf(id); return z==='dot'?32:(z==='chip'?128:200); }
+  PB_cycleSize(id){ const o={full:'chip',chip:'full'}; this.PB_set({size:Object.assign({},this.state.pb.size,{[id]:o[this.PB_sizeOf(id)]||'chip'})}); }
+  PB_centerOf(id){ const p=this.state.pb.placed[id]; return {x:p.x+this.PB_cardW(id)/2, y:p.y+this.PB_cardH(id)/2}; }
+  PB_regionMembers(g){ return Object.keys(this.state.pb.placed).filter(id=>{ if(!this.PB_card(id))return false; const c=this.PB_centerOf(id); return c.x>=g.x&&c.x<=g.x+g.w&&c.y>=g.y&&c.y<=g.y+g.h; }); }
+  PB_inVennOverlap(g,id){ if(g.shape!=='venn')return false; const c=this.PB_centerOf(id); const rx=g.w*0.32,ry=g.h*0.5,cyv=g.y+g.h/2; const lcx=g.x+g.w*0.32,rcx=g.x+g.w*0.68; const inL=((c.x-lcx)*(c.x-lcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; const inR=((c.x-rcx)*(c.x-rcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; return inL&&inR; }
+  PB_baseId(id){ return id.split('#')[0]; }
+  PB_card(id){ if(this.state.pb.memoText[id]!==undefined) return {id,kind:'memo',label:'메모',text:this.state.pb.memoText[id]}; return this.PB_cards.find(c=>c.id===this.PB_baseId(id)); }
+  PB_toWorld(e){ const r=(this._canvas||document.querySelector('[data-canvas]')).getBoundingClientRect(); return {x:(e.clientX-r.left-this.state.pb.pan.x)/this.state.pb.zoom, y:(e.clientY-r.top-this.state.pb.pan.y)/this.state.pb.zoom}; }
+  PB_cardH(id){ const z=this.PB_sizeOf(id); if(z==='dot')return 32; if(z==='chip')return 34; const d=this.PB_card(id); return (d&&d.kind==='quote')?96:64; }
+  PB_onPieceDown(id,e){ if(this.state.pb.connectMode){ e.stopPropagation(); return; } if(e.shiftKey){ let m=this.state.pb.msel.slice(); if(m.length===0&&this.state.pb.sel&&this.state.pb.sel.kind==='piece'&&this.state.pb.sel.id!==id) m=[this.state.pb.sel.id]; const i=m.indexOf(id); if(i>=0)m.splice(i,1); else m.push(id); this.PB_set({msel:m,sel:null}); e.stopPropagation(); return; } if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'piece',id},dragId:null}); e.stopPropagation(); return; } const bnd=this.PB_bindOf(id); if(bnd){ const w=this.PB_toWorld(e),offs={}; bnd.mem.forEach(mid=>{ if(this.state.pb.placed[mid]) offs[mid]={x:w.x-this.state.pb.placed[mid].x,y:w.y-this.state.pb.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false,msel:bnd.mem.slice(),sel:{kind:'bind',id:bnd.id}}); e.stopPropagation(); return; } const pos=this.state.pb.placed[id],w=this.PB_toWorld(e); if(this.state.pb.msel.length>1&&this.state.pb.msel.indexOf(id)>=0){ const offs={}; this.state.pb.msel.forEach(mid=>{ if(this.state.pb.placed[mid]) offs[mid]={x:w.x-this.state.pb.placed[mid].x,y:w.y-this.state.pb.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'piece',dragOff:{x:w.x-pos.x,y:w.y-pos.y},moved:false,msel:[]}); e.stopPropagation(); }
+  PB_onLabelDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'label',id},dragId:null}); e.stopPropagation(); return; } const lb=this.state.pb.labels.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'label',dragOff:{x:w.x-lb.x,y:w.y-lb.y},moved:false}); e.stopPropagation(); }
+  PB_onGroupMoveDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'group',id},dragId:null}); e.stopPropagation(); return; } const g=this.state.pb.groups.find(x=>x.id===id),w=this.PB_toWorld(e); const childG=this.state.pb.groups.filter(x=>x.id!==id&&x.x>=g.x-2&&x.y>=g.y-2&&x.x+x.w<=g.x+g.w+2&&x.y+x.h<=g.y+g.h+2).map(x=>x.id); const mem={}; this.PB_regionMembers(g).forEach(i=>mem[i]=1); childG.forEach(cid=>{ const cg=this.state.pb.groups.find(x=>x.id===cid); this.PB_regionMembers(cg).forEach(i=>mem[i]=1); }); this._carry=Object.keys(mem); this._carryG=childG; this.PB_set({dragId:id,dragKind:'group-move',dragOff:{x:w.x-g.x,y:w.y-g.y},moved:false}); e.stopPropagation(); }
+  PB_onGroupResizeDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'group',id}}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'group-resize',moved:true,sel:{kind:'group',id}}); e.stopPropagation(); }
+  PB_togglePin(id){ const p=Object.assign({},this.state.pb.pins||{}); if(p[id]) delete p[id]; else p[id]=true; this.PB_set({pins:p}); }
+  PB_makeBlock(){ const m=this.state.pb.msel.filter(id=>this.state.pb.placed[id]); if(m.length<2)return; this.PB_set({binds:this.state.pb.binds.concat([{id:'b'+Date.now(),mem:m}]),msel:[],sel:{kind:'bind',id:'b'+Date.now()}}); }
+  PB_bindOf(id){ return (this.state.pb.binds||[]).find(b=>b.mem.indexOf(id)>=0); }
+  PB_unbind(bid){ this.PB_set({binds:this.state.pb.binds.filter(b=>b.id!==bid),sel:null}); }
+  PB_onHandleDown(id,e){ const w=this.PB_toWorld(e); this.PB_set({connectDrag:{from:id,cx:w.x,cy:w.y}}); e.stopPropagation(); }
+  PB_onCanvasMove(e){ const s=this.state.pb,w=this.PB_toWorld(e);
+    if(s.dragId){ if(!s.moved) this.PB_set({moved:true}); if(s.dragKind==='time'){ this.PB_set({times:s.times.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(40,w.x-s.dragOff.x)}):x)}); } else if(s.dragKind==='multi'){ const np=Object.assign({},s.placed); s.msel.forEach(mid=>{ const o=s.multiOff[mid]; if(o&&np[mid]) np[mid]={x:Math.max(0,w.x-o.x),y:Math.max(0,w.y-o.y)}; }); this.PB_set({placed:np}); } else if(s.dragKind==='label'){ this.PB_set({labels:s.labels.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}):x)}); } else if(s.dragKind==='group-move'){ const g=s.groups.find(x=>x.id===s.dragId); const nx=Math.max(0,w.x-s.dragOff.x),ny=Math.max(0,w.y-s.dragOff.y),dx=nx-g.x,dy=ny-g.y; const mem=this._carry||[]; const cg=this._carryG||[]; const np=Object.assign({},s.placed); mem.forEach(id=>{ if(np[id]) np[id]={x:np[id].x+dx,y:np[id].y+dy}; }); this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{x:nx,y:ny}):(cg.indexOf(x.id)>=0?Object.assign({},x,{x:x.x+dx,y:x.y+dy}):x)),placed:np}); } else if(s.dragKind==='group-resize'){ this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{w:Math.max(80,w.x-x.x),h:Math.max(60,w.y-x.y)}):x)}); } else { this.PB_set({placed:Object.assign({},s.placed,{[s.dragId]:{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}})}); } return; }
+    if(s.connectDrag){ this.PB_set({connectDrag:Object.assign({},s.connectDrag,{cx:w.x,cy:w.y})}); return; }
+    if(s.marquee){ this.PB_set({marquee:Object.assign({},s.marquee,{x2:w.x,y2:w.y})}); return; }
+    if(s.panning){ this.PB_set({pan:this.PB_clampPan(e.clientX-s.panStart.x,e.clientY-s.panStart.y)}); return; }
+    if(s.drawShape){ this.PB_set({drawShape:Object.assign({},s.drawShape,{x2:w.x,y2:w.y})}); return; }
+  }
+  PB_onCanvasUp(e){ const s=this.state.pb;
+    if(s.dragId){ const wasBind=this.PB_bindOf(s.dragId); if(!s.moved){ const k=s.dragKind==='group-move'?'group':s.dragKind; this.PB_set({sel:wasBind?{kind:'bind',id:wasBind.id}:{kind:k,id:s.dragId},dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); } else this.PB_set({dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); return; }
+    if(s.connectDrag){ const w=this.PB_toWorld(e); let hit=null; Object.keys(s.placed).forEach(id=>{ if(id===s.connectDrag.from||!this.PB_card(id))return; const p=s.placed[id]; if(w.x>=p.x&&w.x<=p.x+this.PB_cardW(id)&&w.y>=p.y&&w.y<=p.y+this.PB_cardH(id)) hit=id; }); if(hit){ const from=s.connectDrag.from,pa=s.placed[from],pb=s.placed[hit],rest=s.strings.filter(x=>!((x.a===from&&x.b===hit)||(x.a===hit&&x.b===from))); this.PB_set({connectDrag:null,strings:rest.concat([{a:from,b:hit,rel:'related'}]),relPicker:{a:from,b:hit,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22}}); } else this.PB_set({connectDrag:null}); return; }
+    if(s.panning){ this.PB_set({panning:false,panStart:null}); return; }
+    if(s.marquee){ const mq=s.marquee,x0=Math.min(mq.x1,mq.x2),y0=Math.min(mq.y1,mq.y2),x1=Math.max(mq.x1,mq.x2),y1=Math.max(mq.y1,mq.y2); const hit=Object.keys(s.placed).filter(id=>{ if(!this.PB_card(id))return false; const p=s.placed[id]; return p.x+this.PB_cardW(id)>=x0&&p.x<=x1&&p.y+this.PB_cardH(id)>=y0&&p.y<=y1; }); this.PB_set({marquee:null,msel:hit,sel:null}); return; }
+    if(s.drawShape){ const g=s.drawShape,tl=g.shape==='timeline',x=Math.min(g.x1,g.x2),y=Math.min(g.y1,g.y2),rawW=Math.abs(g.x2-g.x1),rawH=Math.abs(g.y2-g.y1),tiny=rawW<40&&rawH<30,wd=tl?(rawW<200?320:rawW):(tiny?220:rawW),ht=tl?52:(tiny?140:rawH); this.PB_set({groups:s.groups.concat([{id:'g'+Date.now(),x,y,w:wd,h:ht,shape:g.shape,label:g.shape==='venn'?'교집합':(tl?'타임라인':'용의선상'),anchor:null}]), drawShape:null, tool:null, sel:{kind:'group',id:null}}); return; }
+  }
+  PB_onBgDown(e){ const s=this.state.pb;
+    if(s.tool==='box'||s.tool==='venn'||s.tool==='timeline'){ const w=this.PB_toWorld(e); this.PB_set({drawShape:{x1:w.x,y1:w.y,x2:w.x,y2:w.y,shape:s.tool},sel:null}); return; }
+    if(s.tool==='memo'){ const w=this.PB_toWorld(e); const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},s.memoText,{[id]:''}),memoOrder:s.memoOrder.concat([id]),placed:Object.assign({},s.placed,{[id]:{x:w.x,y:w.y}}),tool:null,sel:{kind:'piece',id}}); return; }
+    if(s.tool==='label'){ const w=this.PB_toWorld(e); const id='l'+Date.now(); this.PB_set({labels:s.labels.concat([{id,x:w.x,y:w.y,text:''}]),tool:null,sel:{kind:'label',id}}); return; }
+    if(s.connectMode){ this.PB_set({connectFrom:null,relPicker:null,sel:null}); return; }
+    if(e.shiftKey&&!s.mapLock){ const w=this.PB_toWorld(e); this.PB_set({marquee:{x1:w.x,y1:w.y,x2:w.x,y2:w.y},sel:null,msel:[],detailId:null}); return; }
+    if(s.mapLock){ this.PB_set({hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]}); return; }
+    this.PB_set({panning:true,panStart:{x:e.clientX-s.pan.x,y:e.clientY-s.pan.y},hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]});
+  }
+  PB_onPieceClick(id){ if(!this.state.pb.connectMode) return; const f=this.state.pb.connectFrom; if(!f){ this.PB_set({connectFrom:id}); return; } if(f===id){ this.PB_set({connectFrom:null}); return; } const pa=this.state.pb.placed[f],pb=this.state.pb.placed[id],rest=this.state.pb.strings.filter(x=>!((x.a===f&&x.b===id)||(x.a===id&&x.b===f))); this.PB_set({strings:rest.concat([{a:f,b:id,rel:'related'}]),relPicker:{a:f,b:id,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22},connectFrom:null}); }
+  PB_setRel(rel){ const rp=this.state.pb.relPicker; if(!rp)return; const rest=this.state.pb.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))); this.PB_set({strings:rest.concat([{a:rp.a,b:rp.b,rel}]),relPicker:null}); }
+  PB_delRel(){ const rp=this.state.pb.relPicker; this.PB_set({strings:this.state.pb.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))),relPicker:null}); }
+  PB_freshId(base){ if(!this.state.pb.placed[base]) return base; let n=2; while(this.state.pb.placed[base+'#'+n]) n++; return base+'#'+n; }
+  PB_addPiece(id){ const nid=this.PB_freshId(id); this.PB_set({placed:Object.assign({},this.state.pb.placed,{[nid]:{x:300+Math.random()*160,y:180+Math.random()*180}}),sel:{kind:'piece',id:nid}}); }
+  PB_dupPiece(id){ const d=this.PB_card(id),p=this.state.pb.placed[id]; if(!p)return; if(d.kind==='memo'){ const nid='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.state.pb.memoText,{[nid]:d.text}),memoOrder:this.state.pb.memoOrder.concat([nid]),placed:Object.assign({},this.state.pb.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); return; } const nid=this.PB_freshId(this.PB_baseId(id)); this.PB_set({placed:Object.assign({},this.state.pb.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); }
+  PB_removePiece(id){ const p=Object.assign({},this.state.pb.placed); delete p[id]; this.PB_set({placed:p,strings:this.state.pb.strings.filter(s=>s.a!==id&&s.b!==id)}); }
+  PB_newMemo(){ const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.state.pb.memoText,{[id]:''}),memoOrder:this.state.pb.memoOrder.concat([id]),placed:Object.assign({},this.state.pb.placed,{[id]:{x:320+Math.random()*120,y:200+Math.random()*140}}),sel:{kind:'piece',id}}); }
+  PB_deleteSel(){ const sel=this.state.pb.sel; if(!sel)return; if(sel.kind==='piece') this.PB_removePiece(sel.id); else if(sel.kind==='label') this.PB_set({labels:this.state.pb.labels.filter(x=>x.id!==sel.id)}); else if(sel.kind==='group') this.PB_set({groups:this.state.pb.groups.filter(x=>x.id!==sel.id)}); this.PB_set({sel:null,detailId:null}); }
+  PB_setZoom(z){ if(this.state.pb.mapLock)return; this.PB_set({zoom:Math.max(0.5,Math.min(1.6,z))}); }
+  PB_clampPan(x,y){ return { x:Math.min(40,x), y:Math.min(40,y) }; }
+  PB_laneIdx(x){ return Math.max(0,Math.min(3,Math.floor(x/450))); }
+  PB_bandOf(cx){ const ts=this.state.pb.times.slice().sort((a,b)=>a.x-b.x); if(!ts.length)return null; let owner=ts[0].id; for(const t of ts){ if(cx>=t.x-90) owner=t.id; } return owner; }
+  PB_onTimeDown(id,e){ const t=this.state.pb.times.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'time',dragOff:{x:w.x-t.x,y:0},moved:false}); e.stopPropagation(); }
+  PB_addTime(){ const xs=this.state.pb.times.map(t=>t.x),nx=(xs.length?Math.max.apply(null,xs):200)+250; const id='t'+Date.now(); this.PB_set({times:this.state.pb.times.concat([{id,x:nx,label:'새 시간'}]),sel:{kind:'time',id}}); }
+  PB_delTime(id){ this.PB_set({times:this.state.pb.times.filter(t=>t.id!==id),sel:null,hlTimeId:this.state.pb.hlTimeId===id?null:this.state.pb.hlTimeId}); }
+  PB_render(){ this.PB_key();
+    const s=this.state.pb;
+    const ln=this.state.lang;
+    const placedIds=Object.keys(s.placed).filter(id=>this.PB_card(id));
+    const cx={},cy={}; placedIds.forEach(id=>{ cx[id]=s.placed[id].x+90; cy[id]=s.placed[id].y+26; });
+    const selP=s.sel&&s.sel.kind==='piece'?s.sel.id:null;
+    const vennHot={}; s.groups.forEach(g=>{ if(g.shape==='venn') placedIds.forEach(id=>{ if(this.PB_inVennOverlap(g,id)) vennHot[id]=true; }); });
+    const _selBind=(s.sel&&s.sel.kind==='bind')?(s.binds||[]).find(x=>x.id===s.sel.id):null; const _bindMem=_selBind?_selBind.mem:[];
+    const pieces=placedIds.map(id=>{ const d=this.PB_card(id); if(!d) return null; const pos=s.placed[id],selc=s.connectFrom===id,seld=selP===id; const cxw=pos.x+this.PB_cardW(id)/2; const laned=s.timelineOn&&pos.y<56; const own=laned?this.PB_bandOf(cxw):null; const tmk=own?s.times.find(t=>t.id===own):null; const tl=tmk?tmk.label:''; const hot=s.hlTimeId!==null&&laned&&own===s.hlTimeId; const dim=s.hlTimeId!==null&&laned&&own!==s.hlTimeId; const sz=this.PB_sizeOf(id); const vh=vennHot[id];
+      const typeColor=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':(d.kind==='quote'?(d.spk||'var(--fg-3)'):'var(--fg-3)')));
+      const inBind=_bindMem.indexOf(id)>=0; const on=selc||seld||hot||vh||inBind||(s.msel.indexOf(id)>=0); const bd=on?'var(--accent)':'var(--border-strong)';
+      return { id, tierFull:sz==='full',tierChip:sz==='chip',tierDot:sz==='dot', notPersonChip:d.kind!=='person',
+        isPerson:d.kind==='person',isEvidence:d.kind==='evidence',isQuote:d.kind==='quote',isMemo:d.kind==='memo',notMemo:d.kind!=='memo',
+        label:d.label,sub:d.sub||'',hasSub:!!d.sub,ini:d.ini||(d.kind==='memo'?'메':(d.kind==='quote'?'\u201C':'')),icon:d.icon,quote:d.quote||'',text:d.text||'',
+        typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),typeColor,laned,timeLabel:tl,
+        avStyle:{width:'24px',height:'24px',borderRadius:'5px',flex:'none',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 10px var(--font-sans)',color:'#0A0A0B',background:'linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'},
+        chipStyle:{display:'flex',alignItems:'center',gap:'7px',width:'128px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'6px 9px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
+        chipDot:{width:'16px',height:'16px',borderRadius:d.kind==='person'?'50%':'4px',flex:'none',background:typeColor,color:'#0A0A0B',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 9px var(--font-sans)'},
+        dotStyle:{width:'28px',height:'28px',borderRadius:d.kind==='person'?'50%':'6px',background:d.kind==='person'?('linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'):typeColor,border:'2px solid '+(on?'var(--accent)':'var(--bg-app)'),boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)',display:'flex',alignItems:d.kind==='quote'?'flex-start':'center',justifyContent:'center',font:(d.kind==='quote'?'700 22px':'700 10px')+' var(--font-sans)',lineHeight:d.kind==='quote'?'20px':'1',color:'#0A0A0B'},
+        wrapCls:'pb-piece'+((selc||seld)?' pb-sel':''),
+        pinned:!!(s.pins&&s.pins[id]),
+        wrapStyle:{left:pos.x+'px',top:pos.y+'px',zIndex:(selc||seld)?20:5,cursor:s.connectMode?'crosshair':((s.pins&&s.pins[id])?'default':'grab'),opacity:dim?0.32:1,transition:'opacity .15s'},
+        cardStyle:{width:'200px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'9px 11px 10px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
+        handleStyle:{position:'absolute',right:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
+        portInStyle:{position:'absolute',left:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
+        onPortInDown:(e)=>this.PB_onHandleDown(id,e),
+        onDown:(e)=>this.PB_onPieceDown(id,e), onClick:()=>this.PB_onPieceClick(id), onHandleDown:(e)=>this.PB_onHandleDown(id,e),
+        onText:(e)=>this.PB_set({memoText:Object.assign({},s.memoText,{[id]:e.target.value})}), stopDown:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } };
+    }).filter(Boolean);
+    const portR=(id)=>({x:s.placed[id].x+this.PB_cardW(id),y:s.placed[id].y+this.PB_cardH(id)/2}), portL=(id)=>({x:s.placed[id].x,y:s.placed[id].y+this.PB_cardH(id)/2});
+    const rp=s.relPicker;
+    const strings=s.strings.filter(st=>s.placed[st.a]&&s.placed[st.b]).map(st=>{ const active=rp&&((rp.a===st.a&&rp.b===st.b)||(rp.a===st.b&&rp.b===st.a)); const r=active?{label:this.PB_REL[st.rel].label,color:'var(--accent)'}:(this.PB_REL[st.rel]||this.PB_REL.same); const pa=portR(st.a),pb=portL(st.b); const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+      return { x1:pa.x,y1:pa.y,x2:pb.x,y2:pb.y,color:r.color,lineStyle:{stroke:r.color,strokeWidth:1.5,strokeDasharray:'5 4'},relLabel:r.label,labelStyle:{position:'absolute',left:mx+'px',top:my+'px',transform:'translate(-50%,-50%)',zIndex:6,background:'var(--bg-subtle)',border:'1px solid '+r.color,color:r.color,borderRadius:'var(--r-pill)',padding:'1px 8px',fontSize:'10px',fontWeight:600,cursor:'pointer'},onEdit:()=>{ this.PB_set({relPicker:{a:st.a,b:st.b,x:mx,y:my}}); } }; });
+    const cd=s.connectDrag; const cdp=cd?portR(cd.from):null; const liveLine={show:!!cd,x1:cdp?cdp.x:0,y1:cdp?cdp.y:0,x2:cd?cd.cx:0,y2:cd?cd.cy:0};
+    const placedSet={}; placedIds.forEach(id=>placedSet[id]=1);
+    const revEv=this.PB_revEvidence;
+    const drawer=this.PB_KINDS.map(kd=>{ let ids=kd.k==='memo'?s.memoOrder.slice():this.PB_cards.filter(c=>c.kind===kd.k).map(c=>c.id);
+      if(kd.k==='evidence'&&revEv) ids=ids.filter(id=>revEv[id]);
+      const locked=kd.k==='evidence'&&ids.length===0;
+      return { title:kd.title, isMemo:kd.k==='memo', onNew:()=>this.PB_newMemo(), locked, lockedHint:'조사 전 · 없음',
+        dot:{width:'7px',height:'7px',borderRadius:kd.k==='person'?'50%':'2px',flex:'none',background:kd.k==='person'?'var(--fg-3)':(kd.k==='evidence'?'var(--accent)':(kd.k==='memo'?'#F2C94C':'var(--fg-3)'))},
+        items:ids.map(id=>{ const d=this.PB_card(id); const cnt=Object.keys(s.placed).filter(pid=>this.PB_baseId(pid)===id).length; const placed=cnt>0;
+          return { label:d.kind==='memo'?((d.text||'빈 메모').slice(0,16)):d.label, placed, count:cnt, onAdd:()=>this.PB_addPiece(id),
+            rowStyle:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 8px',border:'1px solid '+(placed?'var(--accent)':'var(--border-strong)'),borderRadius:'var(--r-sm)',cursor:'pointer',background:placed?'var(--accent-soft)':'transparent'},
+            badgeStyle:{fontSize:'10px',fontWeight:700,color:'var(--fg-on-accent)',background:'var(--accent)',borderRadius:'var(--r-pill)',padding:'0 6px',flex:'none'} }; }) }; });
+    const ds=s.drawShape,tempGroup={show:!!ds,style:ds?{position:'absolute',left:Math.min(ds.x1,ds.x2)+'px',top:Math.min(ds.y1,ds.y2)+'px',width:Math.abs(ds.x2-ds.x1)+'px',height:Math.abs(ds.y2-ds.y1)+'px',border:'1.5px dashed var(--accent)',borderRadius:ds.shape==='venn'?'var(--r-md)':'var(--r-md)',background:'var(--accent-soft)',zIndex:1}:{}};
+    const selG=s.sel&&s.sel.kind==='group'?s.sel.id:null;
+    const groups=s.groups.map(g=>{ const isVenn=g.shape==='venn',isTl=g.shape==='timeline'; const sg=selG===g.id; const cbc=sg?'var(--accent)':'var(--border-strong)';
+      const boxStyle=isVenn?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',background:'transparent',zIndex:1}:isTl?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',borderTop:'1.5px '+(sg?'solid ':'dashed ')+cbc,background:'transparent',zIndex:1}:{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',border:'1.5px '+(sg?'solid ':'dashed ')+cbc,borderRadius:'var(--r-md)',background:'rgba(255,255,255,.02)',zIndex:1};
+      const circ={position:'absolute',top:'0',width:'64%',height:'100%',borderRadius:'50%',border:'1.5px dashed '+cbc,background:'rgba(76,141,255,.04)'};
+      const an=g.anchor?this.PB_card(g.anchor):null,anColor=an?(an.kind==='person'?an.c1:'var(--accent)'):null;
+      const tlTicks=isTl?this.PB_LANES.map((lb,i)=>({label:lb,style:{position:'absolute',left:((i+0.5)/this.PB_LANES.length*100)+'%',top:'2px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'},tickStyle:{width:'1px',height:'7px',background:'var(--border-strong)'},labelStyle:{color:'var(--fg-4)',fontSize:'10px',whiteSpace:'nowrap'}})):[];
+      return { label:g.label, isVenn, isTl, notTl:!isTl, empty:!isTl&&this.PB_regionMembers(g).length===0, boxStyle, circleL:Object.assign({},circ,{left:'0'}), circleR:Object.assign({},circ,{right:'0'}), tlTicks,
+        hasAnchor:!!an, anchorIni:an?(an.ini||'"'):'', anchorLabel:an?an.label:'', anchorColor:anColor,
+        anchorSlotStyle:{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'16px',height:'16px',borderRadius:'4px',border:an?'none':'1px dashed var(--border-strong)',background:an?('linear-gradient(135deg,'+anColor+','+anColor+')'):'transparent',color:'#0A0A0B',font:'700 9px var(--font-sans)',cursor:'pointer',flex:'none'},
+        onClearAnchor:()=>this.PB_set({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{anchor:null}):x)}),
+        labelWrapStyle:{position:'absolute',left:isVenn?'50%':(isTl?'8px':'18px'),top:'-11px',transform:isVenn?'translateX(-50%)':'none',display:'flex',alignItems:'center',gap:'5px',background:'var(--bg-subtle)',padding:'0 4px'},
+        labelStyle:{background:'transparent',border:'none',outline:'none',boxShadow:'none',color:an?anColor:'var(--fg-3)',font:'600 11px var(--font-sans)',padding:0,maxWidth:'140px'},
+        stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onLabel:(e)=>this.PB_set({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{label:e.target.value}):x)}),onMoveDown:(e)=>this.PB_onGroupMoveDown(g.id,e),onResizeDown:(e)=>this.PB_onGroupResizeDown(g.id,e) }; });
+    const selL=s.sel&&s.sel.kind==='label'?s.sel.id:null;
+    const labels=s.labels.map(lb=>({text:lb.text,selected:selL===lb.id,onDel:()=>{ this.PB_set({labels:s.labels.filter(x=>x.id!==lb.id),sel:null}); },delStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },wrapStyle:{left:lb.x+'px',top:lb.y+'px',zIndex:4,display:'flex',alignItems:'center',gap:'4px',cursor:'grab'},inputStyle:{background:selL===lb.id?'var(--accent-soft)':'transparent',pointerEvents:selL===lb.id?'auto':'none'},onDown:(e)=>this.PB_onLabelDown(lb.id,e),stopIfEdit:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onText:(e)=>this.PB_set({labels:s.labels.map(x=>x.id===lb.id?Object.assign({},x,{text:e.target.value}):x)})}));
+    const markers=s.times.slice().sort((a,b)=>a.x-b.x).map(t=>{ const sel=s.sel&&s.sel.kind==='time'&&s.sel.id===t.id; const active=s.hlTimeId===t.id; return { id:t.id, label:t.label, selected:sel,
+      onDown:(e)=>this.PB_onTimeDown(t.id,e), onHi:()=>this.PB_set({hlTimeId:active?null:t.id}),
+      onLabel:(e)=>this.PB_set({times:s.times.map(x=>x.id===t.id?Object.assign({},x,{label:e.target.value}):x)}),
+      onDel:()=>this.PB_delTime(t.id), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); }, locked:false, notLocked:true,
+      wrapStyle:{position:'absolute',left:t.x+'px',top:'8px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',cursor:'grab',zIndex:sel?12:6},
+      tickStyle:{width:'2px',height:'11px',background:active?'var(--accent)':'var(--border-strong)'},
+      inputStyle:{background:sel?'var(--accent-soft)':'transparent',border:'none',outline:'none',textAlign:'center',color:active?'var(--accent)':'var(--fg-3)',font:(active?'600':'500')+' 12px var(--font-sans)',width:'72px',pointerEvents:sel?'auto':'none',borderRadius:'4px'},
+      guideStyle:active?{position:'absolute',left:t.x+'px',top:'56px',width:'1px',height:'1544px',background:'var(--accent-soft)',pointerEvents:'none',zIndex:0}:null }; });
+    const relPicker={open:!!rp,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:rp?{position:'absolute',left:rp.x+'px',top:rp.y+'px',zIndex:30,minWidth:'150px'}:{},onDelete:()=>this.PB_delRel(),opts:Object.keys(this.PB_REL).map(k=>({label:this.PB_REL[k].label,onPick:()=>this.PB_setRel(k),dot:{width:'9px',height:'9px',borderRadius:'3px',flex:'none',background:this.PB_REL[k].color}}))};
+    let toolbar={show:false,style:{},actions:[]};
+    if(s.sel){ let ex,ey,acts=[]; const pinned=!!(s.pins&&s.pins[s.sel.id]); const abtn=(label,fn,danger)=>({label,onClick:fn,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{cursor:'pointer',fontSize:'12px',fontWeight:500,color:danger?'var(--label-red)':'var(--fg-2)',padding:'0 4px'}});
+      const pinBtn=abtn(pinned?'고정 해제':'고정',()=>this.PB_togglePin(s.sel.id));
+      if(s.sel.kind==='piece'){ const p=s.placed[s.sel.id],d=this.PB_card(s.sel.id); if(p){ ex=p.x; ey=p.y; acts.push(abtn(this.PB_sizeOf(s.sel.id)==='chip'?'크게':'작게',()=>this.PB_cycleSize(s.sel.id))); if(d.kind!=='memo') acts.push(abtn('상세',()=>this.PB_set({detailId:s.sel.id,detailFull:false}))); acts.push(abtn('복제',()=>this.PB_dupPiece(s.sel.id))); acts.push(pinBtn); acts.push(abtn('삭제',()=>this.PB_deleteSel(),true)); } }
+      else if(s.sel.kind==='label'){ ex=undefined; }
+      else if(s.sel.kind==='group'){ const g=s.groups.find(x=>x.id===s.sel.id); if(g){ ex=g.x; ey=g.y; acts.push(pinBtn); acts.push(abtn('삭제',()=>this.PB_deleteSel(),true)); } }
+      if(ex!==undefined) toolbar={show:true,actions:acts,style:{position:'absolute',left:ex+'px',top:(ey-34)+'px',zIndex:25,display:'flex',alignItems:'center',gap:'10px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-sm)',boxShadow:'var(--shadow-popover)',padding:'5px 9px'}};
+    }
+    let detail={open:false,style:{}};
+    if(s.detailId&&s.placed[s.detailId]){ const d=this.PB_card(s.detailId),p=s.placed[s.detailId]; const tc=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':'var(--fg-3)'));
+      detail={open:true,color:tc,typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),label:d.label,sub:d.sub||'',hasSub:!!d.sub,body:d.quote||d.text||'',hasBody:!!(d.quote||d.text),claim:d.claim||'',hasClaim:!!d.claim,claimLabel:ln==='ko'?'본인 주장':'Own claim',clues:d.clues||[],hasClues:!!(d.clues&&d.clues.length),cluesLabel:ln==='ko'?'발견된 단서':'Found clues',slots:d.slots||[],hasSlots:!!(d.slots&&d.slots.length),unknownLabel:ln==='ko'?'미확인':'Unknown',hasFull:!!d.fullStmt,fullText:d.fullStmt||'',fullOpen:!!s.detailFull,fullChevron:s.detailFull?'rotate(90deg)':'rotate(0deg)',fullLabel:ln==='ko'?'진술 원문':'Full statement',onToggleFull:()=>this.PB_set({detailFull:!s.detailFull}),onClose:()=>this.PB_set({detailId:null}),stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{position:'absolute',left:(p.x+this.PB_cardW(s.detailId)+10)+'px',top:p.y+'px',zIndex:35,width:'240px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-md)',boxShadow:'var(--shadow-modal)',padding:'14px 16px'}}; }
+    const scX=150/2600,scY=100/1600,dots=placedIds.map(id=>({style:{position:'absolute',left:(s.placed[id].x*scX)+'px',top:(s.placed[id].y*scY)+'px',width:'5px',height:'5px',borderRadius:'50%',background:this.PB_card(id).kind==='person'?'var(--accent)':'var(--fg-3)'}}));
+    const mmMap=(e)=>{ const el=e.currentTarget.getBoundingClientRect(); const mx=(e.clientX-el.left)/scX, my=(e.clientY-el.top)/scY; return this.PB_clampPan(-(mx*s.zoom)+350, -(my*s.zoom)+260); };
+    const minimap={dots,onDown:(e)=>{ if(s.mapLock)return; this._mmDrag=true; this.PB_set({pan:mmMap(e)}); },onMove:(e)=>{ if(this._mmDrag&&!s.mapLock) this.PB_set({pan:mmMap(e)}); },onUp:()=>{ this._mmDrag=false; },viewport:{pointerEvents:'none',position:'absolute',left:((-s.pan.x/s.zoom)*scX)+'px',top:((-s.pan.y/s.zoom)*scY)+'px',width:((700/s.zoom)*scX)+'px',height:((520/s.zoom)*scY)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)'}};
+    const tool=s.tool;
+    return { drawer,pieces,strings,liveLine,groups,tempGroup,labels,markers,onAddTime:()=>this.PB_addTime(),tlStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },relPicker,minimap,toolbar,detail,timelineOn:s.timelineOn,
+      worldStyle:{position:'absolute',left:0,top:0,width:'2600px',height:'1600px',transformOrigin:'0 0',transform:'translate('+s.pan.x+'px,'+s.pan.y+'px) scale('+s.zoom+')'},
+      tlBandTop: (s.mapLock?0:((-s.pan.y)/s.zoom))+'px',
+      canvasCursor: tool?'copy':(s.panning?'grabbing':'default'),
+      addChip:'v-chip'+(s.addOpen||tool?' active':''), addOpen:s.addOpen, onToggleAdd:()=>this.PB_set({addOpen:!s.addOpen,tool:null}),
+      tools:this.PB_TOOLS.map(t=>({label:t.label,onPick:()=>this.PB_set({tool:t.t,addOpen:false}),dot:{width:'8px',height:'8px',borderRadius:t.t==='venn'?'50%':'2px',flex:'none',background:'var(--fg-3)'}})),
+      connChip:'v-chip'+(s.connectMode?' active':''), onToggleConn:()=>this.PB_set({connectMode:!s.connectMode,connectFrom:null,tool:null}),
+      tlChip:'v-chip'+(s.timelineOn?' active':''), onToggleTl:()=>this.PB_set({timelineOn:!s.timelineOn,hlTimeId:null}),
+      mapLockChip:'v-chip'+(s.mapLock?' active':''), onToggleMapLock:()=>this.PB_set({mapLock:!s.mapLock,panning:false}),
+      drawerOpen:s.drawerOpen, drawerClosed:!s.drawerOpen, drawerTitle: ln==='ko'?'자료':'Sources', onToggleDrawer:()=>this.PB_set({drawerOpen:!s.drawerOpen}),
+      hint: tool?'클릭/드래그해 배치':(s.connectMode?(s.connectFrom?'이을 두 번째 카드를 누르세요':'연결할 첫 카드를 누르세요'):'클릭=선택 · 드래그=이동 · 우측 점 끌어 연결 · 빈 곳=이동'),
+      zoomPct:Math.round(s.zoom*100)+'%',onZoomIn:()=>this.PB_setZoom(s.zoom+0.15),onZoomOut:()=>this.PB_setZoom(s.zoom-0.15),
+      onHome:()=>this.PB_set({zoom:1,pan:{x:40,y:40}}),
+      onFit:()=>{ const ids=placedIds; if(!ids.length){ this.PB_set({zoom:1,pan:{x:0,y:0}}); return; } let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const p=s.placed[id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+this.PB_cardW(id)); y1=Math.max(y1,p.y+this.PB_cardH(id)); }); const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2,z=Math.max(0.5,Math.min(1.3,Math.min(700/bw,520/bh))); this.PB_set({zoom:z,pan:{x:-(x0-pad)*z+40,y:-(y0-pad)*z+40}}); },
+      onReset:()=>this.PB_set({placed:{},memoText:{},memoOrder:[],labels:[],groups:[],strings:[],times:this.state.pb.times,sel:null,detailId:null,relPicker:null,pan:{x:0,y:0},zoom:1}),
+      onBgDown:(e)=>this.PB_onBgDown(e),onCanvasMove:(e)=>this.PB_onCanvasMove(e),onCanvasUp:(e)=>this.PB_onCanvasUp(e),
+      marquee: s.marquee?{ style:{position:'absolute',left:Math.min(s.marquee.x1,s.marquee.x2)+'px',top:Math.min(s.marquee.y1,s.marquee.y2)+'px',width:Math.abs(s.marquee.x2-s.marquee.x1)+'px',height:Math.abs(s.marquee.y2-s.marquee.y1)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)',zIndex:30,pointerEvents:'none'} }:null,
+      bindBox: null,
+      mselBar: (s.sel&&s.sel.kind==='bind'&&(this.state.pb.binds||[]).find(b=>b.id===s.sel.id))?{ bind:true, word:'결속', label:'해제', clearLabel:'선택 해제', count:((this.state.pb.binds||[]).find(b=>b.id===s.sel.id)||{mem:[]}).mem.length, onBlock:()=>this.PB_unbind(s.sel.id), onClear:()=>this.PB_set({sel:null}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } } : (s.msel.length>=2?{ word:'선택', label:'묶기', clearLabel:'해제', count:s.msel.length, onBlock:()=>this.PB_makeBlock(), onClear:()=>this.PB_set({msel:[]}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } }:null) };
+  }
+
+  PB_set(patch){ this.setState(s=>({ pb: Object.assign({}, s.pb, patch) })); }
+  PB_key(){ if(this._pbKey) return; this._pbKey=(e)=>{ const t=document.activeElement,tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA')return; if(this.state.view!=='board')return; if((e.key==='Delete'||e.key==='Backspace')&&this.state.pb&&this.state.pb.sel){ e.preventDefault(); this.PB_deleteSel(); } }; window.addEventListener('keydown',this._pbKey); }
+
   applyTheme() { try { document.documentElement.setAttribute('data-theme', this.state.theme === 'light' ? 'light' : 'dark'); } catch (e) {} }
 
   batchim(w) { if (!w) return false; const c = w.charCodeAt(w.length - 1); if (c < 0xAC00 || c > 0xD7A3) return false; return (c - 0xAC00) % 28 !== 0; }
@@ -1545,7 +1918,7 @@ class Component extends DCLogic {
       prevStyle: { opacity: this.state.readIdx > 0 ? 1 : 0.35, pointerEvents: this.state.readIdx > 0 ? 'auto' : 'none' },
       dots: this.PEOPLE.map((pp, i) => ({ onClick: () => this.gotoRead(i), style: { width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer', background: i === this.state.readIdx ? 'var(--accent)' : (i < this.state.readIdx ? 'var(--fg-3)' : 'var(--border-strong)') } })) };
   }
-  pname(id) { const p = this.PEOPLE.find(x => x.id === id); if (p) return p.name; const pl = this.PLACES.find(x => x.id === id); return pl ? (this.state.lang === 'ko' ? pl.ko : pl.en) : id; }
+  pname(id) { const p = this.PEOPLE.find(x => x.id === id); if (p) return p.name; const pl = this.PLACES.find(x => x.id === id); if (pl) return this.state.lang === 'ko' ? pl.ko : pl.en; const fx = (this.FIXTURES || []).find(x => x.id === id); if (fx) return this.state.lang === 'ko' ? fx.ko : fx.en; return id; }
   selectAction(id) { this.setState({ invSel: { action: id, targets: [] } }); }
   onGraphNode(id) { const p = this.PEOPLE.find(x => x.id === id); if (!p) return; let sel = (this.state.graphSel || []).slice(); const i = sel.indexOf(id); if (i >= 0) sel.splice(i, 1); else { sel.push(id); if (sel.length > 2) sel.shift(); } this.setState({ graphSel: sel }); }
   toggleTarget(id) { const s = this.state.invSel; if (!s.action) return; const a = this.INV_ACTIONS.find(x => x.id === s.action); let tg = s.targets.slice(); if (a.mode === 'pair') { const i = tg.indexOf(id); if (i >= 0) tg.splice(i, 1); else if (tg.length < 2) tg.push(id); } else tg = [id]; this.setState({ invSel: { action: s.action, targets: tg } }); }
@@ -1698,7 +2071,7 @@ class Component extends DCLogic {
   REVEALS = {
     s1: { narrow: true, yield: 'narrow', targets: ['search:annex'], statements: [{ pid: 'yujin', y: 'flavor', text: '자살할 사람이 우리를 왜 불렀을까요? 초대장은 전날 밤에야 급하게 돌았어요.' }] },
     s3: { yield: 'decoy', statements: [{ pid: 'wonyoung', y: 'path', text: '유진 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요.' }, { pid: 'yuri', y: 'decoy', text: '아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요.' }] },
-    s4: { yield: 'path', terms: ['폭로 임박'], statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 쿠라 언니 쪽이었죠.' }] },
+    s4: { yield: 'path', statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 쿠라 언니 쪽이었죠.' }] },
   };
   CLAIM_REVEALS = {
     s3: [{ pid: 'yuri', tid: 't1', ko: '통화 중 (본인 주장)', en: 'On a call (claim)' }],
@@ -1953,72 +2326,178 @@ class Component extends DCLogic {
     return { nodes, edges, alibi, legendPerson: ln === 'ko' ? '용의자' : 'Suspects', legendSecret: ln === 'ko' ? '드러난 사건' : 'Revealed', legendEvidence: ln === 'ko' ? '확보 물증' : 'Evidence', hint: ln === 'ko' ? '두 용의자를 선택해 알리바이를 대조하세요. 조사·항 완성으로 관계가 드러납니다.' : 'Select two suspects to cross-check alibis. Relationships surface as you investigate.', selCount: sel.length };
   }
   segTab(active) { return { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '12px', fontWeight: active ? 600 : 500, color: active ? 'var(--fg)' : 'var(--fg-3)', background: active ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' }; }
+  GEO = {
+    vb: { w: 1000, h: 625 },
+    scale: { x: 96, len: 90, y: 585 },
+    buildings: [
+      { id: 'main', x: 70, y: 60, w: 532, h: 485, poche: 'var(--fg-3)' },
+      { id: 'annex', x: 712, y: 66, w: 228, h: 150, poche: 'var(--accent)' },
+    ],
+    rooms: [
+      { id: 'vroom', b: 'main', loc: 'room', x: 70, y: 60, w: 260, h: 485, ko: '채원의 방', en: "Chae-won's room", scene: true, tint: 'rgba(235,87,87,.10)', primary: true },
+      { id: 'living', b: 'main', loc: 'main', x: 330, y: 60, w: 272, h: 270, ko: '거실', en: 'Living', primary: true },
+      { id: 'kitchen', b: 'main', loc: 'main', x: 330, y: 330, w: 272, h: 215, ko: '부엌', en: 'Kitchen' },
+      { id: 'annexRoom', b: 'annex', loc: 'annex', x: 712, y: 66, w: 228, h: 150, ko: '별채', en: 'Annex', primary: true },
+    ],
+    zones: [
+      { id: 'approachZ', loc: 'approach', x: 712, y: 430, w: 228, h: 140, ko: '진입로', en: 'Approach', hatch: true, primary: true },
+      { id: 'homeZ', loc: 'home', x: 712, y: 250, w: 228, h: 120, ko: '자택 (현장 밖)', en: 'Home (off-site)', offsite: true, primary: true },
+    ],
+    doors: [
+      { id: 'roomdoor', x1: 330, y1: 200, x2: 330, y2: 280, hinge: 'p2', swing: -1, ko: '방문', en: 'Room', lx: 370, ly: 240 },
+      { id: 'ldoor', x1: 430, y1: 330, x2: 510, y2: 330, open: true },
+      { id: 'front', x1: 602, y1: 150, x2: 602, y2: 216, hinge: 'p2', swing: -1, ext: true, ko: '정문', en: 'Front', lx: 566, ly: 183 },
+      { id: 'back', x1: 602, y1: 430, x2: 602, y2: 496, hinge: 'p2', swing: -1, ext: true, ko: '후문', en: 'Back', lx: 566, ly: 463 },
+      { id: 'annexdoor', x1: 712, y1: 124, x2: 712, y2: 158, hinge: 'p1', swing: -1, ext: true, building: 'annex', ko: '문', en: 'Door', lx: 700, ly: 182 },
+    ],
+    windows: [
+      { x1: 150, y1: 60, x2: 258, y2: 60, ko: '창문', en: 'Window', lx: 204, ly: 51 },
+      { x1: 410, y1: 60, x2: 518, y2: 60, ko: '창문', en: 'Window', lx: 464, ly: 51 },
+      { x1: 820, y1: 66, x2: 890, y2: 66, building: 'annex', ko: '창문', en: 'Window', lx: 855, ly: 61 },
+    ],
+    walks: [
+      { b: 'annex', x1: 602, y1: 140, x2: 712, y2: 140, min: 10 },
+      { b: 'approach', x1: 602, y1: 500, x2: 712, y2: 500, min: 2 },
+    ],
+    fixtures: { hearth: { x: 200, y: 415 }, window: { x: 204, y: 76 }, safe: { x: 466, y: 205 }, body: { x: 200, y: 300 } },
+  };
+
   buildFloorplan() {
     const ln = this.state.lang, tsel = this.state.mapTime;
-    const revealed = { annex: !!this.state.solved.s1 };
-    const locById = {}; this.LOCATIONS.forEach(l => locById[l.id] = l);
+    const G = this.GEO, VW = G.vb.w, VH = G.vb.h;
+    const px = v => (v / VW * 100), py = v => (v / VH * 100);
+    const annexOn = !!this.state.solved.s1;
+    const eps = 0.6;
+
     const secured = {}; (this.state.invLog || []).forEach(e => { secured[e.action + ':' + e.key] = true; });
     const cluesByLoc = {}; this.FLOOR_CLUES.forEach(c => { if (secured[c.logKey]) { (cluesByLoc[c.loc] = cluesByLoc[c.loc] || []).push({ label: ln === 'ko' ? c.ko : c.en, iconPath: this.termIconPath(c.ko) }); } });
-    const dotsByLoc = {}; this.PEOPLE.forEach(p => { const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; if (!lid) return; const l = locById[lid]; if (!l || (l.gated && !this.state.solved[l.gated])) return; (dotsByLoc[lid] = dotsByLoc[lid] || []).push({ id: p.id, name: p.name, color: p.color }); });
-    const locs = this.LOCATIONS.filter(l => !l.gated || this.state.solved[l.gated]).map(l => {
-      const searched = !!secured['search:' + l.id];
-      const found = (cluesByLoc[l.id] || []).length > 0;
-      const st = this.invStatusFor('search', [l.id]);
-      const searchable = st === 'ok';
-      const stateColor = found ? 'var(--accent)' : searched ? 'var(--g-confirm)' : (l.scene ? 'var(--g-contradict)' : 'var(--border-strong)');
-      const stateBg = found ? 'var(--accent-soft)' : searched ? 'rgba(76,183,130,.06)' : (l.scene ? 'rgba(235,87,87,.06)' : 'var(--bg-subtle)');
-      const gatedNew = !!(l.gated && this.state.solved[l.gated]);
-      const gsec = gatedNew ? this.SECTIONS.find(x => x.id === l.gated) : null;
+
+    const areas = G.rooms.concat(G.zones).filter(a => a.loc !== 'annex' || annexOn);
+    const anchorByLoc = {}; areas.forEach(a => { if (a.primary && anchorByLoc[a.loc] === undefined) anchorByLoc[a.loc] = a; });
+
+    const sRoomFills = [], sHatch = [], sOffsite = [];
+    areas.forEach(a => {
+      if (a.hatch) { sHatch.push({ x: a.x, y: a.y, w: a.w, h: a.h }); return; }
+      if (a.offsite) sOffsite.push({ x: a.x, y: a.y, w: a.w, h: a.h });
+      const searched = !!secured['search:' + a.loc], found = (cluesByLoc[a.loc] || []).length > 0;
+      let fill = null;
+      if (a.tint) fill = a.tint; else if (found) fill = 'var(--accent-soft)'; else if (searched) fill = 'rgba(76,183,130,.10)';
+      if (fill) sRoomFills.push({ x: a.x, y: a.y, w: a.w, h: a.h, fill });
+    });
+
+    const sPoche = [];
+    G.buildings.filter(b => b.id !== 'annex' || annexOn).forEach(b => {
+      sPoche.push({ d: 'M' + b.x + ' ' + b.y + ' H' + (b.x + b.w) + ' V' + (b.y + b.h) + ' H' + b.x + ' Z', color: b.poche, width: 6 });
+      sPoche.push({ d: 'M' + (b.x + 3) + ' ' + (b.y + 3) + ' H' + (b.x + b.w - 3) + ' V' + (b.y + b.h - 3) + ' H' + (b.x + 3) + ' Z', color: 'var(--border)', width: 1 });
+    });
+
+    const rooms = G.rooms.filter(r => r.b !== 'annex' || annexOn);
+    const raw = [], byB = {}; rooms.forEach(r => (byB[r.b] = byB[r.b] || []).push(r));
+    Object.keys(byB).forEach(k => { const rs = byB[k];
+      for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) {
+        const A = rs[i], B = rs[j];
+        if (Math.abs(A.x + A.w - B.x) < eps || Math.abs(B.x + B.w - A.x) < eps) {
+          const x = Math.abs(A.x + A.w - B.x) < eps ? B.x : A.x;
+          const a = Math.max(A.y, B.y), b = Math.min(A.y + A.h, B.y + B.h);
+          if (b - a > eps) raw.push({ o: 'v', c: x, a: a, b: b });
+        }
+        if (Math.abs(A.y + A.h - B.y) < eps || Math.abs(B.y + B.h - A.y) < eps) {
+          const y = Math.abs(A.y + A.h - B.y) < eps ? B.y : A.y;
+          const a = Math.max(A.x, B.x), b = Math.min(A.x + A.w, B.x + B.w);
+          if (b - a > eps) raw.push({ o: 'h', c: y, a: a, b: b });
+        }
+      }
+    });
+    const intDoors = G.doors.filter(d => !d.ext).map(d => { const o = Math.abs(d.x1 - d.x2) < eps ? 'v' : 'h'; return { o: o, c: o === 'v' ? d.x1 : d.y1, a: o === 'v' ? Math.min(d.y1, d.y2) : Math.min(d.x1, d.x2), b: o === 'v' ? Math.max(d.y1, d.y2) : Math.max(d.x1, d.x2) }; });
+    const sWalls = [];
+    raw.forEach(s => {
+      let parts = [[s.a, s.b]];
+      intDoors.forEach(dr => { if (dr.o === s.o && Math.abs(dr.c - s.c) < eps) { const np = []; parts.forEach(p => { const a = p[0], b = p[1]; if (dr.b <= a + eps || dr.a >= b - eps) { np.push([a, b]); } else { if (a < dr.a - eps) np.push([a, dr.a]); if (dr.b < b - eps) np.push([dr.b, b]); } }); parts = np; } });
+      parts.forEach(p => { if (p[1] - p[0] > eps) sWalls.push(s.o === 'v' ? { x1: s.c, y1: p[0], x2: s.c, y2: p[1] } : { x1: p[0], y1: s.c, x2: p[1], y2: s.c }); });
+    });
+
+    const sDoorErase = [], sDoorLeaf = [], sDoorArc = [], doorLabels = [];
+    G.doors.filter(d => d.building !== 'annex' || annexOn).forEach(d => {
+      if (d.open) return;
+      const p1 = { x: d.x1, y: d.y1 }, p2 = { x: d.x2, y: d.y2 };
+      const hinge = d.hinge === 'p1' ? p1 : p2, free = d.hinge === 'p1' ? p2 : p1;
+      const dvx = free.x - hinge.x, dvy = free.y - hinge.y, R = Math.hypot(dvx, dvy);
+      const open = { x: hinge.x + d.swing * (-dvy), y: hinge.y + d.swing * (dvx) };
+      const aF = Math.atan2(free.y - hinge.y, free.x - hinge.x), aO = Math.atan2(open.y - hinge.y, open.x - hinge.x);
+      let dd = aO - aF; while (dd <= -Math.PI) dd += 2 * Math.PI; while (dd > Math.PI) dd -= 2 * Math.PI;
+      const sweep = dd > 0 ? 1 : 0;
+      if (d.ext) sDoorErase.push({ x1: d.x1, y1: d.y1, x2: d.x2, y2: d.y2 });
+      sDoorLeaf.push({ x1: hinge.x, y1: hinge.y, x2: free.x, y2: free.y });
+      sDoorArc.push({ d: 'M' + free.x + ' ' + free.y + ' A' + R + ' ' + R + ' 0 0 ' + sweep + ' ' + open.x + ' ' + open.y });
+      if (d.ko) doorLabels.push({ left: px(d.lx), top: py(d.ly), label: ln === 'ko' ? d.ko : d.en });
+    });
+
+    const sWin = [], winLabels = [];
+    G.windows.filter(w => w.building !== 'annex' || annexOn).forEach(w => {
+      const dx = w.x2 - w.x1, dy = w.y2 - w.y1, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
+      [-3, 0, 3].forEach(o => sWin.push({ x1: w.x1 + nx * o, y1: w.y1 + ny * o, x2: w.x2 + nx * o, y2: w.y2 + ny * o }));
+      if (w.ko) winLabels.push({ left: px(w.lx), top: py(w.ly), label: ln === 'ko' ? w.ko : w.en });
+    });
+
+    const sWalk = G.walks.filter(w => w.b !== 'annex' || annexOn).map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, mx: px((w.x1 + w.x2) / 2), my: py((w.y1 + w.y2) / 2), label: w.min + (ln === 'ko' ? '분' : ' min') }));
+
+    const locs = areas.map(a => {
+      const st = this.invStatusFor('search', [a.loc]);
+      const searched = !!secured['search:' + a.loc], found = (cluesByLoc[a.loc] || []).length > 0, searchable = st === 'ok';
+      const col = found ? 'var(--accent)' : searched ? 'var(--g-confirm)' : a.scene ? 'var(--g-contradict)' : 'var(--fg-3)';
+      const gatedNew = a.loc === 'annex' && annexOn;
       return {
-        id: l.id, name: ln === 'ko' ? l.ko : l.en, scene: !!l.scene, nameColor: l.scene ? 'var(--g-contradict)' : 'var(--fg-3)',
-        revealNote: gsec ? (ln === 'ko' ? (gsec.num + '장 완성으로 공개') : ('Revealed · sec ' + gsec.num)) : '', isNew: gatedNew,
-        searchable, searched, found, statusLabel: found ? (ln === 'ko' ? '물증' : 'Found') : searched ? (ln === 'ko' ? '빈손' : 'Empty') : (ln === 'ko' ? '미조사' : 'Unsearched'),
-        statusStyle: { fontSize: '9px', fontWeight: 700, color: stateColor, background: 'var(--bg-app)', border: '1px solid ' + stateColor, borderRadius: 'var(--r-pill)', padding: '0 5px' },
-        onSearch: searchable ? (() => this.askInvestigate('search', [l.id])) : (() => {}),
-        boxStyle: { position: 'absolute', left: l.x + '%', top: l.y + '%', width: l.w + '%', height: l.h + '%', border: '1px solid ' + stateColor, borderRadius: 'var(--r-sm)', background: stateBg, boxSizing: 'border-box', padding: '7px 9px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', transition: 'border-color .2s, background .2s' },
-        dots: (dotsByLoc[l.id] || []).map(d => ({ name: d.name, style: { display: 'inline-block', width: '13px', height: '13px', borderRadius: '50%', background: d.color, border: '2px solid var(--bg-app)', transition: 'background .3s var(--ease)' } })),
-        hasDots: !!(dotsByLoc[l.id] || []).length,
-        clues: cluesByLoc[l.id] || [], hasClues: !!(cluesByLoc[l.id] || []).length,
+        id: a.id, primary: !!a.primary, name: ln === 'ko' ? a.ko : a.en,
+        nameColor: a.scene ? 'var(--g-contradict)' : a.offsite ? 'var(--fg-4)' : 'var(--fg-2)',
+        onSearch: searchable ? (() => this.askInvestigate('search', [a.loc])) : (() => {}),
+        isNew: !!gatedNew, revealNote: gatedNew ? (ln === 'ko' ? '1장 완성으로 공개' : 'Revealed · sec 1') : '',
+        statusLabel: found ? (ln === 'ko' ? '물증' : 'Found') : searched ? (ln === 'ko' ? '빈손' : 'Empty') : (ln === 'ko' ? '미조사' : 'Unsearched'),
+        statusStyle: { fontSize: '9px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 5px' },
+        clues: cluesByLoc[a.loc] || [], hasClues: (cluesByLoc[a.loc] || []).length > 0,
+        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: '8px 10px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
       };
     });
-    const dots = [];
-    const walks = this.WALK.filter(w => this.LOCATIONS.find(l => l.id === w.b && (!l.gated || this.state.solved[l.gated]))).map(w => { const a = locById[w.a], b = locById[w.b]; return { min: w.min, ln, label: w.min + (ln === 'ko' ? '분' : ' min'), x1: a.x + a.w / 2, y1: a.y + a.h / 2, x2: b.x + b.w / 2, y2: b.y + b.h / 2, mx: (a.x + a.w / 2 + b.x + b.w / 2) / 2, my: (a.y + a.h / 2 + b.y + b.h / 2) / 2 }; });
-    const times = this.TIMES.map(tm => ({ id: tm.id, label: ln === 'ko' ? tm.ko : tm.en, active: tm.id === tsel, onClick: () => this.setState({ mapTime: tm.id }),
-      style: { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '12px', fontWeight: tm.id === tsel ? 600 : 500, color: tm.id === tsel ? 'var(--fg)' : 'var(--fg-3)', background: tm.id === tsel ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' } }));
-    const dotLegend = this.PEOPLE.map(p => ({ name: p.name, color: p.color }));
-    const revealedLocs = {}; this.LOCATIONS.forEach(l => { if (!l.gated || this.state.solved[l.gated]) revealedLocs[l.id] = l; });
+
+    const revealedLocs = {}; areas.forEach(a => revealedLocs[a.loc] = true);
     const fixtures = this.FIXTURES.filter(f => revealedLocs[f.loc]).map(f => {
+      const pos = G.fixtures[f.id] || { x: 500, y: 312 };
       const actId = f.body ? 'autopsy' : 'fixture';
       const st = this.invStatusFor(actId, f.body ? [] : [f.id]);
       const done = st === 'used', okc = st === 'ok';
       const col = f.body ? 'var(--g-contradict)' : done ? 'var(--g-confirm)' : okc ? 'var(--accent)' : 'var(--fg-4)';
       return { id: f.id, name: ln === 'ko' ? f.ko : f.en, body: !!f.body, done, iconPath: f.body ? '' : this.termIconPath(f.icon),
         onRun: okc ? (() => this.askInvestigate(actId, f.body ? [] : [f.id])) : (() => {}),
-        markStyle: { position: 'absolute', left: f.x + '%', top: f.y + '%', transform: 'translate(-50%,-50%)', width: f.body ? '12px' : '20px', height: f.body ? '12px' : '20px', borderRadius: f.body ? '50%' : 'var(--r-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? 'rgba(76,183,130,.15)' : 'var(--bg-elevated)', border: '1.5px solid ' + col, color: col, cursor: okc ? 'pointer' : 'default', zIndex: 3 },
-        labelStyle: { position: 'absolute', left: f.x + '%', top: 'calc(' + f.y + '% + 13px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none' } };
+        markStyle: { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: okc ? 'pointer' : 'default', background: 'transparent', border: 'none', zIndex: 3 },
+        labelStyle: { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
     });
-    const hasAnyClue = Object.keys(cluesByLoc).length > 0;
+
     const idxInLoc = {};
     const personMarkers = this.PEOPLE.map(p => {
-      const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const l = lid ? locById[lid] : null;
-      const shown = !!(l && (!l.gated || this.state.solved[l.gated]));
-      let cxp = 50, cyp = 50;
-      if (shown) { const n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1; const col = n % 3, row = Math.floor(n / 3); cxp = l.x + l.w / 2 + (col - 1) * 6; cyp = l.y + l.h * 0.62 + row * 7; }
+      const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const a = lid ? anchorByLoc[lid] : null;
+      const shown = !!a;
+      let cx = VW / 2, cy = VH / 2;
+      if (shown) { const n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1; const col = n % 3, row = Math.floor(n / 3); cx = a.x + a.w / 2 + (col - 1) * a.w * 0.18; cy = a.y + a.h * 0.6 + row * a.h * 0.12; }
       return { id: p.id, name: p.name, shown,
-        style: { position: 'absolute', left: cxp + '%', top: cyp + '%', transform: 'translate(-50%,-50%)', width: '15px', height: '15px', borderRadius: '50%', background: p.color, border: '2px solid var(--bg-app)', boxShadow: '0 1px 3px rgba(0,0,0,.4)', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' },
-        labelStyle: { position: 'absolute', left: cxp + '%', top: 'calc(' + cyp + '% + 11px)', transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600, color: p.color, whiteSpace: 'nowrap', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' } };
+        style: { position: 'absolute', left: px(cx) + '%', top: py(cy) + '%', transform: 'translate(-50%,-50%)', width: '15px', height: '15px', borderRadius: '50%', background: p.color, border: '2px solid var(--bg-app)', boxShadow: '0 1px 3px rgba(0,0,0,.4)', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' },
+        labelStyle: { position: 'absolute', left: px(cx) + '%', top: 'calc(' + py(cy) + '% + 11px)', transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600, color: p.color, whiteSpace: 'nowrap', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' } };
     });
-    const tIdx = this.TIMES.findIndex(t => t.id === tsel);
-    const scrubHint = ln === 'ko' ? '시간대를 넘기면 각 인물이 \u2018주장한\u2019 위치로 이동합니다. 지도는 판정하지 않습니다.' : 'Scrub time to move each person to their claimed position. The map does not judge.';
+
+    const times = this.TIMES.map(tm => ({ id: tm.id, label: ln === 'ko' ? tm.ko : tm.en, active: tm.id === tsel, onClick: () => this.setState({ mapTime: tm.id }),
+      style: { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '12px', fontWeight: tm.id === tsel ? 600 : 500, color: tm.id === tsel ? 'var(--fg)' : 'var(--fg-3)', background: tm.id === tsel ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' } }));
+    const dotLegend = this.PEOPLE.map(p => ({ name: p.name, color: p.color }));
+    const hasAnyClue = Object.keys(cluesByLoc).length > 0;
+    const scrubHint = ln === 'ko' ? '시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.' : 'Scrub time to move each person to their claimed position. The map does not judge.';
     const fixLoc = {}; this.FIXTURES.forEach(f => { fixLoc[f.id] = f.loc; });
+    const locNameById = {}; this.LOCATIONS.forEach(l => locNameById[l.id] = ln === 'ko' ? l.ko : l.en);
     const narrations = (this.state.invLog || []).filter(e => e.desc && (e.action === 'search' || e.action === 'fixture' || e.action === 'autopsy')).map(e => {
       let lid = e.action === 'search' ? e.key : e.action === 'autopsy' ? 'room' : fixLoc[e.key];
-      const l = locById[lid];
-      return { locName: l ? (ln === 'ko' ? l.ko : l.en) : '', title: e.title, desc: e.desc, empty: e.type === 'empty',
+      return { locName: locNameById[lid] || '', title: e.title, desc: e.desc, empty: e.type === 'empty',
         barColor: e.type === 'empty' ? 'var(--fg-4)' : e.type === 'solution' ? 'var(--g-confirm)' : e.type === 'redherring' ? 'var(--status-progress)' : 'var(--accent)' };
     });
-    return { locs, dots, walks, times, dotLegend, fixtures, personMarkers, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', annexHidden: !revealed.annex,
-      narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings' };
+    const scb = G.scale, scale = { x: scb.x, x2: scb.x + scb.len, y: scb.y, yt1: scb.y - 4, yt2: scb.y + 4 };
+    const scaleLabel = { left: px(scb.x), top: py(scb.y + 18) };
+
+    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ 5m', narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings' };
   }
   FLOOR_CLUES = [
     { logKey: 'search:annex', loc: 'annex', ko: '대포폰', en: 'Burner' },
@@ -2415,7 +2894,7 @@ class Component extends DCLogic {
       mapPlanMode: (s.mapMode || 'plan') === 'plan', mapGridMode: (s.mapMode || 'plan') === 'grid', onMapPlan: () => this.setState({ mapMode: 'plan' }), onMapGrid: () => this.setState({ mapMode: 'grid' }), mapPlanStyle: this.segTab((s.mapMode || 'plan') === 'plan'), mapGridStyle: this.segTab((s.mapMode || 'plan') === 'grid'),
       isGraph: isGraph, graph: this.buildGraph(),
       isLog: isLog, logView: this.buildInvestigation(),
-      isBoard: isBoard, boardSeed: this.buildBoardSeed(), boardJump: (cardId, target) => this.boardJump(cardId, target),
+      isBoard: isBoard, boardSeed: this.buildBoardSeed(), boardJump: (cardId, target) => this.boardJump(cardId, target), pb: (this.state.view === 'board') ? this.PB_render() : null,
       invConfirm: this.buildInvConfirm(), invResultCard: this.buildInvResult(),
       isResult: view === 'result', result: result,
       finishCTA: { show: view === 'narrative' && s.started, onFinish: () => this.setState({ confirmFinish: true }) },
