@@ -10,6 +10,11 @@ import { CaseDetail } from './screens/CaseDetail'
 import { Prologue } from './screens/Prologue'
 import { Briefing } from './screens/Briefing'
 import { Statements } from './screens/Statements'
+import { Report } from './screens/Report'
+import { Overview } from './screens/Overview'
+import { StatementList } from './screens/StatementList'
+import { Shell, type View } from './shell/Shell'
+import { deriveTerms } from '@engine/verifier'
 import { TopBar } from './components/TopBar'
 
 const CASE_ID = 'mountain-lodge'
@@ -35,6 +40,7 @@ export default function App() {
   const [c, setCase] = useState<Case | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [route, setRoute] = useState<Route>('home')
+  const [view, setView] = useState<View>('report')
   const [progress, setProgress] = useState<CaseProgress>(() =>
     load('progress', CASE_ID, newProgress(CASE_ID)),
   )
@@ -58,6 +64,25 @@ export default function App() {
       }
     })
 
+  const setAnswer = (key: string, value: string) =>
+    setProgress((p) => {
+      const answers = { ...p.answers }
+      if (value) answers[key] = value
+      else delete answers[key]
+      return { ...p, answers }
+    })
+
+  /**
+   * 재개봉. 장당 1회.
+   * **이미 공개된 정보는 회수하지 않는다** — 되돌렸다고 진행이 막히면 안 된다.
+   */
+  const reopen = (order: number) =>
+    setProgress((p) => ({
+      ...p,
+      reopensUsed: { ...p.reopensUsed, [order]: true },
+      solved: p.solved.filter((i) => c!.chapters[i]?.order !== order),
+    }))
+
   const markRead = (person: string) =>
     setProgress((p) =>
       p.statementsRead.includes(person)
@@ -68,6 +93,31 @@ export default function App() {
   useEffect(() => {
     loadCase(CASE_ID).then(setCase, (e: Error) => setError(e.message))
   }, [])
+
+  /**
+   * 지금 손에 있는 확보 단어. seedTerms ∪ atScene 물증 ∪ 조사로 얻은 물증.
+   * 엔진의 함수를 그대로 쓴다 — 같은 계산이 두 벌 있으면 반드시 갈라진다.
+   */
+  const terms = c
+    ? deriveTerms(c, new Set(progress.investigations.flatMap((iv) =>
+        c.actions.find((a) => a.id === iv.actionId)?.gives ?? [])))
+    : new Set<string>()
+
+  /**
+   * 장 자동 완성. **`장 확인` 버튼은 없다** — 공란을 다 채우면 완성되고 다음 장이 열린다.
+   * **정답 여부와 무관하게** 완성된다 (`HANDOFF-TO-CODE.md` §5.2).
+   *
+   * 렌더 중이 아니라 여기서 판정하는 이유: 완성은 상태 전이이고, 상태 전이를
+   * 렌더 안에서 일으키면 같은 전이가 두 번 일어난다.
+   */
+  useEffect(() => {
+    if (!c) return
+    const idx = progress.solved.length
+    const ch = c.chapters[idx]
+    if (!ch) return
+    const filled = ch.blanks.every((_, i) => progress.answers[`${ch.order}:${i}`])
+    if (filled) setProgress((p) => ({ ...p, solved: [...p.solved, idx] }))
+  }, [c, progress.answers, progress.solved])
 
   useEffect(() => { save('progress', CASE_ID, progress) }, [progress])
   useEffect(() => { save('annotations', CASE_ID, annotations) }, [annotations])
@@ -126,18 +176,27 @@ export default function App() {
       )
     default:
       return (
-        <div className="nl-fs">
-          <TopBar title={c.title} onBack={() => setRoute('home')} />
-          <div className="nl-fs-body">
-            <div className="nl-brief">
-              <div className="v-h1" style={{ marginBottom: 6 }}>보고서</div>
-              <div className="v-body nl-brief-sub">
-                진술을 다 읽었습니다. 다음은 보고서 화면(5장 20공란)과 인게임 사이드바입니다 — 아직 만들지 않았습니다.
-              </div>
-              <button className="nl-btn" onClick={() => go('read')}>진술 다시 읽기</button>
-            </div>
-          </div>
-        </div>
+        <Shell
+          c={c}
+          progress={progress}
+          view={view}
+          onView={setView}
+          onHome={() => setRoute('home')}
+        >
+          {view === 'overview' && <Overview c={c} />}
+          {view === 'statements' && <StatementList c={c} />}
+          {view === 'report' && (
+            <Report
+              c={c}
+              answers={progress.answers}
+              solved={progress.solved}
+              reopened={progress.reopensUsed}
+              terms={terms}
+              onAnswer={setAnswer}
+              onReopen={reopen}
+            />
+          )}
+        </Shell>
       )
   }
 }

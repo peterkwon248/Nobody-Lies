@@ -514,3 +514,167 @@ body {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ── 자유 진행 셸 ─────────────────────────────────────────────────── */
+
+.nl-side-foot {
+  margin-top: auto;
+  padding: 12px 8px 4px;
+  border-top: 1px solid var(--border);
+}
+
+.nl-side-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nl-side-note {
+  margin-top: 10px;
+  line-height: 1.55;
+  color: var(--fg-4);
+}
+
+.nl-pane,
+.nl-report {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.nl-pane-head,
+.nl-report-head {
+  margin-bottom: 24px;
+}
+
+.nl-stmt-card {
+  margin-bottom: 12px;
+}
+
+/* ── 보고서 ──────────────────────────────────────────────────────────
+   공란은 문장 안에 있다. 목록 조판을 쓰지 않는다.
+
+   ★ 여기에 유용도·정오답에 따른 스타일을 만들지 말 것 ★
+   채워진 공란은 전부 같게 생긴다. 맞았는지는 최종 채점에서만 말한다. */
+
+.nl-chapter {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+
+.nl-chapter-locked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.45;
+}
+
+.nl-chapter-done {
+  background: var(--bg-subtle);
+}
+
+.nl-chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.nl-chapter-num {
+  color: var(--fg-4);
+  font-size: 13px;
+  flex: none;
+}
+
+/* 장이 열릴 때의 절차 한 줄. 제목이 말하는 것 이상을 말하지 않는다 */
+.nl-chapter-opening {
+  margin: 0 0 14px;
+  color: var(--fg-4);
+  font-size: 13px;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+.nl-chapter-report {
+  margin: 0;
+  font-size: 15px;
+  line-height: 2.15;
+  color: var(--fg-2);
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+.nl-blank-wrap {
+  position: relative;
+  white-space: nowrap;
+}
+
+.nl-blank {
+  appearance: none;
+  font: inherit;
+  font-size: 14px;
+  padding: 1px 10px;
+  margin: 0 1px;
+  border-radius: 5px;
+  border: 1px dashed var(--border-strong);
+  background: var(--bg-input);
+  color: var(--fg-4);
+  cursor: pointer;
+}
+
+.nl-blank:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--fg-3);
+}
+
+/* 채워진 공란. 정답 여부와 무관하게 전부 같게 생긴다 */
+.nl-blank-filled {
+  border-style: solid;
+  border-color: var(--border-strong);
+  background: transparent;
+  color: var(--fg);
+}
+
+.nl-blank:disabled {
+  cursor: default;
+  border-style: solid;
+  opacity: 0.85;
+}
+
+.nl-picker {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 40;
+  min-width: 150px;
+  max-height: 260px;
+  overflow: auto;
+  display: block;
+  white-space: normal;
+}
+
+.nl-picker-item {
+  display: block;
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+
+.nl-picker-item:hover {
+  background: var(--bg-hover);
+}
+
+.nl-picker-clear {
+  color: var(--fg-4);
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+
+.nl-picker-empty {
+  display: block;
+  padding: 8px 10px;
+  color: var(--fg-4);
+}
