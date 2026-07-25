@@ -163,10 +163,18 @@ export function generateCase(seed: number): Case {
         opening: '먼저 그 아침에 무엇이 있었는지를 적는다.',
         requiresFacts: innocents.map((id) => `f_no_${id}`),
         blanks: [
-          { label: '인물', candidates: 'closed', answer: innocents[0] },
+          { label: '인물', candidates: 'closed', answer: innocents[0], particle: '이/가' },
           { label: '장소', candidates: 'closed', answer: 'room' },
           { label: '시각', candidates: 'closed', answer: 't2' },
-          { label: '도구', candidates: 'discovered', answer: tool },
+          { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
+        ],
+        // 생성 사건의 서술문은 템플릿이다. 사람이 쓴 사건만큼 좋을 수 없지만
+        // **문장이긴 해야 한다** — 목록으로 두면 보고서가 두 물건이 된다.
+        // 받침에 따라 갈리는 어미(였다/이었다)는 쓰지 않는다. 답이 매번 다르다
+        report: [
+          { text: '그날 아침 ' }, { blank: 0 }, { text: ' 가장 먼저 도착했다. ' },
+          { blank: 2 }, { text: ', ' }, { blank: 1 }, { text: '에서 ' },
+          { blank: 3 }, { text: ' 발견됐다.' },
         ],
         epilogueOrder: 1,
       },
@@ -178,6 +186,11 @@ export function generateCase(seed: number): Case {
           { label: '인물', candidates: 'closed', answer: culprit, isAccusation: true },
           { label: '정체', candidates: 'discovered', answer: alias },
           { label: '동기', candidates: 'discovered', answer: motive },
+        ],
+        report: [
+          { text: '모든 정황이 한 사람을 가리켰다. 진범은 ' }, { blank: 0 },
+          { text: '. 기록에 남은 이름은 ' }, { blank: 1 },
+          { text: ', 그리고 그를 움직인 것은 ' }, { blank: 2 }, { text: '.' },
         ],
         epilogueOrder: 2,
       },

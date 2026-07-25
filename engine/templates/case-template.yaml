@@ -341,10 +341,29 @@ chapters:
     opening: 먼저 그 아침에 무엇이 있었는지를 적는다.
     requires_facts: [f_no_p2, f_no_p3]
     blanks:
-      - { label: 인물, candidates: closed,     answer: p2 }
+      - { label: 인물, candidates: closed,     answer: p2, particle: 이/가 }
       - { label: 장소, candidates: closed,     answer: room }
       - { label: 시각, candidates: closed,     answer: t2 }
-      - { label: 도구, candidates: discovered, answer: 만년필 }
+      - { label: 도구, candidates: discovered, answer: 만년필, particle: 이/가 }
+    # ★ 보고서 서술문 — 공란은 목록이 아니라 문장 안에 박힌다 ★
+    #   문자열 = 텍스트 조각 · { blank: n } = 위 blanks 의 n번째 (0부터)
+    #   검증기가 강제한다: 모든 공란이 정확히 한 번 참조돼야 한다.
+    #   참조 없는 공란은 문맥 없이 뜨고, 두 번 참조하면 같은 답을 두 번 묻는다.
+    #
+    #   조사(particle)는 받침에 따라 갈리는 쌍을 적는다 — 이/가 · 을/를 · 은/는 ·
+    #   과/와 · (으)로. 어느 쪽이 될지는 답이 정해져야 알 수 있으므로 렌더 시점에 고른다.
+    #   ⚠ `였다`·`이었다` 처럼 받침에 갈리는 **어미**는 텍스트 조각에 쓰지 마라.
+    #     조사와 달리 자동 처리 대상이 아니다. 손으로 쓴 사건에서 답이 고정일 때만 안전하다.
+    report:
+      - "그날 아침 "
+      - { blank: 0 }
+      - " 가장 먼저 도착했다. "
+      - { blank: 2 }
+      - ", "
+      - { blank: 1 }
+      - "에서 "
+      - { blank: 3 }
+      - " 발견됐다."
     epilogue_order: 1
     epilogue: 결말 조각. 최종 제출 후 시간순으로 재배열되어 하나의 이야기가 된다.
 
@@ -357,6 +376,14 @@ chapters:
       - { label: 인물, candidates: closed,     answer: p1, is_accusation: true }
       - { label: 정체, candidates: discovered, answer: 가명 }
       - { label: 동기, candidates: discovered, answer: 채무 관계 }
+    report:
+      - "모든 정황이 한 사람을 가리켰다. 진범은 "
+      - { blank: 0 }
+      - ". 기록에 남은 이름은 "
+      - { blank: 1 }
+      - ", 그리고 그를 움직인 것은 "
+      - { blank: 2 }
+      - "."
     epilogue_order: 2
     epilogue: 결말 조각. 트릭과 동기가 여기서 다 밝혀져야 한다.
 

@@ -446,11 +446,10 @@ body {
   color: #0b0c0d;
 }
 
-/* 인물색 레일 = 주장 층의 표시. 내용의 중요도가 아니라 화자를 가리킨다 */
+/* 프로토타입과 같은 평범한 문단. 인물색은 아바타에만 있다 —
+   문단마다 색선을 그으면 그것이 강조로 읽히고, 강조는 게임이 하지 않는다 */
 .nl-read-p {
   margin: 0 0 14px;
-  padding-left: 14px;
-  border-left: 2px solid;
   font-size: 15px;
   line-height: 1.85;
   color: var(--fg-2);

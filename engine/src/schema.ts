@@ -3,7 +3,7 @@ import { load } from 'js-yaml'
 import { DOMAIN_OF } from './types.js'
 import type {
   Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, Location, Person, PresenceCell,
-  Reveal, Slot, Text,
+  Particle, Reveal, Slot, Text,
 } from './types.js'
 
 /**
@@ -35,6 +35,7 @@ class Problems {
 }
 
 const BLANK_LABELS = new Set(Object.keys(DOMAIN_OF))
+const PARTICLES = new Set(['이/가', '을/를', '은/는', '과/와', '(으)로'])
 const FACT_KINDS = new Set([
   'identity', 'opportunity', 'no_opportunity',
   'motive', 'means', 'contradiction', 'context',
@@ -235,17 +236,34 @@ export function parseCase(raw: unknown, source: string): Case {
       if (b?.candidates !== 'closed' && b?.candidates !== 'discovered')
         p.add(`${bat}.candidates`, `'closed' 또는 'discovered' 여야 한다`)
       if (b?.answer === undefined) p.add(bat, 'answer 가 없다')
+      if (b?.particle && !PARTICLES.has(b.particle))
+        p.add(`${bat}.particle`, `조사는 ${[...PARTICLES].join(' · ')} 중 하나여야 한다 (받은 값: ${b.particle})`)
       return {
         label: b?.label as BlankLabel, candidates: b?.candidates, answer: String(b?.answer),
+        ...(b?.particle ? { particle: b.particle as Particle } : {}),
         ...(b?.candidate_pool !== undefined ? { candidatePool: b.candidate_pool } : {}),
         ...(b?.is_accusation ? { isAccusation: true } : {}),
       }
+    })
+
+    // 서술문. 문자열은 텍스트 조각, { blank: n } 은 이 장 blanks 의 n번째 참조
+    const report = arr(ch?.report).map((r: unknown, j) => {
+      if (typeof r === 'string') return { text: r }
+      const o = (r ?? {}) as Raw
+      if (typeof o.blank !== 'number') {
+        p.add(`${at}.report[${j}]`, '문자열이거나 { blank: 숫자 } 여야 한다')
+        return { text: '' }
+      }
+      if (o.blank < 0 || o.blank >= blanks.length)
+        p.add(`${at}.report[${j}]`, `공란 ${o.blank} 번이 없다 (이 장의 공란은 ${blanks.length}개)`)
+      return { blank: o.blank }
     })
 
     return {
       order: ch?.order, title: ch?.title,
       ...(ch?.opening ? { opening: ch.opening } : {}),
       blanks,
+      ...(report.length ? { report } : {}),
       requiresFacts: arr(ch?.requires_facts),
       ...(ch?.epilogue_order !== undefined ? { epilogueOrder: ch.epilogue_order } : {}),
       ...(ch?.epilogue ? { epilogue: ch.epilogue } : {}),

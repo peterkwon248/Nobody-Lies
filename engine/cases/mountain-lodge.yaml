@@ -488,10 +488,21 @@ chapters:
     opening: 다섯 사람의 말은 모두 들었다. 먼저 그날 아침, 방문이 열리기까지를 적는다.
     requires_facts: [f_yena_no, f_yujin_no, f_yuri_no]
     blanks:
-      - { label: 인물,   candidates: closed,     answer: yujin }
-      - { label: 인물,   candidates: closed,     answer: yena }
+      - { label: 인물,   candidates: closed,     answer: yujin, particle: 이/가 }
+      - { label: 인물,   candidates: closed,     answer: yena,  particle: 과/와 }
       - { label: 장소,   candidates: closed,     answer: room }
-      - { label: 은폐수단, candidates: discovered, answer: 테이프 }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로" }
+    # 서술문 — 공란은 문장 안에 박힌다. 문자열은 텍스트, { blank: n } 은 위 blanks 의 n번째
+    report:
+      - "사건 당일 아침, 요리를 돕기로 한 "
+      - { blank: 0 }
+      - " 남들보다 일찍 산장에 도착했다. 뒤이어 도착한 "
+      - { blank: 1 }
+      - " 함께, 두 사람은 "
+      - { blank: 2 }
+      - "에서 새어 나오는 연기를 발견했다. 방문은 안에서 "
+      - { blank: 3 }
+      - " 막혀 있어 쉽게 열리지 않았다."
     epilogue_order: 1
     epilogue: >-
       그날 아침, 요리를 돕기로 한 사람과 뒤이어 도착한 사람이
@@ -505,7 +516,17 @@ chapters:
       - { label: 마지막목격자, candidates: closed, answer: sakura }
       - { label: 시각,       candidates: closed, answer: t1 }
       - { label: 장소,       candidates: closed, answer: main }
-      - { label: 인물,       candidates: closed, answer: wonyoung }
+      - { label: 인물,       candidates: closed, answer: wonyoung, particle: 은/는 }
+    report:
+      - "생전의 윤다인을 마지막으로 본 사람은 "
+      - { blank: 0 }
+      - "였다. "
+      - { blank: 1 }
+      - "까지 두 사람은 "
+      - { blank: 2 }
+      - "에서 함께 술을 마셨다. 한편 "
+      - { blank: 3 }
+      - " 같은 시각 피해자의 전화를 받았다고 진술했다."
     epilogue_order: 2
     epilogue: >-
       마지막으로 다인을 본 것은 세라였다. 새벽 3시, 두 사람은 본채에 함께 있었다.
@@ -517,9 +538,19 @@ chapters:
     requires_facts: [f_cause, f_sakura_means]
     blanks:
       - { label: 사인,     candidates: discovered, answer: 일산화탄소 중독 }
-      - { label: 도구,     candidates: discovered, answer: 연탄 }
-      - { label: 은폐수단, candidates: discovered, answer: 테이프 }
-      - { label: 위장물,   candidates: discovered, answer: 유서 }
+      - { label: 도구,     candidates: discovered, answer: 연탄,   particle: 을/를 }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로" }
+      - { label: 위장물,   candidates: discovered, answer: 유서,   particle: 을/를 }
+    report:
+      - "부검 결과 직접 사인은 "
+      - { blank: 0 }
+      - "으로 확인됐다. 범인은 화로에 "
+      - { blank: 1 }
+      - " 피워 방을 채우고, 문과 창을 "
+      - { blank: 2 }
+      - " 밀폐했다. 그리고 자살로 위장하기 위해 현장에 "
+      - { blank: 3 }
+      - " 놓아두었다."
     epilogue_order: 3
     epilogue: >-
       사인은 일산화탄소 중독이었다. 화로의 연탄이 방을 채웠고, 문틈의 테이프가
@@ -530,11 +561,23 @@ chapters:
     opening: 현장은 설명됐다. 그러나 설명된 것은 방법뿐이었다.
     requires_facts: [f_alias_exists, f_sakura_is_alias]
     blanks:
-      - { label: 물품,     candidates: discovered, answer: 마약 }
+      - { label: 물품,     candidates: discovered, answer: 마약,   particle: 이/가 }
       - { label: 정체,     candidates: discovered, answer: 김선생 }
-      - { label: 협박대상, candidates: closed,     answer: yuri }
-      - { label: 인물,     candidates: closed,     answer: wonyoung }
+      - { label: 협박대상, candidates: closed,     answer: yuri,   particle: 을/를 }
+      - { label: 인물,     candidates: closed,     answer: wonyoung, particle: 이/가 }
       - { label: 인물,     candidates: closed,     answer: sakura }
+    report:
+      - "산장에 흘러들던 "
+      - { blank: 0 }
+      - " 사건의 이면을 드러냈다. 그것은 마약 유통망 "
+      - { blank: 1 }
+      - "의 것이었다. 조직은 "
+      - { blank: 2 }
+      - " 약물로 붙들어 두고 있었고, 며칠 전 "
+      - { blank: 3 }
+      - " 그 실체를 캐묻기 시작한 참이었다. 그리고 그 이름의 주인은 "
+      - { blank: 4 }
+      - "였다."
     epilogue_order: 4
     epilogue: >-
       그 산장에는 마약이 흐르고 있었다. 유통을 쥔 것은 김선생이라는 이름의
@@ -547,8 +590,16 @@ chapters:
     requires_facts: [f_sakura_motive, f_sakura_opp]
     blanks:
       - { label: 인물,   candidates: closed,     answer: sakura, is_accusation: true }
-      - { label: 동기,   candidates: discovered, answer: 폭로 임박 }
+      - { label: 동기,   candidates: discovered, answer: 폭로 임박, particle: "(으)로" }
       - { label: 은닉처, candidates: discovered, answer: 별채 대포폰 }
+    report:
+      - "모든 정황이 한 사람을 가리켰다. 진범은 "
+      - { blank: 0 }
+      - ". 그는 조직이 드러나는 것을 막으려는 "
+      - { blank: 1 }
+      - " 윤다인을 살해했고, 증거를 "
+      - { blank: 2 }
+      - "에 감췄다."
     epilogue_order: 5
     epilogue: >-
       다인이 모든 것을 털어놓으려 하자, 세라는 폭로가 임박했음을 알았다.

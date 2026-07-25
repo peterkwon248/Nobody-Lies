@@ -444,6 +444,30 @@ export function verify(c: Case): VerifyResult {
         `유무 자체가 신호가 된다. 전부 쓰거나 전부 비워라`,
     )
 
+  // 6.75 보고서 서술문 — 공란은 문장 안에 박혀 있어야 한다
+  //
+  // 참조되지 않은 공란은 문맥 없이 뜨고(무엇을 묻는지 알 수 없다),
+  // 두 번 참조된 공란은 같은 답을 두 번 묻는다. 서술문이 있는 장에서는
+  // 공란과 참조가 정확히 1:1 이어야 한다.
+  const withReport = c.chapters.filter((ch) => ch.report?.length).length
+  if (withReport > 0 && withReport < c.chapters.length)
+    errors.push(
+      `보고서 서술문이 ${withReport}/${c.chapters.length}장에만 있다 — ` +
+        `일부만 문장이고 나머지가 목록이면 보고서가 두 물건이 된다`,
+    )
+
+  for (const ch of c.chapters) {
+    if (!ch.report?.length) continue
+    const refs = ch.report.filter((r): r is { blank: number } => 'blank' in r).map((r) => r.blank)
+    ch.blanks.forEach((b, i) => {
+      const n = refs.filter((r) => r === i).length
+      if (n === 0)
+        errors.push(`${ch.order}장 '${b.label}' 공란이 서술문에 없다 — 문맥 없이 뜬다`)
+      else if (n > 1)
+        errors.push(`${ch.order}장 '${b.label}' 공란이 서술문에 ${n}번 나온다 — 같은 답을 두 번 묻는다`)
+    })
+  }
+
   const chapterReveals = c.reveals.filter((r) => r.trigger.on === 'chapterComplete')
   const narrated = chapterReveals.filter((r) => r.narration).length
   if (narrated > 0 && narrated < chapterReveals.length)
