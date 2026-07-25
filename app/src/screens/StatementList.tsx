@@ -12,11 +12,6 @@ import { ko } from '../case/loadCase'
 export function StatementList({ c }: { c: Case }) {
   return (
     <div className="nl-pane">
-      <header className="nl-pane-head">
-        <div className="v-caption" style={{ color: 'var(--fg-4)' }}>진술</div>
-        <h1 className="v-h2" style={{ margin: '6px 0 0' }}>다섯 사람의 말</h1>
-      </header>
-
       {c.people.map((p) => (
         <section key={p.id} className="nl-read-card nl-stmt-card">
           <div className="nl-read-who">

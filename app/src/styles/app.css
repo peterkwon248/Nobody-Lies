@@ -757,3 +757,143 @@ body {
   color: var(--fg-4);
   line-height: 1.5;
 }
+
+/* ── 셸 상단 헤더 · 우측 디테일 패널 ─────────────────────────────────
+   프로토타입 140~168행(viewheader)과 914~960행(우측 패널)에서 옮겼다.
+   .viewheader · .viewtitle · .toolbar-icons · .spacer · .panel · .seg-toggle 는
+   전부 Vector 클래스라 뼈대는 그대로 온다. */
+
+.nl-view {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.nl-toolbar {
+  position: relative;
+}
+
+.nl-settings {
+  position: absolute;
+  right: 0;
+  top: 36px;
+  width: 220px;
+  z-index: 60;
+}
+
+/* 우측 디테일 패널 = 교차 참조. 보고서를 쓰면서 진술을 확인하는 자리 */
+.nl-right {
+  width: 340px;
+  flex: none;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-subtle);
+}
+
+.nl-right-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.nl-right-tab {
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--fg-4);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.nl-right-tab-on {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
+.nl-right-close {
+  width: 24px;
+  height: 24px;
+  margin: 0 6px 0 auto;
+  font-size: 13px;
+  color: var(--fg-4);
+  flex: none;
+}
+
+.nl-right-body {
+  flex: 1;
+  overflow: auto;
+  padding: 14px;
+}
+
+.nl-right-empty {
+  color: var(--fg-4);
+  text-align: center;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+/* 인물 아코디언. 색 막대는 화자를 가리킬 뿐 중요도를 가리키지 않는다 */
+.nl-acc {
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-acc-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 2px;
+  cursor: pointer;
+}
+
+.nl-acc-bar {
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.nl-acc-body {
+  padding: 2px 2px 12px 20px;
+}
+
+.nl-acc-p {
+  margin: 0 0 11px;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+.nl-memo-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.nl-memo-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-4);
+  margin-bottom: 5px;
+}
+
+/* 층위 표시 — 확정(물증)과 주장(진술)을 섞지 않는다 */
+.nl-memo-layer {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+
+.nl-memo-text {
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}

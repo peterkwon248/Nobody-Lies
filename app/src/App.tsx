@@ -178,6 +178,7 @@ export default function App() {
         <Shell
           c={c}
           progress={progress}
+          annotations={annotations}
           view={view}
           onView={setView}
           onHome={() => setRoute('home')}

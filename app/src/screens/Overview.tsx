@@ -13,11 +13,6 @@ export function Overview({ c }: { c: Case }) {
 
   return (
     <div className="nl-pane">
-      <header className="nl-pane-head">
-        <div className="v-caption" style={{ color: 'var(--fg-4)' }}>사건 개요</div>
-        <h1 className="v-h2" style={{ margin: '6px 0 0' }}>{c.title}</h1>
-      </header>
-
       <div className="nl-brief-rows">
         <Row k="피해자" v={victim ? [victim.name, victim.age, victim.job].filter(Boolean).join(' · ') : c.victim} />
         <Row k="사망 추정" v={window?.label ?? '미확정'} />
