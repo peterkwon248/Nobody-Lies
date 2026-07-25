@@ -170,15 +170,15 @@ class Component extends DCLogic {
   REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
   LANES = ['전날 밤','새벽 3시','3–8시','오전'];
   CARDS = [
-    { id:'sakura', kind:'person', label:'미야와키 사쿠라', sub:'산장지기 · 산장 거주', ini:'쿠', c1:'#F2994A', c2:'#EB5757' },
-    { id:'wonyoung', kind:'person', label:'장원영', sub:'아이돌 · 불참', ini:'원', c1:'#F2C94C', c2:'#F2994A' },
-    { id:'yuri', kind:'person', label:'조유리', sub:'가수 · 아침 도착', ini:'리', c1:'#4CB782', c2:'#2D9CDB' },
+    { id:'sakura', kind:'person', label:'문세라', sub:'산장지기 · 산장 거주', ini:'쿠', c1:'#F2994A', c2:'#EB5757' },
+    { id:'wonyoung', kind:'person', label:'백리원', sub:'아이돌 · 불참', ini:'원', c1:'#F2C94C', c2:'#F2994A' },
+    { id:'yuri', kind:'person', label:'오나경', sub:'가수 · 아침 도착', ini:'리', c1:'#4CB782', c2:'#2D9CDB' },
     { id:'burner', kind:'evidence', label:'대포폰', sub:'별채에서 발견', icon:'M5 2.5h6v11H5z M7 12h2' },
     { id:'note', kind:'evidence', label:'위장 유서', sub:'금고 열쇠 동봉', icon:'M4 2.5h6l2.5 2.5v9H4z M9.5 2.5v3H12' },
     { id:'co', kind:'evidence', label:'일산화탄소', sub:'부검 · 직접 사인', icon:'M8 13c3 0 4-2 4-4 0-3-4-6-4-6S4 6 4 9c0 2 1 4 4 4z' },
-    { id:'q1', kind:'quote', label:'사쿠라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
-    { id:'q2', kind:'quote', label:'원영 진술', quote:'"새벽 3시쯤 채원 언니한테 전화가 왔어요."' },
-    { id:'q3', kind:'quote', label:'사쿠라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
+    { id:'q1', kind:'quote', label:'세라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
+    { id:'q2', kind:'quote', label:'리원 진술', quote:'"새벽 3시쯤 다인 언니한테 전화가 왔어요."' },
+    { id:'q3', kind:'quote', label:'세라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
   ];
   KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'} ];
   get cards(){ const seed=this.props&&this.props.seed; if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.CARDS; }
@@ -191,7 +191,7 @@ class Component extends DCLogic {
     tool:null, addOpen:false, timelineOn:true, hlTimeId:null, drawerOpen:true, axisLock:false, mapLock:false,
     times:[{id:'t1',x:225,label:'전날 밤'},{id:'t2',x:675,label:'새벽 3시'},{id:'t3',x:1125,label:'3–8시'},{id:'t4',x:1575,label:'오전'}],
     placed:{ sakura:{x:120,y:150}, burner:{x:120,y:340}, q1:{x:380,y:150}, m1:{x:660,y:340} },
-    memoText:{ m1:'별채↔본채 10분인데 사망 창이 5시간 → 왕복 가능?', m2:'원영 새벽 3시 통화 — 기지국상 원거리 확인' },
+    memoText:{ m1:'별채↔본채 10분인데 사망 창이 5시간 → 왕복 가능?', m2:'리원 새벽 3시 통화 — 기지국상 원거리 확인' },
     memoOrder:['m1','m2'], labels:[],
     strings:[ {a:'sakura',b:'burner',rel:'same'} ], groups:[], binds:[], relPicker:null, size:{}, progress:1,
     msel:[], marquee:null,
