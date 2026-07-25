@@ -566,6 +566,59 @@ export function verify(c: Case): VerifyResult {
       `조사 대상 ${c.actions.length}개 / 예산 ${c.budget} = ${ratio.toFixed(1)}배 — 3배 이상 권장. 선택이 소거가 된다`,
     )
 
+  // 9. 산문 ↔ 데이터 정합 (2026-07-25 신설)
+  //
+  // 여태 검증기는 논리만 봤고 산문은 한 번도 읽지 않았다. 유서 버그가 그래서
+  // 살아남았다 — "찾았다"는 **문장**과 "단어를 준다"는 **데이터**가 다른 파일에
+  // 있으니 어긋나도 아무도 몰랐다. 아래 둘은 그 역할의 첫 조각이다.
+
+  // 9-1. 지문은 전원이 갖거나 전원이 없어야 한다.
+  //      넷은 담담하고 하나만 불안하면 지문이 곧 범인 표시가 된다.
+  const withGesture = c.people.filter((p) => p.statement?.gesture)
+  if (withGesture.length > 0 && withGesture.length < c.people.length) {
+    const missing = c.people.filter((p) => !p.statement?.gesture).map((p) => p.name)
+    errors.push(
+      `지문이 ${withGesture.length}/${c.people.length}명에게만 있다 (없는 사람: ${missing.join('·')}) — 있고 없음이 곧 신호가 된다`,
+    )
+  }
+
+  // 9-2. 현장 서술이 조사로만 얻는 단어를 미리 말하면 무료 누설이다.
+  //      브리핑은 조사 0회 시점이므로 여기 등장해도 되는 것은 seedTerms 뿐이다.
+  const sceneText = c.incident.sceneState?.ko ?? ''
+  if (sceneText) {
+    const seeded = new Set(c.seedTerms ?? [])
+    const leaked = [...deriveTerms(c, new Set(c.evidence.map((e) => e.id)))]
+      .filter((w) => !seeded.has(w) && sceneText.includes(w))
+    if (leaked.length > 0)
+      errors.push(
+        `현장 서술이 조사로 얻어야 할 단어를 말한다: ${leaked.join('·')} — 브리핑은 조사 0회 시점이다`,
+      )
+  }
+
+  // 9-3. 평면도 ↔ 장소 정합 (2026-07-25 신설)
+  //
+  // 도면은 별도 좌표계에 살아서 장소를 바꿔도 조용히 안 따라온다.
+  // 그리고 도면에 없는 장소는 플레이어가 **갈 수 없다** — 조사 화면이 도면이므로.
+  if (c.floorPlan) {
+    const locIds = new Set(c.locations.map((l) => l.id))
+    const placed = new Set<string>()
+    for (const r of [...c.floorPlan.rooms, ...c.floorPlan.zones]) {
+      if (!r.loc) continue
+      if (!locIds.has(r.loc)) errors.push(`평면도 '${r.id}' 가 없는 장소를 가리킨다: ${r.loc}`)
+      else placed.add(r.loc)
+    }
+    for (const l of c.locations)
+      if (!placed.has(l.id))
+        errors.push(`장소 '${l.label}' 이 평면도에 없다 — 플레이어가 갈 수 없다`)
+
+    // 현장은 반드시 도면에 있고 `scene` 으로 표시돼야 한다
+    if (c.incident.scene) {
+      const sceneRoom = c.floorPlan.rooms.find((r) => r.loc === c.incident.scene)
+      if (sceneRoom && !sceneRoom.scene)
+        warnings.push(`평면도의 현장(${sceneRoom.label})에 scene 표식이 없다`)
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 

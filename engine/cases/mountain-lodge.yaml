@@ -21,6 +21,11 @@ incident:
   description: 산장 장기 투숙 중이던 소설가가 위장 자살로 살해됨
   # 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 기회가 생겨 유일성이 무너진다
   scene: room
+  # 브리핑이 확정 층으로 내놓는 관찰. 조사 없이 보이는 것만 적는다.
+  # body_state 는 시신 외관이다 — 부검 소견(f_cause)은 available_after: 1 이라 오지 않는다.
+  # scene_state 는 seed_terms(테이프·연탄)의 서술형이고, 검증기가 그 밖의 단어를 막는다.
+  body_state: { ko: "외상 없음" }
+  scene_state: { ko: "방문·창가 테이프, 화로에 연탄" }
 
 prose:
   source: authored
@@ -30,6 +35,57 @@ prose:
 # 이것이 없으면 1장(조사 없이 확정돼야 하는 장)의 은폐수단 공란을 채울 수 없어
 # 시작하자마자 막힌다.
 seed_terms: [테이프, 연탄]
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  확보 단어 사전
+# ─────────────────────────────────────────────────────────────────────
+#  보고서 오른쪽 「확보 단어」 은행에서 칩을 누르면 뜨는 내용.
+#  source = 어디서 나왔나 · note = 무엇이었나.
+#
+#  ★ 3인칭 관찰만 적는다 ★ 「~를 뜻한다」·「따라서 ~다」 금지.
+#  해석은 플레이어의 일이고, 여기에 뜻을 적으면 물증 카드의 `뜻` 필드와
+#  같은 실패가 된다 (절대 규칙에 일곱 번째로 재발한 그것).
+#
+#  아홉은 프로토타입 `TERM_INFO`(1516행)에서 옮겼다 — 영문까지 이미 쓰여 있었다.
+#  `영수증`·`물자국` 둘은 **프로토타입에 없다** — 트릭 재작업으로 엔진에만
+#  생긴 물증이라 여기서 새로 썼고, 각 물증의 `record` 를 그대로 줄였다.
+
+terms:
+  - word: 테이프
+    source: { ko: 다인의 방 · 방문·창가, en: "Da-in's room · door & window" }
+    note: { ko: 문틈과 창문 가장자리가 안쪽에서 발라져 있었다., en: The door and window edges were taped over from the inside. }
+  - word: 연탄
+    source: { ko: 다인의 방 · 화로, en: "Da-in's room · brazier" }
+    note: { ko: 방 안 화로에서 타고 있었다., en: It was burning in a brazier inside the room. }
+  - word: 일산화탄소 중독
+    source: { ko: 시신 정밀 검사, en: Detailed autopsy }
+    note: { ko: 외상은 없고, 혈중 일산화탄소 농도가 높았다., en: "No external wounds; blood carbon-monoxide levels were high." }
+  - word: 유서
+    source: { ko: 소지품 검사 · 문세라, en: Belongings · Se-ra }
+    note: { ko: 완성되지 않은 초안이었고, 필체가 원고와 달랐다., en: "An unfinished draft; the handwriting differed from the manuscript." }
+  - word: 김선생
+    source: { ko: 별채 수색 · 소지품 검사, en: Annex search · belongings }
+    note: { ko: 여러 기록에 반복 등장하는 호칭이었다., en: A name that recurs across several records. }
+  - word: 마약
+    source: { ko: 소지품 검사, en: Belongings search }
+    note: { ko: 작은 봉지 여러 개로 나뉘어 있었다., en: Divided into several small bags. }
+  - word: 폭로 임박
+    source: { ko: 별채 수색 · 소지품 검사, en: Annex search · belongings }
+    note: { ko: 기록에 남은 메시지가 같은 시점을 가리켰다., en: Messages in the records pointed to the same moment. }
+  - word: 별채 대포폰
+    source: { ko: 별채 수색, en: Annex search }
+    note: { ko: 가입자 정보가 없었고, 저장된 번호는 하나뿐이었다., en: "No subscriber on record; only one number was saved." }
+  - word: 치정
+    source: { ko: 진술 정황, en: Statement context }
+    note: { ko: 진술에 관련 정황이 있었다., en: Related context appeared in statements. }
+  # 아래 둘은 프로토타입에 없다 — 엔진 전용 물증(e_receipt · e_dryice)에서 새로 썼다
+  - word: 영수증
+    source: { ko: 다인의 방 · 화로 재 속, en: "Da-in's room · in the brazier ash" }
+    note: { ko: 타다 만 조각이었고, 발행 시각이 전날 오후로 찍혀 있었다., en: "A partly burned scrap; the issue time read the previous afternoon." }
+  - word: 물자국
+    source: { ko: 다인의 방 · 화로, en: "Da-in's room · brazier" }
+    note: { ko: 재 아래 바닥에 둥근 자국이 남아 있었다. 연탄재는 그 위에 덮여 있었다., en: "A round mark on the floor beneath the ash, with the ash lying over it." }
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -79,6 +135,60 @@ locations:
 
 
 # ─────────────────────────────────────────────────────────────────────
+#  현장 평면도
+# ─────────────────────────────────────────────────────────────────────
+#  프로토타입 `GEO`(추리게임.dc.html 2329행)를 그대로 옮겼다. 좌표는 view_box 안의 값.
+#
+#  ★ 도면은 판정하지 않는다 ★ 확대·화살표·펄스로 「여길 봐」를 만들지 않는다.
+#  별채는 1장 완성 전까지 나타나지 않지만, 나타난 뒤에는 제자리에 그냥 있다.
+#
+#  rooms·zones 의 loc 은 위 locations 를 가리킨다. 검증기가 그 참조를 검사한다.
+
+floor_plan:
+  view_box: { w: 1000, h: 625 }
+  scale: { x: 96, len: 90, y: 585, label: 5m }
+
+  buildings:
+    - { id: main,  x: 70,  y: 60, w: 532, h: 485, poche: var(--fg-3) }
+    - { id: annex, x: 712, y: 66, w: 228, h: 150, poche: var(--accent) }
+
+  rooms:
+    # 사건 현장. 옅은 붉은 기가 깔린다 — 상태 표시이지 강조가 아니다
+    - { id: vroom,     building: main,  loc: room,  x: 70,  y: 60,  w: 260, h: 485, label: 다인의 방, scene: true, tint: "rgba(235,87,87,.10)", primary: true }
+    - { id: living,    building: main,  loc: main,  x: 330, y: 60,  w: 272, h: 270, label: 거실, primary: true }
+    - { id: kitchen,   building: main,  loc: main,  x: 330, y: 330, w: 272, h: 215, label: 부엌 }
+    - { id: annexRoom, building: annex, loc: annex, x: 712, y: 66,  w: 228, h: 150, label: 별채, primary: true }
+
+  zones:
+    - { id: approachZ, loc: approach, x: 712, y: 430, w: 228, h: 140, label: 진입로, hatch: true, primary: true }
+    - { id: homeZ,     loc: home,     x: 712, y: 250, w: 228, h: 120, label: "자택 (현장 밖)", offsite: true, primary: true }
+
+  doors:
+    - { id: roomdoor,  x1: 330, y1: 200, x2: 330, y2: 280, hinge: p2, swing: -1, label: 방문, lx: 370, ly: 240 }
+    - { id: ldoor,     x1: 430, y1: 330, x2: 510, y2: 330, open: true }
+    - { id: front,     x1: 602, y1: 150, x2: 602, y2: 216, hinge: p2, swing: -1, ext: true, label: 정문, lx: 566, ly: 183 }
+    - { id: back,      x1: 602, y1: 430, x2: 602, y2: 496, hinge: p2, swing: -1, ext: true, label: 후문, lx: 566, ly: 463 }
+    - { id: annexdoor, x1: 712, y1: 124, x2: 712, y2: 158, hinge: p1, swing: -1, ext: true, building: annex, label: 문, lx: 700, ly: 182 }
+
+  windows:
+    - { x1: 150, y1: 60, x2: 258, y2: 60, label: 창문, lx: 204, ly: 51 }
+    - { x1: 410, y1: 60, x2: 518, y2: 60, label: 창문, lx: 464, ly: 51 }
+    - { x1: 820, y1: 66, x2: 890, y2: 66, building: annex, label: 창문, lx: 855, ly: 61 }
+
+  # 건물 사이 도보. min 은 분. 세라의 진술("걸어서 10분")이 이 값과 맞아야 한다
+  walks:
+    - { building: annex,    x1: 602, y1: 140, x2: 712, y2: 140, min: 10 }
+    - { building: approach, x1: 602, y1: 500, x2: 712, y2: 500, min: 2 }
+
+  # 눌러서 조사하는 고정물. 키는 조사 대상 id
+  fixtures:
+    hearth: { x: 200, y: 415 }
+    window: { x: 204, y: 76 }
+    safe:   { x: 466, y: 205 }
+    body:   { x: 200, y: 300 }
+
+
+# ─────────────────────────────────────────────────────────────────────
 #  인물과 동선
 # ─────────────────────────────────────────────────────────────────────
 #  presence = 실제 동선(진실). claim = 진술에서 주장하는 동선.
@@ -93,6 +203,7 @@ people:
   - id: sakura
     name: 문세라
     age: 32
+    sex: 여
     job: 산장지기
     hidden_role: ringleader
     presence:
@@ -108,6 +219,12 @@ people:
     # 진술 원문. 주장의 내용은 위 claim 에서 나오고 여기엔 말투와 성격만 담긴다.
     # 3문단째가 claim(t2·t3 = 별채)을 말로 옮긴 것이다 — 이 사건의 유일한 거짓말.
     statement:
+      # 지문 — 몸짓과 시선만. 사실을 새로 쓰지 않는다.
+      # 다섯 사람 전원이 pre·post 한 쌍씩 갖는다. 검증기가 균등성을 강제한다 —
+      # 넷은 담담하고 하나만 불안하면 지문이 곧 범인 표시가 되기 때문이다.
+      gesture:
+        pre: { ko: "세라는 빈 잔을 만지작거렸다." }
+        post: { ko: "그러고는 잠깐, 창밖으로 시선을 돌렸다." }
       paragraphs:
         - "저는 지금 아이돌 하다가 망하고 공적인 일을 하고 싶지 않아서 다인이 글쓰는거 도와주면서 지내고 있어요. 말이 산장지기지 그냥 다인이가 어질러둔거 좀 치워주고. 먹을꺼 정도 챙겨주는 정도만 하면되는데. 다인이가 벌어둔게 많아서 페이를 많이 챙겨줘서 지낼만 했죠. 그 이외에는 제가 좋아하는 게임 하면서 지내면 되니까 이만큼 좋은 직장이 있을까요?"
         - "다인이가 같은 공간에서 지내는거 별로 안좋아해서 전 별채에서 지내고 있어요. 여기서 그다지 멀지 않은데.. 한 걸어서 10분거리 정도?"
@@ -116,11 +233,17 @@ people:
   - id: yena
     name: 서지안
     age: 31
+    sex: 여
     job: 댄스 강사
     hidden_role: investigator
     presence:
       - { slot: t3, at: main }
     statement:
+      # 프로토타입 원문은 「지안는」이었다 — 옛 이름 '예나는' 을 치환하면서
+      # 조사가 따라가지 않은 것이다. 지안은 받침이 있으므로 '은'.
+      gesture:
+        pre: { ko: "지안은 팔짱을 낀 채 담담하게 말했다." }
+        post: { ko: "그러고는 잠시 말을 골랐다." }
       paragraphs:
         - "요즘에는 소속사에서 춤 레슨을 하고있어요. 다인이가 오랜만에 지인들 모은다길래 초대 받아서 왔어요. 제가 도착했을때에 딱 마침 유빈이도 도착해서 오랜만에 인사를 나누고 있었는데, 창밖으로 무슨 연기같은게 나오고 있더라구요. 저는 또 다인이가 워낙 요리도 못하고 하니까 뭐 태워먹었나 싶었는데. 이게 방에서 나오고 있는거에요? 그래서 급하게 방문을 열려고 했는데. 문이 잠겨있지는 않았는데 이게 안에서 테이프 같은거라도 붙어있는지 아무리 밀고 당겨도 열리지가 않아서 유빈이랑 같이 문을 미니까 그제서야 열렸어요."
         - "문 열자마자 보인건 화로 같은데 피워져있는 연탄이랑 자욱한 연기.. 그리고 창가에도 붙어있는 테이프가 보이더라구요. 유빈이랑 마음이 통했는지 서로 들어가는걸 말리게 됐어요. 그대로 들어가면 위험할 것 같아서 숨참고 들어가서 내가 창문을 열테니까 유빈이보고 다인이를 들처업고 나오라고 지시했어요."
@@ -129,6 +252,7 @@ people:
   - id: yujin
     name: 한유빈
     age: 27
+    sex: 여
     job: 아이돌
     hidden_role: investigator
     presence:
@@ -137,6 +261,9 @@ people:
     # 자살할 사람이 왜 손님을 불렀는가 — 프롤로그의 '초대장은 전날 밤에 돌았고'가
     # 이 위화감의 복선이다.
     statement:
+      gesture:
+        pre: { ko: "유빈은 손끝으로 탁자를 두어 번 두드리며 입을 열었다." }
+        post: { ko: "말끝이 조금 흐려졌다." }
       paragraphs:
         - "저는 아직도 아이돌을 하고있어요. 리원이는 얼마전에 다인언니랑 싸워서 가기 싫다고 해서 안왔구요. 나경언니가 다인언니 요리 못믿겠다면서 자기가 장을 봐올테니까 조금일찍와서 음식 준비하는거 도와달라고 해서 일찍 도착하게되었어요. 그 이후는 지안언니가 말한 그대로에요. 지안언니가 확실히 예전에 저처럼 추리 프로그램을 해서 그런지 상황 파악이 빠르더라구요."
         - "그런데 좀 이상하긴 해요. 자살할 생각인 사람이 우리를 왜 불렀을까요? 산장이라 너무 늦게발견될까봐 걱정됐던걸까요? 그리고 연탄도.. 좀 이상하고."
@@ -144,6 +271,7 @@ people:
   - id: yuri
     name: 오나경
     age: 29
+    sex: 여
     job: 가수
     hidden_role: coerced
     presence:
@@ -151,6 +279,11 @@ people:
     # 이 사람의 배제는 자기 진술("장 보고 아침 도착")에서 나온다. 태그라인이
     # 「모든 진술을 의심하라」였을 때 퍼즐이 안 풀렸던 이유가 정확히 이 문단이다.
     statement:
+      # 프로토타입 원문은 「나경는」이었다 — 옛 이름 '유리는' 의 조사 잔재.
+      # 나경은 받침이 있으므로 '은'.
+      gesture:
+        pre: { ko: "나경은 장바구니를 아직 내려놓지 못한 채였다." }
+        post: { ko: "되묻는 목소리에 물기가 배어 있었다." }
       paragraphs:
         - "저는 아직 가수생활을 하고있어요. 다인언니가 불렀을때부터 요리는 제가 대신해야겠다 생각하고있었죠. 세라언니가 옆에 있는거 알긴하는데 어차피 둘 요리실력이 거기서 거기니까.. 기왕 놀러가는김에 맛있는거 먹으면 좋잖아요?"
         - "멤버들 몇명이나 올지 몰라서 준비하려면 꽤 여유있게 준비해야하니까 유빈이한테 도와달라고 연락 미리해놓고.. 장봐와서 도착했는데 이게 도대체 무슨일이에요..?"
@@ -158,6 +291,7 @@ people:
   - id: wonyoung
     name: 백리원
     age: 26
+    sex: 여
     job: 아이돌
     hidden_role: investigator
     presence:
@@ -165,6 +299,9 @@ people:
       - { slot: t2, at: home }
       - { slot: t3, at: approach }
     statement:
+      gesture:
+        pre: { ko: "리원은 휴대폰을 두 손으로 감싸 쥐었다." }
+        post: { ko: "화면을 몇 번 더 확인했다." }
       paragraphs:
         - "새벽3시쯤에 다인언니한테 전화가 왔어요. 자기는 정말 모르는 일인데 너무 미안하다고. 자기도 세라언니한테 받은거였다고. 그래서 어차피 언니 둘 다 여기있고. 오랜만에 다들 모이니까 다 있는데서 사실을 확인하려고 왔어요. 그... 그런 소문 모르세요? 요즘 연예계에 마약이 돌고있다는 소문이요. 저도 당할뻔 했거든요 그거."
         - "유빈언니가 출발할때 원래 슬쩍 같이 타고 오려고 했는데, 새벽에 다인언니 때문에 깨서그런가 피곤해서 늦잠을 자버렸지 뭐에요. 그래서 급하게 준비하고 출발했는데..."

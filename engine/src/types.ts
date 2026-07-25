@@ -41,6 +41,8 @@ export type Person = {
   id: PersonId
   name: string
   age: number
+  /** 표시용. 진술 화면 머리글이 「여 · 31 · 댄스 강사」로 부른다. 판정과 무관하다 */
+  sex?: string
   job: string
   hiddenRole: HiddenRole
   /** 진실 위치. 누가 언제 어디 있었는지. 부분적일 수 있다(미확인 슬롯 = 격자 공란) */
@@ -62,6 +64,18 @@ export type Person = {
    */
   statement?: {
     paragraphs: Text[]
+    /**
+     * 진술 앞뒤의 지문. 몸짓과 시선만 적고 **사실을 새로 쓰지 않는다.**
+     *
+     * 인터루드의 「인물 묘사 금지」와 헷갈리기 쉬운데 층이 다르다. 서술자는
+     * **확정** 층이라 그가 누구를 오래 보면 그것이 신호가 되지만, 지문은
+     * 진술 화면 안에 있고 진술은 **주장** 층이다.
+     *
+     * 대신 다른 규율이 붙는다 — **전원이 갖거나 전원이 없어야 한다.**
+     * 넷은 담담하고 하나만 불안하면 지문이 곧 범인 표시가 된다.
+     * 검증기가 이것을 강제한다.
+     */
+    gesture?: { pre?: Text; post?: Text }
     /** 말투 지시. 산문가가 읽는다. 플레이어에게 보이지 않는다 */
     voice?: string
   }
@@ -81,6 +95,75 @@ export type Location = {
   label: string
   /** 산장 부지 안인가. 부지 밖(off-site)은 사건 현장 접근이 불가능하다 */
   atLodge: boolean
+}
+
+/**
+ * 현장 평면도의 기하 — 프로토타입 `GEO`(2329행)를 옮긴 것.
+ *
+ * **사건 파일에 둔다.** 사건마다 도면이 다르고 `Case` 는 불변 사건 정의이므로,
+ * 앱에 두면 사건이 자기 지도를 갖고 다닐 수 없다.
+ *
+ * **선택 항목이다** — 생성 사건(daily)은 도면을 뽑을 수 없으므로 필수로 만들면
+ * 생성기가 막힌다. `prologue`·`terms` 와 같은 부류다.
+ *
+ * 좌표는 `viewBox` 안의 값이고 비율로 환산해 쓴다. 방·구역은 `loc` 로
+ * `locations` 를 가리키며, **검증기가 그 참조를 검사한다.**
+ */
+export type FloorPlan = {
+  /** 도면 좌표계 */
+  viewBox: { w: number; h: number }
+  /** 축척 막대 */
+  scale?: { x: number; len: number; y: number; label?: string }
+  /** 건물 외벽(poché). 두꺼운 선으로 그린다 */
+  buildings: { id: string; x: number; y: number; w: number; h: number; poche?: string }[]
+  /** 방. `loc` 이 `locations` 의 id 를 가리킨다 */
+  rooms: {
+    id: string; building?: string; loc?: LocationId
+    x: number; y: number; w: number; h: number
+    label: string
+    /** 사건 현장이면 옅은 색이 깔린다 */
+    scene?: boolean
+    tint?: string
+    /** 그 장소를 대표하는 방. 조사 실행 상자가 여기 붙는다 */
+    primary?: boolean
+  }[]
+  /** 건물 밖 구역(진입로·자택 등) */
+  zones: {
+    id: string; loc?: LocationId
+    x: number; y: number; w: number; h: number
+    label: string
+    /** 빗금 — 실내가 아님 */
+    hatch?: boolean
+    /** 부지 밖. 점선 테두리 */
+    offsite?: boolean
+    primary?: boolean
+  }[]
+  /** 문. `hinge`·`swing` 으로 스윙 아크를 그린다 */
+  doors: {
+    id: string; x1: number; y1: number; x2: number; y2: number
+    hinge?: 'p1' | 'p2'; swing?: number
+    /** 늘 열려 있는 통로 — 문짝을 안 그린다 */
+    open?: boolean
+    /** 외벽에 난 문 */
+    ext?: boolean
+    building?: string
+    label?: string
+    /** 라벨 위치 */
+    lx?: number; ly?: number
+  }[]
+  /** 창문. 3선으로 그린다 */
+  windows: {
+    x1: number; y1: number; x2: number; y2: number
+    building?: string; label?: string; lx?: number; ly?: number
+  }[]
+  /** 건물 사이 도보 경로. `min` 은 분 단위 소요 */
+  walks: { building?: string; x1: number; y1: number; x2: number; y2: number; min?: number }[]
+  /**
+   * 고정물 — 화로·창문·금고·시신. 눌러서 조사한다.
+   *
+   * 키는 조사 대상 id 이고 값은 도면 위 좌표다.
+   */
+  fixtures?: Record<string, { x: number; y: number }>
 }
 
 export type Fact = {
@@ -422,11 +505,36 @@ export type Case = {
     description: string
     /** 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 기회가 생긴다 */
     scene?: LocationId
+    /**
+     * 시신 상태. **조사 없이 보이는 것만.**
+     *
+     * 부검 소견은 여기 오지 않는다 — `f_cause` 는 `available_after: 1` 이고
+     * 사인은 3장의 유료 공란이다. 여기 적히는 것은 「외상 없음」처럼 시신을
+     * 보기만 해도 아는 것이고, 그것이 없으면 위장 자살이라는 전제가 1턴부터
+     * 성립하지 않는다.
+     */
+    bodyState?: Text
+    /**
+     * 현장 상태. **`seedTerms` 로 이미 손에 들어오는 것의 서술형.**
+     *
+     * 장소 이름이 아니다 — 「방문·창가 테이프, 화로에 연탄」처럼 무엇이 놓여
+     * 있었는가다. 한때 앱이 여기에 장소 라벨(`다인의 방`)을 넣어서 브리핑이
+     * 은폐 정황을 아예 말하지 않았다.
+     *
+     * **검증기가 여기 적힌 확보 단어를 `seedTerms` 와 대조한다** — 조사로만
+     * 얻어야 할 단어를 서술이 미리 말하면 무료 누설이다.
+     */
+    sceneState?: Text
   }
   /** 시간 슬롯 레지스트리. 진술 격자의 열 */
   slots: Slot[]
   /** 장소 레지스트리. presence·claim·공란의 위치 어휘 */
   locations: Location[]
+  /**
+   * 현장 평면도. 없으면 평면도 화면이 뜨지 않는다 — 생성 사건(daily)이 그렇다.
+   * 검증기가 `rooms`·`zones` 의 `loc` 참조와 고정물 id 를 검사한다.
+   */
+  floorPlan?: FloorPlan
   /** 문장의 출처. LLM 생성분은 파일에 고정된다 */
   prose?: {
     source: 'authored' | 'template' | 'llm'

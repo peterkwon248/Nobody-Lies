@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs'
 import { load } from 'js-yaml'
 import { DOMAIN_OF } from './types.js'
 import type {
-  Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, Location, Person, PresenceCell,
-  Particle, Reveal, Slot, Text,
+  Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person,
+  PresenceCell, Particle, Reveal, Slot, Text,
 } from './types.js'
 
 /**
@@ -70,6 +70,65 @@ function texts(v: unknown): Text[] {
   return arr(v).map((x) => text(x)!).filter(Boolean)
 }
 
+/**
+ * 평면도 로더. YAML 은 snake_case, 타입은 camelCase 다.
+ *
+ * 좌표는 그대로 통과시키고 이름만 옮긴다 — 기하 검증은 검증기가 한다.
+ */
+function floorPlan(raw: Raw): FloorPlan {
+  const num = (v: unknown) => Number(v ?? 0)
+  const box = (o: Raw) => ({ x: num(o.x), y: num(o.y), w: num(o.w), h: num(o.h) })
+  return {
+    viewBox: { w: num(raw.view_box?.w), h: num(raw.view_box?.h) },
+    ...(raw.scale ? { scale: {
+      x: num(raw.scale.x), len: num(raw.scale.len), y: num(raw.scale.y),
+      ...(raw.scale.label ? { label: String(raw.scale.label) } : {}),
+    } } : {}),
+    buildings: arr(raw.buildings).map((b: Raw) => ({
+      id: b.id, ...box(b), ...(b.poche ? { poche: b.poche } : {}),
+    })),
+    rooms: arr(raw.rooms).map((r: Raw) => ({
+      id: r.id, ...box(r), label: String(r.label ?? r.id),
+      ...(r.building ? { building: r.building } : {}),
+      ...(r.loc ? { loc: r.loc } : {}),
+      ...(r.scene ? { scene: true } : {}),
+      ...(r.tint ? { tint: r.tint } : {}),
+      ...(r.primary ? { primary: true } : {}),
+    })),
+    zones: arr(raw.zones).map((z: Raw) => ({
+      id: z.id, ...box(z), label: String(z.label ?? z.id),
+      ...(z.loc ? { loc: z.loc } : {}),
+      ...(z.hatch ? { hatch: true } : {}),
+      ...(z.offsite ? { offsite: true } : {}),
+      ...(z.primary ? { primary: true } : {}),
+    })),
+    doors: arr(raw.doors).map((d: Raw) => ({
+      id: d.id, x1: num(d.x1), y1: num(d.y1), x2: num(d.x2), y2: num(d.y2),
+      ...(d.hinge ? { hinge: d.hinge } : {}),
+      ...(d.swing !== undefined ? { swing: num(d.swing) } : {}),
+      ...(d.open ? { open: true } : {}),
+      ...(d.ext ? { ext: true } : {}),
+      ...(d.building ? { building: d.building } : {}),
+      ...(d.label ? { label: String(d.label) } : {}),
+      ...(d.lx !== undefined ? { lx: num(d.lx), ly: num(d.ly) } : {}),
+    })),
+    windows: arr(raw.windows).map((w: Raw) => ({
+      x1: num(w.x1), y1: num(w.y1), x2: num(w.x2), y2: num(w.y2),
+      ...(w.building ? { building: w.building } : {}),
+      ...(w.label ? { label: String(w.label) } : {}),
+      ...(w.lx !== undefined ? { lx: num(w.lx), ly: num(w.ly) } : {}),
+    })),
+    walks: arr(raw.walks).map((w: Raw) => ({
+      x1: num(w.x1), y1: num(w.y1), x2: num(w.x2), y2: num(w.y2),
+      ...(w.building ? { building: w.building } : {}),
+      ...(w.min !== undefined ? { min: num(w.min) } : {}),
+    })),
+    ...(raw.fixtures ? { fixtures: Object.fromEntries(
+      Object.entries(raw.fixtures as Raw).map(([k, v]) => [k, { x: num((v as Raw).x), y: num((v as Raw).y) }]),
+    ) } : {}),
+  }
+}
+
 function cells(
   raw: unknown,
   p: Problems,
@@ -134,6 +193,7 @@ export function parseCase(raw: unknown, source: string): Case {
       p.add(`${at}.hidden_role`, `알 수 없는 값 '${x.hidden_role}'`)
     return {
       id: x?.id, name: x?.name, age: x?.age, job: x?.job,
+      ...(x?.sex ? { sex: x.sex } : {}),
       hiddenRole: x?.hidden_role,
       presence: cells(x?.presence, p, `${at}.presence`, slots, locations),
       // claim 을 적지 않으면 presence 와 같다 = 무고한 사람은 거짓말하지 않는다.
@@ -142,6 +202,10 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(x?.claim ? { claim: cells(x.claim, p, `${at}.claim`, slots, locations) } : {}),
       ...(x?.statement ? { statement: {
         paragraphs: texts(x.statement.paragraphs),
+        ...(x.statement.gesture ? { gesture: {
+          ...(x.statement.gesture.pre ? { pre: text(x.statement.gesture.pre)! } : {}),
+          ...(x.statement.gesture.post ? { post: text(x.statement.gesture.post)! } : {}),
+        } } : {}),
         ...(x.statement.voice ? { voice: x.statement.voice } : {}),
       } } : {}),
     }
@@ -352,12 +416,15 @@ export function parseCase(raw: unknown, source: string): Case {
     incident: {
       kind: inc.kind, subject: inc.subject, description: inc.description,
       ...(inc.scene ? { scene: inc.scene } : {}),
+      ...(inc.body_state ? { bodyState: text(inc.body_state)! } : {}),
+      ...(inc.scene_state ? { sceneState: text(inc.scene_state)! } : {}),
     },
     ...(c.prose ? { prose: {
       source: c.prose.source,
       ...(c.prose.model ? { model: c.prose.model } : {}),
       ...(c.prose.generated_at ? { generatedAt: c.prose.generated_at } : {}),
     } } : {}),
+    ...(c.floor_plan ? { floorPlan: floorPlan(c.floor_plan) } : {}),
     ...(c.seed_terms ? { seedTerms: c.seed_terms } : {}),
     ...(c.prologue ? { prologue: texts(c.prologue) } : {}),
     ...(c.terms ? { terms: arr(c.terms).map((t: Raw) => ({
