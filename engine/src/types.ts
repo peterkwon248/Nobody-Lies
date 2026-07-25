@@ -114,8 +114,19 @@ export type FloorPlan = {
   viewBox: { w: number; h: number }
   /** 축척 막대 */
   scale?: { x: number; len: number; y: number; label?: string }
-  /** 건물 외벽(poché). 두꺼운 선으로 그린다 */
-  buildings: { id: string; x: number; y: number; w: number; h: number; poche?: string }[]
+  /**
+   * 건물 외벽(poché). 두꺼운 선으로 그린다.
+   *
+   * `revealedAfter` — N개 장을 완성해야 도면에 **나타난다.** `Action.availableAfter`
+   * 와 같은 어휘다. 별채가 그렇다.
+   *
+   * ★ 흐리게 두지 않고 아예 감춘다 ★ 흐린 채로 두면 「저기 뭔가 있다」가 되고,
+   * 그것은 조사 0회에 사건의 크기를 알려주는 셈이다.
+   */
+  buildings: {
+    id: string; x: number; y: number; w: number; h: number
+    poche?: string; revealedAfter?: number
+  }[]
   /** 방. `loc` 이 `locations` 의 id 를 가리킨다 */
   rooms: {
     id: string; building?: string; loc?: LocationId

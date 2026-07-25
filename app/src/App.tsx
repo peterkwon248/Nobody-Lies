@@ -13,6 +13,7 @@ import { Statements } from './screens/Statements'
 import { Report } from './screens/Report'
 import { Overview } from './screens/Overview'
 import { StatementList } from './screens/StatementList'
+import { FloorPlanView } from './screens/FloorPlanView'
 import { Shell, type View } from './shell/Shell'
 import { deriveTerms } from '@engine/verifier'
 import { TopBar } from './components/TopBar'
@@ -109,7 +110,7 @@ export default function App() {
 
   /** 화면 이름. 메모가 「어디서 적었나」를 남긴다 (원본 `memoMeta`) */
   const VIEW_LABEL: Record<View, string> = {
-    overview: '사건 개요', report: '사건 보고서', statements: '진술',
+    overview: '사건 개요', report: '사건 보고서', statements: '진술', map: '현장',
   }
 
   const addMemo = () =>
@@ -323,6 +324,14 @@ export default function App() {
               highlights={annotations.highlights}
               onMark={setHighlights}
               onQuote={(q) => quoteToMemo(q, '확정')}
+            />
+          )}
+          {view === 'map' && (
+            <FloorPlanView
+              c={c}
+              solved={progress.solved}
+              /* 조사 시스템(P) 이 붙으면 실제 수색 기록이 들어온다 */
+              investigatedLocs={new Set(progress.investigations.map((iv) => iv.actionId))}
             />
           )}
           {view === 'statements' && (

@@ -150,7 +150,8 @@ floor_plan:
 
   buildings:
     - { id: main,  x: 70,  y: 60, w: 532, h: 485, poche: var(--fg-3) }
-    - { id: annex, x: 712, y: 66, w: 228, h: 150, poche: var(--accent) }
+    # 1장을 완성해야 도면에 나타난다. 그전엔 존재 자체가 보이지 않는다
+    - { id: annex, x: 712, y: 66, w: 228, h: 150, poche: var(--accent), revealed_after: 1 }
 
   rooms:
     # 사건 현장. 옅은 붉은 기가 깔린다 — 상태 표시이지 강조가 아니다

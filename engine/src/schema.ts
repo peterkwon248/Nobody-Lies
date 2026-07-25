@@ -86,6 +86,7 @@ function floorPlan(raw: Raw): FloorPlan {
     } } : {}),
     buildings: arr(raw.buildings).map((b: Raw) => ({
       id: b.id, ...box(b), ...(b.poche ? { poche: b.poche } : {}),
+      ...(b.revealed_after !== undefined ? { revealedAfter: num(b.revealed_after) } : {}),
     })),
     rooms: arr(raw.rooms).map((r: Raw) => ({
       id: r.id, ...box(r), label: String(r.label ?? r.id),

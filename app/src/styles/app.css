@@ -743,6 +743,177 @@ body {
   pointer-events: none;
 }
 
+/* ── 현장 평면도 ─────────────────────────────────────────────────────
+   원본 483~519행. 도면은 16:10 비율 안에 비율 좌표로 배치된다.
+
+   ★ 도면은 판정하지 않는다 ★ 확대·화살표·펄스 금지. */
+
+.nl-map {
+  padding: 18px 24px;
+  max-width: 1100px;
+}
+
+.nl-map-times {
+  margin-bottom: 16px;
+}
+
+.nl-map-time {
+  flex: 1;
+  text-align: center;
+  padding: 7px 4px;
+  font-size: 12px;
+  font-weight: var(--fw-medium, 500);
+  color: var(--fg-3);
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+}
+
+.nl-map-time-on {
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg);
+  background: var(--bg-active);
+}
+
+.nl-map-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+.nl-map-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.nl-map-walk {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  color: var(--fg-4);
+  background: var(--bg-subtle);
+  padding: 0 4px;
+}
+
+.nl-map-loc {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.nl-map-loc-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nl-map-loc-name {
+  font-size: 11px;
+}
+
+/* 조사 상태. **사실이지 유용도가 아니다** — 물증이 나온 방과 빈방이 같게 생긴다 */
+.nl-map-status {
+  font-size: 9px;
+  font-weight: var(--fw-bold, 700);
+  background: var(--bg-app);
+  border: 1px solid;
+  border-radius: var(--r-pill, 999px);
+  padding: 0 5px;
+}
+
+.nl-map-fix {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+/* 인물 마커. 시간대를 넘기면 미끄러진다 */
+.nl-map-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-app);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  z-index: 4;
+  pointer-events: none;
+  transition: left 0.45s var(--ease, ease), top 0.45s var(--ease, ease), opacity 0.3s;
+}
+
+.nl-map-dot-label {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 9px;
+  font-weight: var(--fw-semi, 600);
+  white-space: nowrap;
+  z-index: 4;
+  pointer-events: none;
+  transition: left 0.45s var(--ease, ease), top 0.45s var(--ease, ease), opacity 0.3s;
+}
+
+.nl-map-dlabel,
+.nl-map-wlabel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  font-weight: var(--fw-semi, 600);
+  background: var(--bg-subtle);
+  padding: 0 3px;
+  z-index: 5;
+}
+
+.nl-map-dlabel { color: var(--fg-3); }
+.nl-map-wlabel { color: var(--accent); }
+
+.nl-map-scale {
+  position: absolute;
+  font-size: 10px;
+  color: var(--fg-4);
+  z-index: 5;
+}
+
+.nl-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.nl-map-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.nl-map-key-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.nl-map-hint {
+  color: var(--fg-4);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
 /* ── 진술 마킹 ───────────────────────────────────────────────────────
    원본 349~360행. 선택 툴바는 문단 안에 절대 위치로 뜬다.
 
