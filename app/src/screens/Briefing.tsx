@@ -1,5 +1,6 @@
 import type { Case } from '@engine/types'
 import { TopBar } from '../components/TopBar'
+import { Mark } from '../components/Mark'
 
 /**
  * 사건 브리핑 — 진입 흐름 2단계. 피해자·사망 추정·현장 상태의 **사실 요약**.
@@ -10,19 +11,19 @@ import { TopBar } from '../components/TopBar'
  * 문체는 3인칭 중립. *"~로 확인됨"* 이지 *"나는 ~라고 판단했다"* 가 아니다.
  * 수사관에게는 이름도 직책도 얼굴도 없다 (`design-brief.md` §화자).
  */
-export function Briefing({ c, onDone }: { c: Case; onDone: () => void }) {
+export function Briefing({ c, onDone, onHome }: { c: Case; onDone: () => void; onHome: () => void }) {
   const victim = c.victimProfile
   const window = c.slots.find((s) => s.isWindow)
   const scene = c.locations.find((l) => l.id === c.incident.scene)
 
   return (
     <div className="nl-fs">
-      <TopBar title={c.title} />
+      <TopBar onBack={onHome} />
 
       <div className="nl-fs-body">
         <div className="nl-brief">
           <div className="nl-brief-head">
-            <span className="nl-fs-mark" aria-hidden="true" />
+            <Mark size={26} />
             <span className="v-ui" style={{ color: 'var(--fg-3)' }}>{c.title}</span>
           </div>
 

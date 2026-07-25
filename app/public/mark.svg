@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="gun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#aeb6c0"/>
+      <stop offset=".45" stop-color="#5a616b"/>
+      <stop offset="1" stop-color="#2b2f36"/>
+    </linearGradient>
+    <clipPath id="clip"><path d="M62 34 L62 166 A92 66 0 0 0 62 34 Z"/></clipPath>
+    <mask id="cut">
+      <path d="M62 34 L62 166 A92 66 0 0 0 62 34 Z" fill="#fff"/>
+      <g stroke="#000" stroke-width="10" stroke-linecap="round">
+        <line x1="34" y1="182" x2="152" y2="64"/>
+        <line x1="20" y1="150" x2="120" y2="50"/>
+        <line x1="12" y1="118" x2="92" y2="38"/>
+      </g>
+    </mask>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="#0b0c0d"/>
+  <g transform="rotate(45 100 100) scale(0.78) translate(28 28)">
+    <rect width="200" height="200" fill="url(#gun)" mask="url(#cut)"/>
+    <g clip-path="url(#clip)" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round">
+      <line x1="40" y1="184" x2="158" y2="66"/>
+      <line x1="26" y1="152" x2="126" y2="52"/>
+      <line x1="18" y1="120" x2="98" y2="40"/>
+    </g>
+  </g>
+</svg>

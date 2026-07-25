@@ -1,4 +1,5 @@
 import { TopBar } from '../components/TopBar'
+import { Mark } from '../components/Mark'
 import type { CaseProgress } from '../state/stores'
 
 /**
@@ -40,12 +41,12 @@ export function Home({
 
   return (
     <div className="nl-fs">
-      <TopBar title="노바디 라이즈" ruled />
+      <TopBar title="노바디 라이즈" showMark ruled />
 
       <div className="nl-fs-body nl-fs-body-top">
         <div className="nl-home">
           <div className="nl-home-head">
-            <span className="nl-home-mark" aria-hidden="true" />
+            <Mark size={56} radius={14} />
             <div>
               <div className="nl-home-title">노바디 라이즈</div>
               <div className="v-body nl-home-tagline">{TAGLINE}</div>

@@ -12,14 +12,14 @@ import { ko } from '../case/loadCase'
  *
  * 그 규칙은 **사건 파일**이 지킨다. 이 화면은 담긴 것을 그대로 읽을 뿐이다.
  */
-export function Prologue({ c, onDone }: { c: Case; onDone: () => void }) {
+export function Prologue({ c, onDone, onHome }: { c: Case; onDone: () => void; onHome: () => void }) {
   // 프롤로그가 없는 사건도 있다(일일 사건 등). 흐름을 막지 않는다
   const paragraphs = (c.prologue ?? []).map(ko).filter(Boolean)
   const body = paragraphs.length ? paragraphs : [c.incident.description]
 
   return (
     <div className="nl-fs">
-      <TopBar title={c.title} />
+      <TopBar onBack={onHome} />
       <div className="nl-fs-body">
         <Reader kicker={c.title} paragraphs={body} onDone={onDone} doneLabel="계속" />
       </div>

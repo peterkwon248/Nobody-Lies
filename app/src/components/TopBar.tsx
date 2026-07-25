@@ -1,37 +1,41 @@
 import { useEffect, useState } from 'react'
+import { Mark } from './Mark'
 
 /**
- * 전체화면 표면의 상단 바 (홈 · 사건 상세 · 진입 흐름).
+ * 전체화면 표면의 상단 바.
  *
- * 프로토타입과 같은 구성 — 좌측에 표지 또는 뒤로, 우측에 테마 전환.
+ * 프로토타입은 표면마다 구성이 다르다 — **인트로(프롤로그·브리핑)에는 제목도 마크도
+ * 없고 우측 컨트롤만 있다.** 산문 화면에서 UI 를 최소화하기 위해서다. 그 자리에
+ * 마크를 놓으면 텍스트가 화면이 되는 것을 방해한다.
  *
- * **언어 전환(한국어/EN)은 아직 넣지 않는다.** 사건 파일의 `Text.en` 이 대부분
- * 비어 있어서(번역 전) 지금 붙이면 절반만 번역된 화면이 된다. 어휘가 고정이라
- * 번역은 싸지만(`SYSTEM-DECISIONS.md` §7) 아직 하지 않은 일이다.
+ * 다만 **돌아가기는 인트로에도 둔다.** 프로토타입은 인트로에서 홈으로 나갈 길이
+ * 없는데(사이드바가 z-index 아래로 덮인다), 그것은 이식할 만한 성질이 아니다.
+ * 진행은 `CaseProgress.stage` 에 저장되므로 나갔다 와도 이어진다.
  */
 export function TopBar({
   title,
   onBack,
+  showMark,
   ruled,
 }: {
-  title: string
+  title?: string
   onBack?: () => void
+  showMark?: boolean
   ruled?: boolean
 }) {
   return (
     <div className={ruled ? 'nl-fs-bar nl-fs-bar-ruled' : 'nl-fs-bar'}>
-      {onBack ? (
-        <span className="linklike" onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      {onBack && (
+        <span className="linklike nl-back" onClick={onBack}>
           <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M10 3.5L5.5 8l4.5 4.5" />
           </svg>
-          돌아가기
+          홈
         </span>
-      ) : (
-        <>
-          <span className="nl-fs-mark" aria-hidden="true" />
-          <span className="v-ui" style={{ color: 'var(--fg-3)' }}>{title}</span>
-        </>
+      )}
+      {showMark && <Mark size={24} />}
+      {showMark && title && (
+        <span className="v-ui" style={{ color: 'var(--fg-3)' }}>{title}</span>
       )}
       <span className="nl-fs-spacer" />
       <ThemeToggle />

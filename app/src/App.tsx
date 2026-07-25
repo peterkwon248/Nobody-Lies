@@ -86,9 +86,9 @@ export default function App() {
 
   switch (progress.stage) {
     case 'prologue':
-      return <Prologue c={c} onDone={() => go('brief')} />
+      return <Prologue c={c} onDone={() => go('brief')} onHome={() => setRoute('home')} />
     case 'brief':
-      return <Briefing c={c} onDone={() => go('read')} />
+      return <Briefing c={c} onDone={() => go('read')} onHome={() => setRoute('home')} />
     default:
       return (
         <div className="nl-fs">
