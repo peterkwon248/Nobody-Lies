@@ -551,12 +551,48 @@ facts:
 #  추론한 플레이어는 4~5회에 푼다. 의도된 설계다.
 
 actions:
-  - { id: a_yuri,  label: 소지품 검사 · 오나경, cost: 1, gives: [e_yuri_threat],  salience: 0.9,  yield: redherring }
-  - { id: a_yena,  label: 소지품 검사 · 서지안, cost: 1, gives: [e_yena_info],    salience: 0.8,  yield: redherring }
-  - { id: a_yujin, label: 소지품 검사 · 한유빈, cost: 1, gives: [e_yujin_patch],  salience: 0.75, yield: redherring }
+  - id: a_yuri
+    label: 소지품 검사 · 오나경
+    cost: 1
+    gives: [e_yuri_threat]
+    salience: 0.9
+    yield: redherring
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "약물 투약 흔적", en: "Traces of drug use" }
+      body:  { ko: "나경의 소지품에서 약물 흔적이 나왔다. 부끄러운 비밀이지만 살인과는 무관하다.", en: "Signs of drug use in Na-kyung’s things - a shameful secret, unrelated to the murder." }
+  - id: a_yena
+    label: 소지품 검사 · 서지안
+    cost: 1
+    gives: [e_yena_info]
+    salience: 0.8
+    yield: redherring
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "출처 추적 메모", en: "Source-tracing notes" }
+      body:  { ko: "지안이 유통 경로를 캐던 메모. 수상해 보이지만 범행과는 무관하다.", en: "Ji-an’s notes tracing the supply chain - suspicious-looking but unrelated." }
+  - id: a_yujin
+    label: 소지품 검사 · 한유빈
+    cost: 1
+    gives: [e_yujin_patch]
+    salience: 0.75
+    yield: redherring
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "의심 메모", en: "Suspicion notes" }
+      body:  { ko: "유빈이 파스 출처로 다인을 의심한 메모. 개인적 의심일 뿐이다.", en: "Yu-bin’s notes suspecting Da-in - a private hunch, nothing more." }
 
   # 사인은 부검으로만 확보된다 = 필수 조사. 비용 2면 여유가 0이 되어 1로 내렸다
-  - { id: a_autopsy, label: 시신 정밀 검사, cost: 1, gives: [e_time], salience: 0.7, yield: exclusion }
+  - id: a_autopsy
+    label: 시신 정밀 검사
+    cost: 1
+    gives: [e_time]
+    salience: 0.7
+    yield: exclusion
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "일산화탄소 중독 확정", en: "CO poisoning confirmed" }
+      body:  { ko: "사인은 일산화탄소 중독. 외상과 약물 반응은 없다. 사망 추정이 새벽 3~5시로 좁혀졌다.", en: "Cause of death is CO poisoning; no wounds or drugs. The window narrows to 03:00-05:00." }
 
   # 영수증의 2번째 경로. 핵심 물증은 경로가 둘 이상이어야 한다
   - { id: a_briquette, label: 연탄 수색, cost: 1, gives: [e_receipt],
@@ -568,6 +604,10 @@ actions:
     salience: 0.5
     boosted_by: [{ fact: f_alias_exists, amount: 0.45 }]
     yield: solution
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "‘김선생’ 추적 메모", en: "Trace on “Kim”" }
+      body:  { ko: "리원의 폰에 유통망 우두머리를 추적한 정황과 김선생 번호가 남아 있다.", en: "Ri-won’s phone holds a trace on the ring’s head and Kim’s number." }
   - id: a_sakura
     label: 소지품 검사 · 문세라
     cost: 1
@@ -575,6 +615,10 @@ actions:
     salience: 0.35
     boosted_by: [{ fact: f_sakura_is_alias, amount: 0.5 }]
     yield: solution
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "유서 초안과 금고 열쇠", en: "Draft note and safe key" }
+      body:  { ko: "세라의 짐에서 윤다인 명의 유서 초안과 금고 열쇠가 나왔다. 위장에 쓰인 물건이다.", en: "A forged draft note in Da-in’s name and a safe key, found in Se-ra’s things." }
   - id: a_annex
     label: 별채 수색
     cost: 1
@@ -583,22 +627,80 @@ actions:
     available_after: 1
     boosted_by: [{ fact: f_alias_exists, amount: 0.4 }]
     yield: solution
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "대포폰 발견", en: "Burner phone" }
+      body:  { ko: "별채 게임기 뒤에서 발신 전용 대포폰. ‘김선생’ 명의 거래 메시지가 남아 있다.", en: "A burner phone behind the annex game console, with dealing messages under the alias “Kim.”" }
 
   # 통화내역
   - { id: a_ph_yuri,  label: 통화내역 조회 · 오나경, cost: 1, gives: [e_yuri_call],   salience: 0.5,  yield: exclusion }
-  - { id: a_ph_wy,    label: 통화내역 조회 · 백리원, cost: 1, gives: [e_wy_call_log], salience: 0.45, yield: exclusion }
-  - { id: a_ph_sakura, label: 통화내역 조회 · 문세라, cost: 1, gives: [], salience: 0.3,  yield: empty }
+  - id: a_ph_wy
+    label: 통화내역 조회 · 백리원
+    cost: 1
+    gives: [e_wy_call_log]
+    salience: 0.45
+    yield: exclusion
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "새벽 3시 통화 확인", en: "03:00 call verified" }
+      body:  { ko: "리원은 새벽 3시 윤다인과 통화했다. 기지국 기록상 산장에서 멀리 떨어져 있었다.", en: "Ri-won called Da-in at 03:00; cell records place them far from the lodge." }
+  - id: a_ph_sakura
+    label: 통화내역 조회 · 문세라
+    cost: 1
+    gives: []
+    salience: 0.3
+    yield: empty
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "개인폰 깨끗함", en: "Personal phone is clean" }
+      body:  { ko: "세라의 개인 명의 폰에는 특이사항이 없다. 개인폰만으로는 아무것도 드러나지 않는다.", en: "Nothing on Se-ra’s registered phone - the personal line alone reveals nothing." }
   - { id: a_ph_yena,  label: 통화내역 조회 · 서지안, cost: 1, gives: [], salience: 0.35, yield: empty }
   - { id: a_ph_yujin, label: 통화내역 조회 · 한유빈, cost: 1, gives: [], salience: 0.3,  yield: empty }
 
   # 알리바이 대조
-  - { id: a_alibi_yy, label: 알리바이 대조 · 서지안 × 한유빈, cost: 1, gives: [e_mutual], salience: 0.4, yield: exclusion }
-  - { id: a_alibi_yr, label: 알리바이 대조 · 오나경 × 한유빈, cost: 1, gives: [e_yuri_alibi], salience: 0.3, yield: exclusion }
+  - id: a_alibi_yy
+    label: 알리바이 대조 · 서지안 × 한유빈
+    cost: 1
+    gives: [e_mutual]
+    salience: 0.4
+    yield: exclusion
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "지안 동선 일치", en: "Ji-an’s route checks out" }
+      body:  { ko: "지안과 유빈의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.", en: "Ji-an and Yu-bin’s arrival times corroborate - both arrived only in the morning." }
+  - id: a_alibi_yr
+    label: 알리바이 대조 · 오나경 × 한유빈
+    cost: 1
+    gives: [e_yuri_alibi]
+    salience: 0.3
+    yield: exclusion
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "나경 동선 일치", en: "Na-kyung’s route checks out" }
+      body:  { ko: "나경은 장을 보고 유빈과 함께 도착했다. 사망 추정 시간대 현장 접근이 불가능하다.", en: "Na-kyung shopped and arrived with Yu-bin - no access during the window." }
 
   # 장소
   # 화로에 트릭의 핵심 셋이 몰려 있다 — 영수증(시각) · 물자국(가짜 연기) · 식은 정도
-  - { id: a_hearth,  label: 화로 조사,      cost: 1, gives: [e_hearth_cold, e_dryice, e_receipt], salience: 0.55, yield: solution }
-  - { id: a_window,  label: 문틈과 창가 조사, cost: 1, gives: [e_tape_inside], salience: 0.45, yield: exclusion }
+  - id: a_hearth
+    label: 화로 조사
+    cost: 1
+    gives: [e_hearth_cold, e_dryice, e_receipt]
+    salience: 0.55
+    yield: solution
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "화로 · 연탄 확인", en: "Brazier and briquette" }
+      body:  { ko: "화로에 남은 연탄이 사인의 근원으로 확인됐다. 재 아래 바닥에는 둥근 물자국이 있었다.", en: "The briquette in the brazier is confirmed as the source of death; a round mark lay beneath the ash." }
+  - id: a_window
+    label: 문틈과 창가 조사
+    cost: 1
+    gives: [e_tape_inside]
+    salience: 0.45
+    yield: exclusion
+    # 프로토타입 resultFor(1927행)에서 옮김
+    result:
+      title: { ko: "창문 밀폐 테이프", en: "Window taped shut" }
+      body:  { ko: "창틀과 문틈에 안쪽에서 붙인 테이프. 밀폐 위장 장치다.", en: "Tape applied from inside the window frame and door gap - a sealing device." }
   - { id: a_kitchen, label: 주방 수색,      cost: 1, gives: [], salience: 0.2,  yield: empty }
   - { id: a_living,  label: 거실 수색,      cost: 1, gives: [], salience: 0.25, yield: empty }
   - { id: a_storage, label: 창고 수색,      cost: 1, gives: [], salience: 0.2,  yield: empty }
