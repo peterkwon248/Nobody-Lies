@@ -174,7 +174,7 @@ export function Shell({
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H22a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
               </svg>
             </button>
-            {settings && <SettingsPanel onClose={() => setSettings(false)} />}
+            {settings && <SettingsPanel />}
           </span>
         </div>
 
@@ -195,8 +195,11 @@ export function Shell({
  * 대부분 비어 있어서(번역 전) 지금 붙이면 절반만 번역된 화면이 된다. 어휘가 고정이라
  * 번역은 싸지만(`SYSTEM-DECISIONS.md` §7) 아직 하지 않은 일이다. 번역이 들어오면
  * 여기에 한 줄 더 붙인다.
+ *
+ * 닫기는 톱니바퀴를 다시 누르는 것이다 — 테마를 바꾼 뒤 패널이 남아 있어야
+ * 바뀐 것을 그 자리에서 볼 수 있다.
  */
-function SettingsPanel({ onClose }: { onClose: () => void }) {
+function SettingsPanel() {
   const [light, setLight] = useState(document.documentElement.dataset.theme === 'light')
 
   useEffect(() => {
@@ -206,9 +209,11 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="panel nl-settings">
       <div className="panel-caption">테마</div>
+      {/* Vector 의 .seg-toggle 은 자식에 `st` / `st active` 를 요구한다.
+          한때 `on` 이라고 써서 스타일이 하나도 안 붙었다 — 클래스 이름은 계약이다 */}
       <div className="seg-toggle">
-        <span className={light ? '' : 'on'} onClick={() => { setLight(false); onClose() }}>어둡게</span>
-        <span className={light ? 'on' : ''} onClick={() => { setLight(true); onClose() }}>밝게</span>
+        <span className={light ? 'st' : 'st active'} onClick={() => setLight(false)}>어둡게</span>
+        <span className={light ? 'st active' : 'st'} onClick={() => setLight(true)}>밝게</span>
       </div>
     </div>
   )
