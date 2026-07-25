@@ -1,0 +1,25 @@
+{
+  "name": "nobody-lies-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "노바디 라이즈 · 프로덕션 앱. 웹 + Tauri(v1.5) 대상.",
+  "scripts": {
+    "dev": "npm run case && vite",
+    "build": "npm run case && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "case": "npm run export-case -w nobody-lies-engine",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

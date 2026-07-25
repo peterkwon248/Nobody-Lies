@@ -4,11 +4,14 @@
   "private": true,
   "description": "노바디 라이즈 — 추리 게임",
   "workspaces": [
-    "engine"
+    "engine",
+    "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run verify -w engine",
-    "typecheck": "npm run typecheck -w engine",
-    "verify": "npm run verify -w engine"
+    "build": "npm run typecheck -w engine && npm run verify -w engine && npm run build -w nobody-lies-app",
+    "typecheck": "npm run typecheck -w engine && npm run typecheck -w nobody-lies-app",
+    "verify": "npm run verify -w engine",
+    "case": "npm run export-case -w nobody-lies-engine",
+    "dev": "npm run dev -w nobody-lies-app"
   }
 }

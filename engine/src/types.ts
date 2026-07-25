@@ -427,6 +427,14 @@ export type Case = {
   terms?: { word: string; source: Text; note: Text }[]
   people: Person[]
   victim: PersonId
+  /**
+   * 피해자의 표시 정보.
+   *
+   * 피해자는 `people` 에 넣지 않는다 — `guiltTable` 이 `people` 을 순회하므로
+   * 넣으면 피해자의 유죄를 계산하게 된다. 그런데 브리핑·프롤로그·결말은 피해자의
+   * 이름을 부른다. 그 자리가 없어서 화면에 id(`chaewon`)가 그대로 나왔다.
+   */
+  victimProfile?: { name: string; age?: number; job?: string }
   culprit: PersonId
   trick: Trick
   evidence: Evidence[]

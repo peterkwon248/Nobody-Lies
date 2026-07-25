@@ -350,7 +350,13 @@ export function parseCase(raw: unknown, source: string): Case {
     slots: slotList,
     locations: locationList,
     people,
-    victim: c.victim, culprit: c.culprit,
+    victim: c.victim,
+    ...(c.victim_profile ? { victimProfile: {
+      name: c.victim_profile.name,
+      ...(c.victim_profile.age !== undefined ? { age: c.victim_profile.age } : {}),
+      ...(c.victim_profile.job ? { job: c.victim_profile.job } : {}),
+    } } : {}),
+    culprit: c.culprit,
     trick: {
       types, props: arr(trick.props), staging: arr(trick.staging),
       illusions,

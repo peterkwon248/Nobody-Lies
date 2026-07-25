@@ -17,3 +17,7 @@ Thumbs.db
 # bkit 세션 런타임 상태. 기계마다 다르므로 커밋하지 않는다.
 **/.bkit-memory.json
 **/.pdca-status.json
+
+# 사건 JSON 은 engine 이 YAML 에서 방출하는 빌드 산출물이다
+app/public/cases/
+app/dist/

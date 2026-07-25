@@ -6,7 +6,8 @@
   "description": "노바디 라이즈 · 사건 검증기 프로토타입. 프로덕션 앱이 아니라 이식 원본.",
   "scripts": {
     "verify": "tsx src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export-case": "tsx src/export-case.ts"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
