@@ -1,365 +1,429 @@
 # =====================================================================
-#  Nobody Lies · 사건 저작 템플릿
+#  Nobody Lies · 사건 저작 서식
 # =====================================================================
-#  위에서 아래로 순서대로 채운다. 순서가 중요하다.
-#  숨은 범죄에서 동기가 나오고, 인물 배치에서 기회가 나온다.
-#  거꾸로 채우면 반드시 다시 쓰게 된다.
+#  이 파일은 **그대로 검증을 통과하는 최소 사건**이다. 빈 양식이 아니다.
 #
-#  다 채우면:  tsx src/cli.ts --case my-case.yaml
-#  검증기가 통과 여부와 난이도를 알려준다.
+#      cp templates/case-template.yaml cases/my-case.yaml
+#      npm run verify -w engine -- --case cases/my-case.yaml
+#
+#  통과하는 상태에서 시작해 한 항목씩 바꾸고 그때마다 검증기를 돌린다.
+#  빈 양식을 채우다 200개 오류를 한꺼번에 만나는 것보다 훨씬 싸다.
+#
+#  ── 채우는 순서가 중요하다 ──────────────────────────────────
+#    숨은 범죄  →  동기가 여기서 나온다
+#    트릭      →  물증을 결정한다
+#    인물 배치  →  ★ 기회가 여기서 결정된다. 가장 중요
+#    물증      →  거짓말의 반박 근거
+#    사실      →  검증기의 원자 단위
+#    조사      →  탐색 공간
+#    보고서     →  공란 = 진실 세계의 필드
+#    산문      →  마지막. 사실이 다 확정된 뒤에
+#
+#  거꾸로 채우면 반드시 다시 쓴다. 산문을 먼저 쓰면 특히 그렇다.
+#  규모 기준은 templates/README.md 참조. 아래는 daily(3인·2장·7공란).
 # =====================================================================
 
-meta:
-  id: my-case
-  title: 사건 제목
-  scale: campaign          # campaign | daily
-  budget: 5                # 조사 예산. daily는 3, campaign은 5~6
+id: my-case
+title: 사건 제목
+scale: daily
+# 예산은 마지막에 정한다. 검증기가 오라클·탐욕 회차를 알려주면 그때 맞춘다
+budget: 6
+
+incident:
+  kind: homicide          # homicide | theft | leak | forgery | disappearance | sabotage | audit
+  subject: victim
+  description: 한 줄로. 무엇이 벌어졌는가
+  # 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 기회가 생겨 유일성이 무너진다.
+  # 검증기가 그것을 검사하므로 locations 의 id 여야 한다
+  scene: room
+
+prose:
+  source: authored        # authored | template | llm
+
+# 진술 정독만으로 확보되는 단어. 조사가 필요 없다.
+# ★ 1장처럼 조사 없이 확정되어야 하는 장에 확보 공란이 있으면 반드시 필요하다 ★
+seed_terms: [만년필]
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 1. 숨은 범죄 (L1)
+#  시간 축
 # ─────────────────────────────────────────────────────────────────────
-#  살인 밑에 깔린 다른 사건. 이것이 동기의 원천이고,
-#  무고한 사람들에게 각자의 비밀을 줘서 전원을 수상하게 만든다.
-#
-#  이 층이 없으면 용의자들이 전부 밋밋해진다.
-#  makesSuspicious 가 true 인 인물이 최소 3명이어야 레드 헤링이 작동한다.
+#  presence · claim · 시각 공란이 이 어휘만 쓴다. 진술 격자의 열이기도 하다.
+#  너무 잘게 쪼개지 마라 — 격자가 읽히지 않는다.
 
-hidden_crime:
-  type: trafficking        # trafficking | embezzlement | blackmail | fraud | cover_up
-  alias: 가명              # 주범이 쓰던 이름. 정체 밝히기가 핵심 공란이 된다
-  description: |
-    한 문단으로. 무엇이 오갔고 누가 무엇을 했는지.
-
-  roles:
-    # ringleader   주범. 대개 살인범
-    # accomplice   공범. 피해자가 여기인 경우가 많다
-    #              (진실 세계 역할일 뿐. `공범` 공란 라벨은 폐기됐다)
-    # coerced      협박·약점 잡힌 피해자
-    # investigator 추적하던 사람
-    # unaware      무관
-    person_a: ringleader
-    victim:    accomplice
-    person_b:  coerced
-    person_c:  investigator
-    person_d:  investigator
-    person_e:  investigator
+slots:
+  - { id: t0, label: 전날 밤 }
+  - { id: t1, label: 새벽, window: true }   # window = 사망 추정 구간
+  - { id: t2, label: 아침 }
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 2. 살인 (L2)
+#  장소
 # ─────────────────────────────────────────────────────────────────────
-#  동기는 반드시 L1에서 파생되어야 한다.
-#  "폭로 위기" "분배금 다툼" "입막음" 같은 형태.
-
-murder:
-  culprit: person_a
-  victim: victim
-
-  motive:
-    kind: exposure_risk    # exposure_risk | money_dispute | silencing | revenge
-    description: 한 줄로
-
-  trick:
-    type: staged_suicide   # staged_suicide | locked_room | alibi_fabrication
-                           # body_moved | identity_swap | delayed_mechanism
-    props: []              # 트릭에 실제로 쓴 물건
-    staging: []            # 위장하려고 심어둔 것
-
-    # ★ 필수 ★  트릭의 허점.
-    #   허점이 없으면 플레이어가 파고들 지점이 없다.
-    #   그리고 이 허점은 반드시 누군가의 진술에 위화감 형태로 심어야 한다.
-    #   예: "자살할 사람이 왜 손님들을 불렀을까?"
-    flaw: 
-
-  window: t2               # 사망 추정 구간 = isWindow 슬롯 (아래 time_slots)
-  actual: t2               # 실제 범행 시각. 범인 presence 가 이 슬롯에 현장(scene)
-
-
-# ─────────────────────────────────────────────────────────────────────
-# 3. 무대
-# ─────────────────────────────────────────────────────────────────────
-#  walk 는 도보 분. 기회 판정의 핵심 수치다.
-#  범인만 현장에 접근 가능하도록 거리를 설계한다.
-#  at_lodge=false 는 산장 밖(off-site) — 사망 시간대에 여기 있으면 기회가 없다.
-#  scene: true 는 사건 현장. 무고한 자가 사망 시간대에 여기 있으면 검증 실패한다.
+#  presence · claim · 장소 공란이 이 어휘만 쓴다.
+#  자유 문자열로 두면 'room' 과 '방'이 서로 다른 곳이 되고 아무도 모른다.
+#  at_lodge: false = 사건 부지 밖. 사망 시간대에 거기 있으면 현장 접근이 불가능하다.
 
 locations:
-  - id: main
-    name: 본채
-    at_lodge: true
-    walk: { annex: 10 }
-  - id: room
-    name: 피해자의 방
-    at_lodge: true
-    scene: true            # 사건 현장
-  - id: annex
-    name: 별채
-    at_lodge: true
-    walk: { main: 10 }
-    available_after: 1     # 처음엔 존재를 모른다. 1장 확인 후 공개
-  - id: home
-    name: 자택 (현장 밖)
-    at_lodge: false        # off-site — 무고한 자의 알리바이
-
-# 슬롯 4개 권장. 하나에 window: true (사망 추정). 격자의 열이 된다.
-# 어휘를 열로 고정하면 진술 격자가 사건마다 같은 모양이라 UI 가 단순해진다.
-time_slots:
-  - { id: t0, label: 전날 밤 }
-  - { id: t1, label: 새벽 3시 }
-  - { id: t2, label: 새벽 3–8시, window: true }
-  - { id: t3, label: 오전 }
+  - { id: hall, label: 홀,   at_lodge: true }
+  - { id: room, label: 방,   at_lodge: true }   # ← 사건 현장
+  - { id: away, label: 자택, at_lodge: false }
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 4. 인물과 배치
+#  인물과 동선
 # ─────────────────────────────────────────────────────────────────────
-#  ★ 이 게임에서 범인을 특정하는 것은 동기가 아니라 기회다. ★
+#  ★ 이 게임에서 범인을 특정하는 것은 동기가 아니라 기회다 ★
 #  동기는 여러 명이 갖는다(레드 헤링). 기회는 범인만 가져야 한다.
 #
-#  presence 가 진실의 원본이다.
-#  무고한 사람의 진술은 여기서 자동 도출되므로 참이 보장된다 — claim 을 쓰지 않는다.
+#  presence = 실제 동선(진실).  claim = 진술에서 주장하는 동선.
+#  ★ claim 을 적지 않으면 presence 와 같다 ★
+#  즉 "무고한 사람은 거짓말하지 않는다"가 규약이 아니라 **기본값**이다.
+#  거짓말은 명시적으로 적어야 하고, 검증기가 범인 외에는 적지 못하게 막는다.
 #
-#  ★ 범인만 claim 을 쓴다 ★
-#    claim = 위치 진술. presence(진실)와 다른 알리바이 거짓말.
-#    범인은 사망 시간대(window)에 현장에 있었지만 다른 곳에 있었다고 진술한다.
-#    이 거짓말이 없으면 잡을 것이 없다(검증 실패).
-#    무고한 자는 claim 을 생략한다 → 진술 = presence, 거짓이 섞일 수 없다.
+#  people 은 **용의자 목록**이다. 피해자는 넣지 않는다(유죄를 계산하게 된다).
+#  실존 인물명을 쓰지 마라.
 
 people:
-  # 범인 — presence(진실) + claim(거짓말)
-  - id: person_a
-    name: 이름
-    age: 30
+  - id: p1
+    name: 인물 하나
+    age: 34
     job: 직업
+    hidden_role: ringleader     # ringleader | accomplice | coerced | investigator | unaware
     presence:
-      - { slot: t0, at: main }
-      - { slot: t1, at: main }
-      - { slot: t2, at: room }        # ← 범행. window 슬롯에 현장
-      - { slot: t3, at: annex }
-    claim:                            # 알리바이: 새벽부터 별채에 있었다고 진술
-      - { slot: t0, at: main }
-      - { slot: t1, at: annex }       # 거짓 (진실은 main)
-      - { slot: t2, at: annex }       # 거짓 (진실은 room = 현장)
-      - { slot: t3, at: annex }
+      - { slot: t0, at: hall }
+      - { slot: t1, at: room }  # ← 범행
+      - { slot: t2, at: hall }
+    claim:
+      - { slot: t0, at: hall }
+      - { slot: t1, at: hall }  # ← 이 사건의 유일한 거짓말
+      - { slot: t2, at: hall }
+    statement:
+      voice: 말이 느리고 남 이야기를 먼저 한다   # 산문가가 읽는다. 플레이어에겐 안 보인다
+      paragraphs:
+        - 진술 원문. 문단 단위로 적는다.
+        # 문장은 "한 줄" 또는 { ko: …, en: … }. en 이 없으면 번역 전이다
 
-  # 무고 — presence 만. 진술은 도출된다
-  - id: person_b
-    name: 이름
+  - id: p2
+    name: 인물 둘
     age: 29
     job: 직업
+    hidden_role: unaware
     presence:
-      - { slot: t3, at: main }        # 아침 도착 = 기회 없음. 앞 슬롯은 미확인
+      - { slot: t2, at: hall }   # 아침 도착 = 기회 없음
+    statement:
+      voice: 불안하고 말이 빠르다
+      paragraphs:
+        - 진술 원문.
+
+  - id: p3
+    name: 인물 셋
+    age: 41
+    job: 직업
+    hidden_role: unaware
+    presence:
+      - { slot: t2, at: hall }
+    statement:
+      voice: 짧게 끊어 말한다
+      paragraphs:
+        - 진술 원문.
+
+victim: victim
+culprit: p1
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 5. 범인의 거짓말
+#  트릭
 # ─────────────────────────────────────────────────────────────────────
-#  무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다.
-#  거짓말은 범인만 한다.
+#  ★ 트릭은 이름표가 아니라 계약이다 ★
+#  아키타입마다 요구하는 부품이 다르고 검증기가 강제한다.
+#  원형을 늘리려면 `src/types.ts` 의 ARCHETYPES 에 계약을 추가한다.
 #
-#  ★ 반박 규칙 ★
-#  각 거짓말은 아래 둘 중 하나를 만족해야 한다.
-#    (a) 물증이 반박한다              ← 가장 강력. 권장
-#    (b) 2인 이상의 독립된 진술이 반박한다
+#    staged_suicide      스스로 목숨을 끊었다        exit 필수 · death 인상 필수
+#    locked_room         아무도 드나들 수 없었다      exit 필수
+#    alibi_fabrication   그 시각 그 자리에 없었다     time 또는 absence 인상 필수
+#    body_moved          발견된 곳에서 죽었다        place 인상 필수
+#    delayed_mechanism   범인이 있을 때 벌어졌다      time 인상 필수
+#    identity_swap       ⛔ 아직 못 쓴다 (용의자 목록이 거짓이 되면 공란 체계가 무너진다)
 #
-#  1인의 진술로만 반박되면, 그 사람을 범인으로 가정했을 때
-#  반박이 사라져서 정답이 둘이 된다.
+#  ★ 실제 추리물의 트릭은 대개 조합이다 ★ types 에 여럿 적으면 계약이 전부 적용된다.
 
-lies:
-  - claim: 새벽 내내 별채에서 잤다
-    refuted_by: [e_burner_phone]      # 물증 id 또는 인물 id 2개 이상
+trick:
+  types: [alibi_fabrication]
+  props: [e_tool]      # 트릭에 실제로 쓴 물건
+  staging: []          # 위장하려고 심어둔 것
+
+  # 플레이어가 처음 믿게 되는 것들.
+  # ★ broken_by 가 없으면 그 착각에서 영영 빠져나올 수 없다 ★
+  illusions:
+    - id: il_absent
+      kind: absence          # death | time | place | absence | identity
+      impression: 범인은 그 시각 현장에 없었다
+      made_by: []
+      broken_by: [e_trace, e_log]
+
+  # 현장이 닫혀 있다고 주장하는 아키타입(staged_suicide·locked_room)이라면
+  # exit 이 **필수**다. 없으면 물리적으로 성립하지 않는다.
+  # exit:
+  #   slot: t2
+  #   method: 어떻게 빠져나갔는가
+  #   enabled_by: [e_something]
+  #   broken_by: [e_something_else]
+
+  flaw:
+    text: 그 시각에 없었다면 왜 아침에 가장 먼저 알았는가
+    # ★ 허점은 반드시 실제로 심긴 자리를 가리킨다 ★
+    # 자유 텍스트로 두면 작가 머릿속에만 있는 허점을 적게 된다.
+    # 물증 id 또는 인물 id(그 사람의 진술).
+    planted_in: [p1]
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 6. 물증
+#  물증
 # ─────────────────────────────────────────────────────────────────────
+#  record 는 3인칭 관찰만 적는다.
+#  ★ '위조' '가명' '밀폐' 같은 목적·기능 판정어 금지 ★ — 플레이어의 결론이다.
+#
+#  yields_terms = 확보 단어에 들어오는 후보. discovered 공란은 이걸로만 채운다.
 
 evidence:
-  - id: e_burner_phone
-    desc: 대포폰
-    where: { place: annex }           # place | belongings | body | scene
-    reveals: [f_a_is_alias]
+  - id: e_tool
+    description: 만년필
+    found_at: 방 안
+    record: 바닥에 떨어져 있었다.
+    yields_terms: [만년필]
 
-  - id: e_note
-    desc: 유서
-    where: { belongings: person_a }
-    staging: true                     # 범인이 심어둔 위장물
-    reveals: [f_a_means]
+  # ★ 핵심 사실은 획득 경로가 둘 이상이어야 한다 ★
+  # 하나뿐이면 그 조사를 안 고른 플레이어가 영영 막힌다. 검증기가 강제한다.
+  - id: e_toolmark
+    description: 같은 폭의 자국
+    record: 같은 폭의 자국이 남아 있었다.
+    yields_terms: [만년필]
+
+  - id: e_trace
+    description: 새벽의 흔적
+    record: 복도 끝에 젖은 자국이 남아 있었다.
+
+  - id: e_log
+    description: 출입 기록
+    record: 문이 새벽에 한 번 여닫혔다.
+
+  - id: e_alias
+    description: 어떤 이름이 적힌 기록
+    yields_terms: [가명]
+
+  - id: e_alias2
+    description: 같은 이름의 두 번째 기록
+    yields_terms: [가명]
+
+  - id: e_motive
+    description: 금전 기록
+    yields_terms: [채무 관계]
+
+  - id: e_mutual
+    description: 두 사람의 상호 보증
+    record: 두 사람이 말한 도착 시각이 서로 맞물렸다.
+
+  - id: e_herring1
+    description: 개인적인 편지
+
+  - id: e_herring2
+    description: 오래된 사진
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 7. 사실 (Fact)
+#  사실
 # ─────────────────────────────────────────────────────────────────────
-#  검증기의 원자 단위. 유죄는 motive ∧ opportunity ∧ means 로 판정된다.
-#
-#  revealed_by 가 비어 있으면 진술에서 무료로 얻는 사실.
-#
-#  ★ 핵심 사실은 획득 경로가 2개 이상이어야 한다. ★
-#  경로가 하나뿐이면 그 조사를 안 고른 플레이어는 영영 막힌다.
+#  검증기의 원자 단위. 유죄 = motive ∧ opportunity ∧ means.
+#  revealed_by 가 비어 있으면 진술에서 무료로 얻는다.
+#  ※ 쉼표가 든 값은 반드시 인용한다 — flow 스타일 { } 안에서 쉼표는 구분자다.
 
 facts:
-  - id: f_a_opportunity
-    kind: opportunity        # opportunity | no_opportunity | motive | means
-                             # identity | contradiction | context
-    subject: person_a
-    content: 별채는 도보 10분. 새벽까지 현장에 있었음
-    revealed_by: []          # 무료
+  - { id: f_opp, kind: opportunity, subject: p1,
+      content: 새벽에 현장에 있었다, revealed_by: [e_trace, e_log] }
 
-  - id: f_a_is_alias
-    kind: identity
-    subject: person_a
-    content: person_a = 가명의 정체
-    revealed_by: [e_burner_phone, e_text]   # 경로 2개 ✓
+  # 무료 배제 — 1장이 조사 없이 확정되려면 필요하다
+  - { id: f_no_p2, kind: no_opportunity, subject: p2, content: 아침에 도착, revealed_by: [] }
+  - { id: f_no_p3, kind: no_opportunity, subject: p3, content: 아침에 도착, revealed_by: [] }
 
-  - id: f_a_motive
-    kind: motive
-    subject: person_a
-    content: 폭로 임박
-    revealed_by: []
-    requires: [f_a_is_alias]
+  # ★ 레드 헤링으로 의심을 산 인물은 물증으로도 닫아야 한다 ★
+  # 자기 진술뿐이면 그를 범인으로 가정했을 때 배제가 통째로 사라진다.
+  # 위의 무료 배제는 그대로 두고 확인 층을 얹는다.
+  - { id: f_no_p2_ok, kind: no_opportunity, subject: p2, content: 도착 시각 상호 일치, revealed_by: [e_mutual] }
+  - { id: f_no_p3_ok, kind: no_opportunity, subject: p3, content: 도착 시각 상호 일치, revealed_by: [e_mutual] }
+
+  - { id: f_identity, kind: identity, subject: p1, content: 가명의 주인, revealed_by: [e_alias, e_alias2] }
+  - { id: f_means, kind: means, subject: p1, content: 도구를 다룰 수 있었다, revealed_by: [e_tool, e_toolmark] }
+  - { id: f_motive, kind: motive, subject: p1, content: 채무 관계, revealed_by: [e_motive], requires: [f_identity] }
+
+  # 레드 헤링 — 무고한 사람의 비밀. 수상해 보이지만 사건과 무관하다
+  - { id: f_h1, kind: context, subject: p2, content: 감추는 것이 있다, revealed_by: [e_herring1] }
+  - { id: f_h2, kind: context, subject: p3, content: 감추는 것이 있다, revealed_by: [e_herring2] }
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 8. 조사 행동
+#  조사
 # ─────────────────────────────────────────────────────────────────────
-#  salience = 플레이어가 초반에 이 행동을 고를 성향 (0~1)
+#  salience = 플레이어가 초반에 이 조사를 고를 성향 (0~1)
 #
-#  ★ 범인의 salience 를 낮게 설계한다. ★
+#  ★ 범인의 salience 를 낮게 둔다 ★
 #  가장 수상해 보이는 사람이 범인이면 게임이 안 된다.
-#  동기가 선명한 사람, 최초 발견자의 salience 를 높게 둔다.
+#  레드 헤링을 높게, 해답을 낮게. 눈에 띄는 것부터 찍는 플레이어는 실패하고
+#  추론한 플레이어가 이긴다.
 #
-#  available_after = 이 장을 확인해야 조사 대상이 열린다.
-#  초반 선택지를 줄여 탐색을 좁히는 장치.
+#  ★ result 는 gives 바로 옆에 둔다 ★
+#  "찾았다"고 말해놓고 아무것도 주지 않으면 플레이어가 예산만 잃는다.
+#  검증기가 yield 와 gives 의 불일치를 잡는다.
 
 actions:
-  - id: a_bel_b
-    label: 소지품 검사 · person_b
+  - id: a_papers
+    label: 서류 조사
     cost: 1
-    gives: [e_threat]
-    salience: 0.9
-    yield: redherring        # solution | redherring | exclusion | empty
+    gives: [e_alias, e_motive]
+    salience: 0.55
+    yield: solution           # solution | redherring | exclusion | empty
+    result:
+      title: 이름 하나가 반복된다
+      body: 여러 장에 같은 이름이 적혀 있었다.
 
-  - id: a_search_annex
-    label: 별채 수색
-    cost: 1
-    gives: [e_burner_phone]
-    salience: 0.3
-    available_after: 1
-    boosted_by:
-      - { fact: f_alias_exists, amount: 0.4 }
-    yield: solution
+  - { id: a_ledger, label: 장부 조사,     cost: 1, gives: [e_alias2],   salience: 0.3,  yield: solution }
+  - { id: a_room,   label: 방 수색,       cost: 1, gives: [e_tool],     salience: 0.5,  yield: solution }
+  - { id: a_body,   label: 시신 검사,     cost: 1, gives: [e_toolmark], salience: 0.6,  yield: solution }
+  - { id: a_hall,   label: 복도 조사,     cost: 1, gives: [e_trace],    salience: 0.4,  yield: solution }
+  - { id: a_door,   label: 출입 기록 조회, cost: 1, gives: [e_log],      salience: 0.35, yield: solution }
 
-  - id: a_autopsy
-    label: 시신 정밀 검사
-    cost: 2
-    gives: [e_body]
-    salience: 0.7
-    yield: exclusion
+  # 레드 헤링 — salience 를 해답보다 높게
+  - { id: a_h1, label: 소지품 검사 · 인물 둘, cost: 1, gives: [e_herring1], salience: 0.85, yield: redherring }
+  - { id: a_h2, label: 소지품 검사 · 인물 셋, cost: 1, gives: [e_herring2], salience: 0.8,  yield: redherring }
+
+  - { id: a_alibi, label: 알리바이 대조, cost: 1, gives: [e_mutual], salience: 0.45, yield: exclusion }
+
+  # 빈손도 배제 정보다. 조사 대상은 예산의 3배 이상이어야 선택이 소거가 아니라 판단이 된다
+  - { id: a_kitchen, label: 주방 수색, cost: 1, gives: [], salience: 0.2,  yield: empty }
+  - { id: a_yard,    label: 마당 수색, cost: 1, gives: [], salience: 0.15, yield: empty }
+  - { id: a_attic,   label: 다락 수색, cost: 1, gives: [], salience: 0.1,  yield: empty }
+  - { id: a_car,     label: 차량 확인,   cost: 1, gives: [], salience: 0.12, yield: empty }
+  - { id: a_cellar,  label: 지하 수색,   cost: 1, gives: [], salience: 0.18, yield: empty }
+  - { id: a_shed,    label: 창고 수색,   cost: 1, gives: [], salience: 0.14, yield: empty }
+  - { id: a_desk,    label: 책상 조사,   cost: 1, gives: [], salience: 0.22, yield: empty }
+  - { id: a_bin,     label: 쓰레기 확인, cost: 1, gives: [], salience: 0.08, yield: empty }
+  - { id: a_phone,   label: 통화내역 조회, cost: 1, gives: [], salience: 0.28, yield: empty }
+  - { id: a_window,  label: 창가 조사,   cost: 1, gives: [], salience: 0.16, yield: empty }
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 9. 보고서 — 장과 공란
+#  보고서 — 장과 공란
 # ─────────────────────────────────────────────────────────────────────
-#  ★ 공란 라벨은 아래 고정 어휘에서만 고른다. ★
-#  어휘는 고정, 구성은 가변이다.
-#  구성까지 고정하면 플레이어가 구조만 보고 반전을 예측한다.
-#
-#  사용 가능한 어휘:
+#  ★ 공란 라벨은 고정 어휘에서만 고른다 ★ 어휘는 고정, 구성은 가변이다.
 #    인물 · 장소 · 시각 · 도구 · 동기 · 정체 · 은폐수단 · 위장물
 #    마지막목격자 · 접촉수단 · 은닉처 · 사인 · 물품 · 협박대상
 #
-#  `공범`은 공란 라벨에서 폐기했다. 라벨이 보이는 순간 공범의 존재가
-#  무료로 풀리기 때문이다. roles 의 accomplice 역할과 혼동하지 말 것 —
-#  역할은 진실 세계에 남고, 공란으로 묻지만 않는다.
+#  ★ `공범` 은 폐기됐다 ★ 라벨이 존재한다는 사실만으로 "범인 말고 한 명 더
+#  있다"가 조사 0회에 풀린다. 진실 세계의 accomplice 역할은 남지만 공란으로
+#  묻지 않는다. (`docs/MEMORY.md` §1-1)
 #
-#  candidates:
-#    closed     처음부터 목록이 알려짐 (인물·장소·시각) → 드롭다운
-#    discovered 조사로 발견해야 후보에 추가 → 확보 단어
+#  ★ 장소 공란의 답은 locations 의 id, 시각 공란의 답은 slots 의 id 다 ★
+#  라벨을 쓰면 검증기가 잡는다.
 #
-#  ★ 각 장은 그 시점의 가용 정보만으로 확정 가능해야 한다. ★
-#  3장을 확정해야 나오는 정보가 있어야 3장이 풀린다면 교착이다.
+#  ★ 장의 개수와 구성은 사건마다 달라야 한다 ★
+#  모든 사건이 5장이고 4장이 항상 '감춰진 사건'이면 첫 화면에서 반전이 예측된다.
+#
+#  ★ 각 장은 그 시점의 가용 정보만으로 확정 가능해야 한다 ★
+#  장 순서 = 의존성 순서다. 사건 시간순과 달라도 되고 epilogue_order 로 재배열된다.
+#
+#  opening = 장이 열릴 때 뜨는 절차 한 줄. 서술자 3인칭.
+#  ★ 제목이 말하는 것 이상을 말하면 안 된다 ★ 답도 조사 방향도 금지.
+#  ★ 전부 쓰거나 전부 비우거나 ★ 일부만 쓰면 그 유무가 신호가 된다.
 
-report:
-  chapters:
-    - order: 1
-      title: 도착과 발견
-      unlock_after: null            # 첫 장
-      blanks:
-        - { label: 인물, candidates: closed, answer: person_b }
-        - { label: 인물, candidates: closed, answer: person_c }
-        - { label: 장소, candidates: closed, answer: room }
-      # 이 장을 확인하면 공개되는 것
-      reveals:
-        facts: [f_cause_of_death]
-        actions: [a_search_annex]
-        narrows_window: [t2, t2]     # 사망 추정 축소 (window 슬롯 기준)
-        add_claims:
-          - speaker: person_c
-            content: 그러고 보니 새벽에 밖에서 인기척이 났어요
-        # ★ 추가 진술 규칙 ★
-        #   자기 비밀은 말하지 않는다.
-        #   남에 대해서, 또는 사건 전반에 대해서만 말한다.
-        #   탐색을 줄이되 추론을 대신하지 않는다.
+chapters:
+  - order: 1
+    title: 아침의 발견
+    opening: 먼저 그 아침에 무엇이 있었는지를 적는다.
+    requires_facts: [f_no_p2, f_no_p3]
+    blanks:
+      - { label: 인물, candidates: closed,     answer: p2 }
+      - { label: 장소, candidates: closed,     answer: room }
+      - { label: 시각, candidates: closed,     answer: t2 }
+      - { label: 도구, candidates: discovered, answer: 만년필 }
+    epilogue_order: 1
+    epilogue: 결말 조각. 최종 제출 후 시간순으로 재배열되어 하나의 이야기가 된다.
 
-    - order: 2
-      title: 사인과 현장
-      unlock_after: 1
-      blanks:
-        - { label: 사인, candidates: discovered, answer: 일산화탄소 }
-        - { label: 도구, candidates: discovered, answer: 연탄 }
-        - { label: 은폐수단, candidates: discovered, answer: 테이프 }
-        - { label: 위장물, candidates: discovered, answer: 유서 }
+  - order: 2
+    title: 이름과 이유
+    opening: 남은 것은 이름과 이유다.
+    requires_facts: [f_motive, f_opp, f_means]
+    blanks:
+      # is_accusation 은 사건 전체에 정확히 하나. 조합 수 30 이상이어야 찍기가 막힌다
+      - { label: 인물, candidates: closed,     answer: p1, is_accusation: true }
+      - { label: 정체, candidates: discovered, answer: 가명 }
+      - { label: 동기, candidates: discovered, answer: 채무 관계 }
+    epilogue_order: 2
+    epilogue: 결말 조각. 트릭과 동기가 여기서 다 밝혀져야 한다.
 
-    - order: 5
-      title: 범인과 동기
-      unlock_after: 4
-      blanks:
-        - { label: 인물, candidates: closed, answer: person_a }
-        - { label: 동기, candidates: discovered, answer: 폭로 임박 }
-        - { label: 정체, candidates: discovered, answer: 가명 }
+reopen_per_chapter: 1
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 10. 산문
+#  정보 공개
 # ─────────────────────────────────────────────────────────────────────
-#  ★ 프롤로그 절대 규칙 ★
-#  프롤로그는 브리핑과 진술에 이미 있는 사실만 다룬다. 새 정보는 0.
+#  트리거는 둘뿐 — 장 완성, 조사 실행.
+#  yield: path 결정적 / narrow 좁힘 / decoy 참이지만 무관 / flavor 분위기
+#
+#  ★ decoy 는 fact 를 주면 안 된다 ★ 주는 순간 필수 경로가 되어 함정이 아니게 된다.
+#  ★ 추가 진술은 자기 비밀을 말하지 않는다 ★ 남에 대해서, 또는 사건 전반에 대해서만.
+#
+#  narration = 장 사이 인터루드의 서술.
+#  ★ 도착한 것만 말하고 도착물끼리의 관계는 말하지 않는다 ★
+#  `그리고`·`그러나`는 되지만 `그래서`·`따라서`는 안 된다 — 인과를 이으면 추론을 대신한다.
+#  ★ 인물의 태도·표정을 묘사하지 않는다 ★ 분위기는 무대에 얹는다.
+#     (decoy 인물만 주목하게 하면 "서술자가 머무는 인물은 범인이 아니다"가 학습된다)
+
+reveals:
+  - trigger: { on: chapterComplete, chapter_order: 1 }
+    yield: path
+    actions: [a_ledger]
+    surface: map            # statement | map | graph | suspect | overview
+    narration: 아침의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 알게 됐다.
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  산문
+# ─────────────────────────────────────────────────────────────────────
+#  ★ 프롤로그는 브리핑과 진술에 이미 있는 사실만 다룬다. 새 정보는 0 ★
 #  분위기 살리려고 "그녀는 위험한 일에 연루되어 있었다" 한 줄 넣으면
 #  조사로 얻어야 할 정보가 무료로 풀리고 난이도가 무너진다.
-#
-#  트릭의 허점을 복선으로 심는 것은 허용된다. 이미 진술에 있는 정보이므로.
-#
-#  분량: campaign 3~4문단 / daily 2~3문장
+#  트릭의 허점을 복선으로 심는 것은 허용된다 — 이미 진술에 있는 정보이므로.
 
-prologue: |
-  
+prologue:
+  - 프롤로그 첫 문단.
+  - 둘째 문단.
 
-#  진술 산문. claims 는 엔진이 presence 에서 도출하므로
-#  여기에는 말투와 성격만 담는다. 사실을 새로 쓰지 않는다.
-#  화자는 무명의 수사관이므로 진술은 전부 용의자의 목소리다.
+# 확보 단어 카드에 찍히는 출처와 설명.
+# ★ source 는 실제 획득 경로와 일치해야 한다 ★
+# 어긋나면 플레이어에게 그냥 버그로 읽힌다.
 
-voices:
-  person_a:
-    tone: 능청스럽고 태평함
-  person_b:
-    tone: 불안하고 말이 빠름
+terms:
+  - { word: 만년필,     source: 방 수색 · 시신 검사, note: 바닥에 떨어져 있었다. }
+  - { word: 가명,       source: 서류 조사 · 장부 조사, note: 여러 기록에 반복 등장했다. }
+  - { word: 채무 관계,  source: 서류 조사,           note: 금전 기록에 남아 있었다. }
 
 
 # =====================================================================
 #  제출 전 자가 점검
 # =====================================================================
 #  [ ] 기회가 성립하는 인물이 범인 한 명뿐인가
-#  [ ] 동기가 있어 보이는 인물이 3명 이상인가 (레드 헤링)
+#  [ ] 동기가 있어 보이는 인물이 여럿인가 (레드 헤링)
+#  [ ] 레드 헤링으로 의심 산 인물이 물증으로도 배제되는가
 #  [ ] 범인의 salience 가 낮은가
-#  [ ] 트릭에 flaw 가 있고, 누군가의 진술에 심겨 있는가
-#  [ ] 모든 거짓말이 물증 또는 2인 이상으로 반박되는가
+#  [ ] 트릭 아키타입이 요구하는 부품이 다 있는가 (exit · 인상)
+#  [ ] 모든 인상에 broken_by 가 있는가
+#  [ ] 허점이 실제로 심긴 자리를 가리키는가
 #  [ ] 핵심 사실의 획득 경로가 2개 이상인가
 #  [ ] 1장이 조사 없이 확정 가능한가
 #  [ ] 각 장이 그 시점 가용 정보로 확정 가능한가
 #  [ ] 프롤로그에 새 정보가 없는가
 #  [ ] 공란 라벨이 전부 고정 어휘인가
 #
-#  검증기가 이 중 상당수를 자동 검사한다. 통과 후 난이도를 확인하고,
-#  기대 경로 + 1 ≤ 예산 인지 본다.
+#  검증기가 이 중 대부분을 자동 검사한다.
+#  통과 후 볼 것: **오라클 회차 + 여유 ≥ 1 ≤ 예산**
 # =====================================================================

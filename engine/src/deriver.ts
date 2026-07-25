@@ -1,4 +1,4 @@
-import type { Person, PresenceCell } from './types.js'
+import type { Person, PresenceCell, SlotId } from './types.js'
 
 /**
  * 진술 도출.
@@ -28,4 +28,17 @@ export function claimedLocationAt(p: Person, slot: string): string | undefined {
 /** 특정 슬롯의 진실 위치 (없으면 undefined) */
 export function trueLocationAt(p: Person, slot: string): string | undefined {
   return p.presence.find((c) => c.slot === slot)?.location
+}
+
+/**
+ * 진술이 실제 동선과 어긋나는 슬롯.
+ *
+ * 무고한 자에게서 하나라도 나오면 "무고한 사람은 거짓말하지 않는다"가 깨진 것이고,
+ * 범인에게서 하나도 안 나오면 잡아낼 거짓말이 없는 것이다. 검증기가 양쪽을 본다.
+ */
+export function divergentSlots(p: Person): SlotId[] {
+  const truth = new Map(p.presence.map((c) => [c.slot, c.location]))
+  const said = new Map(claimGrid(p).map((c) => [c.slot, c.location]))
+  const slots = new Set([...truth.keys(), ...said.keys()])
+  return [...slots].filter((s) => truth.get(s) !== said.get(s))
 }

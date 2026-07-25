@@ -29,6 +29,14 @@ export type BlankLabel =
 
 export type PresenceCell = { slot: SlotId; location: LocationId }
 
+/**
+ * 두 언어짜리 문장.
+ *
+ * 어휘가 고정이라 번역이 싸다 — 템플릿 20개를 번역하면 사건 1000개가 번역된다
+ * (`SYSTEM-DECISIONS.md` §7). `en` 이 없으면 아직 번역 전이라는 뜻이다.
+ */
+export type Text = { ko: string; en?: string }
+
 export type Person = {
   id: PersonId
   name: string
@@ -45,6 +53,18 @@ export type Person = {
    * 범인은 여기에 알리바이 거짓말(위치)을 담는다.
    */
   claim?: PresenceCell[]
+  /**
+   * 진술 원문. **산문가(빌드 타임 LLM)가 채우는 자리다.**
+   *
+   * 주장의 내용은 `claim`(없으면 `presence`)에서 나오고, 여기에는 말투와
+   * 성격만 담긴다. 사실을 새로 쓰지 않는다 — 손으로 쓰면 실수로 거짓이 섞이고
+   * 그 순간 "무고한 사람은 거짓말하지 않는다"가 깨진다.
+   */
+  statement?: {
+    paragraphs: Text[]
+    /** 말투 지시. 산문가가 읽는다. 플레이어에게 보이지 않는다 */
+    voice?: string
+  }
 }
 
 /** 시간 슬롯. 순서는 배열 순서. 격자의 열이 된다 */
@@ -116,13 +136,150 @@ export type Action = {
   yield: ActionYield
   /** N개 장을 확인해야 조사 대상이 열림 */
   availableAfter?: number
+  /**
+   * 조사 결과문. **`gives` 바로 옆에 있어야 한다.**
+   *
+   * 2026-07-24 플레이테스트에서 터진 버그가 정확히 이 둘이 떨어져 있어서였다 —
+   * 프로토타입의 금고 조사가 "유서 초안이 나왔다"고 말하는데 실제로 주는 것이
+   * 없었다. 문장은 한 파일에, 데이터는 다른 파일에 있으니 어긋나도 아무도 몰랐다.
+   * 붙여 놓으면 검증기가 잡는다.
+   */
+  result?: { title: Text; body: Text }
+}
+
+/**
+ * 트릭 아키타입.
+ * 이름표가 아니라 **계약**이다 — 아키타입마다 요구하는 부품이 다르고
+ * 검증기가 그것을 강제한다. 생성기도 같은 계약을 채워서 만든다.
+ */
+export type TrickType =
+  | 'staged_suicide' | 'locked_room' | 'alibi_fabrication'
+  | 'body_moved' | 'identity_swap' | 'delayed_mechanism'
+
+/**
+ * 인상의 종류. 아키타입이 "이 종류의 인상이 반드시 있어야 한다"고 요구한다.
+ */
+export type IllusionKind = 'death' | 'time' | 'place' | 'absence' | 'identity'
+
+/**
+ * 아키타입 계약.
+ *
+ * **이름표가 아니라 계약이라는 것이 핵심이다.** `staged_suicide` 가 문자열이던
+ * 아침에는 밀실 구멍을 못 잡았고, `exit` 을 요구하는 계약이 되자 즉시 잡혔다.
+ * 원형을 서른 개 넣어도 계약이 없으면 아침 상태로 돌아간다.
+ *
+ * 기존 추리물의 트릭 원형을 넓히려면 **여기에 계약을 추가한다.**
+ * 이름만 늘리는 것은 아무것도 늘리지 않는다.
+ */
+export type ArchetypeContract = {
+  label: string
+  /** 이 트릭이 플레이어에게 주장하는 것 */
+  asserts: string
+  /** 현장이 닫혀 있다고 주장하는가 — 그렇다면 이탈 방법이 필수다 */
+  requiresExit: boolean
+  /** 반드시 있어야 하는 인상의 종류. 하나라도 있으면 만족 */
+  requiresIllusion: IllusionKind[]
+  /** 이 게임 구조와 맞지 않는 경우 그 이유. 생성기가 쓰지 않는다 */
+  unsupported?: string
+}
+
+export const ARCHETYPES: Record<TrickType, ArchetypeContract> = {
+  staged_suicide: {
+    label: '위장 자살',
+    asserts: '스스로 목숨을 끊었다',
+    requiresExit: true,
+    requiresIllusion: ['death'],
+  },
+  locked_room: {
+    label: '밀실',
+    asserts: '아무도 드나들 수 없었다',
+    requiresExit: true,
+    requiresIllusion: [],
+  },
+  alibi_fabrication: {
+    label: '알리바이 위조',
+    asserts: '그 시각 그 자리에 없었다',
+    requiresExit: false,
+    requiresIllusion: ['time', 'absence'],
+  },
+  body_moved: {
+    label: '시신 이동',
+    asserts: '발견된 곳에서 죽었다',
+    requiresExit: false,
+    requiresIllusion: ['place'],
+  },
+  delayed_mechanism: {
+    label: '지연 장치',
+    asserts: '범인이 있을 때 벌어졌다',
+    requiresExit: false,
+    requiresIllusion: ['time'],
+  },
+  identity_swap: {
+    label: '정체 뒤바꾸기',
+    asserts: '이 사람은 이 사람이다',
+    requiresExit: false,
+    requiresIllusion: ['identity'],
+    // 용의자 목록 자체가 거짓이 되면 닫힘 후보(드롭다운)가 무너지고
+    // 조합 수 검사도 의미를 잃는다. 쓰려면 공란 체계를 먼저 손봐야 한다.
+    unsupported: '용의자 목록이 거짓이 되면 닫힘 후보와 조합 수 검사가 무너진다',
+  },
+}
+
+/**
+ * 플레이어가 처음 믿게 되는 인상.
+ * 트릭은 인상의 집합이고, **깨지지 않는 인상이 하나라도 있으면
+ * 플레이어는 진실에 도달할 수 없다.**
+ */
+export type Illusion = {
+  id: string
+  /** 어떤 종류의 인상인가. 아키타입 계약이 이것을 요구한다 */
+  kind: IllusionKind
+  /** 플레이어가 믿게 되는 것 */
+  impression: string
+  /** 이 인상을 만든 물건 */
+  madeBy: EvidenceId[]
+  /** 이 인상을 깨는 물증. 비어 있으면 검증 실패 */
+  brokenBy: EvidenceId[]
+}
+
+/**
+ * 범인이 현장을 떠난 방법.
+ *
+ * 2026-07-24 플레이테스트에서 드러난 구멍이 정확히 이 부품의 부재였다 —
+ * 문과 창이 안쪽에서 밀봉된 방에서 범인이 어떻게 나갔는지 아무도 설명하지
+ * 않았고, 검증기는 물리적 성립성 모델이 없어 잡지 못했다.
+ */
+export type Exit = {
+  /** 언제 떠났는가 */
+  slot: SlotId
+  /** 어떻게 떠났는가 */
+  method: string
+  /** 이탈을 가능하게 한 물건 */
+  enabledBy?: EvidenceId[]
+  /** 이탈이 있었음을 드러내는 물증. 없으면 플레이어가 밀실을 풀 수 없다 */
+  brokenBy: EvidenceId[]
 }
 
 export type Trick = {
-  type: string
+  /**
+   * 아키타입은 **여럿을 겹칠 수 있다.** 실제 추리물의 트릭은 대개 조합이다 —
+   * 산장 사건도 위장 자살(유서·밀폐)과 알리바이 위조(사망 시각 위장)가 겹쳐 있다.
+   * 선언한 아키타입의 계약이 **전부** 적용된다.
+   */
+  types: TrickType[]
   props: EvidenceId[]
   staging: EvidenceId[]
-  flaw: string
+  illusions: Illusion[]
+  exit?: Exit
+  flaw: {
+    text: string
+    /**
+     * 이 허점이 실제로 심긴 자리. 물증 id 또는 인물 id(그 사람의 진술).
+     * **자유 텍스트로 두면 아무 데도 없는 허점을 적을 수 있다** —
+     * 작가가 머릿속에만 갖고 있고 플레이어는 영영 못 만난다.
+     */
+    plantedIn: string[]
+  }
 }
 
 /** 채점 부문. 라벨에서 도출된다 */
@@ -193,6 +350,19 @@ export type ChapterReveal = {
 export type Chapter = {
   order: number
   title: string
+  /**
+   * 장이 열릴 때 뜨는 절차 한 줄. 서술자 3인칭.
+   *
+   * **제목이 말하는 것 이상을 말하면 안 된다.** 장이 열리는 순간 제목도 같이
+   * 공개되므로 제목과 같은 정보량까지가 상한이다.
+   *   ○ '방 안의 일은 정리됐다. 남은 것은 그 전날 밤이었다.'   (= 마지막 정황)
+   *   ✗ '산장에는 마약이 흐르고 있었다.'                       (답을 말한다)
+   *   ✗ '별채를 살펴볼 때다.'                                   (조사 추천 = 금지)
+   *
+   * 전부 쓰거나 전부 비우거나 둘 중 하나다. 일부만 쓰면 그 자체가 신호가 된다.
+   * 생성 사건은 제목에서 템플릿으로 뽑아도 된다.
+   */
+  opening?: string
   blanks: Blank[]
   /** 이 사실들이 모이면 확정 가능. 잠금은 없고 정보 가용성이 게이트다 */
   requiresFacts: FactId[]
@@ -239,6 +409,22 @@ export type Case = {
     model?: string
     generatedAt?: number
   }
+  /**
+   * 진술 정독만으로 확보되는 단어.
+   * 진술문이 이미 언급하는 물건이므로 조사 없이 손에 들어온다.
+   * 이것이 없으면 1장처럼 조사 없이 확정되어야 할 장의 discovered 공란을
+   * 채울 수 없어 시작하자마자 막힌다.
+   */
+  seedTerms?: string[]
+  /** 프롤로그. 브리핑·진술에 이미 있는 사실만 다룬다 — 새 정보는 0 */
+  prologue?: Text[]
+  /**
+   * 확보 단어 카드에 찍히는 출처와 설명.
+   * **`source` 는 실제 획득 경로와 일치해야 한다** — 어긋나면 플레이어에게
+   * 버그로 읽힌다(2026-07-24: 유서가 '본채 금고'라고 적혀 있었는데 실제로는
+   * 소지품에서만 나왔다).
+   */
+  terms?: { word: string; source: Text; note: Text }[]
   people: Person[]
   victim: PersonId
   culprit: PersonId
@@ -282,6 +468,10 @@ export type VerifyResult = {
   typicalPath: string[]
   band: [number, number]
   keyFactRoutes: { fact: FactId; routes: number }[]
+  /** 건너뛸 수 없는 조사. 답을 그 조사로만 얻을 수 있는 경우다 */
+  mandatoryActions: { label: string; cost: number }[]
+  /** 주장이 실제 동선과 어긋나는 인물. 범인 외에 등장하면 검증 실패다 */
+  lies: { person: string; slots: SlotId[] }[]
   domains: { domain: string; count: number }[]
   actionRatio: number
   decoyRatio: number

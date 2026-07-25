@@ -1,8 +1,30 @@
-import { mountainLodge } from './cases/mountain-lodge.js'
+import { loadCaseFile } from './schema.js'
 import { verify } from './verifier.js'
 import { claimGrid, tellsTruth, trueLocationAt } from './deriver.js'
 
-const c = mountainLodge
+// tsx src/cli.ts [--case <경로>]      사건 하나 검증
+// tsx src/cli.ts --generate <N>      N건 생성 → 검증 → 요약
+const genFlag = process.argv.indexOf('--generate')
+if (genFlag >= 0) {
+  const { run, report } = await import('./orchestrate.js')
+  const n = Number(process.argv[genFlag + 1] ?? 50)
+  const seeds = Array.from({ length: n }, (_, i) => i + 1)
+  console.log('')
+  console.log(report(run(seeds)))
+  console.log('')
+  process.exit(0)
+}
+
+const flag = process.argv.indexOf('--case')
+const casePath = flag >= 0 ? process.argv[flag + 1] : 'cases/mountain-lodge.yaml'
+
+let c
+try {
+  c = loadCaseFile(casePath)
+} catch (e) {
+  console.error(`\n  ${(e as Error).message}\n`)
+  process.exit(1)
+}
 const r = verify(c)
 const name = (id: string) => c.people.find((p) => p.id === id)?.name ?? id
 const mk = (b: boolean) => (b ? 'O' : '-')
@@ -59,7 +81,19 @@ console.log(`  공개 정보 ${c.reveals.length}건 · decoy 비율 ${(r.decoyRa
 console.log('\n  핵심 단서 획득 경로')
 r.keyFactRoutes.forEach((k) => console.log(`   ${k.routes >= 2 ? 'O' : 'x'} ${w(k.fact, 24)}${k.routes}개`))
 
-console.log(`\n  난이도  ${r.difficulty}`)
+const mCost = r.mandatoryActions.reduce((n, a) => n + a.cost, 0)
+console.log(`\n  필수 조사  ${r.mandatoryActions.length}건 · 비용 ${mCost} / 예산 ${c.budget}`)
+console.log('  ' + '-'.repeat(50))
+if (!r.mandatoryActions.length) console.log('   없음 — 모든 답이 두 경로 이상')
+r.mandatoryActions.forEach((a) => console.log(`   · ${w(a.label, 30)}${a.cost}`))
+
+// 난이도는 기대 회차 하나로 판정한다. 그 모델이 거칠어 오라클 하한과 탐욕 상한을
+// 나란히 찍는다 — 둘의 부호가 다르면 라벨을 믿지 말 것
+console.log(`\n  난이도  ${r.difficulty}   (기대 ${r.typicalActions}회 기준)`)
+console.log(
+  `          오라클 ${r.minActions}회 → 여유 ${c.budget - r.minActions}` +
+    ` · 탐욕 ${r.band[1]}회 → 여유 ${c.budget - r.band[1]}`,
+)
 console.log(`  검증    ${r.ok ? '통과' : '실패'}`)
 if (r.errors.length) { console.log('\n  오류'); r.errors.forEach((e) => console.log(`   x ${e}`)) }
 if (r.warnings.length) { console.log('\n  경고'); r.warnings.forEach((x) => console.log(`   ! ${x}`)) }

@@ -1,91 +1,120 @@
-# DC 툴 동기화 changeset — 데이터 수정 (2026-07-24)
+# DC 툴 동기화 changeset — 남은 데이터 수정 (2026-07-25 재작성)
 
-> **왜 이 파일이 있나.** 리포의 `추리게임.dc.html`(소스)에는 아래 데이터 수정이
-> 들어갔지만 **DC 저작 툴(마스터)에는 안 들어갔다.** 그래서 DC 툴에서 뽑은 export
-> 는 이 수정들이 빠진 stale 상태다. 아래를 **DC 툴에서** 적용해야(재export 시
-> 덮어써지지 않게) 플레이테스트 빌드가 올바른 사건을 담는다.
+> **왜 이 파일이 있나.** 게임 로직의 정본은 `engine/`이고 프로토타입은 그 미러다.
+> 미러가 어긋난 항목을 여기 모아둔다. **적용은 DC 저작 툴에서 한다** — 저장소의
+> `추리게임.dc.html`은 DC 워크스페이스의 사본이라 여기서 고쳐도 재export 때 덮어써진다.
+> 적용 방법: DC 툴의 `dc_js_str_replace`. 대상 = DC 툴의 `추리게임.dc.html`.
 >
-> 엔진(TypeScript)은 이미 전부 반영·검증 완료 — 이건 프로토타입 쪽 미러링일 뿐이다.
-> 적용 방법: DC 툴의 `dc_js_str_replace`(로직) 사용. `추리게임.dc.html` 대상.
+> **2026-07-25 재작성 이유.** 두 기계가 병렬로 작업하면서 이 파일이 실제 상태와
+> 어긋났다. 병합 시 새 DC export(2946줄, 평면도 GEO 엔진 + 상황판 인라인)를 정본으로
+> 채택하고 그 export 를 한 줄씩 확인해 **이미 적용된 것과 남은 것을 갈랐다.**
+> 아래는 확인된 것만 적는다.
 
 ---
 
-## 1. 4장 협박대상 = 조유리 (구: 김채원) + 공범 라벨 폐기
+## ✅ 이미 적용됨 — 다시 하지 말 것
 
-**b15 정답 교체**
-```
-- b15: { kind: 'vTarget', src: 'person', ans: '김채원', par: null },
-+ b15: { kind: 'vTarget', src: 'person', ans: '조유리', par: '을/를' },
-```
+DC 툴 쪽에서 이미 반영돼 새 export 에 들어와 있다. 엔진과 일치하는 것을 확인했다.
 
-**4장 서사 문장틀** (문장 자체가 "협박"을 안 쓰고 "입막음"을 물어서 조유리를
-넣으면 서사가 깨졌다 → 문장을 고침)
-```
-- ...마약 유통망 {b14}의 것이었다. 조직은 {b15}의 입을 막으려 했고, 며칠 전 {b16} 그 실체를 캐묻기 시작한 참이었다.
-+ ...마약 유통망 {b14}의 것이었다. 조직은 {b15} 약물로 붙들어 두고 있었고, 며칠 전 {b16} 그 실체를 캐묻기 시작한 참이었다.
-```
-(코드상 `{ text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: '의 입을 막으려 했고, 며칠 전 ' }`
-→ `{ text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: ' 약물로 붙들어 두고 있었고, 며칠 전 ' }`)
+| 항목 | 확인 근거 |
+|---|---|
+| **4장 협박대상 = 조유리** | `b15: { kind: 'vTarget', src: 'person', ans: '조유리' }` |
+| **확보 단어 획득 그래프** | `TERM_MAP` 의 `search:annex` = `[별채 대포폰, 김선생, 폭로 임박]` · `belongings:wonyoung` = `[김선생, 마약, 폭로 임박]` · `belongings:yuri` = `[마약, 치정]` — 엔진 `e_burner`·`e_wy_text`·`e_yuri_threat` 와 각각 완전 일치 |
+| **`폭로 임박` 무료 공개 제거** | `REVEALS.s4` 에 `terms` 키가 없다 (유리 진술 statement 만 남음) |
+| **`대포폰` 동의어 후보 제거** | `COLLECTED_POOL` 에 `대포폰` 없음. `별채 대포폰` 하나만 후보로 뜬다 |
 
-**공범 라벨(`vAccomplice`) 4곳 제거** — 라벨 존재가 "범인 말고 한 명 더"를 조사
-0회에 누설. 진실세계 accomplice 역할은 유지, 공란 라벨만 폐기.
-- ko 라벨 사전: `vStaging: '위장물', vAccomplice: '공범', vLastSeen:` → `vStaging: '위장물', vLastSeen:`
-- en 라벨 사전: `Staging: 'Staging', vAccomplice: 'Accomplice', vLastSeen:` → `... vLastSeen:`
-- `CAT`: 끝의 `vTarget: 'susp', vAccomplice: 'susp' }` → `vTarget: 'susp' }`
-- `catL`: 끝의 `vTarget: '협박대상', vAccomplice: '공범' }` → `vTarget: '협박대상' }`
+남아 있는 `'대포폰'` 4건은 전부 **표시 라벨**이다(아이콘 사전 · 물증 카드 label ·
+관계 그래프 노드 · 평면도 마커). 후보 목록이 아니라 자연어 지칭이라 오답을 유발하지
+않는다 — 그대로 둔다.
 
 ---
 
-## 2. 대포폰 동의어 해소 — 한 물건이 둘로 쪼개져 있었다
+## 1. `공범` 라벨(`vAccomplice`) 제거 — 4곳
 
-`대포폰`(짧은 이름)과 `별채 대포폰`은 같은 물건인데 후보에 둘 다 떠서 짧은 이름
-고른 플레이어가 오답 처리됐다. `별채 대포폰`으로 통일.
+라벨 존재 자체가 "범인 말고 한 명 더 있다"를 **조사 0회에** 누설한다.
+진실 세계의 `accomplice` 역할은 유지하고 공란 어휘에서만 뺀다.
+엔진은 `BlankLabel`·`DOMAIN_OF` 양쪽에서 이미 제거됐다.
 
-**COLLECTED_POOL** — `대포폰` 제거
 ```
-- [..., '유서', '대포폰', '김선생', ...]
-+ [..., '유서', '김선생', ...]
-```
-**아이콘 사전** — `'대포폰': 'M5 2.5h6v11H5z M7 12h2',` 줄 삭제
+ko 라벨 사전   ... vStaging: '위장물', vAccomplice: '공범', vLastSeen: ...
+             → ... vStaging: '위장물', vLastSeen: ...
 
-**TERM_INFO** — `'대포폰': {...}` 줄 삭제. `별채 대포폰` 서술을 실물에 맞춤:
-```
-'별채 대포폰': { fk: '별채 수색', dk: '가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.', fe: 'Annex search', de: 'No subscriber on record; only one number was saved.' },
-```
-(구 서술 "별채 안쪽에 놓여 있던 또 다른 선불폰" = 존재하지 않는 두 번째 폰이었음)
+en 라벨 사전   ... vStaging: 'Staging', vAccomplice: 'Accomplice', vLastSeen: ...
+             → ... vStaging: 'Staging', vLastSeen: ...
 
-**조사 결과 카드** — 발견 위치 통일 (엔진 `e_burner.foundAt`)
-```
-- dKo: '별채 서랍에서 발신 전용 대포폰. ...'  dEn: 'A burner phone in the annex drawer, ...'
-+ dKo: '별채 게임기 뒤에서 발신 전용 대포폰. ...'  dEn: 'A burner phone behind the annex game console, ...'
+CAT           ... vTarget: 'susp', vAccomplice: 'susp' }
+             → ... vTarget: 'susp' }
+
+catL          ... vTarget: '협박대상', vAccomplice: '공범' }
+             → ... vTarget: '협박대상' }
 ```
 
 ---
 
-## 3. 확보 단어 획득 그래프 — 엔진에 맞춤
+## 2. 4장 서사 문장틀 — 답은 고쳤는데 문장이 안 따라왔다
 
-별채 수색이 한 번에 3단어(별채폰+김선생+마약)를 줘서 엔진보다 쉬웠고, 원영
-소지품 조사는 확보 단어를 하나도 안 줘 헛돌았다. 폭로 임박은 4장 완료 무료
-공개라 예산 경제가 무너졌다.
+`b15` 답은 `조유리`로 바뀌었는데 문장이 아직 "입막음"을 묻는다.
+조유리는 입막음 대상이 아니라 **약물로 붙들린** 쪽이다. 답이 아니라 문장을 고친다.
 
-**TERM_MAP 재구성**
 ```
-- TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['대포폰', '별채 대포폰', '김선생', '마약'], 'belongings:sakura': ['유서'], 'belongings:yuri': ['치정'] };
-+ TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:yuri': ['치정'] };
-```
-- `search:annex`: `마약`·`대포폰` 제거 → `[별채 대포폰, 김선생]` (엔진 e_burner 일치)
-- `belongings:wonyoung` 신설 → `[김선생, 마약, 폭로 임박]` (엔진 e_wy_text 완전 일치)
-
-**REVEALS.s4** — `폭로 임박` 무료 공개 제거 (유리 진술 statement 는 유지)
-```
-- s4: { yield: 'path', terms: ['폭로 임박'], statements: [...] },
-+ s4: { yield: 'path', statements: [...] },
+- { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: '의 입을 막으려 했고, 며칠 전 ' }
++ { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: ' 약물로 붙들어 두고 있었고, 며칠 전 ' }
 ```
 
 ---
 
-## 참고 — 슬롯/장소/진술 격자는 프로토타입이 이미 맞다
+## 3. `별채 대포폰` 서술 — 존재하지 않는 두 번째 폰
 
-엔진에 새로 넣은 4슬롯(t0~t3)·locations(scene·offsite)·presence/claim 도출 모델은
-프로토타입의 `LOCATIONS`(scene:true·offsite:true)·`CLAIMS`/`CLAIM_LOC` 와 이미 일치한다
-(엔진 데이터를 프로토타입에서 역설계했으므로). 프로토타입 쪽 수정 불필요.
+`TERM_INFO` 의 서술이 "별채 안쪽에 놓여 있던 **또 다른** 선불폰"인데 사건에 폰은
+하나뿐이다. 짧은 이름 `대포폰`을 후보에서 뺄 때 서술은 같이 안 고쳐졌다.
+엔진 `e_burner.record` 로 맞춘다.
+
+```
+- '별채 대포폰': { fk: '별채 수색', dk: '별채 안쪽에 놓여 있던 또 다른 선불폰이었다.',
+                  fe: 'Annex search', de: 'Another prepaid phone, set inside the annex.' }
++ '별채 대포폰': { fk: '별채 수색', dk: '가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.',
+                  fe: 'Annex search', de: 'No subscriber on record; only one number was saved.' }
+```
+
+---
+
+## 4. 조사 결과 카드 — 발견 위치
+
+엔진 `e_burner.foundAt = '별채 · 게임기 뒤'`.
+
+```
+- '별채 서랍에서 발신 전용 대포폰. ...'        'A burner phone in the annex drawer, ...'
++ '별채 게임기 뒤에서 발신 전용 대포폰. ...'   'A burner phone behind the annex game console, ...'
+```
+
+---
+
+## 5. 인물명 — 엔진·문서는 새 이름, 프로토타입은 옛 이름
+
+엔진 YAML 과 `docs/` 는 2026-07-24에 교체됐는데 프로토타입은 아직 옛 이름이다.
+현재 export 기준 출현 수: `사쿠라` 13 · `김채원` 11 · `미야와키` 8 ·
+`장원영` 5 · `조유리` 4 · `최예나` 3 · `안유진` 3.
+
+| id | 옛 이름 | 새 이름 |
+|---|---|---|
+| `sakura` | 미야와키 사쿠라 (쿠라) | **문세라** (세라) |
+| `yena` | 최예나 | **서지안** |
+| `yujin` | 안유진 | **한유빈** |
+| `yuri` | 조유리 | **오나경** |
+| `wonyoung` | 장원영 | **백리원** |
+| `chaewon` (피해자) | 김채원 | **윤다인** |
+
+애칭·호칭(`쿠라언니`·`채원언니`)까지 같이 바꿔야 한다. `docs/design-brief.md` §진술
+5개가 교체된 원문을 갖고 있으니 그것을 그대로 쓰면 된다.
+
+> 이름 교체는 **상업 출시 전 필수**이면서 지금 하는 것이 싸다 — 진술 원문이 아직
+> 프로토타입에 하드코딩돼 있어서, 산문을 사건 파일로 이관(A-2)한 뒤에 하면 두 곳을
+> 고치게 된다.
+
+---
+
+## 참고 — 슬롯·장소·진술 격자는 프로토타입이 이미 맞다
+
+엔진의 4슬롯(`t0~t3`)·`locations`(`atLodge`)·`incident.scene`·presence/claim 도출
+모델은 프로토타입의 `LOCATIONS`(`scene`·`offsite` 표식)·`CLAIMS`/`CLAIM_LOC` 와
+이미 일치한다 (엔진 데이터를 프로토타입에서 역설계했으므로). 프로토타입 쪽 수정 불필요.
