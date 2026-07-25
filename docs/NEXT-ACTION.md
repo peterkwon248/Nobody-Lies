@@ -9,6 +9,76 @@
 
 ---
 
+# 🔀 먼저 읽을 것 — 두 기계가 같은 날 병렬 작업했다 (2026-07-24)
+
+**다른 머신에서 한 세션이 통째로 돌았고, 그 결과는 `main` 이 아니라 브랜치에 있다.**
+
+```
+브랜치  session/2026-07-24-yaml-orchestrator   (origin 에 푸시됨, 6커밋)
+```
+
+`main` 을 그대로 이어받아 작업하면 **그 6커밋이 있는지도 모른 채 같은 일을 또 하게 된다.**
+실제로 오늘 이미 그렇게 됐다 — 양쪽이 `presence → 진술 도출`, `확보 단어 그래프 동기화`,
+`4장 공란 확정`을 각각 구현했다.
+
+## 브랜치에만 있는 것 (main 에 없음)
+
+| | |
+|---|---|
+| **사건이 YAML 정본** | `engine/cases/mountain-lodge.yaml` + `src/schema.ts` 로더. `src/cases/*.ts` 삭제됨 |
+| **트릭이 계약** | `TrickType[]`·`Illusion[]`·`Exit`·`flaw.plantedIn` + `ARCHETYPES` 레지스트리. main 은 아직 `type: string`·`flaw: string` |
+| **오케스트레이터** | `generate.ts`(작가) · `orchestrate.ts`(실험자·루프). `--generate N` |
+| **산문 스키마** | `Text`·`Person.statement`·`Action.result`·`prologue`·`terms` |
+| 검사 15종 추가 | 결과문↔gives, 레드 헤링 회수, 서사 균일성, 필수 조사 등 |
+| 난이도 공식 수정 | `탐욕×1.5`(이중 계산) → `(오라클+탐욕)/2`. 예산 5→6 |
+| **플레이테스트 1차** | 시나리오 작가 1명. 5건 발견 — 밀실 탈출 구멍·유서 진행 차단·관계 그래프 누설·레드 헤링 미회수·난이도 |
+| 저작 서식 재작성 | 통과하는 최소 사건으로 |
+
+## main 에만 있는 것 (브랜치에 없음)
+
+| | |
+|---|---|
+| **`Case.locations` 레지스트리** | 브랜치는 `location` 이 자유 문자열이다. **main 쪽이 낫다** |
+| `incident.scene` | 사건 현장 id |
+| **무고한 자가 사망 시간대에 현장에 없는가 검사** | 브랜치에 없는 검사 |
+| `deriver.ts` 분리 | 브랜치는 `verifier.ts` 안에 섞여 있다. **분리가 낫다** |
+| **`공범` 라벨 폐기** | 브랜치가 놓친 항목 |
+| `.gitignore` | |
+
+## 이름만 다른 같은 개념 — 통합 시 하나로
+
+```
+main                     브랜치
+Person.claim   (단수)     Person.claims  (복수)
+Case.slots  Slot.isWindow Case.timeline  TimeSlot.window
+PresenceCell             Placement
+```
+
+논리는 완전히 같다 — *오버라이드가 없으면 진실을 말한다.*
+
+## 통합 순서 (권장)
+
+**한 세션을 통째로 써야 한다.** `types.ts` 가 양쪽 다 크게 바뀌었고 사건 파일은
+형식 자체가 다르다(TS ↔ YAML). 어중간하게 시작하면 끊긴다.
+
+```
+1. main 을 베이스로 잡는다      (locations·scene·공범 폐기·deriver 유지)
+2. 이름은 main 것을 따른다       claim · slots · PresenceCell
+                                (deriver.ts 와 문서가 그 이름이라 고칠 곳이 적다)
+3. 브랜치에서 얹는다             YAML 로더 · 트릭 계약 · 오케스트레이터 · 산문 스키마
+4. locations 를 YAML 스키마에 반영 (브랜치 로더의 미완 항목이 채워진다)
+5. main 의 '무고한 자 현장 부재' 검사를 가져온다
+6. 공범 라벨 폐기를 브랜치 사건·서식에 반영
+```
+
+⚠️ **`git merge` / `rebase` 를 그냥 돌리지 말 것.** 브랜치가 `src/cases/mountain-lodge.ts` 를
+삭제했는데 main 은 그 파일을 계속 수정했다. 삭제↔수정 지점에서 한쪽이 조용히 사라진다.
+
+⚠️ **`docs/MEMORY.md` 가 양쪽에서 갈라져 있다.** 통합 전까지 어느 쪽을 읽느냐에 따라
+다른 상태를 보게 된다 — 이것이 지금 가장 큰 위험이다.
+
+---
+
 ## 다음 즉시 액션 — 다음 액션 순서 **3번 (플레이테스트 빌드 수리)**
 
 엔진 데이터 정합(1~4번)은 끝났다. 막힌 지점은 **DC 툴 split-brain**이다.
