@@ -13,7 +13,7 @@
 계보는 Return of the Obra Dinn → The Case of the Golden Idol. 차이는 **사건을 논리 검증기로 검사해 자동 생성할 수 있다는 것.** v1은 손으로 쓴 산장 사건 1건.
 
 - **앱 이름**: 노바디 라이즈 (Nobody Lies)
-- **저장소**: https://github.com/peterkwon248/Nobdy-Lies (public)
+- **저장소**: https://github.com/peterkwon248/Nobody-Lies (public) — 2026-07-25 이름 변경됨(구 Nobdy-Lies 는 리다이렉트)
 - **현재 단계**: 설계 완료 · 프로토타입 완성 · **플레이테스트 이전** · 프로덕션 코드 0줄
 
 핵심 규칙이 곧 제목이다 — *무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다.* 그리고 제목 자체가 거짓이다. 다섯 중 하나는 거짓말을 한다.
