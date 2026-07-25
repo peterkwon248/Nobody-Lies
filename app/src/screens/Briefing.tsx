@@ -1,6 +1,7 @@
 import type { Case } from '@engine/types'
 import { TopBar } from '../components/TopBar'
 import { Mark } from '../components/Mark'
+import { ko } from '../case/loadCase'
 
 /**
  * 사건 브리핑 — 진입 흐름 2단계. 피해자·사망 추정·현장 상태의 **사실 요약**.
@@ -11,10 +12,15 @@ import { Mark } from '../components/Mark'
  * 문체는 3인칭 중립. *"~로 확인됨"* 이지 *"나는 ~라고 판단했다"* 가 아니다.
  * 수사관에게는 이름도 직책도 얼굴도 없다 (`design-brief.md` §화자).
  */
+/** 「이름 (나이) · 직업」. 브리핑과 개요가 같은 줄을 쓰므로 한 곳에 둔다 */
+export function victimLine(c: Case): string {
+  const v = c.victimProfile
+  if (!v) return c.victim
+  return v.name + (v.age ? ` (${v.age})` : '') + (v.job ? ` · ${v.job}` : '')
+}
+
 export function Briefing({ c, onDone, onHome }: { c: Case; onDone: () => void; onHome: () => void }) {
-  const victim = c.victimProfile
   const window = c.slots.find((s) => s.isWindow)
-  const scene = c.locations.find((l) => l.id === c.incident.scene)
 
   return (
     <div className="nl-fs">
@@ -28,15 +34,17 @@ export function Briefing({ c, onDone, onHome }: { c: Case; onDone: () => void; o
           </div>
 
           <div className="v-h1" style={{ marginBottom: 6 }}>사건 브리핑</div>
-          <div className="v-body nl-brief-sub">확인된 사실만 적혀 있습니다.</div>
+          <div className="v-body nl-brief-sub">읽기 전 확인</div>
 
           <div className="nl-brief-rows">
-            <Row
-              k="피해자"
-              v={victim ? [victim.name, victim.age, victim.job].filter(Boolean).join(' · ') : c.victim}
-            />
+            {/* 원본 1306행 `ovVictimV` 는 「윤다인 (30) · 소설가」 — 나이는 괄호다 */}
+            <Row k="피해자" v={victimLine(c)} />
             <Row k="사망 추정" v={window?.label ?? '미확정'} />
-            <Row k="현장" v={scene?.label ?? '미확정'} />
+            {/* 원본 2842행의 네 행 — 시신·현장은 **관찰 서술**이지 장소 이름이 아니다.
+                한때 여기에 `scene.label`(다인의 방)을 넣어서 브리핑이 은폐 정황을
+                아예 말하지 않았다 */}
+            <Row k="시신" v={ko(c.incident.bodyState) || '미확인'} />
+            <Row k="현장" v={ko(c.incident.sceneState) || '미확인'} />
             <Row k="개요" v={c.incident.description} />
           </div>
 
@@ -55,10 +63,10 @@ export function Briefing({ c, onDone, onHome }: { c: Case; onDone: () => void; o
           </div>
 
           <button className="nl-btn nl-btn-primary nl-btn-wide" onClick={onDone}>
-            진술 정독
+            진술 읽기 시작
           </button>
           <div className="v-meta nl-brief-note">
-            다섯 사람의 진술을 모두 읽어야 보고서 1장이 열립니다.
+            5명의 진술을 먼저 읽습니다. 다 읽으면 1장이 열립니다.
           </div>
         </div>
       </div>

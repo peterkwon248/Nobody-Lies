@@ -7,6 +7,54 @@
    유용도에 따라 무게가 달라지는 스타일(결정적 단서만 강조, path 만 굵게)을 만들면
    CSS 가 정답을 누설한다. 단서와 레드 헤링은 완전히 동일하게 생겨야 한다. */
 
+/* ── 게임 토큰 · 스크롤바 ────────────────────────────────────────────
+   프로토타입 `추리게임.dc.html` **30~52행 그대로**.
+
+   ★ 이 블록이 통째로 빠져 있었다 (2026-07-25 전수 대조에서 발견) ★
+   프로토타입은 이 `--g-*` 아홉을 48곳에서 쓴다 — 공란 3상태와 마킹 4색이 전부
+   여기서 나온다. 토큰이 없으니 앱은 값을 눈대중으로 채웠고, 잠긴 공란이
+   초록빛(`rgba(76,183,130,.12)`)이어야 하는데 회색이 됐다.
+
+   **Vector 변수를 참조하는 별칭 층이다.** 새 토큰 체계가 아니라 "이 게임에서
+   확인은 무슨 색인가"를 한 곳에 모은 것이고, 그래서 `[data-surface="vector"]`
+   스코프 안에 산다. */
+
+[data-surface="vector"] {
+  --g-empty-line: var(--fg-4);
+  --g-fill-fg: var(--accent);
+  --g-fill-bg: var(--accent-soft);
+  --g-lock-fg: var(--fg);
+  --g-lock-bg: rgba(76, 183, 130, 0.12);
+  --g-lock-mark: var(--status-review);
+  --g-confirm: var(--status-review);
+  --g-suspect: var(--status-progress);
+  --g-contradict: var(--label-red);
+}
+
+/* 공란이 채워질 때 accent 에서 잠김 색으로 **정착**한다.
+   한 번 쓰이고 끝나는 전환이라 강조가 아니다 — 상태가 바뀌었다는 신호일 뿐 */
+@keyframes gSettle {
+  0% { background: var(--accent-soft); }
+  100% { background: var(--g-lock-bg); }
+}
+
+.g-blank-trigger:hover { filter: brightness(1.12); }
+.g-word:hover { border-color: var(--accent) !important; }
+.g-cell:hover .g-cell-hoverable { color: var(--fg); }
+
+[data-surface="vector"] *::-webkit-scrollbar { width: 10px; height: 10px; }
+[data-surface="vector"] *::-webkit-scrollbar-track { background: transparent; }
+[data-surface="vector"] *::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 5px;
+}
+[data-surface="vector"] *::-webkit-scrollbar-thumb:hover { background: var(--fg-4); }
+[data-surface="vector"] *::-webkit-scrollbar-corner { background: transparent; }
+[data-surface="vector"] * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -135,7 +183,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border: 1px solid var(--border);
   border-radius: var(--r-md, 8px);
   background: var(--bg-app);
@@ -188,21 +236,55 @@ body {
   background: var(--accent-soft);
 }
 
-.nl-home-more {
-  display: flex;
-  gap: 10px;
+/* 난이도 배지는 중립색이다(원본 2044행). 난이도로 색이 갈리면 그것이 신호가 된다 */
+.nl-case-diff {
+  background: var(--bg-elevated-2);
+  color: var(--fg-3);
 }
 
-.nl-home-more-card {
-  flex: 1;
+/* 오늘의 사건 — 사건 행이 아니라 캘린더 아이콘이 붙은 단독 카드 (원본 1098행) */
+.nl-home-daily {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: var(--r-md, 8px);
-  opacity: 0.5;
+  opacity: 0.55;
+  margin-bottom: 26px;
+}
+
+.nl-home-daily-label {
+  color: var(--fg-2);
+  flex: 1;
+}
+
+/* 더 보기 — **점선 테두리**가 '아직 없는 것'의 표시다 (원본 1104~1106행) */
+.nl-home-more {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nl-home-more-card {
+  flex: 1 1 150px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  opacity: 0.45;
+}
+
+.nl-home-more-label {
+  color: var(--fg-3);
+  flex: 1;
+}
+
+.nl-home-more-badge {
+  background: var(--bg-elevated-2);
+  color: var(--fg-4);
 }
 
 /* ── 사건 상세 ───────────────────────────────────────────────────── */
@@ -228,10 +310,10 @@ body {
 
 .nl-detail-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 11px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -243,6 +325,25 @@ body {
   color: var(--fg-4);
   line-height: 1.6;
   margin-bottom: 20px;
+}
+
+/* 원본 1131~1134행 — 주 버튼이 늘어나고 협동 버튼은 자리만 지킨다.
+   높이 38px 는 원본 `hint-size="auto,38px"`. `.nl-btn` 의 36px 를 이겨야 하므로
+   클래스 둘로 특이도를 올린다 */
+.nl-detail-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.nl-btn.nl-detail-primary {
+  flex: 1 1 auto;
+  justify-content: center;
+  height: 38px;
+}
+
+.nl-btn.nl-detail-room {
+  flex: 0 0 auto;
+  height: 38px;
 }
 
 /* ── 산문 화면 (프롤로그 · 인터루드) ────────────────────────────────
@@ -362,6 +463,96 @@ body {
   gap: 12px;
 }
 
+/* ── 사건 개요 ───────────────────────────────────────────────────────
+   원본 824~835행. 프롤로그가 여기 다시 실리고, 브리핑 표가 그 아래 온다. */
+
+.nl-ov {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 38px 24px 60px;
+}
+
+.nl-ov-kicker {
+  color: var(--fg-4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.nl-ov-p {
+  font-size: 16px;
+  line-height: 1.9;
+  margin: 0 0 18px;
+}
+
+.nl-ov-brief {
+  border-top: 1px solid var(--border);
+  margin-top: 28px;
+  padding-top: 24px;
+}
+
+.nl-ov-cap {
+  color: var(--fg-2);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.nl-ov-row {
+  align-items: baseline;
+  padding: 12px 16px;
+}
+
+.nl-ov-k {
+  color: var(--fg-4);
+  width: 96px;
+  flex: none;
+}
+
+.nl-ov-v {
+  flex: 1;
+  min-width: 0;
+  word-break: keep-all;
+}
+
+/* 조사로 갱신된 행. **무엇이 바뀌었는지**를 알리는 것이지 어디를 보라는 말이 아니다 */
+.nl-ov-badge {
+  font-size: 9px;
+  font-weight: var(--fw-bold, 700);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill, 999px);
+  padding: 1px 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* 옛 값은 지우지 않고 취소선으로 남긴다 — 바뀌었다는 사실이 수사의 자취다 */
+.nl-ov-prev {
+  color: var(--fg-4);
+  margin-left: 8px;
+  text-decoration: line-through;
+}
+
+.nl-ov-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.nl-ov-tool {
+  cursor: pointer;
+  color: var(--fg-4);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+}
+
+.nl-ov-tool:hover {
+  color: var(--fg-2);
+}
+
 /* ── 버튼 ───────────────────────────────────────────────────────────
    Vector 의 Button 은 DC 전용 컴포넌트라 CSS 로 같은 형태를 만든다 */
 
@@ -448,13 +639,39 @@ body {
 
 /* 프로토타입과 같은 평범한 문단. 인물색은 아바타에만 있다 —
    문단마다 색선을 그으면 그것이 강조로 읽히고, 강조는 게임이 하지 않는다 */
+/* 원본 1908행 값 그대로. 음수 마진 + 패딩으로 배경이 본문보다 넓게 깔린다 */
 .nl-read-p {
-  margin: 0 0 14px;
+  margin: 0 -8px 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
   font-size: 15px;
   line-height: 1.85;
   color: var(--fg-2);
   word-break: keep-all;
   text-wrap: pretty;
+  cursor: pointer;
+  background: transparent;
+}
+
+.nl-read-p-lit {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* 지문. 원본 1913~1914행 값 그대로 — 진술 본문(15px)보다 작고 흐리고 기울어
+   **주장이 아니라 관찰**임을 조판으로 가른다 */
+.nl-read-gesture {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--fg-4);
+  font-style: italic;
+  margin: 0 0 12px;
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+.nl-read-gesture-post {
+  margin: 12px 0 0;
 }
 
 .nl-read-memo-label {
@@ -499,20 +716,118 @@ body {
   justify-content: center;
 }
 
+/* 원본 1919행 — 8px, 지나온 것/지금/남은 것 셋으로 갈린다 */
 .nl-read-dots .nl-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   cursor: pointer;
+  background: var(--border-strong);
 }
 
-.nl-dot-read {
-  background: var(--fg-4);
-  opacity: 0.5;
+.nl-read-dots .nl-dot-now {
+  background: var(--accent);
+}
+
+.nl-read-dots .nl-dot-past {
+  background: var(--fg-3);
 }
 
 .nl-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* 원본 prevStyle(1918행)은 0.35 다 */
+.nl-read-prev:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── 진술 마킹 ───────────────────────────────────────────────────────
+   원본 349~360행. 선택 툴바는 문단 안에 절대 위치로 뜬다.
+
+   ★ 네 마크는 완전히 같게 생긴다 ★ 색만 다르다.
+   「모순」이 「표시」보다 진하거나 크면 그것이 곧 유용도 표시가 된다. */
+
+.nl-mk-p {
+  position: relative;
+  margin: 0 0 1.4em;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+  cursor: text;
+}
+
+.nl-seltb {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -6px;
+  z-index: 41;
+  cursor: default;
+}
+
+.nl-seltb-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  box-shadow: var(--shadow-popover);
+  padding: 4px;
+  white-space: nowrap;
+}
+
+.nl-seltb-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  font: var(--fw-semi, 600) 12px var(--font-sans);
+}
+
+.nl-seltb-mark:hover,
+.nl-seltb-x:hover,
+.nl-seltb-icon:hover {
+  background: var(--bg-hover);
+}
+
+.nl-seltb-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.nl-seltb-x,
+.nl-seltb-icon {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+}
+
+.nl-seltb-x {
+  color: var(--fg-4);
+  font-size: 12px;
+}
+
+.nl-seltb-icon {
+  color: var(--fg-3);
+}
+
+.nl-seltb-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border-strong);
+  margin: 0 2px;
 }
 
 /* ── 자유 진행 셸 ─────────────────────────────────────────────────── */
@@ -535,11 +850,323 @@ body {
   color: var(--fg-4);
 }
 
-.nl-pane,
-.nl-report {
+/* 포기 — 사이드바 맨 아래(원본 135행)와 사건 상세 하단(1135행) 두 곳 */
+.nl-side-abandon {
+  margin-top: 10px;
+  padding-left: 0;
+  color: var(--label-red);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nl-detail-abandon {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.nl-pane {
   max-width: 720px;
   margin: 0 auto;
   padding: 28px 24px 64px;
+}
+
+/* 보고서는 **좌우 2단**이다 — 원본 `narrLayoutStyle`.
+   오른쪽 292px 이 확보 단어 은행이고, 한때 이게 통째로 빠져 있어서
+   보고서가 단일 컬럼이었다 */
+.nl-narr {
+  display: flex;
+  gap: 22px;
+  padding: 22px 24px;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.nl-report {
+  flex: 1;
+  min-width: 0;
+  max-width: 780px;
+}
+
+/* ── 확보 단어 은행 ─────────────────────────────────────────────────
+   원본 311~321행. `bankStyle`(2860행대) 값 그대로.
+
+   ★ 결정적 단어와 레드 헤링은 완전히 동일하게 생긴다 ★
+   칩의 유일한 상태 차이는 「이미 답으로 쓴 것」이고 그건 플레이어의 행동이다. */
+
+.nl-bank {
+  width: 292px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-subtle);
+}
+
+.nl-bank-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.nl-bank-hint {
+  margin-bottom: 14px;
+  line-height: 1.55;
+  color: var(--fg-4);
+}
+
+.nl-bank-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm, 6px);
+  padding: 16px;
+  color: var(--fg-4);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.nl-bank-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.nl-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--r-pill, 999px);
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: var(--fw-medium, 500);
+  background: var(--bg-elevated);
+  color: var(--fg-2);
+}
+
+.nl-word:hover {
+  border-color: var(--accent);
+}
+
+/* 이미 어딘가 답으로 쓴 단어. 정오답과 무관하다 — 내가 썼다는 사실만 */
+.nl-word-used {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ── 모달 ────────────────────────────────────────────────────────────
+   원본 1142~1158행. scrim 은 z-index 96 */
+
+.nl-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 96;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nl-dlg {
+  width: 400px;
+  max-width: 92vw;
+  background: var(--bg-app);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg, 12px);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.nl-dlg-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-dlg-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  flex: none;
+}
+
+.nl-dlg-title {
+  color: var(--fg);
+  font-weight: var(--fw-semi, 600);
+  flex: 1;
+  min-width: 0;
+}
+
+.nl-dlg-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nl-dlg-line {
+  display: flex;
+  gap: 12px;
+}
+
+.nl-dlg-k {
+  width: 44px;
+  flex: none;
+  font-size: 11px;
+  color: var(--fg-4);
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}
+
+.nl-dlg-v {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-2);
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.nl-dlg-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 18px 16px;
+}
+
+.nl-dlg-quote {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+/* 확인 모달 — 원본 1162 · 1246행. scrim z-95 (확보 단어는 96 이라 위에 겹친다) */
+.nl-scrim-modal {
+  z-index: 95;
+}
+
+.nl-modal {
+  max-width: 92vw;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg, 12px);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.nl-modal-body {
+  padding: 20px 20px 6px;
+}
+
+.nl-modal-desc {
+  color: var(--fg-3);
+  margin-top: 8px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 「아직 채우지 않은 공란 N개」. 경고색이지 오답 표시가 아니다 */
+.nl-modal-note {
+  color: var(--status-progress);
+  margin-top: 10px;
+  font-weight: var(--fw-semi, 600);
+}
+
+.nl-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px 20px;
+}
+
+.nl-btn-danger {
+  background: var(--label-red);
+  border-color: transparent;
+  color: #fff;
+  font-weight: var(--fw-semi, 600);
+}
+
+/* 토스트 — 원본 1254행. 신호만 나르고 내용은 화면에 남는다 */
+.nl-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 74px;
+  transform: translateX(-50%);
+  z-index: 120;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill, 999px);
+  box-shadow: var(--shadow-popover);
+  padding: 9px 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font: var(--fw-semi, 600) 12.5px var(--font-sans);
+  color: var(--fg);
+}
+
+.nl-toast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+/* 보고서 제출 CTA — 원본 193행 */
+.nl-finish {
+  margin-bottom: 16px;
+}
+
+/* 재개봉 — 원본 239~240행 */
+.nl-reopen {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nl-reopen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 6px);
+  padding: 5px 11px;
+  cursor: pointer;
+}
+
+.nl-reopen-warn {
+  color: var(--fg-4);
+  line-height: 1.5;
+}
+
+.nl-reopen-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--accent);
+  cursor: pointer;
 }
 
 .nl-pane-head,
@@ -547,8 +1174,210 @@ body {
   margin-bottom: 24px;
 }
 
-.nl-stmt-card {
-  margin-bottom: 12px;
+/* ── 진술 화면 (D안 조판) ────────────────────────────────────────────
+   원본 327~379행. 좌측 172px 고정 레일 + 우측 아코디언.
+   한때 여기가 카드 5개 세로 나열이었다 — 다른 화면을 만든 것이었다. */
+
+.nl-stmts {
+  display: flex;
+  gap: 20px;
+  padding: 8px 24px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.nl-stmt-rail {
+  width: 172px;
+  flex: none;
+  position: sticky;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nl-stmt-rail-cap {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px 8px;
+}
+
+.nl-stmt-rail-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  background: transparent;
+}
+
+.nl-stmt-rail-row-on {
+  background: var(--bg-active);
+}
+
+.nl-stmt-rail-line {
+  width: 2px;
+  align-self: stretch;
+  border-radius: 1px;
+  flex: none;
+}
+
+.nl-stmt-rail-name {
+  font-size: 14.5px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nl-stmt-rail-rel {
+  font-size: 12px;
+  color: var(--fg-4);
+  margin-top: 2px;
+}
+
+.nl-stmt-rail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.nl-stmt-rail-hint {
+  color: var(--fg-4);
+  margin-top: 12px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+.nl-stmt-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nl-stmt-row {
+  border-top: 1px solid var(--border);
+}
+
+.nl-stmt-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 4px;
+  cursor: pointer;
+}
+
+.nl-stmt-bar {
+  width: 3px;
+  height: 34px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.nl-stmt-av {
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+}
+
+.nl-stmt-who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 150px;
+  flex: none;
+}
+
+.nl-stmt-name {
+  font-size: 15px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg);
+}
+
+.nl-stmt-meta {
+  color: var(--fg-4);
+}
+
+.nl-stmt-preview {
+  color: var(--fg-4);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 본문은 52ch 로 묶는다 — 한 줄이 길면 눈이 다음 줄 첫머리를 잃는다 */
+.nl-stmt-text {
+  padding: 0 4px 22px 42px;
+  max-width: 52ch;
+}
+
+/* 관계 칩 3종. 원본 `relChip`(2651~2656행).
+   셋의 색이 다른 것은 **동선의 종류**를 가리키는 것이지 혐의가 아니다 */
+.nl-relchip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: var(--fw-semi, 600);
+  border-radius: var(--r-pill, 999px);
+  padding: 5px 12px;
+  flex: none;
+  white-space: nowrap;
+}
+
+.nl-relchip-onsite {
+  color: #f2994a;
+  background: rgba(242, 153, 74, 0.16);
+  border: 1px solid rgba(242, 153, 74, 0.4);
+}
+
+.nl-relchip-absent {
+  color: var(--fg-3);
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+}
+
+.nl-relchip-arrive {
+  color: var(--fg-2);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+}
+
+/* 추가 진술 — 장 완성으로 도착한 것. 원본 362~364행 */
+.nl-stmt-added {
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-left: 2px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--r-sm, 6px) var(--r-sm, 6px) 0;
+}
+
+.nl-stmt-added-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.nl-stmt-added-tag {
+  font-size: 9px;
+  font-weight: var(--fw-bold, 700);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nl-stmt-added-p {
+  margin: 0;
 }
 
 /* ── 보고서 ──────────────────────────────────────────────────────────
@@ -696,10 +1525,14 @@ body {
   margin: 0 1px;
 }
 
+/* 셋 다 원본 2161~2163행의 값이다. **색은 `--g-*` 토큰을 거친다** —
+   계산값은 같지만 토큰이 계약이고, 이 게임에서 "빈칸/채움/잠김이 무슨 색인가"는
+   한 곳에서만 바뀌어야 한다 */
+
 .nl-blank-empty {
   min-width: 58px;
   text-align: center;
-  border-bottom: 1.5px dashed var(--fg-4);
+  border-bottom: 1.5px dashed var(--g-empty-line);
   color: var(--fg-4);
   padding: 0 9px 2px;
   cursor: pointer;
@@ -709,8 +1542,8 @@ body {
 }
 
 .nl-blank-fill {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--g-fill-bg);
+  color: var(--g-fill-fg);
   font-weight: var(--fw-semi, 600);
   padding: 1px 9px;
   border-radius: var(--r-sm, 6px);
@@ -718,7 +1551,9 @@ body {
   border: 1px solid transparent;
 }
 
-/* 완성된 장의 답. 편집할 수 없으므로 accent 를 벗는다 */
+/* 완성된 장의 답. 편집할 수 없으므로 accent 를 벗는다.
+   **초록빛 `--g-lock-bg` 가 아니다** — 그것은 표기 안내 범례와 상태 칩의 색이고
+   서술 안의 잠긴 공란은 원본도 `--bg-elevated-2` 다 (2163행) */
 .nl-blank-lock {
   background: var(--bg-elevated-2);
   color: var(--fg);
@@ -867,6 +1702,92 @@ body {
   word-break: keep-all;
 }
 
+/* 우측 패널 상단 줄 — `표시만` 토글(945행) · `＋ 새 메모`(962행) */
+.nl-right-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* 원본 `marksToggleStyle` 값 그대로 */
+.nl-marks-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  padding: 3px 9px;
+  border-radius: var(--r-pill, 999px);
+  cursor: pointer;
+  color: var(--fg-3);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+}
+
+.nl-marks-toggle-on {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.nl-acc-av {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+}
+
+.nl-acc-preview {
+  color: var(--fg-4);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nl-acc-nomarks {
+  font-size: 12px;
+  color: var(--fg-4);
+  line-height: 1.6;
+}
+
+/* `표시만` 목록 — 색 레일 + 구절. 원본 950행 */
+.nl-mk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.nl-mk-item {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.nl-mk-item-bar {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: none;
+  min-height: 18px;
+}
+
+.nl-mk-item-t {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  word-break: keep-all;
+}
+
+/* ── 메모 카드 ───────────────────────────────────────────────────────
+   원본 964~969행. **메모가 1급 객체다** — 번호·인용구·편집/읽기·저장 표시. */
+
+.nl-memo-new {
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .nl-memo-card {
   border: 1px solid var(--border);
   border-radius: var(--r-sm, 6px);
@@ -874,12 +1795,17 @@ body {
   margin-bottom: 8px;
 }
 
-.nl-memo-who {
+.nl-memo-top {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 6px;
+}
+
+.nl-memo-num {
   color: var(--fg-4);
-  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
 }
 
 /* 층위 표시 — 확정(물증)과 주장(진술)을 섞지 않는다 */
@@ -888,6 +1814,35 @@ body {
   border-radius: 999px;
   padding: 0 6px;
   font-size: 10px;
+  color: var(--fg-4);
+}
+
+.nl-memo-edit { color: var(--fg-3); font-size: 11px; cursor: pointer; }
+.nl-memo-done { color: var(--accent); font-size: 11px; cursor: pointer; }
+.nl-memo-del { color: var(--label-red); font-size: 11px; cursor: pointer; margin-left: 6px; }
+
+/* 인용구. 이탤릭 따옴표로 **내 글이 아님**을 표시한다 */
+.nl-memo-quote {
+  color: var(--fg-3);
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  word-break: keep-all;
+}
+
+.nl-memo-input {
+  width: 100%;
+  min-height: 44px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px);
+  padding: 7px 9px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
 }
 
 .nl-memo-text {
@@ -896,4 +1851,13 @@ body {
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: keep-all;
+}
+
+.nl-memo-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--fg-4);
+  font-size: 10px;
 }

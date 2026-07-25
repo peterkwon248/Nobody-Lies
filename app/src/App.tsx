@@ -16,6 +16,7 @@ import { StatementList } from './screens/StatementList'
 import { Shell, type View } from './shell/Shell'
 import { deriveTerms } from '@engine/verifier'
 import { TopBar } from './components/TopBar'
+import { Confirm, Toast } from './components/Confirm'
 
 const CASE_ID = 'mountain-lodge'
 
@@ -41,6 +42,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [route, setRoute] = useState<Route>('home')
   const [view, setView] = useState<View>('report')
+  /** 확인 모달. 화면 상태라 저장하지 않는다 */
+  const [ask, setAsk] = useState<'abandon' | 'finish' | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
   const [progress, setProgress] = useState<CaseProgress>(() =>
     load('progress', CASE_ID, newProgress(CASE_ID)),
   )
@@ -64,6 +68,68 @@ export default function App() {
       }
     })
 
+  /**
+   * 진술 마킹. 플레이어가 만든 것이므로 `PlayerAnnotations` 로 간다.
+   * **게임은 여기에 아무 의미도 부여하지 않는다** — 네 색은 플레이어의 어휘다.
+   */
+  const setHighlights = (highlights: PlayerAnnotations['highlights']) =>
+    setAnnotations((a) => ({ ...a, highlights }))
+
+  /**
+   * 인용 → 메모.
+   *
+   * **층위를 인용 출처가 정한다** — 진술에서 뽑으면 `주장`, 확보 단어(물증)에서
+   * 뽑으면 `확정`이다. 모순 경고를 없앴으므로 둘의 대조를 플레이어가 전부 혼자
+   * 해야 하고, 층위 표시가 없으면 그 대조 자체가 불가능해진다 (`HANDOFF` §6).
+   */
+  const quoteToMemo = (quote: string, source: '확정' | '주장') => {
+    setAnnotations((a) => ({
+      ...a,
+      notes: [
+        ...a.notes,
+        {
+          id: `quote:${Date.now()}`,
+          content: '',
+          quote,
+          source,
+          at: Date.now(),
+          context: VIEW_LABEL[view],
+        },
+      ],
+    }))
+    // 토스트는 **어디에 생겼는지만** 말한다. 인용문은 메모 화면에 영구히 남는다
+    setToast('인용이 메모에 추가되었습니다')
+  }
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2600)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  /** 화면 이름. 메모가 「어디서 적었나」를 남긴다 (원본 `memoMeta`) */
+  const VIEW_LABEL: Record<View, string> = {
+    overview: '사건 개요', report: '사건 보고서', statements: '진술',
+  }
+
+  const addMemo = () =>
+    setAnnotations((a) => ({
+      ...a,
+      notes: [
+        ...a.notes,
+        { id: `memo:${Date.now()}`, content: '', at: Date.now(), context: VIEW_LABEL[view] },
+      ],
+    }))
+
+  const editMemo = (id: string, content: string) =>
+    setAnnotations((a) => ({
+      ...a,
+      notes: a.notes.map((n) => (n.id === id ? { ...n, content } : n)),
+    }))
+
+  const deleteMemo = (id: string) =>
+    setAnnotations((a) => ({ ...a, notes: a.notes.filter((n) => n.id !== id) }))
+
   const setAnswer = (key: string, value: string) =>
     setProgress((p) => {
       const answers = { ...p.answers }
@@ -80,7 +146,15 @@ export default function App() {
    * 회수하는 셈**이 된다 (`HANDOFF-TO-CODE.md` §5.2).
    */
   const reopen = (order: number) =>
-    setProgress((p) => ({ ...p, reopensUsed: { ...p.reopensUsed, [order]: true } }))
+    setProgress((p) => ({
+      ...p,
+      reopensUsed: { ...p.reopensUsed, [order]: true },
+      reopensOpen: { ...p.reopensOpen, [order]: true },
+    }))
+
+  /** 편집 완료 — 다시 잠근다. **`reopensUsed` 는 그대로 둔다**(장당 1회) */
+  const closeReopen = (order: number) =>
+    setProgress((p) => ({ ...p, reopensOpen: { ...p.reopensOpen, [order]: false } }))
 
   const markRead = (person: string) =>
     setProgress((p) =>
@@ -134,29 +208,79 @@ export default function App() {
   }
   if (!c) return <div className="nl-fs" />
 
-  if (route === 'home') {
-    return (
-      <Home
-        progress={progress}
-        caseTitle={c.title}
-        onOpen={() => setRoute('detail')}
-        onResume={() => setRoute('play')}
-      />
-    )
+  /** 아직 채우지 않은 공란 수. 원본 `finishUnfilled` — 제출 모달에만 뜬다 */
+  const unfilled = c.chapters.reduce(
+    (n, ch) => n + ch.blanks.filter((_, i) => !progress.answers[`${ch.order}:${i}`]).length,
+    0,
+  )
+
+  /**
+   * 사건 포기 — 진행을 통째로 버리고 처음부터. 원본 `abandon()`(2036행).
+   * 플레이어가 만든 주석은 남긴다 — 진행 기록과 수명이 다르다(저장소 3분리).
+   */
+  const abandon = () => {
+    setProgress(newProgress(CASE_ID))
+    setAsk(null)
+    setView('report')
+    setRoute('home')
   }
 
-  if (route === 'detail') {
-    return (
-      <CaseDetail
-        c={c}
-        progress={progress}
-        onBack={() => setRoute('home')}
-        onStart={() => { go(progress.stage); setRoute('play') }}
-      />
-    )
-  }
+  return (
+    <>
+      {screen()}
 
-  switch (progress.stage) {
+      {ask === 'abandon' && (
+        <Confirm
+          title="사건을 포기할까요?"
+          body="진행 상황과 점수가 사라지고 처음부터 시작됩니다."
+          confirmLabel="포기하기"
+          danger
+          onConfirm={abandon}
+          onCancel={() => setAsk(null)}
+        />
+      )}
+
+      {ask === 'finish' && (
+        <Confirm
+          title="이대로 사건을 종결할까요?"
+          body="제출 후에는 되돌릴 수 없습니다. 완성된 보고서가 사건의 전말이 됩니다."
+          note={unfilled > 0 ? `아직 채우지 않은 공란 ${unfilled}개` : undefined}
+          confirmLabel="제출"
+          width={420}
+          onConfirm={() => setAsk(null)}
+          onCancel={() => setAsk(null)}
+        />
+      )}
+
+      {toast && <Toast message={toast} />}
+    </>
+  )
+
+  function screen() {
+    if (!c) return null
+
+    if (route === 'home')
+      return (
+        <Home
+          c={c}
+          progress={progress}
+          onOpen={() => setRoute('detail')}
+          onResume={() => setRoute('play')}
+        />
+      )
+
+    if (route === 'detail')
+      return (
+        <CaseDetail
+          c={c}
+          progress={progress}
+          onBack={() => setRoute('home')}
+          onStart={() => { go(progress.stage); setRoute('play') }}
+          onAbandon={() => setAsk('abandon')}
+        />
+      )
+
+    switch (progress.stage) {
     case 'prologue':
       return <Prologue c={c} onDone={() => go('brief')} onHome={() => setRoute('home')} />
     case 'brief':
@@ -182,9 +306,34 @@ export default function App() {
           view={view}
           onView={setView}
           onHome={() => setRoute('home')}
+          onAbandon={() => setAsk('abandon')}
+          onAddMemo={addMemo}
+          onEditMemo={editMemo}
+          onDeleteMemo={deleteMemo}
         >
-          {view === 'overview' && <Overview c={c} />}
-          {view === 'statements' && <StatementList c={c} />}
+          {view === 'overview' && (
+            <Overview
+              c={c}
+              /* 시각 축소는 그 공개를 여는 조사를 했을 때만. 조사 시스템(P) 이후 참이 된다 */
+              firedNarrow={c.reveals?.some((r) => {
+                if (!r.narrowsWindow || r.trigger.on !== 'action') return false
+                const need = r.trigger.actionId
+                return progress.investigations.some((iv) => iv.actionId === need)
+              }) ?? false}
+              highlights={annotations.highlights}
+              onMark={setHighlights}
+              onQuote={(q) => quoteToMemo(q, '확정')}
+            />
+          )}
+          {view === 'statements' && (
+            <StatementList
+              c={c}
+              solved={progress.solved}
+              highlights={annotations.highlights}
+              onMark={setHighlights}
+              onQuote={(q, person) => quoteToMemo(`“${q}” — ${person}`, '주장')}
+            />
+          )}
           {view === 'report' && (
             <Report
               c={c}
@@ -192,11 +341,16 @@ export default function App() {
               solved={progress.solved}
               reopened={progress.reopensUsed}
               terms={terms}
+              reopenOpen={progress.reopensOpen}
               onAnswer={setAnswer}
               onReopen={reopen}
+              onCloseReopen={closeReopen}
+              onSubmit={() => setAsk('finish')}
+              onQuote={(q) => quoteToMemo(q, '확정')}
             />
           )}
         </Shell>
       )
+    }
   }
 }

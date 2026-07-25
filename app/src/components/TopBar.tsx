@@ -15,11 +15,14 @@ import { Mark } from './Mark'
 export function TopBar({
   title,
   onBack,
+  backLabel = '홈',
   showMark,
   ruled,
 }: {
   title?: string
   onBack?: () => void
+  /** 사건 상세는 원본이 `‹ 사건 목록` 이다(1115행). 인트로의 `홈` 은 우리가 더한 것 */
+  backLabel?: string
   showMark?: boolean
   ruled?: boolean
 }) {
@@ -30,7 +33,7 @@ export function TopBar({
           <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M10 3.5L5.5 8l4.5 4.5" />
           </svg>
-          홈
+          {backLabel}
         </span>
       )}
       {showMark && <Mark size={24} />}

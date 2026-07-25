@@ -52,6 +52,27 @@ function NavIcon({ id }: { id: View | 'home' }) {
   )
 }
 
+/**
+ * 패널 토글 아이콘. 원본 81행(좌) · 161행(우) 그대로.
+ *
+ * **채워진 `rect` 가 핵심이다** — 어느 쪽 패널인지 알려주는 것이 그 반투명 면이고,
+ * 한때 `<path>` 선 하나로 줄여 그려서 좌·우 구분이 사라졌다.
+ */
+function PanelIcon({ side }: { side: 'left' | 'right' }) {
+  const x = side === 'left' ? 7 : 11
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+      <rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" />
+      <line x1={x} y1="3.6" x2={x} y2="14.4" stroke="currentColor" strokeWidth="1.6" />
+      <rect
+        x={side === 'left' ? 2.8 : 11.2}
+        y="3.8" width="4" height="10.4" rx="2.4"
+        fill="currentColor" opacity="0.18"
+      />
+    </svg>
+  )
+}
+
 export function Shell({
   c,
   progress,
@@ -59,6 +80,10 @@ export function Shell({
   view,
   onView,
   onHome,
+  onAbandon,
+  onAddMemo,
+  onEditMemo,
+  onDeleteMemo,
   children,
 }: {
   c: Case
@@ -67,6 +92,10 @@ export function Shell({
   view: View
   onView: (v: View) => void
   onHome: () => void
+  onAbandon: () => void
+  onAddMemo: () => void
+  onEditMemo: (id: string, content: string) => void
+  onDeleteMemo: (id: string) => void
   children: React.ReactNode
 }) {
   const [leftOpen, setLeftOpen] = useState(true)
@@ -84,10 +113,7 @@ export function Shell({
             </div>
             <span className="nl-fs-spacer" />
             <button className="iconbtn" onClick={() => setLeftOpen(false)} title="사이드바 접기">
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.4" />
-                <path d="M7 3v12" stroke="currentColor" strokeWidth="1.4" />
-              </svg>
+              <PanelIcon side="left" />
             </button>
           </div>
 
@@ -134,6 +160,8 @@ export function Shell({
               범인만 거짓말을 할 수 있다. 무고한 사람은 거짓말하지 않는다.
               다만 자기 비밀은 말하지 않는다.
             </div>
+            {/* 원본 135행 — 사이드바 맨 아래 빨간 링크 */}
+            <div className="linklike nl-side-abandon" onClick={onAbandon}>사건 포기</div>
           </div>
         </div>
       )}
@@ -142,10 +170,7 @@ export function Shell({
         <div className="viewheader">
           {!leftOpen && (
             <button className="iconbtn" onClick={() => setLeftOpen(true)} title="사이드바 펼치기" style={{ marginRight: 8 }}>
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.4" />
-                <path d="M7 3v12" stroke="currentColor" strokeWidth="1.4" />
-              </svg>
+              <PanelIcon side="left" />
             </button>
           )}
           <div className="viewtitle">
@@ -163,15 +188,18 @@ export function Shell({
               title="교차 참조"
               style={rightOpen ? { color: 'var(--accent)' } : undefined}
             >
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.4" />
-                <path d="M11 3v12" stroke="currentColor" strokeWidth="1.4" />
-              </svg>
+              <PanelIcon side="right" />
             </button>
+            {/* 원본 162행은 톱니바퀴가 아니라 **슬라이더**다 */}
             <button className="iconbtn" onClick={() => setSettings((v) => !v)} title="설정">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H22a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+              <svg
+                width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M20 7h-9" />
+                <path d="M14 17H5" />
+                <circle cx="17" cy="17" r="3" />
+                <circle cx="7" cy="7" r="3" />
               </svg>
             </button>
             {settings && <SettingsPanel />}
@@ -182,7 +210,14 @@ export function Shell({
       </div>
 
       {rightOpen && (
-        <DetailPanel c={c} annotations={annotations} onClose={() => setRightOpen(false)} />
+        <DetailPanel
+          c={c}
+          annotations={annotations}
+          onClose={() => setRightOpen(false)}
+          onAddMemo={onAddMemo}
+          onEditMemo={onEditMemo}
+          onDeleteMemo={onDeleteMemo}
+        />
       )}
     </div>
   )

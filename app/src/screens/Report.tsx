@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Blank, Case, Chapter } from '@engine/types'
 import { josa } from '../text/josa'
 import { caseNo } from '../case/catalog'
+import { TermBank } from './TermBank'
+import { StatusIcon } from '../components/StatusIcon'
 
 /**
  * 보고서 — 이 게임의 메인 화면.
@@ -50,24 +52,34 @@ export function Report({
   answers,
   solved,
   reopened,
+  reopenOpen,
   terms,
   onAnswer,
   onReopen,
+  onCloseReopen,
+  onSubmit,
+  onQuote,
 }: {
   c: Case
   answers: Record<string, string>
   solved: number[]
   reopened: Record<number, boolean>
+  reopenOpen: Record<number, boolean>
   terms: Set<string>
   onAnswer: (key: string, value: string) => void
   onReopen: (order: number) => void
+  onCloseReopen: (order: number) => void
+  onSubmit: () => void
+  onQuote: (quote: string) => void
 }) {
   // 순차 잠금. i번 장은 i-1번이 완성돼야 열린다
   const openIndex = solved.length
   const victim = c.victimProfile
   const done = solved.length === c.chapters.length
 
+  // 원본 `narrLayoutStyle` — 좌우 2단. 오른쪽 292px 이 확보 단어 은행이다
   return (
+    <div className="nl-narr">
     <div className="nl-report">
       {/* 문서 헤더 — 디지털 네이티브 공문서. 스큐어모피즘 없이 구조만 가져온다 */}
       <div className="nl-doc">
@@ -93,6 +105,12 @@ export function Report({
         </div>
       </div>
 
+      {/* 보고서 제출 — 원본 193행. 장이 남아 있어도 누를 수 있다.
+          「아직 채우지 않은 공란 N개」는 확인 모달이 말한다 */}
+      <div className="nl-finish">
+        <button className="nl-btn nl-btn-primary" onClick={onSubmit}>보고서 제출</button>
+      </div>
+
       {c.chapters.map((ch, idx) => (
         <ChapterBlock
           key={ch.order}
@@ -102,10 +120,15 @@ export function Report({
           answers={answers}
           terms={terms}
           reopened={!!reopened[ch.order]}
+          reopenOpen={!!reopenOpen[ch.order]}
           onAnswer={onAnswer}
           onReopen={onReopen}
+          onCloseReopen={onCloseReopen}
         />
       ))}
+    </div>
+
+      <TermBank c={c} terms={terms} answers={answers} onQuote={onQuote} />
     </div>
   )
 }
@@ -120,16 +143,20 @@ function Field({ k, v }: { k: string; v: string }) {
 }
 
 function ChapterBlock({
-  c, ch, state, answers, terms, reopened, onAnswer, onReopen,
+  c, ch, state, answers, terms, reopened, reopenOpen, onAnswer, onReopen, onCloseReopen,
 }: {
   c: Case
   ch: Chapter
   state: 'done' | 'open' | 'locked'
   answers: Record<string, string>
   terms: Set<string>
+  /** 재개봉을 이미 썼는가. 되돌아가지 않는다 */
   reopened: boolean
+  /** 지금 재개봉해서 편집 중인가 */
+  reopenOpen: boolean
   onAnswer: (key: string, value: string) => void
   onReopen: (order: number) => void
+  onCloseReopen: (order: number) => void
 }) {
   // 완성된 장은 접힌 채로 시작한다. 지금 쓰는 장에 시선이 가야 한다
   const [collapsed, setCollapsed] = useState(state === 'done')
@@ -153,7 +180,9 @@ function ChapterBlock({
 
   const key = (i: number) => `${ch.order}:${i}`
   const filled = ch.blanks.filter((_, i) => answers[key(i)]).length
-  const editable = state === 'open' || reopened
+  // **`reopened`(썼다) 가 아니라 `reopenOpen`(지금 열려 있다) 이 편집을 연다.**
+  // 하나로 두면 「편집 완료」를 눌러도 계속 고칠 수 있다
+  const editable = state === 'open' || reopenOpen
   const body = !collapsed
 
   return (
@@ -162,17 +191,19 @@ function ChapterBlock({
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={{ flex: 'none' }}>
           {collapsed ? <path d="M6 4l4 4-4 4" /> : <path d="M4 6l4 4 4-4" />}
         </svg>
+        {/* 원본 209행 — Vector StatusIcon. 상태이지 강조가 아니다 */}
+        <StatusIcon status={state === 'done' ? 'done' : 'progress'} size={16} />
         <span className="v-meta v-num nl-chapter-num">{ch.order}장</span>
         <span className="v-h3">{ch.title}</span>
         <span className="nl-fs-spacer" />
-        {state === 'done' ? (
-          <>
-            {reopened && <span className="v-meta" style={{ color: 'var(--fg-4)' }}>재개봉됨</span>}
-            <span className="nl-chip">완성</span>
-          </>
-        ) : (
-          <span className="nl-chip">미완성</span>
+        {/* 접힌 완성 장의 우측 문구 (원본 213행 `reopenStatusLabel`) */}
+        {state === 'done' && collapsed && (
+          <span className="v-meta" style={{ color: 'var(--fg-4)' }}>
+            {reopened ? '재개봉 사용됨' : '재개봉 가능'}
+          </span>
         )}
+        {/* 칩은 **열린 장에만** 뜬다 (원본 `showChip: open`) */}
+        {state === 'open' && <span className="nl-chip">미확정</span>}
       </div>
 
       {body && (
@@ -212,7 +243,7 @@ function ChapterBlock({
                       ))}
                       {opts.length === 0 && (
                         <div className="v-meta nl-picker-empty">
-                          아직 확보한 단어가 없습니다. 조사로 찾아야 합니다.
+                          아직 공개된 단어가 없습니다. 장을 확인하면 조사로 드러난 단어가 추가됩니다.
                         </div>
                       )}
                       {value && (
@@ -230,20 +261,46 @@ function ChapterBlock({
             })}
           </div>
 
-          <div className="nl-chapter-foot">
-            <span className="v-meta v-num">{filled} / {ch.blanks.length}</span>
-            {state === 'open' && (
+          {state === 'open' && (
+            <div className="nl-chapter-foot">
+              <span className="v-meta v-num">{filled} / {ch.blanks.length}</span>
               <span className="v-meta">공란을 모두 채우면 완성됩니다</span>
-            )}
-            {state === 'done' && !reopened && (
+            </div>
+          )}
+
+          {/* 재개봉 — 원본 239행. 테두리 버튼 + 회전 화살표 + **경고문**.
+              경고문이 규칙의 절반이다: 되돌릴 수 없다는 것을 누르기 전에 말해야 한다 */}
+          {state === 'done' && !reopened && !reopenOpen && (
+            <div className="nl-reopen">
               <span
-                className="linklike"
+                className="linklike nl-reopen-btn"
                 onClick={(e) => { e.stopPropagation(); onReopen(ch.order) }}
               >
-                재개봉 (1회)
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M13 8a5 5 0 11-1.5-3.5M13 2v3h-3" />
+                </svg>
+                재개봉
               </span>
-            )}
-          </div>
+              <span className="v-micro nl-reopen-warn">
+                장당 한 번만 다시 열 수 있으며, 닫으면 더 이상 수정할 수 없습니다.
+              </span>
+            </div>
+          )}
+
+          {/* 재개봉 닫기 — 원본 240행. 편집을 끝내고 다시 잠근다 */}
+          {state === 'done' && reopenOpen && (
+            <div className="nl-reopen">
+              <span
+                className="linklike nl-reopen-close"
+                onClick={(e) => { e.stopPropagation(); onCloseReopen(ch.order) }}
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M3.5 8.5l3 3 6-7" />
+                </svg>
+                편집 완료
+              </span>
+            </div>
+          )}
         </>
       )}
     </section>

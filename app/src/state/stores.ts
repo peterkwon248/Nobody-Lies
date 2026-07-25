@@ -25,6 +25,10 @@ export type PlayerAnnotations = {
     /** 인용의 층위. 확정(물증)과 주장(진술)을 섞지 않는다 — `HANDOFF` §6 */
     source?: '확정' | '주장'
     target?: string
+    /** 만든 시각. 원본 `memoMeta()` 가 「오전 10:23 · 사건 보고서」를 만든다 */
+    at?: number
+    /** 어느 화면에서 만들었나. 되짚어 갈 실마리가 된다 */
+    context?: string
   }[]
   cellMarks: { person: PersonId; slot: SlotId; kind: '확인' | '의심' | '모순' }[]
   boardItems: {
@@ -66,8 +70,18 @@ export type CaseProgress = {
   statementsRead: PersonId[]
   actionsUsed: number
   investigations: InvestigationEntry[]
-  /** 장별 재개봉 사용 여부. 장당 1회 */
+  /**
+   * 장별 재개봉 사용 여부. 장당 1회. **한 번 참이 되면 되돌아가지 않는다**
+   */
   reopensUsed: Record<number, boolean>
+  /**
+   * 지금 재개봉해서 편집 중인 장.
+   *
+   * **`reopensUsed` 와 다른 상태다** — 원본이 `reopenUsed` / `reopenActive` 로
+   * 나눠 갖고 있고, 「편집 완료」가 성립하려면 나뉘어야 한다. 하나로 두면
+   * 닫는 순간 재개봉 권한이 되살아난다.
+   */
+  reopensOpen: Record<number, boolean>
   /** 공란 입력. key = `${chapterOrder}:${blankIndex}` */
   answers: Record<string, string>
   /** 완성된 장 (정답 여부와 무관하게 완성된다) */
@@ -84,6 +98,7 @@ export const newProgress = (caseId: string): CaseProgress => ({
   actionsUsed: 0,
   investigations: [],
   reopensUsed: {},
+  reopensOpen: {},
   answers: {},
   solved: [],
   elapsedMs: 0,

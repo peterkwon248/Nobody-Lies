@@ -52,6 +52,8 @@ export function Statements({
     const next = c.people.findIndex((p) => !read.includes(p.id))
     return next < 0 ? 0 : next
   })
+  // 원본의 `readHi` 와 같다 — 정독 화면에만 사는 표시라 저장소로 가지 않는다
+  const [lit, setLit] = useState<Record<string, boolean>>({})
 
   const p = c.people[i]
   const total = c.people.length
@@ -78,7 +80,7 @@ export function Statements({
             {/* 진술은 이후에도 언제든 다시 볼 수 있으므로 정독을 건너뛸 수 있다.
                 프로토타입과 같다 — 여기서 막으면 재방문이 벌처럼 느껴진다 */}
             <span className="linklike" onClick={() => { onRead(p.id); onDone() }}>
-              정독 건너뛰기
+              건너뛰기
             </span>
           </div>
 
@@ -93,11 +95,33 @@ export function Statements({
               </span>
             </div>
 
-            {(p.statement?.paragraphs ?? []).map((t, n) => (
-              <p key={n} className="nl-read-p">
-                {ko(t)}
-              </p>
-            ))}
+            {/* 지문 — 원본 1045·1047행. 이탤릭 `fg-4` 로 진술 본문과 층을 가른다.
+                전원이 갖거나 전원이 없다(검증기 9-1) */}
+            {p.statement?.gesture?.pre && (
+              <p className="nl-read-gesture">{ko(p.statement.gesture.pre)}</p>
+            )}
+
+            {/* 문단 클릭 토글. 원본 1908행.
+                **자유 진행 진술 화면의 드래그 4색 마킹과는 별개의 단순 버전이다** —
+                정독은 한 번 지나가는 선형 흐름이라 눈에 걸린 문단만 짚어두는
+                용도이고, 프로토타입도 이 둘을 다른 상태로 갖고 있다
+                (`readHi` ↔ `hls`). 그래서 여기 표시는 `표시만` 에 안 뜬다 */}
+            {(p.statement?.paragraphs ?? []).map((t, n) => {
+              const key = `${p.id}-${n}`
+              return (
+                <p
+                  key={n}
+                  className={lit[key] ? 'nl-read-p nl-read-p-lit' : 'nl-read-p'}
+                  onClick={() => setLit((v) => ({ ...v, [key]: !v[key] }))}
+                >
+                  {ko(t)}
+                </p>
+              )
+            })}
+
+            {p.statement?.gesture?.post && (
+              <p className="nl-read-gesture nl-read-gesture-post">{ko(p.statement.gesture.post)}</p>
+            )}
 
             <div className="nl-read-memo-label">
               <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -110,19 +134,20 @@ export function Statements({
               className="nl-read-memo"
               value={memo}
               onChange={(e) => onMemo(p.id, e.target.value)}
-              placeholder="눈에 걸리는 것을 적어두세요."
+              placeholder="이 진술에서 눈에 띄는 점…"
             />
           </div>
 
           <div className="nl-read-foot">
-            <button className="nl-btn" onClick={() => setI(i - 1)} disabled={i === 0}>
+            <button className="nl-btn nl-read-prev" onClick={() => setI(i - 1)} disabled={i === 0}>
               이전
             </button>
+            {/* 원본 1919행 — 지나온 것과 남은 것을 인덱스로 가른다. 읽음 기록이 아니다 */}
             <div className="nl-read-dots">
               {c.people.map((q, n) => (
                 <span
                   key={q.id}
-                  className={n === i ? 'nl-dot nl-dot-on' : read.includes(q.id) ? 'nl-dot nl-dot-read' : 'nl-dot'}
+                  className={n === i ? 'nl-dot nl-dot-now' : n < i ? 'nl-dot nl-dot-past' : 'nl-dot'}
                   onClick={() => goto(n)}
                 />
               ))}

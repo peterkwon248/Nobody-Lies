@@ -37,5 +37,7 @@ export default defineConfig({
       '@engine': engineSrc,
     },
   },
-  server: { port: 3000 },
+  // 기본은 3000. 이 저장소는 병렬 세션이 전제라(기계 3대) 포트가 겹칠 때
+  // PORT 로 비켜설 수 있어야 한다
+  server: { port: Number(process.env.PORT) || 3000 },
 })

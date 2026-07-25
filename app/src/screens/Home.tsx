@@ -1,3 +1,4 @@
+import type { Case } from '@engine/types'
 import { TopBar } from '../components/TopBar'
 import { Mark } from '../components/Mark'
 import type { CaseProgress } from '../state/stores'
@@ -23,17 +24,18 @@ const TAGLINE = '모든 진술을 의심하라'
 
 
 export function Home({
+  c,
   progress,
-  caseTitle,
   onOpen,
   onResume,
 }: {
+  c: Case
   progress: CaseProgress
-  caseTitle: string
   onOpen: (id: string) => void
   onResume: () => void
 }) {
   const started = progress.status === 'in_progress'
+  const remaining = c.budget - progress.actionsUsed
 
   return (
     <div className="nl-fs">
@@ -55,9 +57,10 @@ export function Home({
                 <path d="M5 3.5l7 4.5-7 4.5z" />
               </svg>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="v-ui" style={{ color: 'var(--fg)' }}>이어하기 · {caseTitle}</div>
+                <div className="v-ui" style={{ color: 'var(--fg)' }}>이어하기 · {c.title}</div>
+                {/* 원본 1084행: `진행 N/M · 잔여 조사 K`. 예산 잔량이 여기 있다 */}
                 <div className="v-meta" style={{ color: 'var(--fg-3)', marginTop: 2 }}>
-                  {stageLabel(progress)} · {progress.solved.length}/5장
+                  진행 {progress.solved.length}/{c.chapters.length} · 잔여 조사 {remaining}
                 </div>
               </div>
               <span className="v-meta" style={{ color: 'var(--accent)', fontSize: 16 }}>›</span>
@@ -66,31 +69,36 @@ export function Home({
 
           <div className="v-caption nl-home-group">캠페인</div>
           <div className="nl-home-list">
-            {CAMPAIGN.map((c) => (
+            {CAMPAIGN.map((row) => (
               <div
-                key={c.num}
-                className={c.id ? 'nl-case-row nl-case-row-open' : 'nl-case-row nl-case-row-locked'}
-                onClick={c.id ? () => onOpen(c.id!) : undefined}
+                key={row.num}
+                className={row.id ? 'nl-case-row nl-case-row-open' : 'nl-case-row nl-case-row-locked'}
+                onClick={row.id ? () => onOpen(row.id!) : undefined}
               >
-                <span className="v-num nl-case-num">{c.num}</span>
-                <span className="v-title nl-case-title">{c.id ? caseTitle : c.title}</span>
-                <span className="v-micro nl-case-est">{c.est}</span>
-                <span className="pr-badge">{c.diff}</span>
-                <span className={c.id && started ? 'nl-chip nl-chip-live' : 'nl-chip'}>
-                  {c.id ? (started ? '진행 중' : '미플레이') : '준비 중'}
+                <span className="v-num nl-case-num">{row.num}</span>
+                <span className="v-title nl-case-title">{row.id ? c.title : row.title}</span>
+                <span className="v-micro nl-case-est">{row.est}</span>
+                {/* 난이도 배지는 중립색이다(원본 2044행 diffStyle) — 난이도가 곧 유용도 신호가 되지 않도록 */}
+                <span className="pr-badge nl-case-diff">{row.diff}</span>
+                <span className={row.id && started ? 'nl-chip nl-chip-live' : 'nl-chip'}>
+                  {row.id ? (started ? '진행 중' : '미플레이') : '준비 중'}
                 </span>
               </div>
             ))}
           </div>
 
+          {/* 원본 1098행 — 사건 행이 아니라 캘린더 아이콘이 붙은 단독 카드다 */}
           <div className="v-caption nl-home-group">오늘의 사건</div>
-          <div className="nl-home-list">
-            <div className="nl-case-row nl-case-row-locked">
-              <span className="v-title nl-case-title">오늘의 사건</span>
-              <span className="v-micro nl-case-est">매일 새 사건 · 순위표</span>
-            </div>
+          <div className="nl-home-daily">
+            <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4">
+              <rect x="2.5" y="3" width="11" height="11" rx="1.5" />
+              <path d="M2.5 6h11M6 2v2M10 2v2" />
+            </svg>
+            <span className="v-title nl-home-daily-label">오늘의 사건</span>
+            <span className="v-meta" style={{ color: 'var(--fg-4)' }}>매일 새 사건 · 순위표</span>
           </div>
 
+          {/* 원본 1104~1106행 — 점선 테두리가 '아직 없는 것'의 표시다 */}
           <div className="v-caption nl-home-group">더 보기</div>
           <div className="nl-home-more">
             {[
@@ -99,8 +107,8 @@ export function Home({
               { label: '협동', when: 'v2' },
             ].map((m) => (
               <div key={m.label} className="nl-home-more-card">
-                <span className="v-ui">{m.label}</span>
-                <span className="v-micro" style={{ color: 'var(--fg-4)' }}>{m.when}</span>
+                <span className="v-title nl-home-more-label">{m.label}</span>
+                <span className="pr-badge nl-home-more-badge">{m.when}</span>
               </div>
             ))}
           </div>
@@ -108,13 +116,4 @@ export function Home({
       </div>
     </div>
   )
-}
-
-function stageLabel(p: CaseProgress): string {
-  switch (p.stage) {
-    case 'prologue': return '프롤로그'
-    case 'brief': return '사건 브리핑'
-    case 'read': return '진술 정독'
-    default: return '수사 중'
-  }
 }
