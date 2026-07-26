@@ -8,17 +8,18 @@
     <title>노바디 라이즈</title>
 
     <!--
-      Vector Design System — DC export 가 요구하는 로드 순서 그대로다.
-      `_ds_bundle.js` 가 `window.VectorDesignSystem_490b73` 을 심고 `App.jsx` 의
-      Button·StatusIcon 래퍼가 그것을 집어간다. **module 로 바꾸거나 순서를
-      뒤집으면 렌더 시점에 전역이 없어서 조용히 폴백된다.**
+      Vector Design System 토큰·스타일. 컴포넌트 번들(`_ds_bundle.js`)은
+      **여기서 불러오지 않는다** — 그 번들이 모듈 최상단에서 `React` 를 전역으로
+      참조하는데, Vite 는 React 를 ES 모듈로 넣기 때문에 이 시점엔 전역이 없다.
+      그러면 `Button` 이 컴파일에 실패해 `undefined` 가 되고, 래퍼가 조용히
+      민 `<button>` 으로 폴백해서 **버튼이 브라우저 기본 흰 버튼으로 나온다.**
+      `src/main.jsx` 가 React 를 심은 뒤에 불러온다.
     -->
     <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
     <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/app.css">
     <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/sidebar-hover-actions.css">
     <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/numeric-typography.css">
     <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
-    <script src="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
   </head>
   <body>
     <div id="root"></div>
