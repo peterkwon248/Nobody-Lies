@@ -389,6 +389,89 @@ export default class App extends React.Component {
 
   /**
    * ─────────────────────────────────────────────────────────────────
+   *  사건 파일이 정본인 것들
+   * ─────────────────────────────────────────────────────────────────
+   *
+   * 층은 둘로 가른다 (`docs/NEXT-ACTION.md`):
+   *
+   *   숫자 · 사실 · 어휘 · **사건 산문**        → 엔진
+   *   클래스 · 구조 · 스타일 · **UI 문구**      → 프로토타입(이 파일)
+   *
+   * 그래서 표를 통째로 갈아끼우지 않고 **필드 단위로** 덮어쓴다. 앱 표는
+   * 엔진의 상위집합이다 — 평면도 좌표·영문·역할 라벨은 엔진에 없다.
+   * 통째로 바꾸면 그것들이 사라지고, 안 바꾸면 사건이 두 벌이 된다.
+   *
+   * ★ 덮어쓰는 것만 적는다 ★ 여기 없는 표(조사·확보 단어 후보)는 아직
+   * 앱이 정본이다. 조사는 모델이 다르고(앱 6동사×대상 ↔ 엔진 23구체),
+   * 후보 풀은 decoy 셋이 앱에만 있다 — 둘 다 결정이 필요하다.
+   */
+  applyCase(c) {
+    if (!c) return
+    const ko = (t) => (t && typeof t === 'object' ? t.ko : t) || ''
+
+    if (typeof c.budget === 'number') this.BUDGET = c.budget
+    if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
+
+    // 인물 — **표시 속성(색·이니셜·역할·좌표)은 건드리지 않는다**
+    for (const e of c.people ?? []) {
+      const p = this.PEOPLE.find((x) => x.id === e.id)
+      if (!p) continue
+      if (e.name) p.name = e.name
+      if (e.age != null) p.age = e.age
+      if (e.job) p.jobKo = e.job
+      if (e.claimSummary) p.claimKo = ko(e.claimSummary)
+      // 진술 원문과 지문 — 사건 산문이므로 엔진이 정본이다
+      const st = e.statement
+      if (st?.paragraphs?.length) this.STMT[e.id] = st.paragraphs.map(ko)
+      if (st?.gesture) {
+        this.STMT_GESTURE[e.id] = {
+          pre: ko(st.gesture.pre) || this.STMT_GESTURE[e.id]?.pre || '',
+          post: ko(st.gesture.post) || this.STMT_GESTURE[e.id]?.post || '',
+        }
+      }
+    }
+
+    /**
+     * 공란의 답과 조사. 2026-07-26 대조에서 20개가 답·조사까지 1:1 로 맞는 것을
+     * 확인했다. **엔진은 id 로 적고 앱은 표시 이름으로 적으므로** 사람·장소·
+     * 시각은 이름으로 옮긴다.
+     *
+     * ⚠ **`b1..b20` 순서로 맞추면 안 된다.** 앱의 `SECTIONS` 배열은
+     * `s1, s3, s2, s4, s5` 순이다 — 공란 id 는 s 번호를 따르는데 **화면에
+     * 보이는 장 순서는 배열 순서**라, `s2` 가 3장(사인과 현장)이고 `s3` 이
+     * 2장(마지막 정황)이다. id 순으로 이으면 2장과 3장의 답이 뒤바뀐다.
+     * 그래서 `SECTIONS` 배열 순서 ↔ 엔진 `chapters` 순서로 잇는다.
+     */
+    const nameOf = (label, id) => {
+      if (label === '장소') return c.locations?.find((l) => l.id === id)?.label ?? id
+      if (label === '시각') return c.slots?.find((s) => s.id === id)?.label ?? id
+      return c.people?.find((p) => p.id === id)?.name
+        ?? (c.victim === id ? c.victimProfile?.name : null) ?? id
+    }
+    this.SECTIONS.forEach((sec, i) => {
+      const ch = c.chapters?.[i]
+      const bids = this.SEC_BLANKS[sec.id] ?? []
+      if (!ch || ch.blanks?.length !== bids.length) {
+        // 개수가 어긋나면 **아무것도 하지 않는다.** 어긋난 채 반쯤 덮어쓰면
+        // 사건이 조용히 달라지고 아무도 못 잡는다
+        console.warn(`[nobody-lies] ${sec.id} 공란 수가 엔진과 다르다 — 이 장은 앱 값을 쓴다`)
+        return
+      }
+      bids.forEach((bid, n) => {
+        const b = ch.blanks[n]
+        this.BLANKS[bid].ans = nameOf(b.label, b.answer)
+        this.BLANKS[bid].par = b.particle ?? null
+      })
+    })
+  }
+
+  constructor(props) {
+    super(props)
+    this.applyCase(props?.caseData)
+  }
+
+  /**
+   * ─────────────────────────────────────────────────────────────────
    *  진행 저장
    * ─────────────────────────────────────────────────────────────────
    *
