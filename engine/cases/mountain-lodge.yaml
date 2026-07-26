@@ -60,10 +60,10 @@ terms:
     note: { ko: 방 안 화로에서 타고 있었다., en: It was burning in a brazier inside the room. }
   - word: 일산화탄소 중독
     source: { ko: 시신 정밀 검사, en: Detailed autopsy }
-    note: { ko: 외상은 없고, 혈중 일산화탄소 농도가 높았다., en: "No external wounds; blood carbon-monoxide levels were high." }
+    note: { ko: "외상은 없고, 혈중 일산화탄소 농도가 높았다.", en: "No external wounds; blood carbon-monoxide levels were high." }
   - word: 유서
     source: { ko: 소지품 검사 · 문세라, en: Belongings · Se-ra }
-    note: { ko: 완성되지 않은 초안이었고, 필체가 원고와 달랐다., en: "An unfinished draft; the handwriting differed from the manuscript." }
+    note: { ko: "완성되지 않은 초안이었고, 필체가 원고와 달랐다.", en: "An unfinished draft; the handwriting differed from the manuscript." }
   - word: 김선생
     source: { ko: 별채 수색 · 소지품 검사, en: Annex search · belongings }
     note: { ko: 여러 기록에 반복 등장하는 호칭이었다., en: A name that recurs across several records. }
@@ -75,14 +75,14 @@ terms:
     note: { ko: 기록에 남은 메시지가 같은 시점을 가리켰다., en: Messages in the records pointed to the same moment. }
   - word: 별채 대포폰
     source: { ko: 별채 수색, en: Annex search }
-    note: { ko: 가입자 정보가 없었고, 저장된 번호는 하나뿐이었다., en: "No subscriber on record; only one number was saved." }
+    note: { ko: "가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.", en: "No subscriber on record; only one number was saved." }
   - word: 치정
     source: { ko: 진술 정황, en: Statement context }
     note: { ko: 진술에 관련 정황이 있었다., en: Related context appeared in statements. }
   # 아래 둘은 프로토타입에 없다 — 엔진 전용 물증(e_receipt · e_dryice)에서 새로 썼다
   - word: 영수증
     source: { ko: 다인의 방 · 화로 재 속, en: "Da-in's room · in the brazier ash" }
-    note: { ko: 타다 만 조각이었고, 발행 시각이 전날 오후로 찍혀 있었다., en: "A partly burned scrap; the issue time read the previous afternoon." }
+    note: { ko: "타다 만 조각이었고, 발행 시각이 전날 오후로 찍혀 있었다.", en: "A partly burned scrap; the issue time read the previous afternoon." }
   - word: 물자국
     source: { ko: 다인의 방 · 화로, en: "Da-in's room · brazier" }
     note: { ko: 재 아래 바닥에 둥근 자국이 남아 있었다. 연탄재는 그 위에 덮여 있었다., en: "A round mark on the floor beneath the ash, with the ash lying over it." }
