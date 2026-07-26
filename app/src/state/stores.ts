@@ -172,6 +172,17 @@ export type CaseProgress = {
   solved: number[]
   elapsedMs: number
   clearedAt?: number
+  /**
+   * 안 읽음 — 장을 완성해서 새 정보가 **도착한** 화면들 (원본 `unread`).
+   *
+   * ★ 재촉이 아니라 도착 신호다 ★ 토스트는 「어디에 생겼다」만 말하고 사라지고,
+   * 점은 그 화면에 **들어가면** 사라진다. 무엇이 왔는지는 말하지 않는다 —
+   * 그건 가서 읽을 일이다.
+   *
+   * 목적지는 `Reveal.surface` 가 정한다. 엔진이 이미 「이 공개가 어느 화면에
+   * 내려앉는가」를 갖고 있으므로 그 값을 다시 도출하지 않는다.
+   */
+  unread: string[]
 }
 
 export const newProgress = (caseId: string): CaseProgress => ({
@@ -186,6 +197,7 @@ export const newProgress = (caseId: string): CaseProgress => ({
   answers: {},
   solved: [],
   elapsedMs: 0,
+  unread: [],
 })
 
 // ── 영속화 ────────────────────────────────────────────────────────────

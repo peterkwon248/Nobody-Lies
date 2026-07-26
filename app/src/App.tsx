@@ -49,6 +49,17 @@ const CASE_ID = 'mountain-lodge'
  */
 type Route = 'home' | 'detail' | 'play'
 
+/**
+ * 공개가 내려앉는 화면 — 엔진 `Reveal.surface` → 앱 `View`.
+ *
+ * `graph` 는 관계 그래프다. 엔진이 프로토타입보다 한 칸 세밀해서(`suspect` 가
+ * 따로 있다) 원본의 `unread.narrative`(보고서) 대신 그 값을 그대로 쓴다.
+ */
+const SURFACE_VIEW: Record<string, View> = {
+  statement: 'statements', map: 'map', graph: 'relations',
+  suspect: 'suspects', overview: 'overview',
+}
+
 /** 메모 대상의 종류. 저장 타입과 같은 어휘를 쓴다 */
 type TargetType = NonNullable<PlayerAnnotations['notes'][number]['targetType']>
 
@@ -89,6 +100,12 @@ export default function App() {
   const [memoQuery, setMemoQuery] = useState('')
   /** 담을 곳을 묻는 중인 인용. 「인용 모으기」가 둘 이상일 때만 값이 있다 */
   const [picking, setPicking] = useState<Quote | null>(null)
+  /**
+   * 화면 이동 기록 — 상단 헤더의 뒤로/앞으로 (원본 `navHist`·`navIdx`).
+   * 화면 상태라 저장하지 않는다. 사건을 다시 열면 기록도 처음부터다.
+   */
+  const [navHist, setNavHist] = useState<View[]>(['report'])
+  const [navIdx, setNavIdx] = useState(0)
   /** 열려 있는 인물 상세 (원본 `openProfile`) */
   const [openProfile, setOpenProfile] = useState<string | null>(null)
   /** 「출처 보기」로 뛰어간 조사. 조사 기록에서 잠깐 표시된다 (원본 `hlLog`) */
@@ -237,10 +254,40 @@ export default function App() {
     })
   }, [view, progress.investigations])
 
+  /**
+   * 화면 이동 — 원본 `setView(v, noPush)`(1825행).
+   *
+   * 세 가지를 한다: 그 화면의 **안 읽음 점을 지우고**, 이동 기록에 쌓고, 화면을 바꾼다.
+   * 뒤로/앞으로로 온 이동은 기록에 다시 쌓지 않는다(`noPush`) — 안 그러면
+   * 뒤로 갈 때마다 기록이 길어져서 앞으로가 영영 끝나지 않는다.
+   */
+  const goView = (v: View, noPush = false) => {
+    setProgress((p) => (p.unread.includes(v) ? { ...p, unread: p.unread.filter((x) => x !== v) } : p))
+    if (!noPush && v !== view)
+      setNavHist((h) => {
+        const next = [...h.slice(0, navIdx + 1), v]
+        setNavIdx(next.length - 1)
+        return next
+      })
+    setView(v)
+  }
+
+  const navBack = () => {
+    if (navIdx <= 0) return
+    setNavIdx(navIdx - 1)
+    goView(navHist[navIdx - 1], true)
+  }
+
+  const navForward = () => {
+    if (navIdx >= navHist.length - 1) return
+    setNavIdx(navIdx + 1)
+    goView(navHist[navIdx + 1], true)
+  }
+
   /** 출처 보기 — 조사 기록으로 뛰고 그 카드를 표시한다 (원본 `goToLog`) */
   const jumpToLog = (actionId: string) => {
     setOpenProfile(null)
-    setView('log')
+    goView('log')
     setHlLog(actionId)
   }
 
@@ -426,7 +473,23 @@ export default function App() {
     const ch = c.chapters[idx]
     if (!ch) return
     const filled = ch.blanks.every((_, i) => progress.answers[`${ch.order}:${i}`])
-    if (filled)
+    if (filled) {
+      /**
+       * 새 정보가 **어디에** 내려앉았나 — 원본 1830행대. 목적지는 엔진의
+       * `Reveal.surface` 가 이미 갖고 있으므로 다시 도출하지 않는다.
+       *
+       * ★ 무엇이 왔는지는 말하지 않는다 ★ 토스트도 점도 위치만 가리킨다.
+       * 내용을 여기 담으면 *"한 번 보여주고 사라지는 텍스트"* 가 된다(§0.3).
+       */
+      const landed = [...new Set(
+        (c.reveals ?? [])
+          .filter((r) => r.trigger.on === 'chapterComplete' && r.trigger.chapterOrder === ch.order)
+          .map((r) => SURFACE_VIEW[r.surface])
+          .filter(Boolean),
+      )]
+      if (landed.length)
+        setToast(`새 정보가 공개되었습니다 · ${landed.map((v) => VIEW_LABEL[v]).join(' · ')}`)
+
       setProgress((p) => {
         const solved = [...p.solved, idx]
         // 마지막 장이 차면 그 자리에서 클리어다 (원본 `caseStatus()` = `allSealed()`).
@@ -435,8 +498,11 @@ export default function App() {
           ...p,
           solved,
           status: solved.length === c.chapters.length ? 'cleared' : p.status,
+          // 지금 보고 있는 화면은 안 읽음으로 찍지 않는다 — 이미 보고 있다
+          unread: [...new Set([...p.unread, ...landed])].filter((v) => v !== view),
         }
       })
+    }
   }, [c, progress.answers, progress.solved])
 
   useEffect(() => { save('progress', CASE_ID, progress) }, [progress])
@@ -608,7 +674,12 @@ export default function App() {
           progress={progress}
           annotations={annotations}
           view={view}
-          onView={setView}
+          onView={goView}
+          unread={progress.unread}
+          canBack={navIdx > 0}
+          canForward={navIdx < navHist.length - 1}
+          onBack={navBack}
+          onForward={navForward}
           onHome={() => setRoute('home')}
           onAbandon={() => setAsk('abandon')}
           onAddMemo={addMemo}

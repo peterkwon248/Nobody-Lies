@@ -4647,3 +4647,22 @@ body {
 }
 
 .nl-pb-piece:hover .nl-pb-port { opacity: 0.42; }
+
+/* 안 읽음 점 — 원본 96·106행. 6px accent 원 **하나뿐이다.**
+   개수도 내용도 말하지 않는다. 「저기 뭔가 왔다」가 전부다 */
+.nl-unread {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 6px;
+  flex: none;
+}
+
+/* 뒤로/앞으로 — 원본 157행. 갈 곳이 없으면 흐려질 뿐 사라지지 않는다 */
+.nl-nav-hist {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 8px;
+}

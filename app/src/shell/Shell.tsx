@@ -138,6 +138,11 @@ export function Shell({
   annotations,
   view,
   onView,
+  unread,
+  canBack,
+  canForward,
+  onBack,
+  onForward,
   onHome,
   onAbandon,
   onAddMemo,
@@ -153,6 +158,15 @@ export function Shell({
   annotations: PlayerAnnotations
   view: View
   onView: (v: View) => void
+  /**
+   * 새 정보가 도착한 화면들. **재촉이 아니라 도착 신호다** — 무엇이 왔는지는
+   * 말하지 않고, 그 화면에 들어가면 사라진다 (원본 `nav.*Unread`)
+   */
+  unread: string[]
+  canBack: boolean
+  canForward: boolean
+  onBack: () => void
+  onForward: () => void
   onHome: () => void
   onAbandon: () => void
   onAddMemo: () => void
@@ -214,6 +228,9 @@ export function Shell({
                     {it.id === 'memo' && annotations.notes.length > 0 && (
                       <span className="count">{annotations.notes.length}</span>
                     )}
+                    {/* 안 읽음 점 — 원본 96·106행 등. 6px accent 원 하나뿐이고
+                        개수도 내용도 말하지 않는다 */}
+                    {unread.includes(it.id) && <span className="nl-unread" />}
                   </div>
                 ))}
               </div>
@@ -248,6 +265,26 @@ export function Shell({
               <PanelIcon side="left" />
             </button>
           )}
+          {/* 뒤로/앞으로 — 원본 157행. 갈 곳이 없으면 **지우지 않고 흐려진다**
+              (`backStyle` 이 opacity .35). 자리가 사라지면 눌렀던 손이 헤맨다 */}
+          <span className="nl-nav-hist">
+            <button
+              className="iconbtn" onClick={onBack} title="뒤로"
+              disabled={!canBack} style={canBack ? undefined : { opacity: 0.35 }}
+            >
+              <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M10 3.5L5.5 8l4.5 4.5" />
+              </svg>
+            </button>
+            <button
+              className="iconbtn" onClick={onForward} title="앞으로"
+              disabled={!canForward} style={canForward ? undefined : { opacity: 0.35 }}
+            >
+              <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M6 3.5L10.5 8 6 12.5" />
+              </svg>
+            </button>
+          </span>
           <div className="viewtitle">
             <h1>{(heading ?? META[view]).title}</h1>
             <span className="v-meta" style={{ marginLeft: 6, color: 'var(--fg-4)' }}>
