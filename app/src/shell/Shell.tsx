@@ -24,7 +24,7 @@ import { DetailPanel } from './DetailPanel'
  */
 export type View =
   | 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'relations'
-  | 'log' | 'board' | 'memo' | 'result'
+  | 'log' | 'board' | 'memo' | 'reference' | 'result'
 
 /** 사이드바에 실제로 서는 항목. `result` 는 여기 없다 */
 type NavView = Exclude<View, 'result'>
@@ -43,6 +43,11 @@ const ICONS: Record<NavView | 'home', React.ReactNode> = {
   log: <><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></>,
   // 원본 121행 — 줄 세 개가 든 종이. 맨 아랫줄만 짧다
   memo: <><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></>,
+  // 원본 1838행 `ICONS.guide` — 가로 막대 둘
+  reference: <>
+    <rect x="2.5" y="2.5" width="11" height="4" rx="1" />
+    <rect x="2.5" y="9.5" width="11" height="4" rx="1" />
+  </>,
   // 원본 1841행 `ICONS.board` — 네모 셋과 그 사이를 잇는 짧은 선
   board: <>
     <rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" />
@@ -68,6 +73,8 @@ const META: Record<View, { title: string; sub: string }> = {
   relations: { title: '관계 그래프', sub: '조사로 드러난 인물·사건의 연결' },
   log: { title: '조사 기록', sub: '수행한 조사가 전문 그대로 남습니다' },
   board: { title: '상황판', sub: '무엇을 옆에 두는지가 곧 추리입니다 · 게임은 판정하지 않습니다' },
+  // 원본 `t.rTitle` · `t.rSub` — 사이드바 이름(표기 안내)과 화면 제목이 다르다
+  reference: { title: '상태 레퍼런스', sub: '공란 2상태 · 장 2상태 · 셀 마킹' },
   // 원본 2831~2832행 — `t.memoTitle` · `t.annHint`
   memo: { title: '메모장', sub: '문장을 눌러 표시하거나 인용하세요' },
   /** 제목은 채점 결과로 갈리므로 App 이 `heading` 으로 덮어쓴다 (원본 2831행) */
@@ -92,6 +99,7 @@ const NAV: { group: string; items: { id: NavView; label: string }[] }[] = [
     // 원본 [도구] 순서 — navBoard · navMemo · navReference
     { id: 'board', label: '상황판' },
     { id: 'memo', label: '메모' },
+    { id: 'reference', label: '표기 안내' },
   ] },
 ]
 

@@ -22,6 +22,7 @@ import { Result } from './screens/Result'
 import { SuspectDetail } from './screens/SuspectDetail'
 import { Relations } from './screens/Relations'
 import { BoardView } from './screens/BoardView'
+import { Reference } from './screens/Reference'
 import { scoreCase } from './case/score'
 import { Shell, type View } from './shell/Shell'
 import { deriveFacts, deriveTerms } from '@engine/verifier'
@@ -247,7 +248,7 @@ export default function App() {
   const VIEW_LABEL: Record<View, string> = {
     overview: '사건 개요', report: '사건 보고서', statements: '진술', map: '현장',
     log: '조사 기록', suspects: '용의자', memo: '메모장', relations: '관계 그래프',
-    board: '상황판',
+    board: '상황판', reference: '상태 레퍼런스',
     // 원본 `ctxMap`(2685행)에 result 가 없다 — 결말에서 적은 메모는 시각만 남는다
     result: '',
   }
@@ -667,6 +668,7 @@ export default function App() {
               onBoard={(board) => setAnnotations((a) => ({ ...a, board }))}
             />
           )}
+          {view === 'reference' && <Reference />}
           {view === 'result' && (
             <Result c={c} progress={progress} onHome={() => setRoute('home')} />
           )}

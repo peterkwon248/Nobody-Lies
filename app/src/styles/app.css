@@ -4442,3 +4442,165 @@ body {
   white-space: pre-wrap;
   word-break: keep-all;
 }
+
+/* ── 표기 안내 ───────────────────────────────────────────────────────
+   원본 747~820행. 완성된 게임 전체의 범례라 맨 마지막에 옮겼다.
+   ★ 견본은 사건과 무관하다 ★ 실제 인물·장소를 예로 들면 그게 곧 힌트다. */
+
+.nl-ref {
+  padding: 22px 24px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.nl-ref-intro {
+  color: var(--fg-3);
+  margin-bottom: 22px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.nl-ref-cap {
+  display: block;
+  color: var(--fg-2);
+  margin: 22px 0 12px;
+}
+
+.nl-ref-cap:first-of-type { margin-top: 8px; }
+
+.nl-ref-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.nl-ref-grid-wide { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.nl-ref-grid-narrow { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+.nl-ref-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 14px 16px;
+}
+
+.nl-ref-card-dim { opacity: 0.7; }
+.nl-ref-card-strong { border-color: var(--border-strong); }
+.nl-ref-card-done { background: rgba(76, 183, 130, 0.04); }
+.nl-ref-card-flush { padding: 0; overflow: hidden; }
+.nl-ref-card-reveal { border-left: 2px solid var(--accent); }
+
+.nl-ref-t { color: var(--fg); }
+
+.nl-ref-d {
+  color: var(--fg-4);
+  margin-top: 3px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 공란 견본 — 보고서의 실제 조판과 같은 크기여야 알아본다 */
+.nl-ref-sample {
+  font-size: 15px;
+  line-height: 2;
+  color: var(--fg-2);
+  margin-bottom: 12px;
+}
+
+.nl-ref-blank-empty {
+  display: inline-block;
+  min-width: 58px;
+  text-align: center;
+  border-bottom: 1.5px dashed var(--g-empty-line);
+  color: var(--fg-4);
+  padding: 0 9px 2px;
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+}
+
+.nl-ref-blank-fill {
+  display: inline-block;
+  background: var(--g-fill-bg);
+  color: var(--g-fill-fg);
+  font-weight: var(--fw-semi, 600);
+  padding: 1px 9px;
+  border-radius: var(--r-sm, 6px);
+}
+
+.nl-ref-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.nl-ref-chip {
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  color: var(--fg-4);
+}
+
+.nl-ref-chip-done { background: var(--g-lock-bg); color: var(--g-lock-mark); }
+
+/* 셀 마킹 견본 — 격자 칸을 그대로 잘라온 모양 */
+.nl-ref-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-ref-cell-icon {
+  font-weight: var(--fw-bold, 700);
+  font-size: 13px;
+}
+
+.nl-ref-cell-sample {
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+.nl-ref-cell-body { padding: 10px 12px; }
+
+.nl-ref-ann {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  margin-bottom: 10px;
+}
+
+.nl-ref-ann-sample {
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.nl-ref-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.nl-ref-slot-k {
+  color: var(--fg-4);
+  width: 40px;
+  flex: none;
+}
+
+.nl-ref-slot-dash {
+  flex: 1;
+  border-bottom: 1.5px dashed var(--border-strong);
+}
+
+.nl-ref-new {
+  font-size: 9px;
+  font-weight: var(--fw-bold, 700);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0 5px;
+  flex: none;
+}
