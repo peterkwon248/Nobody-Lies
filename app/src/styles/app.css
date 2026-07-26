@@ -743,6 +743,164 @@ body {
   pointer-events: none;
 }
 
+/* ── 조사 ────────────────────────────────────────────────────────────
+   원본 875~911행.
+
+   ★ 목록은 평평하다 ★ 결정적 조사와 레드 헤링이 완전히 같게 생긴다.
+   상태 셋(가능·잔여 부족·완료)만 사실로 표시한다 — 그건 내가 한 일이지
+   게임의 판정이 아니다. */
+
+.nl-inv {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 22px 24px 64px;
+}
+
+.nl-inv-budget {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.nl-inv-budget-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nl-inv-num {
+  font-size: 22px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg);
+}
+
+.nl-inv-den {
+  font-size: 13px;
+  color: var(--fg-4);
+}
+
+.nl-inv-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.nl-pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-elevated-2);
+}
+
+.nl-pip-on {
+  background: var(--accent);
+}
+
+.nl-inv-hint {
+  color: var(--fg-4);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.nl-inv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nl-inv-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid var(--border-strong);
+  color: var(--fg-2);
+}
+
+.nl-inv-row-ok {
+  cursor: pointer;
+}
+
+.nl-inv-row-ok:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* 완료·잠김·부족은 흐려진다. 셋의 차이는 문구가 말한다 */
+.nl-inv-row-used,
+.nl-inv-row-locked,
+.nl-inv-row-nobudget {
+  opacity: 0.45;
+}
+
+.nl-inv-label {
+  color: inherit;
+}
+
+.nl-inv-cost,
+.nl-inv-state {
+  color: var(--fg-4);
+}
+
+.nl-inv-done {
+  color: var(--g-confirm);
+}
+
+/* 조사 결과 카드 — 원본 1232~1241행 */
+.nl-result {
+  width: 520px;
+  max-width: 92vw;
+  background: var(--bg-app);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg, 12px);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.nl-result-accent {
+  height: 3px;
+}
+
+.nl-result-body {
+  padding: 22px 24px;
+}
+
+.nl-result-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.nl-result-badge {
+  font-size: 10px;
+  font-weight: var(--fw-bold, 700);
+  border-radius: var(--r-pill, 999px);
+  padding: 2px 8px;
+}
+
+.nl-result-title {
+  color: var(--fg);
+  margin-bottom: 12px;
+}
+
+.nl-result-text {
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+.nl-result-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
 /* ── 현장 평면도 ─────────────────────────────────────────────────────
    원본 483~519행. 도면은 16:10 비율 안에 비율 좌표로 배치된다.
 
@@ -2031,4 +2189,24 @@ body {
   margin-top: 5px;
   color: var(--fg-4);
   font-size: 10px;
+}
+
+/* 도면에서 누를 수 있는 지점. **커서와 테두리만** 바뀐다 —
+   펄스나 확대를 넣으면 그게 곧 「여길 봐」가 된다 (평면도 규율) */
+.nl-map-loc-hot {
+  cursor: pointer;
+}
+
+.nl-map-loc-hot:hover {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+  border-radius: var(--r-sm, 6px);
+}
+
+.nl-map-fix-hot {
+  cursor: pointer;
+}
+
+.nl-map-fix-hot:hover {
+  filter: brightness(1.25);
 }

@@ -17,7 +17,7 @@ import { DetailPanel } from './DetailPanel'
  * 만들지 않는다. 남은 예산처럼 사실인 것만 적는다.
  */
 
-export type View = 'overview' | 'report' | 'statements' | 'map'
+export type View = 'overview' | 'report' | 'statements' | 'map' | 'investigate'
 
 /** 아이콘은 프로토타입 84~118행의 인라인 SVG 그대로다 */
 const ICONS: Record<View | 'home', React.ReactNode> = {
@@ -27,6 +27,8 @@ const ICONS: Record<View | 'home', React.ReactNode> = {
   statements: <><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></>,
   // 원본 104행
   map: <><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></>,
+  // 원본 113행 — 돋보기
+  investigate: <><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></>,
 }
 
 /** 화면 제목과 부제. 문구는 프로토타입 `t.nTitle`·`t.nSub` 등에서 가져왔다 */
@@ -35,6 +37,7 @@ const META: Record<View, { title: string; sub: string }> = {
   report: { title: '사건 보고서', sub: '공란을 모두 채우면 장이 완성됩니다 · 마지막에 제출' },
   statements: { title: '진술', sub: '다섯 사람의 원문 진술' },
   map: { title: '현장', sub: '시간대별 주장 위치 · 지도는 판정하지 않습니다' },
+  investigate: { title: '조사', sub: '예산을 쓰는 유일한 자리 · 되돌릴 수 없습니다' },
 }
 
 const NAV: { group: string; items: { id: View; label: string }[] }[] = [
@@ -45,6 +48,7 @@ const NAV: { group: string; items: { id: View; label: string }[] }[] = [
   { group: '단서', items: [
     { id: 'statements', label: '진술' },
     { id: 'map', label: '현장 평면도' },
+    { id: 'investigate', label: '조사' },
   ] },
 ]
 

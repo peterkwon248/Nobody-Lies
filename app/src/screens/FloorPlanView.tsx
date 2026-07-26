@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Case } from '@engine/types'
+import type { Action, Case } from '@engine/types'
 import { claimedLocationAt } from '@engine/deriver'
 import { buildGeometry, markerSpot, pctX, pctY } from '../map/geometry'
 import { personColor } from '../case/people'
@@ -21,12 +21,17 @@ export function FloorPlanView({
   c,
   solved,
   investigatedLocs,
+  actionAt,
+  onAsk,
 }: {
   c: Case
   /** 완성된 장 인덱스. 별채가 여기서 열린다 */
   solved: number[]
   /** 이미 수색한 장소 id */
   investigatedLocs: Set<string>
+  /** 이 지점에 걸린 조사와 그 상태. 없으면 누를 수 없다 */
+  actionAt: (kind: 'location' | 'fixture', id: string) => { action: Action; state: string } | null
+  onAsk: (a: Action) => void
 }) {
   const fp = c.floorPlan
   const [slot, setSlot] = useState(c.slots[0]?.id ?? '')
@@ -141,8 +146,12 @@ export function FloorPlanView({
           const searched = a.loc ? investigatedLocs.has(a.loc) : false
           const scene = 'scene' in a && a.scene
           const offsite = 'offsite' in a && a.offsite
+          const hit = a.loc ? actionAt('location', a.loc) : null
+          const can = hit?.state === 'ok'
           return (
-            <div key={a.id} className="nl-map-loc"
+            <div key={a.id}
+              className={can ? 'nl-map-loc nl-map-loc-hot' : 'nl-map-loc'}
+              onClick={can ? () => onAsk(hit!.action) : undefined}
               style={{ left: `${X(a.x)}%`, top: `${Y(a.y)}%`, width: `${X(a.w)}%`, height: `${Y(a.h)}%` }}>
               <div className="nl-map-loc-head">
                 <span className="nl-map-loc-name"
@@ -163,9 +172,17 @@ export function FloorPlanView({
         })}
 
         {/* 고정물 — 화로·창문·금고·시신 */}
-        {fp.fixtures && Object.entries(fp.fixtures).map(([id, pos]) => (
-          <span key={id} className="nl-map-fix"
-            style={{ left: `${X(pos.x)}%`, top: `${Y(pos.y)}%`, color: id === 'body' ? 'var(--g-contradict)' : 'var(--fg-4)' }}>
+        {fp.fixtures && Object.entries(fp.fixtures).map(([id, pos]) => {
+          const hit = actionAt('fixture', id)
+          const can = hit?.state === 'ok'
+          const done = hit?.state === 'used'
+          return (
+          <span key={id}
+            className={can ? 'nl-map-fix nl-map-fix-hot' : 'nl-map-fix'}
+            title={hit?.action.label}
+            onClick={can ? () => onAsk(hit!.action) : undefined}
+            style={{ left: `${X(pos.x)}%`, top: `${Y(pos.y)}%`,
+              color: id === 'body' ? 'var(--g-contradict)' : done ? 'var(--g-confirm)' : can ? 'var(--accent)' : 'var(--fg-4)' }}>
             {id === 'body' ? (
               <svg width="26" height="26" viewBox="0 0 26 26">
                 <path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round" />
@@ -176,7 +193,8 @@ export function FloorPlanView({
               </svg>
             )}
           </span>
-        ))}
+          )
+        })}
 
         {/* 인물 마커 — **주장한** 위치다 */}
         {markers.map((m) => (

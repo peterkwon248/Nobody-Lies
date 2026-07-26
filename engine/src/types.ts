@@ -231,6 +231,14 @@ export type Action = {
   /** N개 장을 확인해야 조사 대상이 열림 */
   availableAfter?: number
   /**
+   * 이 조사를 여는 지점. **평면도가 이 값으로 상자·고정물에 조사를 매단다.**
+   *
+   * 없으면 조사 화면 목록에서만 실행된다(알리바이 대조처럼 장소가 없는 것).
+   * `id` 는 `kind` 에 따라 `locations` · `floorPlan.fixtures` · `people` 을 가리키고,
+   * **검증기가 그 참조를 검사한다** — 도면을 고치면 조사가 조용히 끊긴다.
+   */
+  target?: { kind: 'location' | 'fixture' | 'person'; id: string }
+  /**
    * 조사 결과문. **`gives` 바로 옆에 있어야 한다.**
    *
    * 2026-07-24 플레이테스트에서 터진 버그가 정확히 이 둘이 떨어져 있어서였다 —

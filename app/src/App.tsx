@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Case } from '@engine/types'
+import type { Action, Case } from '@engine/types'
 import { loadCase } from './case/loadCase'
 import {
   emptyAnnotations, load, newProgress, save,
@@ -14,6 +14,7 @@ import { Report } from './screens/Report'
 import { Overview } from './screens/Overview'
 import { StatementList } from './screens/StatementList'
 import { FloorPlanView } from './screens/FloorPlanView'
+import { Investigate, ResultCard, actionState } from './screens/Investigate'
 import { Shell, type View } from './shell/Shell'
 import { deriveTerms } from '@engine/verifier'
 import { TopBar } from './components/TopBar'
@@ -45,6 +46,9 @@ export default function App() {
   const [view, setView] = useState<View>('report')
   /** 확인 모달. 화면 상태라 저장하지 않는다 */
   const [ask, setAsk] = useState<'abandon' | 'finish' | null>(null)
+  /** 조사 확인 대기 · 조사 결과 카드. 화면 상태라 저장하지 않는다 */
+  const [pending, setPending] = useState<Action | null>(null)
+  const [result, setResult] = useState<Action | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [progress, setProgress] = useState<CaseProgress>(() =>
     load('progress', CASE_ID, newProgress(CASE_ID)),
@@ -111,6 +115,7 @@ export default function App() {
   /** 화면 이름. 메모가 「어디서 적었나」를 남긴다 (원본 `memoMeta`) */
   const VIEW_LABEL: Record<View, string> = {
     overview: '사건 개요', report: '사건 보고서', statements: '진술', map: '현장',
+    investigate: '조사',
   }
 
   const addMemo = () =>
@@ -156,6 +161,22 @@ export default function App() {
   /** 편집 완료 — 다시 잠근다. **`reopensUsed` 는 그대로 둔다**(장당 1회) */
   const closeReopen = (order: number) =>
     setProgress((p) => ({ ...p, reopensOpen: { ...p.reopensOpen, [order]: false } }))
+
+  /**
+   * 조사 실행 — 예산을 쓰는 유일한 자리.
+   *
+   * 확보 단어는 여기서 손대지 않는다. `deriveTerms` 가 `investigations` 에서
+   * 다시 계산하므로 **같은 계산이 두 벌 생기지 않는다.**
+   */
+  const runInvestigation = (a: Action) => {
+    setProgress((p) => ({
+      ...p,
+      actionsUsed: p.actionsUsed + a.cost,
+      investigations: [...p.investigations, { actionId: a.id, at: Date.now() }],
+    }))
+    setAsk(null)
+    setResult(a)
+  }
 
   const markRead = (person: string) =>
     setProgress((p) =>
@@ -253,6 +274,19 @@ export default function App() {
         />
       )}
 
+      {pending && (
+        <Confirm
+          title={pending.label}
+          body={`조사 ${pending.cost}회를 사용합니다. 되돌릴 수 없습니다.`}
+          confirmLabel="조사"
+          width={380}
+          onConfirm={() => runInvestigation(pending)}
+          onCancel={() => setPending(null)}
+        />
+      )}
+
+      {result && <ResultCard a={result} onClose={() => setResult(null)} />}
+
       {toast && <Toast message={toast} />}
     </>
   )
@@ -326,12 +360,35 @@ export default function App() {
               onQuote={(q) => quoteToMemo(q, '확정')}
             />
           )}
+          {view === 'investigate' && (
+            <Investigate
+              c={c}
+              used={new Set(progress.investigations.map((iv) => iv.actionId))}
+              remaining={c.budget - progress.actionsUsed}
+              solvedCount={progress.solved.length}
+              onAsk={setPending}
+            />
+          )}
           {view === 'map' && (
             <FloorPlanView
               c={c}
               solved={progress.solved}
               /* 조사 시스템(P) 이 붙으면 실제 수색 기록이 들어온다 */
-              investigatedLocs={new Set(progress.investigations.map((iv) => iv.actionId))}
+              investigatedLocs={new Set(
+                progress.investigations
+                  .map((iv) => c.actions.find((a) => a.id === iv.actionId)?.target)
+                  .filter((t) => t?.kind === 'location')
+                  .map((t) => t!.id),
+              )}
+              /* 도면에서 누르면 조사가 열린다. 실행 가능한 것만 건다 */
+              actionAt={(kind, id) => {
+                const a = c.actions.find((x) => x.target?.kind === kind && x.target.id === id)
+                if (!a) return null
+                const used = new Set(progress.investigations.map((iv) => iv.actionId))
+                const st = actionState(c, a, used, c.budget - progress.actionsUsed, progress.solved.length)
+                return { action: a, state: st }
+              }}
+              onAsk={setPending}
             />
           )}
           {view === 'statements' && (

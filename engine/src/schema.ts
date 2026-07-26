@@ -283,6 +283,7 @@ export function parseCase(raw: unknown, source: string): Case {
         title: text(a.result.title) ?? { ko: '' },
         body: text(a.result.body) ?? { ko: '' },
       } } : {}),
+      ...(a?.target ? { target: { kind: a.target.kind, id: a.target.id } } : {}),
     }
   })
   const actionIds = new Set(actions.map((a) => a.id))

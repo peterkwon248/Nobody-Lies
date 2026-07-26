@@ -619,6 +619,28 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  // 9-4. 조사 ↔ 조사 지점 정합
+  //
+  // `target` 이 가리키는 것이 사라지면 **조사가 조용히 실행 불가가 된다** —
+  // 화면에는 아무 일도 안 일어나고 예산도 안 줄고 오류도 안 난다.
+  {
+    const locIds = new Set(c.locations.map((l) => l.id))
+    const fixIds = new Set(Object.keys(c.floorPlan?.fixtures ?? {}))
+    const personIds = new Set([...c.people.map((p) => p.id), c.victim])
+    for (const a of c.actions) {
+      const t = a.target
+      if (!t) continue
+      const pool = t.kind === 'location' ? locIds : t.kind === 'fixture' ? fixIds : personIds
+      if (!pool.has(t.id))
+        errors.push(`조사 '${a.label}' 의 대상이 없다: ${t.kind} '${t.id}'`)
+    }
+    // 도면에 놓였는데 아무 조사도 걸리지 않은 고정물 — 눌러도 아무 일이 없다
+    const targeted = new Set(c.actions.map((a) => a.target).filter(Boolean).map((t) => `${t!.kind}:${t!.id}`))
+    for (const id of fixIds)
+      if (!targeted.has(`fixture:${id}`))
+        warnings.push(`고정물 '${id}' 에 걸린 조사가 없다 — 눌러도 아무 일이 없다`)
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
