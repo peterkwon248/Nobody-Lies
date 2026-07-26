@@ -30,10 +30,16 @@ export function InvestigationLog({
   c,
   progress,
   onAsk,
+  highlight,
 }: {
   c: Case
   progress: CaseProgress
   onAsk: (a: Action) => void
+  /**
+   * 「출처 보기 ↗」로 뛰어온 조사. **테두리만 accent 로 바뀌고 2.2초 뒤 꺼진다**
+   * (원본 `hlLog`, 2015행). 계속 켜두면 그게 「여길 봐」가 된다
+   */
+  highlight?: string | null
 }) {
   const done = progress.investigations
     .map((iv) => ({ iv, a: c.actions.find((x) => x.id === iv.actionId) }))
@@ -54,7 +60,11 @@ export function InvestigationLog({
             const k = KIND[a.yield] ?? KIND.empty
             const empty = a.yield === 'empty'
             return (
-              <div key={a.id} className="nl-log-card">
+              <div
+                key={a.id}
+                className="nl-log-card"
+                style={highlight === a.id ? { borderColor: 'var(--accent)' } : undefined}
+              >
                 <div className="nl-log-bar" style={{ background: k.color }} />
                 <div className="nl-log-top">
                   <span

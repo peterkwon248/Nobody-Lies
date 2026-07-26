@@ -21,14 +21,36 @@ export type PlayerAnnotations = {
   notes: {
     id: string
     content: string
+    /**
+     * 인용 원문. **따옴표를 붙이지 않은 날것이다** — 원본 `m.quote` 가 그렇고,
+     * 화면이 `“…”` 를 그린다(메모장 401행 · 우측 패널 966행). 문자열에 미리
+     * 박아두면 인용한 사람(`quoteWho`)을 따로 쓸 자리가 사라진다.
+     */
     quote?: string
+    /** 누구의 말인가. 원본 `quotePid` → 「— 서지안 · 인용」 */
+    quoteWho?: string
     /** 인용의 층위. 확정(물증)과 주장(진술)을 섞지 않는다 — `HANDOFF` §6 */
     source?: '확정' | '주장'
+    /**
+     * 대상의 **종류**. 원본 `targetType`.
+     *
+     * `target` 하나만으로는 「서지안」이 인물인지 그 사람의 진술인지 구분이 안 된다.
+     * 메모장의 필터·정렬·왼쪽 색 막대가 전부 이 값으로 갈린다.
+     */
+    targetType?: '없음' | '인물' | '진술' | '물증'
     target?: string
     /** 만든 시각. 원본 `memoMeta()` 가 「오전 10:23 · 사건 보고서」를 만든다 */
     at?: number
     /** 어느 화면에서 만들었나. 되짚어 갈 실마리가 된다 */
     context?: string
+    /**
+     * 인용 모으기. 켜둔 메모가 **둘 이상**이면 인용할 때 어디에 담을지 묻고,
+     * **하나**면 묻지 않고 거기에 이어 붙인다 (원본 `routeQuote`).
+     *
+     * 원본은 `quotePins` 라는 별도 맵이라 메모를 지울 때 핀도 따로 지워야 했다.
+     * 메모에 붙여두면 그 짝이 어긋날 자리가 없다.
+     */
+    pinned?: boolean
   }[]
   cellMarks: { person: PersonId; slot: SlotId; kind: '확인' | '의심' | '모순' }[]
   /**
@@ -39,6 +61,15 @@ export type PlayerAnnotations = {
    * 정반대다. **점수와 무관하고 채점에 쓰이지 않는다.**
    */
   verdicts: Record<PersonId, '제외' | '주목' | '유력'>
+  /**
+   * 용의자 화면에서 이미 본 조사. 여기 없는 조사에서 나온 단서에 「신규」가 붙는다
+   * (원본 `seenClues` · `markProfileSeen()`).
+   *
+   * **조사 id 하나로 센다.** 원본은 `조사|인물|슬롯` 세 겹 키를 쓰는데, 한 조사의
+   * 결과는 **동시에 도착하고 동시에 읽힌다** — `markProfileSeen()` 도 그 시점의
+   * 기록 전체를 한꺼번에 본 것으로 처리한다. 세 겹으로 두면 같은 값을 세 벌 적는다.
+   */
+  seenClues: string[]
   boardItems: {
     id: string
     kind: 'person' | 'evidence' | 'note'
@@ -53,6 +84,7 @@ export const emptyAnnotations = (): PlayerAnnotations => ({
   notes: [],
   cellMarks: [],
   verdicts: {},
+  seenClues: [],
   boardItems: [],
 })
 

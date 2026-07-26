@@ -70,7 +70,8 @@ export function Report({
   onReopen: (order: number) => void
   onCloseReopen: (order: number) => void
   onSubmit: () => void
-  onQuote: (quote: string) => void
+  /** 확보 단어 은행의 인용. 인용문과 그 단어를 함께 넘긴다 */
+  onQuote: (quote: string, term: string) => void
 }) {
   // 순차 잠금. i번 장은 i-1번이 완성돼야 열린다
   const openIndex = solved.length

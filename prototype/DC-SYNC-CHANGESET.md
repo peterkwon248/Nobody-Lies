@@ -174,6 +174,42 @@ DC 마스터에만 남은 것이다.
 
 ---
 
+## 8. `--g-*` 게임 토큰이 셸 밖에서 전부 죽는다 (2026-07-26 발견)
+
+**`--g-*` 아홉이 `[data-surface="vector"]` 스코프에만 정의돼 있다**(31~33행).
+그런데 셸(`.app`)은 986행에서 닫히고 **홈 · 사건 상세 · 모든 모달은 그 밖**에 산다.
+
+```
+73    <div class="app" data-surface="vector">   ← 셸. --g-* 가 여기 산다
+986   </div>                                    ← 셸이 닫힌다
+997   isIntro   ┐
+1066  isHome    ├ position:fixed 오버레이. 셸 밖이다 → --g-* 가 없다
+1112  isDetail  ┘
+```
+
+**값이 틀린 게 아니라 변수가 없다.** 그래서 색 선언이 통째로 무효가 되고
+`transparent` / `currentColor` 로 떨어진다. 확인된 것 셋:
+
+| 어디 | 무엇이 | 어떻게 보이나 |
+|---|---|---|
+| 홈·상세 `statusChip()` 2037행 | 「클리어」 칩 `--g-lock-mark`·`--g-lock-bg` | 글자색 상속 · 배경 투명 |
+| 인물 상세 **1199행** | 단서 카드 `border-left: 2px solid var(--g-confirm)` | 흰 선 |
+| 조사 결과 카드 **1231행** | `invResultCard.accent`(유형색) | 3px 띠가 투명 |
+
+같은 칩의 「진행 중」(`--status-progress`)·「미플레이」(`--bg-elevated-2`)는 Vector
+전역 토큰이라 멀쩡하다 — **한 줄 안에서 어떤 색은 살고 어떤 색은 죽는다.**
+
+**고칠 것** — 33행 `[data-surface="vector"] {` 를 **`:root {`** 로. 값은 그대로 둔다.
+참조 대상(`--fg-4`·`--accent`·`--status-review` …)이 전부 Vector 의 `:root` 토큰이라
+스코프를 올려도 달라지는 것이 없다.
+
+> 셸 안에서만 확인하면 절대 안 보인다. 홈의 클리어 칩은 다섯 장을 다 채워야
+> 나오고, 나머지 둘은 모달이다. 앱에 최종 제출·채점과 인물 상세를 붙이면서 드러났다.
+
+**앱은 이미 고쳐져 있다** — `app/src/styles/app.css` 의 `--g-*` 블록이 `:root` 에 있다.
+
+---
+
 ## 참고 — 슬롯·장소·진술 격자는 프로토타입이 이미 맞다
 
 엔진의 4슬롯(`t0~t3`)·`locations`(`atLodge`)·`incident.scene`·presence/claim 도출

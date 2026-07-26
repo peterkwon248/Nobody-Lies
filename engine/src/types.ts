@@ -117,6 +117,56 @@ export type Location = {
  * 좌표는 `viewBox` 안의 값이고 비율로 환산해 쓴다. 방·구역은 `loc` 로
  * `locations` 를 가리키며, **검증기가 그 참조를 검사한다.**
  */
+/**
+ * 관계 도식 — 누가 누구와 어떻게 얽혀 있나.
+ *
+ * **평면도(`FloorPlan`)와 같은 자리에 산다.** 사건마다 관계가 다르고 `Case` 는
+ * 불변 사건 정의다. 앱에 두면 사건이 자기 관계도를 못 갖는다.
+ *
+ * ★ 좌표는 저작이다 ★ 자동 배치(force layout)를 쓰지 않는다 — 매번 다르게
+ * 그려지면 「저번엔 세라가 가운데였는데」가 되고, 무엇보다 **밀집도가 곧
+ * 「여기가 중요하다」** 가 된다. 0~100 백분율.
+ *
+ * ★ 도식은 판정하지 않는다 ★ 아직 안 드러난 관계는 **흐리게가 아니라 없다.**
+ * 흐린 선은 「저기 뭔가 있다」이고, 그건 조사 0회에 사건의 크기를 알려주는 것이다.
+ */
+export type RelationGraph = {
+  nodes: {
+    id: string
+    /** `person` 이면 `id` 가 `people` 을 가리킨다. 이름·색을 거기서 읽는다 */
+    kind: 'victim' | 'person' | 'secret'
+    /** `person` 이 아닌 노드의 이름 */
+    label?: Text
+    x: number
+    y: number
+    /** N개 장을 완성해야 **나타난다** */
+    revealedAfter?: number
+  }[]
+  edges: {
+    from: string
+    to: string
+    label: Text
+    revealedAfter?: number
+    /** 붉은 선. 사건의 중심을 지나는 관계 */
+    danger?: boolean
+  }[]
+  /**
+   * 조사로 열리는 관계. 그 조사를 수행해야 나타난다.
+   *
+   * `node` 가 있으면 노드도 같이 생긴다(대포폰·위장 유서처럼 물증이 곧 노드인 것).
+   * **같은 짝의 `edges` 선을 덮어쓴다** — 추정 관계가 물증으로 확정되면
+   * 선이 둘이 되는 게 아니라 하나로 바뀐다 (원본 `supersede`).
+   */
+  discoveries: {
+    action: string
+    node?: { id: string; label: Text; x: number; y: number }
+    from: string
+    to: string
+    label: Text
+    danger?: boolean
+  }[]
+}
+
 export type FloorPlan = {
   /** 도면 좌표계 */
   viewBox: { w: number; h: number }
@@ -246,6 +296,14 @@ export type Action = {
    * **검증기가 그 참조를 검사한다** — 도면을 고치면 조사가 조용히 끊긴다.
    */
   target?: { kind: 'location' | 'fixture' | 'person'; id: string }
+  /**
+   * **두 인물을 짝지어** 실행하는 조사. 알리바이 대조가 그것이다.
+   *
+   * `target` 과 다른 필드인 이유: 대상이 하나가 아니다. 평면도는 지점 하나에
+   * 조사를 매달지만 이것은 매달 지점이 없고, 관계 도식에서 **두 명을 고르는
+   * 행위 자체**가 실행 지점이다. 순서는 의미가 없다 — 검증기가 짝으로 본다.
+   */
+  pair?: [PersonId, PersonId]
   /**
    * 조사 결과문. **`gives` 바로 옆에 있어야 한다.**
    *
@@ -562,6 +620,11 @@ export type Case = {
    * 검증기가 `rooms`·`zones` 의 `loc` 참조와 고정물 id 를 검사한다.
    */
   floorPlan?: FloorPlan
+  /**
+   * 관계 도식. 없으면 도식 화면이 뜨지 않는다 — 평면도와 같은 취급이다.
+   * 검증기가 노드·간선의 참조와 `discoveries.action` 을 검사한다.
+   */
+  relationGraph?: RelationGraph
   /** 문장의 출처. LLM 생성분은 파일에 고정된다 */
   prose?: {
     source: 'authored' | 'template' | 'llm'

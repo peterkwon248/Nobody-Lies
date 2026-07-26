@@ -2,7 +2,7 @@ import type { Case } from '@engine/types'
 import { TopBar } from '../components/TopBar'
 import { Mark } from '../components/Mark'
 import type { CaseProgress } from '../state/stores'
-import { CAMPAIGN } from '../case/catalog'
+import { CAMPAIGN, statusChip } from '../case/catalog'
 
 /**
  * 홈 — 콘텐츠 3층 구조(캠페인 / 일일 사건 / 워크샵)의 진입점.
@@ -35,6 +35,7 @@ export function Home({
   onResume: () => void
 }) {
   const started = progress.status === 'in_progress'
+  const chip = statusChip(progress.status)
   const remaining = c.budget - progress.actionsUsed
 
   return (
@@ -80,9 +81,13 @@ export function Home({
                 <span className="v-micro nl-case-est">{row.est}</span>
                 {/* 난이도 배지는 중립색이다(원본 2044행 diffStyle) — 난이도가 곧 유용도 신호가 되지 않도록 */}
                 <span className="pr-badge nl-case-diff">{row.diff}</span>
-                <span className={row.id && started ? 'nl-chip nl-chip-live' : 'nl-chip'}>
-                  {row.id ? (started ? '진행 중' : '미플레이') : '준비 중'}
-                </span>
+                {row.id ? (
+                  <span className="nl-chip" style={{ color: chip.color, background: chip.background }}>
+                    {chip.label}
+                  </span>
+                ) : (
+                  <span className="nl-chip">준비 중</span>
+                )}
               </div>
             ))}
           </div>

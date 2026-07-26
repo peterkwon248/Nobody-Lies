@@ -28,6 +28,8 @@ export function DetailPanel({
   onAddMemo,
   onEditMemo,
   onDeleteMemo,
+  editing,
+  onEditing,
 }: {
   c: Case
   annotations: PlayerAnnotations
@@ -35,6 +37,12 @@ export function DetailPanel({
   onAddMemo: () => void
   onEditMemo: (id: string, content: string) => void
   onDeleteMemo: (id: string) => void
+  /**
+   * 편집 중인 메모. **메모장과 같은 값을 본다** — 원본이 `editMemoId` 하나를
+   * 둘이 나눠 쓴다. 여기서 편집을 열고 메모장으로 건너가면 그 메모가 열려 있다
+   */
+  editing: string | null
+  onEditing: (id: string | null) => void
 }) {
   const [tab, setTab] = useState<Tab>('statements')
 
@@ -66,6 +74,8 @@ export function DetailPanel({
             onAdd={onAddMemo}
             onEdit={onEditMemo}
             onDelete={onDeleteMemo}
+            editing={editing}
+            onEditing={onEditing}
           />
         )}
       </div>
@@ -185,14 +195,15 @@ function InvLogTab() {
  * 한때 여기가 인물별 한 줄 나열이었다.
  */
 function MemoTab({
-  annotations, onAdd, onEdit, onDelete,
+  annotations, onAdd, onEdit, onDelete, editing, onEditing,
 }: {
   annotations: PlayerAnnotations
   onAdd: () => void
   onEdit: (id: string, content: string) => void
   onDelete: (id: string) => void
+  editing: string | null
+  onEditing: (id: string | null) => void
 }) {
-  const [editing, setEditing] = useState<string | null>(null)
   const notes = annotations.notes
 
   return (
@@ -218,16 +229,17 @@ function MemoTab({
               <span className="nl-fs-spacer" />
               {isEditing ? (
                 <>
-                  <span className="linklike nl-memo-done" onClick={() => setEditing(null)}>완료</span>
+                  <span className="linklike nl-memo-done" onClick={() => onEditing(null)}>완료</span>
                   <span className="linklike nl-memo-del" onClick={() => onDelete(n.id)}>삭제</span>
                 </>
               ) : (
-                <span className="linklike nl-memo-edit" onClick={() => setEditing(n.id)}>편집</span>
+                <span className="linklike nl-memo-edit" onClick={() => onEditing(n.id)}>편집</span>
               )}
             </div>
 
-            {/* 인용구 — 이탤릭 따옴표. 원본 966행 */}
-            {n.quote && <div className="v-micro nl-memo-quote">{n.quote}</div>}
+            {/* 인용구 — 이탤릭 따옴표. 원본 966행이 `“{{ mo.quote }}”` 로
+                따옴표를 **화면에서** 붙인다. 화자는 메모장에만 나온다 */}
+            {n.quote && <div className="v-micro nl-memo-quote">“{n.quote}”</div>}
 
             {isEditing ? (
               <textarea

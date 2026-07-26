@@ -200,6 +200,47 @@ floor_plan:
 #
 #  실존 인물명은 쓰지 않는다. (2026-07-24 교체 완료)
 
+# ── 관계 도식 ────────────────────────────────────────────────────────
+#  프로토타입 GRAPH_NODES · GRAPH_EDGES · GRAPH_EVIDENCE(2265~2284행) 그대로.
+#
+#  ★ 좌표는 저작이다 ★ 자동 배치를 쓰지 않는다 — 매번 다르게 그려지면
+#  밀집도가 곧 「여기가 중요하다」가 된다. 0~100 백분율.
+#
+#  ★ 아직 안 드러난 관계는 흐리게가 아니라 없다 ★
+#  흐린 선은 「저기 뭔가 있다」이고, 그건 조사 0회에 사건의 크기를 알려주는 것이다.
+relation_graph:
+  nodes:
+    - { id: victim,   kind: victim, label: { ko: 윤다인, en: Yoon Da-in }, x: 50, y: 50 }
+    - { id: yena,     kind: person, x: 22, y: 22 }
+    - { id: yujin,    kind: person, x: 50, y: 15 }
+    - { id: sakura,   kind: person, x: 80, y: 30 }
+    - { id: yuri,     kind: person, x: 82, y: 72 }
+    - { id: wonyoung, kind: person, x: 24, y: 78 }
+    # 마약망은 4장을 완성해야 **나타난다**. 그전에는 도식에 없다
+    - { id: ring, kind: secret, label: { ko: "마약망 '김선생'", en: "Ring 'Kim'" }, x: 62, y: 88, revealed_after: 4 }
+
+  edges:
+    - { from: sakura,   to: ring,   label: { ko: 정체,      en: Is },       revealed_after: 4, danger: true }
+    - { from: ring,     to: victim, label: { ko: 폭로 임박, en: Exposure }, revealed_after: 5, danger: true }
+    - { from: wonyoung, to: ring,   label: { ko: 추적,      en: Tracing },  revealed_after: 4 }
+
+  # 조사로 열리는 관계. 같은 짝의 위 간선을 덮어쓴다
+  discoveries:
+    - { action: a_yuri,  from: yuri,     to: ring,   label: { ko: 약물 정황,      en: Drug link } }
+    - { action: a_ph_wy, from: wonyoung, to: victim, label: { ko: 새벽 통화 확인, en: Call verified } }
+    - action: a_annex
+      node: { id: burner, label: { ko: 대포폰, en: Burner }, x: 88, y: 62 }
+      from: burner
+      to: sakura
+      label: { ko: 소지, en: Owned by }
+      danger: true
+    - action: a_sakura
+      node: { id: note, label: { ko: 위장 유서, en: Fake note }, x: 62, y: 40 }
+      from: note
+      to: sakura
+      label: { ko: 작성, en: Written by }
+      danger: true
+
 people:
   - id: sakura
     name: 문세라
@@ -698,6 +739,8 @@ actions:
   # 알리바이 대조
   - id: a_alibi_yy
     label: 알리바이 대조 · 서지안 × 한유빈
+    # 관계 도식에서 이 둘을 고르면 열린다. 매달 지점이 없어 target 이 아니다
+    pair: [yena, yujin]
     cost: 1
     gives: [e_mutual]
     salience: 0.4
@@ -708,6 +751,7 @@ actions:
       body:  { ko: "지안과 유빈의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.", en: "Ji-an and Yu-bin’s arrival times corroborate - both arrived only in the morning." }
   - id: a_alibi_yr
     label: 알리바이 대조 · 오나경 × 한유빈
+    pair: [yuri, yujin]
     cost: 1
     gives: [e_yuri_alibi]
     salience: 0.3

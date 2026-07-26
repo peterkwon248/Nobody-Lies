@@ -1,7 +1,8 @@
-import type { Action, Case, Fact, PersonId } from '@engine/types'
+import type { Action, Case, PersonId } from '@engine/types'
 import { ko } from '../case/loadCase'
 import { initialOf, personColor, relationOf } from '../case/people'
-import type { PlayerAnnotations } from '../state/stores'
+import { suspectView } from '../case/suspect'
+import type { CaseProgress, PlayerAnnotations } from '../state/stores'
 
 /**
  * 용의자 — 프로토타입 837~871행.
@@ -18,34 +19,37 @@ import type { PlayerAnnotations } from '../state/stores'
  * 손으로 관리하면 사건을 고칠 때 갈라진다.
  */
 
-const VERDICTS: { key: '제외' | '주목' | '유력'; color: string }[] = [
-  { key: '제외', color: 'var(--fg-3)' },
+/**
+ * 심증 셋. 색은 원본 `verdictMeta()`(1869행) 그대로 —
+ * 제외 `--fg-4` · 주목 `--g-suspect`(= `--status-progress`) · 유력 `--g-contradict`(= `--label-red`).
+ *
+ * 상세 모달도 이 배열을 쓴다. 심증 색이 두 곳에서 갈리면 같은 사람이 화면마다
+ * 다른 색으로 보인다.
+ */
+export const VERDICTS: { key: '제외' | '주목' | '유력'; color: string }[] = [
+  { key: '제외', color: 'var(--fg-4)' },
   { key: '주목', color: 'var(--g-suspect)' },
   { key: '유력', color: 'var(--g-contradict)' },
 ]
 
-const SLOTS: { label: string; kind: Fact['kind'] }[] = [
-  { label: '동기', kind: 'motive' },
-  { label: '기회', kind: 'opportunity' },
-  { label: '수단', kind: 'means' },
-]
-
 export function Suspects({
   c,
+  progress,
   facts,
-  cluesByPerson,
   annotations,
   onVerdict,
+  onOpen,
   actionsFor,
   onAsk,
 }: {
   c: Case
+  progress: CaseProgress
   /** 지금까지 확보한 사실. 엔진 `deriveFacts` 의 결과 */
   facts: Set<string>
-  /** 인물별로 조사에서 나온 것. `조사 라벨 → 물증 설명` */
-  cluesByPerson: Map<PersonId, { text: string; action: string }[]>
   annotations: PlayerAnnotations
   onVerdict: (person: PersonId, v: '제외' | '주목' | '유력') => void
+  /** 카드를 누르면 상세 모달이 열린다 (원본 `onOpen`, 1882행) */
+  onOpen: (person: PersonId) => void
   /** 이 사람을 대상으로 한 조사와 상태. 원본 buildProfiles 15~19행 */
   actionsFor: (person: PersonId) => { action: Action; state: string }[]
   onAsk: (a: Action) => void
@@ -53,8 +57,11 @@ export function Suspects({
   return (
     <div className="nl-sus">
       {c.people.map((p, i) => {
-        const clues = cluesByPerson.get(p.id) ?? []
-        const memos = annotations.notes.filter((n) => n.target === p.id && n.content.trim())
+        // 카드와 상세가 **같은 계산**을 본다 — 원본 `buildProfiles()` 하나가 둘 다 먹인다
+        const { clues, slots } = suspectView(c, progress, facts, p.id)
+        const memos = annotations.notes.filter(
+          (n) => n.targetType === '인물' && n.target === p.id && n.content.trim(),
+        )
         const verdict = annotations.verdicts[p.id]
         const color = personColor(i)
 
@@ -62,7 +69,9 @@ export function Suspects({
           <div key={p.id} className="nl-sus-card">
             <span className="nl-sus-rail" style={{ background: color }} />
             <div className="nl-sus-body">
-              <div className="nl-sus-head">
+              {/* 머리를 누르면 상세가 열린다. 심증 칩·조사 버튼은 카드에서 바로 눌러야
+                  하므로 카드 전체를 클릭 영역으로 두지 않는다 */}
+              <div className="nl-sus-head nl-sus-head-open" onClick={() => onOpen(p.id)}>
                 <span className="nl-avatar nl-sus-av" style={{ background: color }}>
                   {initialOf(p.name)}
                 </span>
@@ -149,11 +158,8 @@ export function Suspects({
                   된다. 그게 곧 범인 표시다 — 2026-07-25 화면을 보고 잡았다.
                   프로토타입이 슬롯을 조사 기록에서만 채운 이유가 이것이다. */}
               <div className="nl-sus-slots">
-                {SLOTS.map((s) => {
-                  const f = c.facts.find(
-                    (x) => x.kind === s.kind && x.subject === p.id
-                      && x.revealedBy.length > 0 && facts.has(x.id),
-                  )
+                {slots.map((s) => {
+                  const f = s.fact
                   return (
                     <div key={s.kind} className="nl-sus-slot">
                       <span className="v-meta nl-sus-slot-k">{s.label}</span>

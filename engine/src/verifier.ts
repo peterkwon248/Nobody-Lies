@@ -641,6 +641,53 @@ export function verify(c: Case): VerifyResult {
         warnings.push(`고정물 '${id}' 에 걸린 조사가 없다 — 눌러도 아무 일이 없다`)
   }
 
+  // 9-5. 관계 도식 ↔ 인물·조사 정합 (2026-07-26 신설)
+  //
+  // 도식도 평면도처럼 별도 좌표계에 살아서 인물을 바꿔도 안 따라온다.
+  // 끊긴 간선은 **그냥 안 그려진다** — 관계 하나가 조용히 사라지고 아무도 모른다.
+  if (c.relationGraph) {
+    const g = c.relationGraph
+    const personIds = new Set(c.people.map((p) => p.id))
+    const actionIds = new Set(c.actions.map((a) => a.id))
+    const nodeIds = new Set(g.nodes.map((n) => n.id))
+    for (const d of g.discoveries) if (d.node) nodeIds.add(d.node.id)
+
+    for (const n of g.nodes) {
+      if (n.kind === 'person' && !personIds.has(n.id))
+        errors.push(`도식 노드 '${n.id}' 가 없는 인물을 가리킨다`)
+      if (n.kind !== 'person' && !n.label)
+        errors.push(`도식 노드 '${n.id}' 에 이름이 없다 — 점만 찍힌다`)
+    }
+    // 인물이 하나라도 빠지면 그 사람만 도식에서 지워진다. 그게 곧 표시다
+    for (const p of c.people)
+      if (!g.nodes.some((n) => n.kind === 'person' && n.id === p.id))
+        errors.push(`인물 '${p.name}' 이 관계 도식에 없다`)
+
+    const endpoints = [
+      ...g.edges.map((e) => ({ e, from: e.from, to: e.to, what: '간선' })),
+      ...g.discoveries.map((d) => ({ e: d, from: d.from, to: d.to, what: '발견' })),
+    ]
+    for (const { from, to, what } of endpoints) {
+      if (!nodeIds.has(from)) errors.push(`도식 ${what}의 끝점 '${from}' 이 없다`)
+      if (!nodeIds.has(to)) errors.push(`도식 ${what}의 끝점 '${to}' 이 없다`)
+    }
+    for (const d of g.discoveries)
+      if (!actionIds.has(d.action))
+        errors.push(`도식 발견이 없는 조사를 기다린다: '${d.action}'`)
+  }
+
+  // 9-6. 짝 조사 — 두 인물이 실재해야 하고, 도식에서 고를 수 있어야 한다
+  for (const a of c.actions) {
+    if (!a.pair) continue
+    for (const id of a.pair)
+      if (!c.people.some((p) => p.id === id))
+        errors.push(`짝 조사 '${a.label}' 의 인물이 없다: '${id}'`)
+    if (a.pair[0] === a.pair[1])
+      errors.push(`짝 조사 '${a.label}' 이 같은 사람 둘을 가리킨다`)
+    if (a.target)
+      warnings.push(`조사 '${a.label}' 에 pair 와 target 이 둘 다 있다 — 실행 지점이 둘이다`)
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 

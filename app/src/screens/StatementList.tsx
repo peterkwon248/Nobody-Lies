@@ -41,7 +41,12 @@ export function StatementList({
   solved: number[]
   highlights: Highlight[]
   onMark: (next: Highlight[]) => void
-  onQuote: (quote: string, person: string) => void
+  /**
+   * 인용. **이름과 id 를 둘 다 넘긴다** — 메모는 「— 서지안」을 적어야 하고
+   * 대상 지정은 `p.id` 여야 한다. 이름만 넘기면 메모장에서 그 사람의 진술로
+   * 묶을 수가 없다 (원본 `quoteSelToMemo` 는 `sel.pid` 를 쓴다)
+   */
+  onQuote: (quote: string, person: string, personId: string) => void
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const toggle = (id: string) => setOpen((v) => ({ ...v, [id]: !v[id] }))
@@ -118,7 +123,7 @@ export function StatementList({
                     textRef={refOf(p.id, n)}
                     highlights={highlights}
                     onMark={onMark}
-                    onQuote={(q) => onQuote(q, p.name)}
+                    onQuote={(q) => onQuote(q, p.name, p.id)}
                   />
                 ))}
 
@@ -137,7 +142,7 @@ export function StatementList({
                       textRef={refOf(p.id, `add${n}`)}
                       highlights={highlights}
                       onMark={onMark}
-                      onQuote={(q) => onQuote(q, p.name)}
+                      onQuote={(q) => onQuote(q, p.name, p.id)}
                       className="nl-mk-p nl-stmt-added-p"
                     />
                   </div>

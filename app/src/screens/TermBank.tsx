@@ -41,7 +41,8 @@ export function TermBank({
   /** 지금 손에 있는 확보 단어. 엔진 `deriveTerms` 의 결과 */
   terms: Set<string>
   answers: Record<string, string>
-  onQuote: (quote: string) => void
+  /** 인용문과 **어느 단어에서 나왔는지**. 메모가 그 단어를 대상으로 잡는다 */
+  onQuote: (quote: string, term: string) => void
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const words = [...terms].sort()
@@ -104,7 +105,9 @@ export function TermBank({
             <div className="nl-dlg-foot">
               <span
                 className="linklike nl-dlg-quote"
-                onClick={() => { onQuote(`“${open}” — ${ko(info?.note) || ''}`.trim()); setOpen(null) }}
+                /* 인용문은 기록 그 자체다. 단어는 메모의 **대상**으로 붙으므로
+                   문장에 다시 적지 않는다 (원본 `quoteTermToMemo`) */
+                onClick={() => { onQuote(ko(info?.note) || open, open); setOpen(null) }}
               >
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M4 4h5v4l-2 -1.2L5 8V4z" />

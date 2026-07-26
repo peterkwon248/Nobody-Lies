@@ -17,10 +17,19 @@ import { DetailPanel } from './DetailPanel'
  * 만들지 않는다. 남은 예산처럼 사실인 것만 적는다.
  */
 
-export type View = 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'log'
+/**
+ * `result` 는 **사이드바에 없다** — 원본 `nav` 에도 없다. 보고서 제출로만 닿고,
+ * 닿은 뒤에도 사이드바로 아무 화면이나 다시 열 수 있다(원본 `finishReport()` 는
+ * `view` 만 바꾼다).
+ */
+export type View =
+  | 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'relations' | 'log' | 'memo' | 'result'
+
+/** 사이드바에 실제로 서는 항목. `result` 는 여기 없다 */
+type NavView = Exclude<View, 'result'>
 
 /** 아이콘은 프로토타입 84~118행의 인라인 SVG 그대로다 */
-const ICONS: Record<View | 'home', React.ReactNode> = {
+const ICONS: Record<NavView | 'home', React.ReactNode> = {
   home: <path d="M3 7l5-4 5 4v6H3z" />,
   overview: <><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></>,
   report: <><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></>,
@@ -31,6 +40,13 @@ const ICONS: Record<View | 'home', React.ReactNode> = {
   map: <><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></>,
   // 원본 113행 — 돋보기
   log: <><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></>,
+  // 원본 121행 — 줄 세 개가 든 종이. 맨 아랫줄만 짧다
+  memo: <><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></>,
+  // 원본 1839행 `ICONS.graph` — 점 셋과 그 사이를 잇는 선
+  relations: <>
+    <circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" />
+    <path d="M5.8 5.8l3.6 4.6M5.7 4.3l4.7-.2" />
+  </>,
 }
 
 /** 화면 제목과 부제. 문구는 프로토타입 `t.nTitle`·`t.nSub` 등에서 가져왔다 */
@@ -40,10 +56,16 @@ const META: Record<View, { title: string; sub: string }> = {
   statements: { title: '진술', sub: '다섯 사람의 원문 진술' },
   suspects: { title: '용의자', sub: '확보한 사실만 채워집니다 · 심증은 내 판단일 뿐입니다' },
   map: { title: '현장', sub: '평면도에서 시간대별 주장 위치를, 도식 탭에서 주장 대조표를 봅니다' },
+  // 원본 `t.navGraph` · `t.graphHint`
+  relations: { title: '관계 그래프', sub: '조사로 드러난 인물·사건의 연결' },
   log: { title: '조사 기록', sub: '수행한 조사가 전문 그대로 남습니다' },
+  // 원본 2831~2832행 — `t.memoTitle` · `t.annHint`
+  memo: { title: '메모장', sub: '문장을 눌러 표시하거나 인용하세요' },
+  /** 제목은 채점 결과로 갈리므로 App 이 `heading` 으로 덮어쓴다 (원본 2831행) */
+  result: { title: '사건 종결', sub: '' },
 }
 
-const NAV: { group: string; items: { id: View; label: string }[] }[] = [
+const NAV: { group: string; items: { id: NavView; label: string }[] }[] = [
   { group: '사건', items: [
     { id: 'overview', label: '사건 개요' },
     { id: 'report', label: '보고서' },
@@ -52,14 +74,17 @@ const NAV: { group: string; items: { id: View; label: string }[] }[] = [
     { id: 'statements', label: '진술' },
     { id: 'suspects', label: '용의자' },
     { id: 'map', label: '현장' },
+    // 원본 순서 그대로 — [단서] 의 마지막이다 (navStatements · navProfile · navMap · navGraph)
+    { id: 'relations', label: '관계 그래프' },
   ] },
   // 원본 111행 — 조사 기록·상황판·메모·표기 안내가 여기 산다
   { group: '도구', items: [
     { id: 'log', label: '조사 기록' },
+    { id: 'memo', label: '메모' },
   ] },
 ]
 
-function NavIcon({ id }: { id: View | 'home' }) {
+function NavIcon({ id }: { id: NavView | 'home' }) {
   return (
     <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
       {ICONS[id]}
@@ -99,6 +124,9 @@ export function Shell({
   onAddMemo,
   onEditMemo,
   onDeleteMemo,
+  editing,
+  onEditing,
+  heading,
   children,
 }: {
   c: Case
@@ -111,6 +139,11 @@ export function Shell({
   onAddMemo: () => void
   onEditMemo: (id: string, content: string) => void
   onDeleteMemo: (id: string) => void
+  /** 편집 중인 메모. 우측 패널과 메모장이 같은 값을 본다 (원본 `editMemoId`) */
+  editing: string | null
+  onEditing: (id: string | null) => void
+  /** 상단 제목 덮어쓰기. 결말 화면만 쓴다 — 제목이 채점 결과다 */
+  heading?: { title: string; sub: string }
   children: React.ReactNode
 }) {
   const [leftOpen, setLeftOpen] = useState(true)
@@ -158,6 +191,10 @@ export function Shell({
                     {it.id === 'log' && progress.investigations.length > 0 && (
                       <span className="count">{progress.investigations.length}</span>
                     )}
+                    {/* 원본 122행 `memoBadge` — 내가 적은 개수다. 게임이 세는 것이 아니다 */}
+                    {it.id === 'memo' && annotations.notes.length > 0 && (
+                      <span className="count">{annotations.notes.length}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -193,9 +230,9 @@ export function Shell({
             </button>
           )}
           <div className="viewtitle">
-            <h1>{META[view].title}</h1>
+            <h1>{(heading ?? META[view]).title}</h1>
             <span className="v-meta" style={{ marginLeft: 6, color: 'var(--fg-4)' }}>
-              {META[view].sub}
+              {(heading ?? META[view]).sub}
             </span>
           </div>
           <span className="spacer" />
@@ -236,6 +273,8 @@ export function Shell({
           onAddMemo={onAddMemo}
           onEditMemo={onEditMemo}
           onDeleteMemo={onDeleteMemo}
+          editing={editing}
+          onEditing={onEditing}
         />
       )}
     </div>

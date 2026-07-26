@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { load } from 'js-yaml'
 import { DOMAIN_OF } from './types.js'
 import type {
-  Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person,
+  Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person, RelationGraph,
   PresenceCell, Particle, Reveal, Slot, Text,
 } from './types.js'
 
@@ -75,6 +75,30 @@ function texts(v: unknown): Text[] {
  *
  * 좌표는 그대로 통과시키고 이름만 옮긴다 — 기하 검증은 검증기가 한다.
  */
+function relationGraph(raw: Raw): RelationGraph {
+  const num = (v: unknown) => Number(v ?? 0)
+  return {
+    nodes: arr(raw.nodes).map((n: Raw) => ({
+      id: n.id, kind: n.kind, x: num(n.x), y: num(n.y),
+      ...(n.label ? { label: text(n.label)! } : {}),
+      ...(n.revealed_after !== undefined ? { revealedAfter: num(n.revealed_after) } : {}),
+    })),
+    edges: arr(raw.edges).map((e: Raw) => ({
+      from: e.from, to: e.to, label: text(e.label) ?? { ko: '' },
+      ...(e.revealed_after !== undefined ? { revealedAfter: num(e.revealed_after) } : {}),
+      ...(e.danger ? { danger: true } : {}),
+    })),
+    discoveries: arr(raw.discoveries).map((d: Raw) => ({
+      action: d.action, from: d.from, to: d.to, label: text(d.label) ?? { ko: '' },
+      ...(d.danger ? { danger: true } : {}),
+      ...(d.node ? { node: {
+        id: d.node.id, label: text(d.node.label) ?? { ko: '' },
+        x: num(d.node.x), y: num(d.node.y),
+      } } : {}),
+    })),
+  }
+}
+
 function floorPlan(raw: Raw): FloorPlan {
   const num = (v: unknown) => Number(v ?? 0)
   const box = (o: Raw) => ({ x: num(o.x), y: num(o.y), w: num(o.w), h: num(o.h) })
@@ -280,6 +304,7 @@ export function parseCase(raw: unknown, source: string): Case {
       salience: a?.salience, yield: a?.yield,
       ...(a?.boosted_by ? { boostedBy: a.boosted_by } : {}),
       ...(a?.available_after !== undefined ? { availableAfter: a.available_after } : {}),
+      ...(a?.pair ? { pair: arr(a.pair) as [string, string] } : {}),
       ...(a?.result ? { result: {
         title: text(a.result.title) ?? { ko: '' },
         body: text(a.result.body) ?? { ko: '' },
@@ -428,6 +453,7 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(c.prose.generated_at ? { generatedAt: c.prose.generated_at } : {}),
     } } : {}),
     ...(c.floor_plan ? { floorPlan: floorPlan(c.floor_plan) } : {}),
+    ...(c.relation_graph ? { relationGraph: relationGraph(c.relation_graph) } : {}),
     ...(c.seed_terms ? { seedTerms: c.seed_terms } : {}),
     ...(c.prologue ? { prologue: texts(c.prologue) } : {}),
     ...(c.terms ? { terms: arr(c.terms).map((t: Raw) => ({

@@ -16,10 +16,18 @@
    초록빛(`rgba(76,183,130,.12)`)이어야 하는데 회색이 됐다.
 
    **Vector 변수를 참조하는 별칭 층이다.** 새 토큰 체계가 아니라 "이 게임에서
-   확인은 무슨 색인가"를 한 곳에 모은 것이고, 그래서 `[data-surface="vector"]`
-   스코프 안에 산다. */
+   확인은 무슨 색인가"를 한 곳에 모은 것이다.
 
-[data-surface="vector"] {
+   ★ `:root` 다. 원본은 `[data-surface="vector"]` 스코프에 두는데 **그게 버그다** ★
+   셸(`.app`)이 원본 986행에서 닫히고 **홈 · 사건 상세 · 모든 모달은 그 밖**에
+   산다(오버레이). 그래서 원본에서는 홈의 「클리어」 칩, 인물 상세의 단서 좌측선,
+   조사 결과 카드의 유형색이 전부 조용히 죽는다 — 값이 틀린 게 아니라 **변수가
+   없어서** `transparent`/`currentColor` 로 떨어진다.
+
+   참조 대상(`--fg-4`·`--accent`·`--status-review` …)이 전부 Vector 의 `:root`
+   토큰이므로 여기 둔다고 달라지는 것은 없다. `DC-SYNC-CHANGESET.md` 8번. */
+
+:root {
   --g-empty-line: var(--fg-4);
   --g-fill-fg: var(--accent);
   --g-fill-bg: var(--accent-soft);
@@ -2678,4 +2686,945 @@ body {
 .nl-log .nl-inv {
   max-width: none;
   padding: 0;
+}
+
+/* ── 메모장 화면 ─────────────────────────────────────────────────────
+   원본 384~418행. 우측 패널의 `.nl-memo-*` 와 **이름을 나누지 않는다** —
+   같은 클래스를 둘이 쓰면 한쪽 여백을 고칠 때 다른 쪽이 조용히 따라 움직인다.
+   (`nb` = notebook. 원본 `t.memoTitle` 이 「메모장 / Notebook」이다) */
+
+.nl-nb {
+  padding: 18px 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.nl-nb-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.nl-nb-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 필터·정렬·대상이 전부 같은 알약이다. 원본 `chip()`(2719행) */
+.nl-nb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nl-nb-chip-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 원본 391~393행 — 돋보기가 입력칸 **안쪽** 왼쪽에 앉는다 */
+.nl-nb-search {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.nl-nb-search svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nl-nb-search input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 12px 0 33px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+/* 빈 상태는 **점선**이다 — 실선 카드로 그리면 내용이 있는 것처럼 보인다 */
+.nl-nb-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  padding: 26px;
+  text-align: center;
+  color: var(--fg-4);
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.nl-nb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.nl-nb-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 14px 16px;
+}
+
+/* 왼쪽 세로 막대 = 대상 색. 카드 모서리를 따라 둥글다 */
+.nl-nb-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--r-md, 8px) 0 0 var(--r-md, 8px);
+}
+
+.nl-nb-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.nl-nb-num {
+  color: var(--fg-4);
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+}
+
+.nl-nb-layer {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: var(--fw-semi, 600);
+}
+
+.nl-nb-pin,
+.nl-nb-done,
+.nl-nb-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nl-nb-pin { color: var(--fg-4); margin-right: 6px; }
+.nl-nb-done { color: var(--accent); }
+.nl-nb-edit { color: var(--fg-3); }
+.nl-nb-del { color: var(--label-red); font-size: 12px; cursor: pointer; margin-left: 6px; }
+
+/* 인용 — 여는 따옴표가 본문 밖에 크게 선다 (원본 401행) */
+.nl-nb-quote {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.nl-nb-quote-mark {
+  color: var(--fg-4);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.nl-nb-quote-body { min-width: 0; }
+
+.nl-nb-quote-text {
+  color: var(--fg-2);
+  font-style: italic;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.nl-nb-quote-who {
+  color: var(--fg-4);
+  margin-top: 3px;
+}
+
+.nl-nb-input {
+  width: 100%;
+  min-height: 46px;
+  resize: vertical;
+  box-sizing: border-box;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 6px);
+  padding: 8px 10px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.nl-nb-targets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.nl-nb-targets-label {
+  color: var(--fg-4);
+  margin-right: 2px;
+}
+
+/* 인물·물증 칩. 대상 칩보다 한 단 작다 (원본 `pchip()`, 2731행) */
+.nl-nb-picks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+}
+
+.nl-nb-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nl-nb-pick-on {
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.nl-nb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.nl-nb-text {
+  color: var(--fg-2);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+
+.nl-nb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--fg-4);
+  font-size: 11px;
+}
+
+/* ── 인용 피커 ───────────────────────────────────────────────────────
+   원본 1257~1265행. 확보 단어 다이얼로그(96) 위에 떠야 한다 —
+   단어 카드에서 인용하면 그 다이얼로그가 열린 채로 이것이 올라온다. */
+
+.nl-scrim-quote {
+  z-index: 97;
+  align-items: center;
+}
+
+.nl-qp {
+  width: 320px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg, 10px);
+  box-shadow: var(--shadow-popover);
+}
+
+.nl-qp-head { padding: 16px 18px 8px; }
+
+.nl-qp-list {
+  padding: 4px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nl-qp-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+}
+
+.nl-qp-row:hover { background: var(--bg-active); }
+
+.nl-qp-num {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 5px;
+  background: var(--bg-elevated-2);
+  color: var(--fg-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+}
+
+.nl-qp-excerpt {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nl-qp-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 5px 6px;
+}
+
+.nl-qp-new { color: var(--accent); }
+
+.nl-qp-num-new {
+  background: transparent;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+}
+
+.nl-qp-newlabel {
+  font-size: 13px;
+  font-weight: var(--fw-semi, 600);
+}
+
+/* ── 채점·결말 ───────────────────────────────────────────────────────
+   원본 423~477행. **이야기가 위, 숫자가 아래.** 순서를 뒤집으면 퀴즈가 된다. */
+
+.nl-res {
+  padding: 30px 24px 60px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.nl-res-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+/* 예산을 다 쓰고 못 끝냈을 때만. 「네 탓이 아니라 난이도」라고 말하는 배지다 */
+.nl-res-stuck-badge {
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(235, 87, 87, 0.14);
+  color: var(--g-contradict);
+}
+
+.nl-res-stuck {
+  color: var(--fg-3);
+  margin-bottom: 22px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.nl-res-block { margin-bottom: 22px; }
+
+.nl-res-real {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  margin-bottom: 8px;
+}
+
+.nl-res-allright { margin-bottom: 34px; }
+
+/* 절 머리말 — 대문자·자간. 한글엔 대문자가 없으니 자간만 남는다 */
+.nl-res-cap {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+
+.nl-res-cap-mine { color: var(--g-contradict); margin-bottom: 12px; }
+.nl-res-cap-real { color: var(--accent); margin-bottom: 12px; }
+
+.nl-res-story {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 보고서 본문과 같은 조판 — 같은 문장이므로 같게 읽혀야 한다 */
+.nl-res-p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+/* 내 이야기는 한 단 흐리다. 정본이 아니라는 표시 */
+.nl-res-p-mine { color: var(--fg-3); }
+
+.nl-res-blank { font-weight: var(--fw-semi, 600); }
+
+.nl-res-fold { margin-top: 16px; }
+
+.nl-res-fold-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nl-res-fold-chev {
+  color: var(--fg-4);
+  font-size: 11px;
+}
+
+.nl-res-corrections {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.nl-res-cor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.nl-res-cor-label {
+  color: var(--fg-4);
+  width: 70px;
+  flex: none;
+}
+
+/* 내 답에 취소선. **지우는 것이 아니라 그어 두는 것** — 무엇을 골랐는지는 남는다 */
+.nl-res-cor-mine {
+  font-weight: var(--fw-semi, 600);
+  color: var(--g-contradict);
+  text-decoration: line-through;
+  text-decoration-color: var(--g-contradict);
+}
+
+.nl-res-cor-arrow { color: var(--fg-4); }
+
+.nl-res-cor-right {
+  font-weight: var(--fw-semi, 600);
+  color: var(--accent);
+}
+
+/* ── 숫자 구역 ── 구분선 아래로 내려간다 */
+
+.nl-res-score {
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+}
+
+.nl-res-nom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.nl-res-nom-label { color: var(--fg); flex: 1; }
+
+.nl-res-nom-result {
+  font-size: 12px;
+  font-weight: var(--fw-bold, 700);
+}
+
+.nl-res-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.nl-res-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nl-res-bar-label {
+  color: var(--fg-3);
+  width: 44px;
+  flex: none;
+}
+
+.nl-res-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-elevated-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* 세 축이 **같은 색**이다. 축마다 색을 주면 어느 축이 중요한지 말하게 된다 */
+.nl-res-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.nl-res-bar-num {
+  color: var(--fg-2);
+  width: 44px;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nl-res-metrics {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.nl-res-metric {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 12px 14px;
+}
+
+.nl-res-metric-k {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.nl-res-metric-v {
+  font-size: 18px;
+  font-weight: var(--fw-semi, 600);
+  color: var(--fg);
+}
+
+/* ── 인물 상세 모달 ──────────────────────────────────────────────────
+   원본 1171~1218행. 680px 2단 — **왼쪽은 주장, 오른쪽은 확정**.
+   z-index 90 : 조사 확인(95)·결과 카드(96)보다 아래다. 상세에서 조사를 실행하면
+   확인 모달이 그 위로 올라와야 한다. */
+
+.nl-scrim-profile {
+  z-index: 90;
+  align-items: center;
+  justify-content: center;
+}
+
+.nl-pd {
+  width: 680px;
+  max-width: 94vw;
+  max-height: 88vh;
+  background: var(--bg-app);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg, 10px);
+  box-shadow: var(--shadow-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nl-pd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.nl-pd-rail {
+  width: 3px;
+  height: 34px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.nl-pd-av {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+  flex: none;
+}
+
+.nl-pd-verdict-badge {
+  font-size: 10px;
+  font-weight: var(--fw-bold, 700);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  flex: none;
+}
+
+.nl-pd-cols {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.nl-pd-left {
+  width: 300px;
+  flex: none;
+  border-right: 1px solid var(--border);
+  padding: 18px 20px;
+  overflow: auto;
+}
+
+.nl-pd-right {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 20px;
+  overflow: auto;
+}
+
+.nl-pd-cap {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.nl-pd-verdicts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+
+.nl-pd-hint {
+  color: var(--fg-4);
+  margin-bottom: 18px;
+}
+
+/* 본인 주장 — 왼쪽 세로선 + 이탤릭. **내 글이 아니고 확정도 아니다** */
+.nl-pd-claim {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.nl-pd-claim-bar {
+  width: 2px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: none;
+  opacity: 0.75;
+}
+
+.nl-pd-claim-text {
+  color: var(--fg-3);
+  line-height: 1.7;
+  font-style: italic;
+  word-break: keep-all;
+}
+
+.nl-pd-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.nl-pd-slot {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.nl-pd-slot-k {
+  color: var(--fg-4);
+  width: 40px;
+  flex: none;
+  padding-top: 1px;
+}
+
+/* 못 얻은 칸. **비었다는 사실만** 말한다 — 무엇이 올지는 말하지 않는다 */
+.nl-pd-dash {
+  flex: 1;
+  border-bottom: 1.5px dashed var(--border-strong);
+  margin-top: 9px;
+}
+
+.nl-pd-new {
+  font-size: 9px;
+  font-weight: var(--fw-bold, 700);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0 5px;
+  margin-left: 5px;
+  white-space: nowrap;
+}
+
+.nl-pd-jump {
+  display: block;
+  color: var(--accent);
+  font-size: 11px;
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.nl-pd-none {
+  color: var(--fg-4);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  word-break: keep-all;
+}
+
+.nl-pd-clues {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* 단서 카드 — 왼쪽 2px 이 확정색. 조사 기록의 카드와 같은 어휘다 */
+.nl-pd-clue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--g-confirm);
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+}
+
+.nl-pd-clue-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--g-confirm);
+  margin-top: 6px;
+  flex: none;
+}
+
+.nl-pd-clue-action {
+  color: var(--fg-4);
+  margin-top: 2px;
+}
+
+.nl-pd-narrs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.nl-pd-narr {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 11px 14px 11px 16px;
+}
+
+.nl-pd-narr-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--r-md, 8px) 0 0 var(--r-md, 8px);
+}
+
+.nl-pd-narr-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.nl-pd-narr-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+.nl-pd-sec {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-bottom: 8px;
+}
+
+.nl-pd-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nl-pd-memo-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  margin-bottom: 10px;
+}
+
+.nl-pd-memos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 메모는 왼쪽 accent 선만. **내가 쓴 것**이라는 표시다 */
+.nl-pd-memo {
+  border-left: 2px solid var(--accent);
+  padding: 2px 0 2px 10px;
+}
+
+.nl-pd-memo-q {
+  color: var(--fg-3);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.nl-pd-memo-c {
+  color: var(--fg-2);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+/* 카드 머리를 누르면 상세가 열린다 */
+.nl-sus-head-open { cursor: pointer; }
+
+/* ── 관계 그래프 ─────────────────────────────────────────────────────
+   원본 720~742행. 16:11 판 위에 점과 선.
+
+   ★ 흐린 선을 쓰지 않는다 ★ 아직 안 드러난 관계는 **없다**. 흐리게 두면
+   「저기 뭔가 있다」가 되고 그건 조사 0회에 사건의 크기를 알려주는 셈이다. */
+
+.nl-rg {
+  padding: 18px 24px;
+  max-width: 1100px;
+}
+
+.nl-rg-board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+/* viewBox 100×100 을 판에 늘여 맞춘다(preserveAspectRatio=none).
+   선만 늘어나고 **점과 글자는 안 늘어난다** — 그래서 점은 SVG 밖에 있다 */
+.nl-rg-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.nl-rg-elabel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: var(--fw-med, 500);
+  background: var(--bg-subtle);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.nl-rg-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--bg-app);
+}
+
+.nl-rg-nlabel {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 11px;
+  font-weight: var(--fw-med, 500);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.nl-rg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.nl-rg-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.nl-rg-leg-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+}
+
+.nl-rg-hint {
+  color: var(--fg-4);
+  margin-top: 10px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 두 명을 고르면 나타나는 실행 막대. 하나만 골랐을 때는 아무 말도 하지 않는다 */
+.nl-rg-alibi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  background: var(--bg-elevated);
+}
+
+.nl-rg-cancel {
+  color: var(--fg-3);
+  font-size: 12px;
+  cursor: pointer;
 }
