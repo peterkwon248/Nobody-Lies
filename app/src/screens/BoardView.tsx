@@ -16,10 +16,10 @@ import type { Board, PlayerAnnotations, Relation } from '../state/stores'
  * 연결선의 관계(모순·뒷받침·동일인·시간충돌·관련)는 **플레이어의 어휘**다.
  * 게임은 그것이 맞는지 틀린지 말하지 않고 채점에도 쓰지 않는다 — 심증과 같다.
  *
- * ⚠ **1층까지 옮겼다.** 판·팬/줌·서랍·카드 3단·드래그·핀·연결선·선택 툴바·
- * 미니맵. 남은 층은 **그룹(영역/교집합/타임라인) · 자유 라벨 · 마퀴 다중선택 ·
- * 상세 팝업**이고 `Board` 타입에 자리(`groups`·`labels`·`times`)는 이미 있다.
- * `docs/NEXT-ACTION.md` 참조.
+ * ⚠ **2층까지 옮겼다.** 판·팬/줌·서랍·카드 3단·드래그·핀·연결선·선택 툴바·
+ * 미니맵(1층) + ＋생성 메뉴·그룹(영역·교집합)·자유 라벨·그룹 이동/크기(2층).
+ * 남은 것은 **타임라인 밴드 · 마퀴 다중선택 · 조각 상세 팝업 · 미니맵 드래그**이고
+ * `Board.times` 자리는 이미 있다. `docs/NEXT-ACTION.md` 참조.
  */
 
 const REL: Record<Relation, string> = {
@@ -38,9 +38,25 @@ const SECTIONS: { kind: CardKind; title: string }[] = [
   { kind: 'memo', title: '메모' },
 ]
 
-type Sel = { kind: 'piece'; id: string } | null
-type Drag = { id: string; ox: number; oy: number; moved: boolean } | null
+/** ＋생성 메뉴. 원본 `PB_TOOLS`(1639행) */
+const TOOLS: { tool: Tool; label: string; color: string }[] = [
+  { tool: '영역', label: '박스 (영역)', color: 'var(--border-strong)' },
+  { tool: '교집합', label: '교집합 (벤다이어그램)', color: 'var(--accent)' },
+  { tool: '메모', label: '메모', color: '#F2C94C' },
+  { tool: '라벨', label: '텍스트 라벨', color: 'var(--fg-3)' },
+]
+
+type Tool = '영역' | '교집합' | '메모' | '라벨'
+type Sel =
+  | { kind: 'piece'; id: string }
+  | { kind: 'group'; id: string }
+  | { kind: 'label'; id: string }
+  | null
+type Drag =
+  | { kind: 'piece' | 'label' | 'group' | 'resize'; id: string; ox: number; oy: number; moved: boolean }
+  | null
 type Connect = { from: string; cx: number; cy: number } | null
+type DrawShape = { x1: number; y1: number; x2: number; y2: number; shape: '영역' | '교집합' } | null
 
 export function BoardView({
   c,
@@ -68,6 +84,10 @@ export function BoardView({
   const [panning, setPanning] = useState<{ x: number; y: number } | null>(null)
   const [connect, setConnect] = useState<Connect>(null)
   const [picker, setPicker] = useState<{ a: string; b: string; x: number; y: number } | null>(null)
+  /** 다음에 판을 누르면 무엇이 생기나. 한 번 쓰면 풀린다 (원본 `tool`) */
+  const [tool, setTool] = useState<Tool | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const [draw, setDraw] = useState<DrawShape>(null)
   const canvas = useRef<HTMLDivElement>(null)
 
   const set = (patch: Partial<Board>) => onBoard({ ...b, ...patch })
@@ -129,9 +149,31 @@ export function BoardView({
     setSel({ kind: 'piece', id })
   }
 
+  /** 영역 안에 든 조각. 중심이 기준이다 (원본 `PB_regionMembers`) */
+  const membersOf = (g: Board['groups'][number]) =>
+    Object.keys(b.placed).filter((id) => {
+      if (!cardOf(id)) return false
+      const cc = centerOf(id)
+      return cc.x >= g.x && cc.x <= g.x + g.w && cc.y >= g.y && cc.y <= g.y + g.h
+    })
+
   // ── 포인터 ────────────────────────────────────────────────────────
   const onCanvasDown = (e: React.PointerEvent) => {
-    setSel(null); setPicker(null)
+    setSel(null); setPicker(null); setAddOpen(false)
+    // 도구가 들려 있으면 판을 누르는 것이 곧 생성이다 (원본 `PB_onBgDown`)
+    if (tool === '영역' || tool === '교집합') {
+      const w = toWorld(e)
+      setDraw({ x1: w.x, y1: w.y, x2: w.x, y2: w.y, shape: tool })
+      return
+    }
+    if (tool === '메모') { const w = toWorld(e); newMemo(w.x, w.y); setTool(null); return }
+    if (tool === '라벨') {
+      const w = toWorld(e)
+      const id = `l${Date.now()}`
+      set({ labels: [...b.labels, { id, x: w.x, y: w.y, text: '' }] })
+      setSel({ kind: 'label', id }); setTool(null)
+      return
+    }
     if (lock) return
     setPanning({ x: e.clientX - pan.x, y: e.clientY - pan.y })
   }
@@ -140,11 +182,31 @@ export function BoardView({
     if (drag) {
       const w = toWorld(e)
       if (!drag.moved) setDrag({ ...drag, moved: true })
-      set({ placed: { ...b.placed, [drag.id]: {
-        x: Math.max(0, w.x - drag.ox), y: Math.max(0, w.y - drag.oy),
-      } } })
+      const nx = Math.max(0, w.x - drag.ox)
+      const ny = Math.max(0, w.y - drag.oy)
+      if (drag.kind === 'label') {
+        set({ labels: b.labels.map((l) => (l.id === drag.id ? { ...l, x: nx, y: ny } : l)) })
+      } else if (drag.kind === 'group') {
+        // 영역을 옮기면 **안에 든 조각도 같이 간다.** 안 그러면 묶은 것이 풀린다
+        const g = b.groups.find((x) => x.id === drag.id)!
+        const dx = nx - g.x
+        const dy = ny - g.y
+        const placed = { ...b.placed }
+        for (const id of membersOf(g))
+          placed[id] = { x: placed[id].x + dx, y: placed[id].y + dy }
+        set({
+          groups: b.groups.map((x) => (x.id === drag.id ? { ...x, x: nx, y: ny } : x)),
+          placed,
+        })
+      } else if (drag.kind === 'resize') {
+        set({ groups: b.groups.map((x) => (x.id === drag.id
+          ? { ...x, w: Math.max(80, w.x - x.x), h: Math.max(60, w.y - x.y) } : x)) })
+      } else {
+        set({ placed: { ...b.placed, [drag.id]: { x: nx, y: ny } } })
+      }
       return
     }
+    if (draw) { const w = toWorld(e); setDraw({ ...draw, x2: w.x, y2: w.y }); return }
     if (connect) {
       const w = toWorld(e)
       setConnect({ ...connect, cx: w.x, cy: w.y })
@@ -155,8 +217,27 @@ export function BoardView({
 
   const onCanvasUp = (e: React.PointerEvent) => {
     if (drag) {
-      if (!drag.moved) setSel({ kind: 'piece', id: drag.id })
+      if (!drag.moved)
+        setSel({ kind: drag.kind === 'resize' ? 'group' : drag.kind, id: drag.id } as Sel)
       setDrag(null)
+      return
+    }
+    if (draw) {
+      // 작게 그리면 기본 크기로. 원본 `tiny` — 툭 찍어도 쓸 만한 영역이 생긴다
+      const x = Math.min(draw.x1, draw.x2)
+      const y = Math.min(draw.y1, draw.y2)
+      const rw = Math.abs(draw.x2 - draw.x1)
+      const rh = Math.abs(draw.y2 - draw.y1)
+      const tiny = rw < 40 && rh < 30
+      const id = `g${Date.now()}`
+      set({ groups: [...b.groups, {
+        id, x, y,
+        w: tiny ? 220 : rw,
+        h: tiny ? 140 : rh,
+        shape: draw.shape,
+        label: draw.shape === '교집합' ? '교집합' : '용의선상',
+      }] })
+      setDraw(null); setTool(null); setSel({ kind: 'group', id })
       return
     }
     if (connect) {
@@ -187,7 +268,18 @@ export function BoardView({
     if (b.pins[id]) { setSel({ kind: 'piece', id }); return }
     const w = toWorld(e)
     const p = b.placed[id]
-    setDrag({ id, ox: w.x - p.x, oy: w.y - p.y, moved: false })
+    setDrag({ kind: 'piece', id, ox: w.x - p.x, oy: w.y - p.y, moved: false })
+  }
+
+  const onGrabDown = (
+    kind: 'label' | 'group' | 'resize',
+    id: string,
+    at: { x: number; y: number },
+    e: React.PointerEvent,
+  ) => {
+    e.stopPropagation()
+    const w = toWorld(e)
+    setDrag({ kind, id, ox: w.x - at.x, oy: w.y - at.y, moved: false })
   }
 
   const placedCount = (cardId: string) =>
@@ -203,7 +295,28 @@ export function BoardView({
           서랍에서 끌어다 놓고, 오른쪽 손잡이를 끌어 이으세요
         </span>
         <span className="nl-fs-spacer" />
-        <span className="nl-pb-chip" onClick={() => newMemo(320, 220)}>＋ 메모</span>
+        {/* 원본 588~592행 — 고르면 다음에 판을 누르는 자리에 생긴다 */}
+        <div className="nl-pb-add">
+          <span
+            className={tool ? 'nl-pb-chip nl-pb-chip-on' : 'nl-pb-chip'}
+            onClick={() => setAddOpen((v) => !v)}
+          >
+            ＋ 생성{tool ? ` · ${tool}` : ''}
+          </span>
+          {addOpen && (
+            <div className="v-menu nl-pb-add-menu">
+              {TOOLS.map((t) => (
+                <div
+                  key={t.tool}
+                  className="v-menu-item"
+                  onClick={() => { setTool(t.tool); setAddOpen(false) }}
+                >
+                  <span className="nl-pb-rel-dot" style={{ background: t.color }} />{t.label}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <span
           className={lock ? 'nl-pb-chip nl-pb-chip-on' : 'nl-pb-chip'}
           onClick={() => setLock((v) => !v)}
@@ -222,8 +335,11 @@ export function BoardView({
             className="iconbtn nl-pb-btn-wide nl-pb-btn-danger"
             title="빈 판으로 초기화"
             onClick={() => {
-              onBoard({ ...b, placed: {}, size: {}, strings: [], memoText: {}, memoOrder: [], pins: {} })
-              setSel(null); setPicker(null)
+              onBoard({
+                ...b, placed: {}, size: {}, strings: [], memoText: {}, memoOrder: [],
+                pins: {}, groups: [], labels: [],
+              })
+              setSel(null); setPicker(null); setTool(null)
             }}
           >
             초기화
@@ -281,6 +397,74 @@ export function BoardView({
             className="nl-pb-world"
             style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
           >
+            {/* 그룹 — 조각보다 **아래**에 깔린다. 묶는 것이지 덮는 것이 아니다 */}
+            {b.groups.map((g) => {
+              const on = sel?.kind === 'group' && sel.id === g.id
+              const bc = on ? 'var(--accent)' : 'var(--border-strong)'
+              const venn = g.shape === '교집합'
+              return (
+                <div
+                  key={g.id}
+                  className={venn ? 'nl-pb-group nl-pb-group-venn' : 'nl-pb-group'}
+                  style={{
+                    left: g.x, top: g.y, width: g.w, height: g.h,
+                    ...(venn ? {} : { border: `1.5px ${on ? 'solid' : 'dashed'} ${bc}` }),
+                  }}
+                >
+                  {venn && (
+                    <>
+                      <span className="nl-pb-venn-c" style={{ left: 0, borderColor: bc }} />
+                      <span className="nl-pb-venn-c" style={{ right: 0, borderColor: bc }} />
+                    </>
+                  )}
+                  {membersOf(g).length === 0 && <span className="nl-pb-group-empty">비어 있음</span>}
+
+                  <span
+                    className="nl-pb-grip nl-pb-grip-move"
+                    title="이동"
+                    onPointerDown={(e) => onGrabDown('group', g.id, g, e)}
+                  >
+                    ⠿
+                  </span>
+                  <div className={venn ? 'nl-pb-group-lw nl-pb-group-lw-venn' : 'nl-pb-group-lw'}>
+                    <input
+                      className="nl-pb-group-label"
+                      value={g.label}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onChange={(e) => set({ groups: b.groups.map((x) =>
+                        x.id === g.id ? { ...x, label: e.target.value } : x) })}
+                    />
+                    {on && (
+                      <span
+                        className="nl-pb-group-del"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => { set({ groups: b.groups.filter((x) => x.id !== g.id) }); setSel(null) }}
+                      >
+                        삭제
+                      </span>
+                    )}
+                  </div>
+                  <span
+                    className="nl-pb-grip nl-pb-grip-resize"
+                    title="크기"
+                    onPointerDown={(e) => onGrabDown('resize', g.id, { x: g.x + g.w, y: g.y + g.h }, e)}
+                  >
+                    ◢
+                  </span>
+                </div>
+              )
+            })}
+
+            {draw && (
+              <div
+                className="nl-pb-group nl-pb-draw"
+                style={{
+                  left: Math.min(draw.x1, draw.x2), top: Math.min(draw.y1, draw.y2),
+                  width: Math.abs(draw.x2 - draw.x1), height: Math.abs(draw.y2 - draw.y1),
+                }}
+              />
+            )}
+
             <svg className="nl-pb-svg" width="2600" height="1600">
               {b.strings.map((s, i) => {
                 if (!b.placed[s.a] || !b.placed[s.b]) return null
@@ -319,11 +503,42 @@ export function BoardView({
               )
             })}
 
+            {/* 자유 라벨 — 원본 652~655행. 판에 직접 쓰는 글씨다 */}
+            {b.labels.map((l) => {
+              const on = sel?.kind === 'label' && sel.id === l.id
+              return (
+                <div
+                  key={l.id}
+                  className="nl-pb-freelabel"
+                  style={{ left: l.x, top: l.y, zIndex: on ? 20 : 6 }}
+                  onPointerDown={(e) => onGrabDown('label', l.id, l, e)}
+                >
+                  <input
+                    className="nl-pb-lbl-input"
+                    value={l.text}
+                    placeholder="라벨"
+                    onPointerDown={(e) => { if (on) e.stopPropagation() }}
+                    onChange={(e) => set({ labels: b.labels.map((x) =>
+                      x.id === l.id ? { ...x, text: e.target.value } : x) })}
+                  />
+                  {on && (
+                    <span
+                      className="nl-pb-lbl-del"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => { set({ labels: b.labels.filter((x) => x.id !== l.id) }); setSel(null) }}
+                    >
+                      삭제
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+
             {pieces.map((id) => {
               const card = cardOf(id)!
               const p = b.placed[id]
               const size = sizeOf(id)
-              const on = sel?.id === id
+              const on = sel?.kind === 'piece' && sel.id === id
               const isMemo = card.kind === 'memo'
               return (
                 <div
@@ -416,7 +631,7 @@ export function BoardView({
           </div>
 
           {/* 선택 툴바 — 원본 1769~1771행 */}
-          {sel && b.placed[sel.id] && (
+          {sel?.kind === 'piece' && b.placed[sel.id] && (
             <div className="nl-pb-toolbar" onPointerDown={(e) => e.stopPropagation()}>
               <span onClick={() => cycleSize(sel.id)}>{sizeOf(sel.id) === 'chip' ? '크게' : '작게'}</span>
               <span onClick={() => addPiece(baseId(sel.id))}>복제</span>
