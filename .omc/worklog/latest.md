@@ -1,122 +1,148 @@
 ---
-session_date: "2026-07-26 21:30"
+session_date: "2026-07-26 23:40"
 project: "노바디 라이즈 (Nobody Lies)"
 working_directory: "C:/Users/user/Desktop/Nobdy Lies"
 ---
 
 ## Completed Work
 
-**커밋 13개(+6308 / −145 · 33개 파일). 프로토타입의 모든 화면이 앱에 있다.**
+**커밋 11개(+3510 / −12642 · 64개 파일). `main` 에 fast-forward 병합됨. 브랜치 정리됨.**
 
-`HANDOFF-TO-CODE.md` §8.1 이 남겨둔 미결이 사용자 결정으로 닫혔다 —
-*"어쨌든 프로토타입을 전부 이식(디자인)하는 건 잊지 마."*
+**앱이 바뀌었다 — 손이식을 접고 DC React export 를 앱으로 삼았다.**
 
-**1. 이식 4화면** (`1e5e1d4`)
-- **메모장** 382~419 + **인용 피커** 1257~1265 (핀 0/1/2+ 세 갈래)
-- **채점·결말** 422~477 — 세 갈래 실측(오답/만점/예산 소진)
-- **인물 상세 모달** 1171~1218 — 왼쪽 주장 · 오른쪽 확정
-- **관계 그래프** 719~742 + 엔진 `RelationGraph`·`Action.pair`·검사 9-5/9-6
+### 1. `port-check` 미확인 171 → 0 (`8859692`)
+화면 아홉을 원본과 한 벌씩 대조. **실제로 빠져 있던 것 일곱** — 「배제 정보」 태그 ·
+「발견」 표시 + 카드→단어 다이얼로그 · 단어 다이얼로그 메모 개수 배지 ·
+**우측 패널 조사 기록 탭이 스텁이었다** · 「N장 완성으로 공개」 배지 ·
+범례 「확보 물증」 · **완성/진행 장 머리글이 뒤바뀜**.
 
-**2. 상황판 5층** (`52fd19d`·`d001ad7`·`9b4feb4`·`223d845`·`115a2b3`)
-원본 581~717행 + `PB_*` 41개 함수. 캔버스 에디터 한 벌.
-판·팬/줌·서랍·조각 3단·드래그·핀·연결선·툴바·미니맵 → ＋생성 메뉴·영역/교집합·
-자유 라벨 → 마퀴·묶기(`binds`) → 타임라인 띠·시간 강조 → 상세 팝업·벤 판정.
-전부 `PointerEvent` 를 실제로 dispatch 해 좌표를 쟀다.
+마지막 것은 갈래가 둘 다 있고 **조건이 틀린** 것이라 장부만으론 통과할 뻔했다.
+원본 마크업이 아니라 `buildSections()`(2180행)를 읽어서 잡았다.
+상황판이 상단 헤더를 덮던 것도 고쳤다(`.nl-view` 에 `position:relative`).
 
-**3. 표기 안내** (`613564a`) 746~821 — 7절. 마지막 화면.
+### 2. 앱을 DC React export 로 교체 (`dfdf878`)
+사용자 결정. `app/src/App.jsx` 3116줄 단일 클래스 + `app/public/_ds/`.
+옛 TypeScript 앱 50개 파일 삭제(`8859692` 에 남아 있다).
 
-**4. 지적 두 번으로 잡은 누락** (`40c1cf7`·`6679226`·`73bbad9`·`6533099`)
-- 조각 디테일 셋 — 물증 아이콘(빈 동그라미였다) · 왼쪽 연결 포트 · 칩 단 점
-- 셸 둘 — **안 읽음 점 4개** · **뒤로/앞으로**(`navHist`/`navIdx`)
-- 현장 둘 — 장소별 단서 칩 · 도면 아래 조사 서술
-- 용의자 **카드**의 「신규」 배지 (모달엔 있었다)
+### 3. DC-SYNC 1~7 + 예산 6 재적용 (`565e1e0`)
+export 가 옛 마스터에서 뽑혀 전부 되살아나 있었다. 인물명 1:1 검산
+(세라 16=쿠라 16 · 다인 36=채원 36 …) · **조사 8건**(changeset 은 지문 2건만
+적었다) · 이니셜 4 · 예산 5→6 을 `BUDGET` 상수 하나로.
 
-**5. 이식 대조기** (`3ec4cce`) — `npm run port-check`
-원본 분기·반복 **326개**를 `docs/port-ledger.json` 과 대조. ported 130 · skip 25 ·
-**미확인 171**.
+같은 커밋에서 **진술 화면을 죽이던 `relChip()` 문자열**을 고쳤다.
+
+### 4. 대조기를 앱에 겨눴다 · 장부 폐기 (`82f764a`)
+`port-check` 초록불이 **사라진 앱**에 대한 기록이었다. 이제 프로토타입과
+`App.jsx` 를 직접 비교한다 — **308 대 308 · 어긋남 0.** 음성 테스트 확인.
+`docs/port-ledger.json` 삭제.
+
+### 5. 상태 훑기 (`1a897bb`)
+끝까지 밀었다 — 5장 채움 → 제출 → 채점 세 갈래 · 조사 6회 소진 · 화면 열 개.
+**놓쳤던 예산 하드코딩 셋**을 더 잡았다(지역변수 `spent` 라 앞선 치환이 못 잡음).
+
+### 6. 진행 저장 (`bde9910`)
+export 에 `localStorage` 가 **0줄**이었다. 화이트리스트로 진행/주석/설정/휘발
+네 갈래로 갈랐다 — 그 구분이 곧 엔진 재분리의 절반.
+
+### 7. 사건 파일 이관 (`0be9796`, `d93fb4d`)
+엔진이 정본이 된 것: 예산 · 프롤로그 · 인물 이름/나이/직업/주장요약 ·
+진술 원문 5명 · 지문 · **공란 20의 답과 조사** · 장 제목 5 · **서사 문장틀 5** ·
+확보 단어 출처/기록.
+
+### 8. 엔진 YAML 쉼표 절단 4건 + 검사기 (`8e1bc0b`)
+`npm run yaml-check` 신설, 빌드에 걸었다.
+
+### 9. 버튼이 브라우저 기본 흰 버튼 (`48cbb03`)
+**사용자가 화면으로 잡았다.** DS 번들이 `<head>` 에서 React 보다 먼저 돌았다.
 
 ## In Progress
 
-없음. 전부 커밋됨. 빌드 green · 콘솔 에러 0 · 작업 트리 깨끗.
+없음. 전부 커밋·병합됨. `main` 빌드 green · 작업 트리 깨끗.
 
 ## Remaining Tasks
 
-- [ ] **`port-check` 미확인 171을 0으로** — 07-25 이전에 옮긴 화면들이다.
-      `isMap` 38 · `isInvestigate` 33 · `isNarrative` 32 · `isDetail` 32 ·
-      `isIntro` 12 · `showOriginal` 9 · `isLog`·`isOverview` 6 · `isHome` 3.
-      **0이 되면 `npm run build` 에 건다**
-- [ ] **장 인터루드** — 프로토타입에 없는 유일한 신축. `Reveal.narration` 은 엔진에
-      이미 5개 다 쓰여 있다. 설계는 `MEMORY.md` §장 인터루드
-- [ ] 데이터 구멍 2 — `narrowsWindow` 좁혀진 라벨 · 조사 결과문 3건 신규 집필
-- [ ] DC 마스터에 `DC-SYNC-CHANGESET.md` **9건** 반영 (사용자 · DC 툴)
-- [ ] 모바일 레이아웃 — `isNarrow` 141·978~996 + `moreOpen` 988. 반응형 축소가
-      아니라 재설계라 그 결정과 함께
-- [ ] `connectMode` — 조각을 **클릭해서** 잇는 모드. 원본에도 켜는 버튼이 헤더에
-      없어서 도달 경로부터 확인해야 한다
-- [ ] Phase 4 플레이테스트 ← 이제 사건이 끝까지 플레이된다
+- [ ] **엔진 재분리 나머지 절반** ← 가장 큼. 아직 `App.jsx` 하드코딩:
+      `REVEALS` · `CLAIM_REVEALS` · `TERM_MAP` · `CLUE_MAP` · `FLOOR_CLUES` ·
+      `GEO` · `FIXTURES` · `WALK` · `GRAPH_*` · `COLLECTED_POOL`.
+      **`REVEALS` 부터** — 장 완성 공개라 사건 진행에 직결
+- [ ] `INV_ACTIONS` — **모델이 다르다.** 앱 6동사×대상 ↔ 엔진 23구체.
+      `TERM_MAP['search:annex']` ↔ `a_annex`. 판정 로직과 붙어 있어 별도 설계
+- [ ] **영문 이름이 옛 이름** — `Kim Chae-won` 13 · `Sakura` 4 · `Yena`/`Yujin`/`Yuri` 3 ·
+      `Won-young` 2. **엔진엔 영문 이름 자체가 없다.** 로마자 표기 결정 필요
+- [ ] **결말 산문 조사** — 문장틀이 하드코딩(「테이프**으로**」·「서지안**였다**」).
+      `particle()` 은 멀쩡하고 문장틀이 안 쓴다. 프로토타입 원래 결함
+- [ ] `COLLECTED_POOL` decoy 3(수면제·둔기·유산 상속) vs 엔진 영수증·물자국 —
+      갈아끼우면 후보 12→11 로 **난이도가 바뀐다.** 설계 결정
+- [ ] DC 마스터에 changeset 반영 — **다음 export 에 1~7 이 또 되살아난다**
+- [ ] changeset 9번 표기 안내 (문안 저작)
+- [ ] 장 인터루드 · Phase 4 앱 플레이테스트
 
 ## Key Decisions
 
-- **전부 이식한다** — 관계 그래프·상황판 미결 종료 (사용자, 2026-07-26)
-- **보고서 목록·보드 모드는 폐기** (사용자) — 산문만 잇는다
-- **`RelationGraph`·`Action.pair` 는 엔진으로** — 평면도 `GEO` 와 같은 판단.
-  사건마다 다른 저작 데이터는 `Case` 에 산다. 좌표는 저작이다(자동 배치 금지)
-- **조사 대상 목록은 안 옮긴다** — `Action.target` 지점 실행으로 이미 대체.
-  옮기면 같은 조사에 실행 경로가 두 벌 생긴다
-- **`--g-*` 는 `:root`** — 스코프가 문제였지 값이 아니었다
-- **게임에 「실패」가 없다** — 클리어는 다섯 장을 채운 순간이지 제출이 아니다
-- **파생 계층 셋** — `score.ts`(채점) · `suspect.ts`(카드+모달) · `board.ts`(카탈로그).
-  같은 계산 두 벌 금지
-- **인용문은 날것으로 저장하고 화면이 따옴표를 그린다** (원본 401·966행)
-- **DC 재export 는 지금 손해** — 게임 데이터 14덩이 하드코딩 + 앱이 고친 9건
-  되살아남. 다만 `port-check` 가 그 계산을 바꾼다
+- **손이식 폐기 → DC React export 가 앱** (사용자, 2026-07-26). 대가는 엔진이
+  정본이 아니게 된 것 · 저장소 3분리·사건 파일 외부화도 함께 사라졌다
+- **`--g-*` 를 `:root` 로 올리지 않는다** — 이 export 는 전부 한 트리 안이라
+  문제가 없다(홈 z=70 · 상세 z=72 · 모달 z=90 실측). 올리면 재export 가 되돌린다
+- **decoy 3 은 그대로** — 지우면 난이도가 바뀐다
+- **`chapters[].opening` 은 안 가져온다** — 렌더할 자리가 없으면 죽은 데이터,
+  자리를 만들면 이식이 아니라 발명
+- **저장 목록은 화이트리스트** — 통째 저장하면 깨진 화면으로 복귀
+- **표는 통째로 안 갈아끼운다. 필드 단위로.** 앱 표가 상위집합이다
+  (평면도 좌표·영문·역할 라벨은 엔진에 없다)
+- **장부 폐기** — 손이식이 이름을 바꿔서 있던 것. 기계 변환은 이름을 보존한다
 
 ## Blockers / Issues
 
-- ⚠ **「완료」를 두 번 틀리게 말했다.** 두 번 다 최상위 화면 블록만 세어보고 한 말.
-  실제 누락은 블록 **안**의 분기·반복에 몰려 있었다 — 07-25 의 45건과 같은 층위.
-  `port-check` 를 만든 이유다
-- ⚠ **미확인 171** — 아직 아무도 대조 안 한 분기가 그만큼 있다
-- **발명 셋을 했다** — 필터 칩 순서 · 「실패」 상태 · `dot` 단을 남은 것으로 오인.
-  셋 다 원본을 다시 읽고 되돌렸다
+- ⚠ **`window.React` 를 심고 끝냈다가 절반만 고쳤다.** `StatusIcon`(함수 안 참조)은
+  살고 `Button`(모듈 최상단)은 죽는데 앞의 것만 보고 종료했다. **사용자가 화면으로
+  잡았다.** `ds.__errors` 가 처음부터 적어두고 있었는데 첫 수정 뒤 다시 안 봤다
+- ⚠ **커밋 `0be9796` 제목이 과장이다** — 「사건 파일이 정본이 됐다」인데 실제로는
+  여섯 항목만 옮겼다. 열 개가 남아 있었다
+- ⚠ **기계 변환의 새 결함 부류** — 변환은 완전한데 그 환경에서 안 돈다. 셋 다
+  에러를 안 던졌다(흰 버튼 · 빈 화면 · 잘린 문장)
+- **DC 마스터는 여전히 옛 상태**
 
 ## Notes for Next Session
 
-**끝났다고 말하기 전에 `npm run port-check` 를 돌린다.** 이번에 두 번 틀린 이유가
-그걸 안 해서다.
+**대조기 초록불을 「맞게 옮겼다」로 읽지 않는다.** 갈래가 있느냐까지만 본다.
+장 머리글이 정확히 그렇게 빠져나갔다 — 두 갈래가 다 있고 조건이 뒤바뀌어 있었다.
 
-**셸 안에서만 확인하지 않는다.** 07-26 최대 결함(`--g-*` 토큰이 셸 밖에서 전부
-죽음)은 홈·사건 상세·모달이 `.app` 밖에 살아서 생겼다. 자유 진행 화면만 눌러보면
-도달조차 못 한다.
+**옮기기 전에 값을 센다.** 이번에 세 번 값을 했다 —
+① 앱 `SECTIONS` 배열이 `s1,s3,s2,s4,s5` 순이라 `b1..b20` 순차로 이으면 2장·3장
+답이 뒤바뀐다 ② 엔진 네 문장이 쉼표에서 잘려 있었다 ③ 4장 조각 수 7 vs 6 은
+**오진**(인접 text 가 합쳐진 것 — 이어붙이면 같다).
+**조각 수로 재면 오진이 난다. 이어붙인 문장 + 공란 순서/답으로 재라.**
 
-**포인터 인터랙션은 좌표를 재라.** `PointerEvent` 를 실제로 dispatch 해서 저장된
-좌표가 정확히 그만큼 움직였는지. 단, **매번 원점으로 되돌린 뒤** 재야 한다 —
-한 번은 이전 테스트의 팬이 누적된 상태에서 재서 버그로 오인했다.
+**개수가 어긋나면 그 단위는 아예 건드리지 않는다.** 반쯤 덮어쓴 상태가 제일 나쁘다.
 
-`npm run dev` → localhost:3000. `localStorage.clear()` 금지.
+**기계 변환본은 「전 화면 열기」로 검수한다.** 에러 리스너를 걸고 라우트를
+순회하되, 조용한 시각 결함(흰 버튼)은 그것으로도 안 잡히고 사람이 봐야 했다.
 
-원본 위치 색인 (`prototype/추리게임.dc.html`, 마크업 1~1266):
-사이드바 74~138 · 헤더 140~176 · 보고서 178~324 · 진술 325~381 · 메모 382~419 ·
-채점 422~478 · 평면도 482~564 · 조사 기록 566~578 · **상황판 581~717** ·
-**관계 그래프 719~743** · **표기 안내 746~821** · 개요 824~836 · 용의자 838~871 ·
-조사 874~977 · 모바일 978~996 · 인트로 997~1064 · 홈 1066~1110 · 상세 1112~1139 ·
-모달 1141~1266
+`npm run dev` → localhost:3000 (`.claude/launch.json` autoPort).
+`localStorage.clear()` 금지 — 단 저장 키는 이제 `nobody-lies:mountain-lodge` 하나다.
+
+빌드 게이트 순서: `engine typecheck` → **`yaml-check`** → `verify` →
+**`port-check`** → `vite build`.
+
+원본 위치 색인은 `docs/NEXT-ACTION.md` 참조. `App.jsx` 쪽 색인은 아직 없다 —
+`grep -n "^  [A-Z_]\+ = " app/src/App.jsx` 로 표 목록이 나온다.
 
 ## Files Modified
 
-- `app/src/screens/` — **신설 6**: `Memo` · `Result` · `SuspectDetail` · `Relations` ·
-  `BoardView` · `Reference`. 수정: `Suspects`·`FloorPlanView`·`Report`·`TermBank`·
-  `StatementList`·`InvestigationLog`·`Home`·`CaseDetail`
-- `app/src/case/` — **신설 3**: `score.ts`(채점) · `suspect.ts`(용의자 파생) ·
-  `board.ts`(상황판 카탈로그). 수정: `catalog.ts`(`statusChip`)
-- `app/src/components/QuotePicker.tsx` — 신설
-- `app/src/state/stores.ts` — `Board`·`Relation` 타입 · `notes` 확장 · `seenClues` ·
-  `unread`
-- `app/src/shell/{Shell,DetailPanel}.tsx` · `app/src/App.tsx`
-- `app/src/styles/app.css` — `--g-*` 를 `:root` 로 · 신규 화면 전부 (2681 → 3900행대)
-- `engine/src/types.ts` — `RelationGraph` · `Action.pair` · `Case.relationGraph`
-- `engine/src/schema.ts` · `engine/src/verifier.ts` — 로더 + 검사 9-5·9-6
-- `engine/cases/mountain-lodge.yaml` — `relation_graph` · 알리바이 `pair` (23.6 → 24.9 KB)
-- `scripts/port-check.mjs` · `docs/port-ledger.json` — **신설.** 이식 대조기
-- `docs/MEMORY.md` · `docs/NEXT-ACTION.md` · `prototype/DC-SYNC-CHANGESET.md`(8·9번 추가)
-- LLM Wiki `raw/2026-07-26-css-var-scope-and-port-ledger.md` — 신설 (컴파일 대기)
+- `app/src/App.jsx` — **신설(3116줄).** DC React export + changeset 재적용 +
+  `applyCase()` + 진행 저장 + `BUDGET` 상수
+- `app/src/main.jsx` — 신설. React 전역 심기 → **DS 번들 직접 로드** → 사건 파일 fetch
+- `app/src/styles.css` — 신설. `app/src/styles/app.css`(4729줄) 삭제
+- `app/index.html` — DS CSS 링크 · `<script>` 제거(로드 순서 문제)
+- `app/public/_ds/` — Vector 번들 이동
+- **삭제 50개** — `app/src/{screens,components,shell,case,marks,map,state,text}/` 전부
+- `engine/cases/mountain-lodge.yaml` — `terms[].note.ko` 4건 따옴표
+- `scripts/port-check.mjs` — 프로토타입 ↔ `App.jsx` 직접 비교로 재작성
+- `scripts/yaml-comma-check.mjs` — **신설.** 쉼표 절단 검사기
+- `docs/port-ledger.json` — **삭제**
+- `package.json` · `app/package.json` — `yaml-check` 추가 · `tsc` 제거
+- `docs/MEMORY.md` — §앱 교체 · §진행 저장 · §사건 파일 이관 신설
+- `docs/NEXT-ACTION.md` — 교체 헤더 + 거짓이 된 결정 6개 수정
+- `prototype/DC-SYNC-CHANGESET.md` — 재적용 기록 · 8번 종료
+- LLM Wiki — `raw/2026-07-26-machine-conversion-and-global-bundles.md` 신설,
+  토픽 4개 확장 + `silent-failures` 인스턴스 3건. **컴파일 반영 완료**
