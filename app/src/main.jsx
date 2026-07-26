@@ -24,19 +24,34 @@ window.ReactDOM = Object.assign({}, ReactDOM, { createRoot });
 
 const DS_BUNDLE = '/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js';
 
-/** 클래식 스크립트라 `import()` 가 아니라 태그로 넣고 기다린다 */
+/**
+ * 클래식 스크립트라 `import()` 가 아니라 태그로 넣고 기다린다.
+ *
+ * ⚠ **번들 끝(2283행)에 자기 앱 마운트가 들어 있다.**
+ * `ReactDOM.createRoot(document.getElementById("root")).render(<App/>)` —
+ * DC export 의 `standalone.html` 은 그 한 줄로 도는 물건이라 그렇다. 우리는
+ * 같은 `#root` 를 쓰므로 **두 앱이 겹쳐 렌더된다.** 사이드바 클릭이 죽은 트리로
+ * 가고, 콘솔 경고 말고는 단서가 없다(우리 앱은 나중에 그려서 순서 운으로 이긴다).
+ *
+ * 번들은 재export 로 되돌아오므로 고칠 자리는 여기다. 로드하는 동안만
+ * `createRoot` 를 빈 루트로 바꿔 그 한 줄을 삼킨다.
+ */
 function loadDesignSystem() {
   return new Promise((resolve) => {
+    const real = window.ReactDOM.createRoot;
+    window.ReactDOM.createRoot = () => ({ render() {}, unmount() {} });
+    const done = () => { window.ReactDOM.createRoot = real; };
     const s = document.createElement('script');
     s.src = DS_BUNDLE;
     s.onload = () => {
+      done();
       const errs = window.VectorDesignSystem_490b73?.__errors;
       // 번들은 실패해도 예외를 던지지 않고 `__errors` 에 적어둔다. 조용히 지나가면
       // 화면이 어긋난 채로 돈다 — 콘솔에라도 남긴다
       if (errs?.length) console.error('[nobody-lies] 디자인 시스템 컴파일 실패:', errs);
       resolve();
     };
-    s.onerror = () => { console.error('[nobody-lies] 디자인 시스템 번들을 못 읽었다'); resolve(); };
+    s.onerror = () => { done(); console.error('[nobody-lies] 디자인 시스템 번들을 못 읽었다'); resolve(); };
     document.head.appendChild(s);
   });
 }

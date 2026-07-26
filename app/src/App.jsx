@@ -53,17 +53,26 @@ export default class App extends React.Component {
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
+    /**
+     * 상황판. **탭 여럿**이고, 탭마다 배경 도면 하나와 자기 배치를 갖는다.
+     *
+     *   루트   화면 상태(휘발) + **탭이 공유하는 것**(메모·타임라인)
+     *   boards[] 탭마다 따로 — 배치·실·영역·라벨·배경  (`PB_CONTENT` 참조)
+     *
+     * 읽기는 `this.PB`(루트+활성탭 병합), 쓰기는 `PB_set` 이 갈라 보낸다.
+     */
     pb: {
     dragId:null, dragKind:null, dragOff:{x:0,y:0}, moved:false, sel:null, detailId:null,
     pan:{x:0,y:0}, zoom:1, panning:false, panStart:null, drawShape:null,
-    connectDrag:null, connectMode:false, connectFrom:null, pins:{},
+    connectDrag:null, connectMode:false, connectFrom:null,
     tool:null, addOpen:false, timelineOn:true, hlTimeId:null, drawerOpen:true, axisLock:false, mapLock:false,
+    // 공유 — 사건에 대한 기록이라 탭을 넘나든다
     times:[{id:'t1',x:225,label:'전날 밤'},{id:'t2',x:675,label:'새벽 3시'},{id:'t3',x:1125,label:'3–8시'},{id:'t4',x:1575,label:'오전'}],
-    placed:{},
-    memoText:{},
-    memoOrder:[], labels:[],
-    strings:[], groups:[], binds:[], relPicker:null, size:{}, progress:1,
-    msel:[], marquee:null,
+    memoText:{}, memoOrder:[],
+    relPicker:null, progress:1, msel:[], marquee:null,
+    active:0,
+    boards:[{ name:'상황판 1', backdrop:null, backdropW:760,
+      placed:{}, strings:[], groups:[], binds:[], pins:{}, size:{}, labels:[] }],
     },
   };
 
@@ -71,7 +80,7 @@ export default class App extends React.Component {
     ko: {
       caseTitle: '산장 살인사건', navCase: '사건', navClue: '단서', navTool: '도구', navNarrative: '보고서', navStatements: '진술',
       navReference: '표기 안내', refShort: '안내', navSoon: '곧', navInvestigate: '조사', navMap: '현장',
-      navGraph: '관계 그래프', navBoard: '상황판', graphHint: '조사로 드러난 인물·사건의 연결', logHint: '수행한 조사와 결과가 여기 누적됩니다', soon: '곧', budget: '잔여 조사', difficulty: '난이도', themeLabel: '테마', language: '언어', settings: '설정', toggleLeft: '사이드바', themeDark: '다크', themeLight: '라이트',
+      navGraph: '관계도', navBoard: '상황판', graphHint: '조사로 드러난 인물·사건의 연결', logHint: '수행한 조사와 결과가 여기 누적됩니다', soon: '곧', budget: '잔여 조사', difficulty: '난이도', themeLabel: '테마', language: '언어', settings: '설정', toggleLeft: '사이드바', themeDark: '다크', themeLight: '라이트',
       sidebarNote: '범인만 거짓말을 할 수 있다. 무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다.',
       nTitle: '사건 보고서', nSub: '공란을 모두 채우면 장이 완성됩니다 · 마지막에 제출', sTitle: '진술', sSub: '다섯 사람의 원문 진술',
       rTitle: '상태 레퍼런스', rSub: '공란 2상태 · 장 2상태 · 셀 마킹',
@@ -487,6 +496,140 @@ export default class App extends React.Component {
       // SECTIONS 에 그 자리가 없다 — 넣어도 아무도 렌더하지 않는 죽은 데이터가
       // 되고, 렌더할 자리를 새로 만들면 그건 이식이 아니라 발명이다.
     })
+
+    /**
+     * 관계 도식. 라벨·공개 게이트·위험 표시는 사건의 의미이므로 엔진이 정본이다.
+     * 좌표·`kind`·`logKey` 는 앱 것을 둔다 — 인물과 같은 이유(표시 속성)다.
+     *
+     * ⚠ **위치로 잇지 않는다.** 엔진 `discoveries` 는 `a_yuri · a_ph_wy · a_annex ·
+     * a_sakura` 순이고 앱 `GRAPH_EVIDENCE` 는 `yuri · annex · sakura · wonyoung`
+     * 순이다. 순서로 이으면 「소지」와 「새벽 통화 확인」이 뒤바뀐다 — `SECTIONS`
+     * 가 `s1,s3,s2` 였던 것과 같은 함정이다.
+     *
+     * 잇는 열쇠는 노드가 `id`, 간선이 `from|to` 다. 조사 id ↔ `logKey` 대응
+     * (`a_yuri` ↔ `belongings:yuri`)은 **일부러 쓰지 않는다** — 그 대응이 곧
+     * `INV_ACTIONS` 모델 충돌(앱 6동사×대상 ↔ 엔진 23구체)이고 아직 결정되지
+     * 않았다. `(from,to)` 네 쌍이 전부 유일하므로 그것 없이 이어진다.
+     */
+    // 엔진 `revealedAfter` 는 **장 순서**, 앱 `gate` 는 **절 id** 다.
+    // `SECTIONS` 배열 순서가 장 순서라서 (s1,s3,s2,s4,s5 ↔ 1..5) 이렇게 잇는다
+    const gateOf = (order) => this.SECTIONS[order - 1]?.id
+    const pair = (a, b) => a + '|' + b
+    /** 관계 도식 라벨은 `{ko,en}` 이다 */
+    const lbl = (dst, src) => {
+      if (src?.ko) dst.ko = src.ko
+      if (src?.en) dst.en = src.en
+    }
+    /**
+     * 평면도 라벨은 **한국어 문자열 하나**다 — 엔진에 영문이 없다.
+     * 그래서 `en` 은 앱 것을 그대로 둔다(`"Chae-won's room"` 처럼 낡은 것도 남는다.
+     * 로마자 표기가 결정되면 엔진에 넣고 여기서 같이 받는다)
+     */
+    const koOnly = (dst, s) => { if (s) dst.ko = String(s) }
+    // 개수가 어긋나거나 짝을 못 찾으면 **그 표는 통째로 앱 값을 쓴다.**
+    // 반쯤 덮어쓴 표는 틀린 사건을 조용히 보여준다
+    const join = (name, appRows, engRows, keyApp, keyEng) => {
+      const m = new Map((engRows ?? []).map((e) => [keyEng(e), e]))
+      if (m.size !== appRows.length || appRows.some((r) => !m.has(keyApp(r)))) {
+        // 조사를 붙이지 않는다 — `노드가`·`간선이` 로 갈리는 자리다. 이 프로젝트는
+        // 문장틀이 조사를 하드코딩해서 「테이프으로」를 만든 전례가 있다
+        console.warn(`[nobody-lies] ${name}: 엔진과 다르다 — 이 표는 앱 값을 쓴다`)
+        return null
+      }
+      return m
+    }
+
+    const g = c.relationGraph
+    if (g) {
+      const nodes = join('관계 도식 노드', this.GRAPH_NODES, g.nodes, (n) => n.id, (e) => e.id)
+      if (nodes) for (const n of this.GRAPH_NODES) {
+        const e = nodes.get(n.id)
+        lbl(n, e.label)
+        if (e.revealedAfter != null) n.gate = gateOf(e.revealedAfter) ?? n.gate
+      }
+
+      const edges = join('관계 도식 간선', this.GRAPH_EDGES, g.edges,
+        (r) => pair(r.a, r.b), (e) => pair(e.from, e.to))
+      if (edges) for (const r of this.GRAPH_EDGES) {
+        const e = edges.get(pair(r.a, r.b))
+        lbl(r, e.label)
+        r.danger = !!e.danger
+        if (e.revealedAfter != null) r.gate = gateOf(e.revealedAfter) ?? r.gate
+      }
+
+      const disc = join('관계 도식 조사 간선', this.GRAPH_EVIDENCE, g.discoveries,
+        (r) => pair(r.a, r.b), (e) => pair(e.from, e.to))
+      if (disc) for (const r of this.GRAPH_EVIDENCE) {
+        const e = disc.get(pair(r.a, r.b))
+        lbl(r, e.label)
+        r.danger = !!e.danger
+        if (r.node && e.node) lbl(r.node, e.node.label)
+      }
+    }
+
+    /**
+     * 현장 평면도. 엔진 `floor_plan` 이 프로토타입 `GEO` 를 그대로 받아 적은 것이라
+     * **좌표가 양쪽에서 이미 같다** — 좌표는 앱 것을 둔다(인물·관계 도식과 같은 이유).
+     * 엔진이 정본이 되는 것은 **한국어 라벨 · 도보 시간 · 별채 공개 게이트 ·
+     * 축척 라벨 · 설비 좌표**다.
+     *
+     * ⚠ **창은 `id` 가 없다** — 양쪽 다 없다. 좌표 네 값으로 잇는다(셋 다 유일).
+     *
+     * 앱 `FIXTURES`(화로·테이프·금고·시신의 라벨·아이콘)는 **가져오지 않는다.**
+     * 엔진엔 설비의 좌표(`floor_plan.fixtures`)만 있고 이름이 없다 — 조사 대상
+     * id 로만 존재한다. 없는 것을 만들면 이식이 아니라 발명이다.
+     */
+    const fp = c.floorPlan
+    if (fp) {
+      const G = this.GEO
+      if (fp.viewBox?.w && fp.viewBox?.h) G.vb = { w: fp.viewBox.w, h: fp.viewBox.h }
+      // 축척 라벨은 앱이 `'0 ─ 5m'` 로 **문자열에 박아** 두고 있었다. 값만 받는다
+      if (fp.scale?.label) G.scale.label = String(fp.scale.label)
+
+      const bld = join('평면도 건물', G.buildings, fp.buildings, (r) => r.id, (e) => e.id)
+      if (bld) for (const r of G.buildings) {
+        const e = bld.get(r.id)
+        // 별채는 1장을 완성해야 도면에 나타난다. 조건만 데이터로 받는다 —
+        // **어느 건물이 가려지는지는 아직 렌더가 `'annex'` 로 하드코딩한다**
+        if (e.revealedAfter != null) r.gate = gateOf(e.revealedAfter) ?? r.gate
+      }
+
+      const rms = join('평면도 방', G.rooms, fp.rooms, (r) => r.id, (e) => e.id)
+      if (rms) for (const r of G.rooms) koOnly(r, rms.get(r.id).label)
+
+      const zns = join('평면도 구역', G.zones, fp.zones, (r) => r.id, (e) => e.id)
+      if (zns) for (const r of G.zones) koOnly(r, zns.get(r.id).label)
+
+      const drs = join('평면도 문', G.doors, fp.doors, (r) => r.id, (e) => e.id)
+      if (drs) for (const r of G.doors) koOnly(r, drs.get(r.id).label)
+
+      const seg = (o) => [o.x1, o.y1, o.x2, o.y2].join(',')
+      const wins = join('평면도 창', G.windows, fp.windows, seg, seg)
+      if (wins) for (const r of G.windows) koOnly(r, wins.get(seg(r)).label)
+
+      // 도보 시간은 사건의 사실이다 — 「본채에서 별채까지 10분」이 알리바이를 가른다
+      const wks = join('평면도 동선', G.walks, fp.walks, (r) => r.b, (e) => e.building)
+      if (wks) for (const r of G.walks) {
+        const e = wks.get(r.b)
+        if (e.min != null) r.min = e.min
+      }
+      // 같은 값을 읽는 두 번째 표. `WALK` 는 알리바이 대조가 쓴다
+      const wk2 = join('도보 시간', this.WALK, fp.walks, (r) => r.b, (e) => e.building)
+      if (wk2) for (const r of this.WALK) {
+        const e = wk2.get(r.b)
+        if (e.min != null) r.min = e.min
+      }
+
+      // 설비 좌표는 표가 아니라 map 이다. 키 집합이 같을 때만 받는다
+      if (fp.fixtures) {
+        const ak = Object.keys(G.fixtures).sort().join(','), ek = Object.keys(fp.fixtures).sort().join(',')
+        if (ak !== ek) console.warn('[nobody-lies] 평면도 설비 좌표: 엔진과 키가 다르다 — 앱 값을 쓴다')
+        else for (const k of Object.keys(G.fixtures)) {
+          const e = fp.fixtures[k]
+          if (e.x != null && e.y != null) G.fixtures[k] = { x: e.x, y: e.y }
+        }
+      }
+    }
   }
 
   constructor(props) {
@@ -517,7 +660,7 @@ export default class App extends React.Component {
    */
   SAVE_KEY = 'nobody-lies:mountain-lodge';
   /** 구조를 바꾸면 올린다. 옛 저장은 조용히 버려진다 — 깨진 채 복구하는 것보다 낫다 */
-  SAVE_VERSION = 1;
+  SAVE_VERSION = 2;   // 2: 상황판이 탭 여럿(`pb.boards[]`). v1 은 `loadSave` 가 감싸 올린다
 
   SAVED = {
     progress: ['blanks', 'solved', 'reopenActive', 'reopenUsed', 'evidence', 'invLog',
@@ -525,9 +668,13 @@ export default class App extends React.Component {
     annotations: ['memos', 'readMemos', 'hls', 'annMarks', 'cellMarks', 'verdicts', 'quotePins'],
     prefs: ['lang', 'theme', 'narrMode', 'stmtMode', 'viewOpts'],
   };
-  /** 상황판에서 저작에 해당하는 것만. `pan`·`zoom`·드래그 중간값은 화면 상태다 */
-  SAVED_PB = ['placed', 'memoText', 'memoOrder', 'labels', 'strings', 'groups',
-    'binds', 'pins', 'size', 'times'];
+  /**
+   * 상황판 저장. `pan`·`zoom`·드래그 중간값은 화면 상태라 안 담는다.
+   *
+   *   `SAVED_PB_SHARED`  탭이 공유하는 것 — `pb` 루트에 그대로
+   *   `PB_CONTENT` + name  탭마다 — `pb.boards[]`
+   */
+  SAVED_PB_SHARED = ['memoText', 'memoOrder', 'times'];
 
   loadSave() {
     let raw;
@@ -535,11 +682,33 @@ export default class App extends React.Component {
     if (!raw) return null;
     let data;
     try { data = JSON.parse(raw); } catch (e) { return null; }
-    if (!data || data.v !== this.SAVE_VERSION) return null;
+    if (!data || !(data.v === 1 || data.v === this.SAVE_VERSION)) return null;
     const next = {};
     for (const group of Object.values(this.SAVED))
       for (const k of group) if (k in data) next[k] = data[k];
-    if (data.pb) next.pb = Object.assign({}, this.state.pb, data.pb);
+    if (data.pb) {
+      let pb = data.pb;
+      /**
+       * v1 → v2 마이그레이션. v1 은 상황판이 하나여서 배치가 `pb` 에 납작하게
+       * 있었다. 그것을 **첫 탭으로 감싼다.**
+       *
+       * 이걸 안 쓰면 `data.v !== SAVE_VERSION` 에서 걸려 **플레이 중인 사람의
+       * 상황판이 통째로 버려진다.** 「옛 저장은 조용히 버려진다」는 구조가
+       * 바뀔 때의 최후 수단이고, 감쌀 수 있는 변경에 쓸 것이 아니다.
+       */
+      if (data.v === 1) {
+        const b = this.PB_newBoard('상황판 1');
+        for (const k of this.PB_CONTENT) if (k in pb) b[k] = pb[k];
+        const shared = {};
+        for (const k of this.SAVED_PB_SHARED) if (k in pb) shared[k] = pb[k];
+        pb = Object.assign(shared, { active: 0, boards: [b] });
+      }
+      next.pb = Object.assign({}, this.state.pb, pb);
+      // 빈 배열로 들어오면 활성 탭이 없어 상황판이 죽는다
+      if (!Array.isArray(next.pb.boards) || !next.pb.boards.length)
+        next.pb.boards = [this.PB_newBoard('상황판 1')];
+      next.pb.active = Math.max(0, Math.min(next.pb.active || 0, next.pb.boards.length - 1));
+    }
     return next;
   }
 
@@ -547,8 +716,13 @@ export default class App extends React.Component {
     const s = this.state;
     const out = { v: this.SAVE_VERSION };
     for (const group of Object.values(this.SAVED)) for (const k of group) out[k] = s[k];
-    out.pb = {};
-    for (const k of this.SAVED_PB) out.pb[k] = s.pb[k];
+    out.pb = { active: s.pb.active || 0, boards: [] };
+    for (const k of this.SAVED_PB_SHARED) out.pb[k] = s.pb[k];
+    for (const b of (s.pb.boards || [])) {
+      const o = { name: b.name };
+      for (const k of this.PB_CONTENT) o[k] = b[k];
+      out.pb.boards.push(o);
+    }
     try { localStorage.setItem(this.SAVE_KEY, JSON.stringify(out)); } catch (e) { /* 용량 초과 등 — 게임을 막지 않는다 */ }
   }
 
@@ -594,44 +768,72 @@ export default class App extends React.Component {
     { id:'q2', kind:'quote', label:'리원 진술', quote:'"새벽 3시쯤 다인 언니한테 전화가 왔어요."' },
     { id:'q3', kind:'quote', label:'세라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
   ];
-  PB_KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'} ];
+  PB_KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'}, {k:'source',title:'도판'} ];
+  /**
+   * 상황판 배경 — **탭의 바닥**이다. 탭마다 하나(또는 없음).
+   *
+   * 세 도면은 게임의 다른 화면이 이미 그리는 것이고, 여기서는 **같은 view 데이터로
+   * 같은 메서드를 부른다**(`renderPlanFigure` 등). 그래서 **공개 게이트가 저절로
+   * 따라온다** — 별채는 1장, 마약망은 4장 완성 전까지 도면에 없다. 사본을 따로
+   * 만들면 그 보장이 사라진다.
+   *
+   * ★ 바닥은 죽은 사본이다 ★ `pointerEvents:'none'` 으로 도면을 막는다. 원래
+   *   마크업에 조사 실행(`f.onRun`)·격자 주장 선택(`cell.onClick`)·알리바이 대조가
+   *   붙어 있어서, 막지 않으면 **상황판에서 조사 예산이 깎이고** §0.2 자동 분석
+   *   금지에 걸린다.
+   *
+   *   예외 하나 — **시간대 전환은 살린다.** `mapTime` 은 순수 화면 상태라 바꿔도
+   *   예산이 안 깎이고 아무것도 공개되지 않는다. 잠글 이유가 없다
+   *   (사용자가 「시간이 왜 안 따라오지」로 잡았다, 2026-07-26).
+   */
+  PB_SOURCES = [
+    { src: 'plan',  label: '평면도' },
+    { src: 'grid',  label: '도식'   },
+    { src: 'graph', label: '관계도' },
+  ];
+  PB_srcDef(src){ return this.PB_SOURCES.find(s=>s.src===src); }
+  /** 같은 것을 다시 누르면 바닥을 걷는다 — 토글이다 */
+  PB_setBackdrop(src){ this.PB_set({ backdrop: this.PB.backdrop===src?null:src, sel:null, detailId:null }); }
+  PB_setBackdropW(w){ this.PB_set({ backdropW: Math.max(360, Math.min(2000, Math.round(w))) }); }
+  /** 바닥이 놓이는 세계 좌표. 타임라인 띠(y 0~56)를 피해 아래에 둔다 */
+  PB_BACKDROP_AT = { x: 80, y: 76 };
   get PB_cards(){ const seed=this.buildBoardSeed(); if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.PB_CARDS; }
   get PB_revEvidence(){ const seed=this.buildBoardSeed(); if(seed&&seed.revealedEvidence) return seed.revealedEvidence; return null; }
   PB_TOOLS = [ {t:'box',label:'박스 (영역)'}, {t:'venn',label:'교집합 (벤다이어그램)'}, {t:'memo',label:'메모'}, {t:'label',label:'텍스트 라벨'} ];
-  PB_sizeOf(id){ return this.state.pb.size[id]||'full'; }
+  PB_sizeOf(id){ return this.PB.size[id]||'full'; }
   PB_cardW(id){ const z=this.PB_sizeOf(id); return z==='dot'?32:(z==='chip'?128:200); }
-  PB_cycleSize(id){ const o={full:'chip',chip:'full'}; this.PB_set({size:Object.assign({},this.state.pb.size,{[id]:o[this.PB_sizeOf(id)]||'chip'})}); }
-  PB_centerOf(id){ const p=this.state.pb.placed[id]; return {x:p.x+this.PB_cardW(id)/2, y:p.y+this.PB_cardH(id)/2}; }
-  PB_regionMembers(g){ return Object.keys(this.state.pb.placed).filter(id=>{ if(!this.PB_card(id))return false; const c=this.PB_centerOf(id); return c.x>=g.x&&c.x<=g.x+g.w&&c.y>=g.y&&c.y<=g.y+g.h; }); }
+  PB_cycleSize(id){ const o={full:'chip',chip:'full'}; this.PB_set({size:Object.assign({},this.PB.size,{[id]:o[this.PB_sizeOf(id)]||'chip'})}); }
+  PB_centerOf(id){ const p=this.PB.placed[id]; return {x:p.x+this.PB_cardW(id)/2, y:p.y+this.PB_cardH(id)/2}; }
+  PB_regionMembers(g){ return Object.keys(this.PB.placed).filter(id=>{ if(!this.PB_card(id))return false; const c=this.PB_centerOf(id); return c.x>=g.x&&c.x<=g.x+g.w&&c.y>=g.y&&c.y<=g.y+g.h; }); }
   PB_inVennOverlap(g,id){ if(g.shape!=='venn')return false; const c=this.PB_centerOf(id); const rx=g.w*0.32,ry=g.h*0.5,cyv=g.y+g.h/2; const lcx=g.x+g.w*0.32,rcx=g.x+g.w*0.68; const inL=((c.x-lcx)*(c.x-lcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; const inR=((c.x-rcx)*(c.x-rcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; return inL&&inR; }
   PB_baseId(id){ return id.split('#')[0]; }
-  PB_card(id){ if(this.state.pb.memoText[id]!==undefined) return {id,kind:'memo',label:'메모',text:this.state.pb.memoText[id]}; return this.PB_cards.find(c=>c.id===this.PB_baseId(id)); }
-  PB_toWorld(e){ const r=(this._canvas||document.querySelector('[data-canvas]')).getBoundingClientRect(); return {x:(e.clientX-r.left-this.state.pb.pan.x)/this.state.pb.zoom, y:(e.clientY-r.top-this.state.pb.pan.y)/this.state.pb.zoom}; }
+  PB_card(id){ if(this.PB.memoText[id]!==undefined) return {id,kind:'memo',label:'메모',text:this.PB.memoText[id]}; return this.PB_cards.find(c=>c.id===this.PB_baseId(id)); }
+  PB_toWorld(e){ const r=(this._canvas||document.querySelector('[data-canvas]')).getBoundingClientRect(); return {x:(e.clientX-r.left-this.PB.pan.x)/this.PB.zoom, y:(e.clientY-r.top-this.PB.pan.y)/this.PB.zoom}; }
   PB_cardH(id){ const z=this.PB_sizeOf(id); if(z==='dot')return 32; if(z==='chip')return 34; const d=this.PB_card(id); return (d&&d.kind==='quote')?96:64; }
-  PB_onPieceDown(id,e){ if(this.state.pb.connectMode){ e.stopPropagation(); return; } if(e.shiftKey){ let m=this.state.pb.msel.slice(); if(m.length===0&&this.state.pb.sel&&this.state.pb.sel.kind==='piece'&&this.state.pb.sel.id!==id) m=[this.state.pb.sel.id]; const i=m.indexOf(id); if(i>=0)m.splice(i,1); else m.push(id); this.PB_set({msel:m,sel:null}); e.stopPropagation(); return; } if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'piece',id},dragId:null}); e.stopPropagation(); return; } const bnd=this.PB_bindOf(id); if(bnd){ const w=this.PB_toWorld(e),offs={}; bnd.mem.forEach(mid=>{ if(this.state.pb.placed[mid]) offs[mid]={x:w.x-this.state.pb.placed[mid].x,y:w.y-this.state.pb.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false,msel:bnd.mem.slice(),sel:{kind:'bind',id:bnd.id}}); e.stopPropagation(); return; } const pos=this.state.pb.placed[id],w=this.PB_toWorld(e); if(this.state.pb.msel.length>1&&this.state.pb.msel.indexOf(id)>=0){ const offs={}; this.state.pb.msel.forEach(mid=>{ if(this.state.pb.placed[mid]) offs[mid]={x:w.x-this.state.pb.placed[mid].x,y:w.y-this.state.pb.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'piece',dragOff:{x:w.x-pos.x,y:w.y-pos.y},moved:false,msel:[]}); e.stopPropagation(); }
-  PB_onLabelDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'label',id},dragId:null}); e.stopPropagation(); return; } const lb=this.state.pb.labels.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'label',dragOff:{x:w.x-lb.x,y:w.y-lb.y},moved:false}); e.stopPropagation(); }
-  PB_onGroupMoveDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'group',id},dragId:null}); e.stopPropagation(); return; } const g=this.state.pb.groups.find(x=>x.id===id),w=this.PB_toWorld(e); const childG=this.state.pb.groups.filter(x=>x.id!==id&&x.x>=g.x-2&&x.y>=g.y-2&&x.x+x.w<=g.x+g.w+2&&x.y+x.h<=g.y+g.h+2).map(x=>x.id); const mem={}; this.PB_regionMembers(g).forEach(i=>mem[i]=1); childG.forEach(cid=>{ const cg=this.state.pb.groups.find(x=>x.id===cid); this.PB_regionMembers(cg).forEach(i=>mem[i]=1); }); this._carry=Object.keys(mem); this._carryG=childG; this.PB_set({dragId:id,dragKind:'group-move',dragOff:{x:w.x-g.x,y:w.y-g.y},moved:false}); e.stopPropagation(); }
-  PB_onGroupResizeDown(id,e){ if(this.state.pb.pins&&this.state.pb.pins[id]){ this.PB_set({sel:{kind:'group',id}}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'group-resize',moved:true,sel:{kind:'group',id}}); e.stopPropagation(); }
-  PB_togglePin(id){ const p=Object.assign({},this.state.pb.pins||{}); if(p[id]) delete p[id]; else p[id]=true; this.PB_set({pins:p}); }
-  PB_makeBlock(){ const m=this.state.pb.msel.filter(id=>this.state.pb.placed[id]); if(m.length<2)return; this.PB_set({binds:this.state.pb.binds.concat([{id:'b'+Date.now(),mem:m}]),msel:[],sel:{kind:'bind',id:'b'+Date.now()}}); }
-  PB_bindOf(id){ return (this.state.pb.binds||[]).find(b=>b.mem.indexOf(id)>=0); }
-  PB_unbind(bid){ this.PB_set({binds:this.state.pb.binds.filter(b=>b.id!==bid),sel:null}); }
+  PB_onPieceDown(id,e){ if(this.PB.connectMode){ e.stopPropagation(); return; } if(e.shiftKey){ let m=this.PB.msel.slice(); if(m.length===0&&this.PB.sel&&this.PB.sel.kind==='piece'&&this.PB.sel.id!==id) m=[this.PB.sel.id]; const i=m.indexOf(id); if(i>=0)m.splice(i,1); else m.push(id); this.PB_set({msel:m,sel:null}); e.stopPropagation(); return; } if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'piece',id},dragId:null}); e.stopPropagation(); return; } const bnd=this.PB_bindOf(id); if(bnd){ const w=this.PB_toWorld(e),offs={}; bnd.mem.forEach(mid=>{ if(this.PB.placed[mid]) offs[mid]={x:w.x-this.PB.placed[mid].x,y:w.y-this.PB.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false,msel:bnd.mem.slice(),sel:{kind:'bind',id:bnd.id}}); e.stopPropagation(); return; } const pos=this.PB.placed[id],w=this.PB_toWorld(e); if(this.PB.msel.length>1&&this.PB.msel.indexOf(id)>=0){ const offs={}; this.PB.msel.forEach(mid=>{ if(this.PB.placed[mid]) offs[mid]={x:w.x-this.PB.placed[mid].x,y:w.y-this.PB.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'piece',dragOff:{x:w.x-pos.x,y:w.y-pos.y},moved:false,msel:[]}); e.stopPropagation(); }
+  PB_onLabelDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'label',id},dragId:null}); e.stopPropagation(); return; } const lb=this.PB.labels.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'label',dragOff:{x:w.x-lb.x,y:w.y-lb.y},moved:false}); e.stopPropagation(); }
+  PB_onGroupMoveDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'group',id},dragId:null}); e.stopPropagation(); return; } const g=this.PB.groups.find(x=>x.id===id),w=this.PB_toWorld(e); const childG=this.PB.groups.filter(x=>x.id!==id&&x.x>=g.x-2&&x.y>=g.y-2&&x.x+x.w<=g.x+g.w+2&&x.y+x.h<=g.y+g.h+2).map(x=>x.id); const mem={}; this.PB_regionMembers(g).forEach(i=>mem[i]=1); childG.forEach(cid=>{ const cg=this.PB.groups.find(x=>x.id===cid); this.PB_regionMembers(cg).forEach(i=>mem[i]=1); }); this._carry=Object.keys(mem); this._carryG=childG; this.PB_set({dragId:id,dragKind:'group-move',dragOff:{x:w.x-g.x,y:w.y-g.y},moved:false}); e.stopPropagation(); }
+  PB_onGroupResizeDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'group',id}}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'group-resize',moved:true,sel:{kind:'group',id}}); e.stopPropagation(); }
+  PB_togglePin(id){ const p=Object.assign({},this.PB.pins||{}); if(p[id]) delete p[id]; else p[id]=true; this.PB_set({pins:p}); }
+  PB_makeBlock(){ const m=this.PB.msel.filter(id=>this.PB.placed[id]); if(m.length<2)return; this.PB_set({binds:this.PB.binds.concat([{id:'b'+Date.now(),mem:m}]),msel:[],sel:{kind:'bind',id:'b'+Date.now()}}); }
+  PB_bindOf(id){ return (this.PB.binds||[]).find(b=>b.mem.indexOf(id)>=0); }
+  PB_unbind(bid){ this.PB_set({binds:this.PB.binds.filter(b=>b.id!==bid),sel:null}); }
   PB_onHandleDown(id,e){ const w=this.PB_toWorld(e); this.PB_set({connectDrag:{from:id,cx:w.x,cy:w.y}}); e.stopPropagation(); }
-  PB_onCanvasMove(e){ const s=this.state.pb,w=this.PB_toWorld(e);
-    if(s.dragId){ if(!s.moved) this.PB_set({moved:true}); if(s.dragKind==='time'){ this.PB_set({times:s.times.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(40,w.x-s.dragOff.x)}):x)}); } else if(s.dragKind==='multi'){ const np=Object.assign({},s.placed); s.msel.forEach(mid=>{ const o=s.multiOff[mid]; if(o&&np[mid]) np[mid]={x:Math.max(0,w.x-o.x),y:Math.max(0,w.y-o.y)}; }); this.PB_set({placed:np}); } else if(s.dragKind==='label'){ this.PB_set({labels:s.labels.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}):x)}); } else if(s.dragKind==='group-move'){ const g=s.groups.find(x=>x.id===s.dragId); const nx=Math.max(0,w.x-s.dragOff.x),ny=Math.max(0,w.y-s.dragOff.y),dx=nx-g.x,dy=ny-g.y; const mem=this._carry||[]; const cg=this._carryG||[]; const np=Object.assign({},s.placed); mem.forEach(id=>{ if(np[id]) np[id]={x:np[id].x+dx,y:np[id].y+dy}; }); this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{x:nx,y:ny}):(cg.indexOf(x.id)>=0?Object.assign({},x,{x:x.x+dx,y:x.y+dy}):x)),placed:np}); } else if(s.dragKind==='group-resize'){ this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{w:Math.max(80,w.x-x.x),h:Math.max(60,w.y-x.y)}):x)}); } else { this.PB_set({placed:Object.assign({},s.placed,{[s.dragId]:{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}})}); } return; }
+  PB_onCanvasMove(e){ const s=this.PB,w=this.PB_toWorld(e);
+    if(s.dragId){ if(!s.moved) this.PB_set({moved:true}); if(s.dragKind==='time'){ this.PB_set({times:s.times.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(40,w.x-s.dragOff.x)}):x)}); } else if(s.dragKind==='multi'){ const np=Object.assign({},s.placed); s.msel.forEach(mid=>{ const o=s.multiOff[mid]; if(o&&np[mid]) np[mid]={x:Math.max(0,w.x-o.x),y:Math.max(0,w.y-o.y)}; }); this.PB_set({placed:np}); } else if(s.dragKind==='label'){ this.PB_set({labels:s.labels.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}):x)}); } else if(s.dragKind==='group-move'){ const g=s.groups.find(x=>x.id===s.dragId); const nx=Math.max(0,w.x-s.dragOff.x),ny=Math.max(0,w.y-s.dragOff.y),dx=nx-g.x,dy=ny-g.y; const mem=this._carry||[]; const cg=this._carryG||[]; const np=Object.assign({},s.placed); mem.forEach(id=>{ if(np[id]) np[id]={x:np[id].x+dx,y:np[id].y+dy}; }); this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{x:nx,y:ny}):(cg.indexOf(x.id)>=0?Object.assign({},x,{x:x.x+dx,y:x.y+dy}):x)),placed:np}); } else if(s.dragKind==='group-resize'){ this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{w:Math.max(80,w.x-x.x),h:Math.max(60,w.y-x.y)}):x)}); } else if(s.dragKind==='backdrop-resize'){ this.PB_setBackdropW(w.x-this.PB_BACKDROP_AT.x); } else { this.PB_set({placed:Object.assign({},s.placed,{[s.dragId]:{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}})}); } return; }
     if(s.connectDrag){ this.PB_set({connectDrag:Object.assign({},s.connectDrag,{cx:w.x,cy:w.y})}); return; }
     if(s.marquee){ this.PB_set({marquee:Object.assign({},s.marquee,{x2:w.x,y2:w.y})}); return; }
     if(s.panning){ this.PB_set({pan:this.PB_clampPan(e.clientX-s.panStart.x,e.clientY-s.panStart.y)}); return; }
     if(s.drawShape){ this.PB_set({drawShape:Object.assign({},s.drawShape,{x2:w.x,y2:w.y})}); return; }
   }
-  PB_onCanvasUp(e){ const s=this.state.pb;
+  PB_onCanvasUp(e){ const s=this.PB;
     if(s.dragId){ const wasBind=this.PB_bindOf(s.dragId); if(!s.moved){ const k=s.dragKind==='group-move'?'group':s.dragKind; this.PB_set({sel:wasBind?{kind:'bind',id:wasBind.id}:{kind:k,id:s.dragId},dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); } else this.PB_set({dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); return; }
     if(s.connectDrag){ const w=this.PB_toWorld(e); let hit=null; Object.keys(s.placed).forEach(id=>{ if(id===s.connectDrag.from||!this.PB_card(id))return; const p=s.placed[id]; if(w.x>=p.x&&w.x<=p.x+this.PB_cardW(id)&&w.y>=p.y&&w.y<=p.y+this.PB_cardH(id)) hit=id; }); if(hit){ const from=s.connectDrag.from,pa=s.placed[from],pb=s.placed[hit],rest=s.strings.filter(x=>!((x.a===from&&x.b===hit)||(x.a===hit&&x.b===from))); this.PB_set({connectDrag:null,strings:rest.concat([{a:from,b:hit,rel:'related'}]),relPicker:{a:from,b:hit,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22}}); } else this.PB_set({connectDrag:null}); return; }
     if(s.panning){ this.PB_set({panning:false,panStart:null}); return; }
     if(s.marquee){ const mq=s.marquee,x0=Math.min(mq.x1,mq.x2),y0=Math.min(mq.y1,mq.y2),x1=Math.max(mq.x1,mq.x2),y1=Math.max(mq.y1,mq.y2); const hit=Object.keys(s.placed).filter(id=>{ if(!this.PB_card(id))return false; const p=s.placed[id]; return p.x+this.PB_cardW(id)>=x0&&p.x<=x1&&p.y+this.PB_cardH(id)>=y0&&p.y<=y1; }); this.PB_set({marquee:null,msel:hit,sel:null}); return; }
     if(s.drawShape){ const g=s.drawShape,tl=g.shape==='timeline',x=Math.min(g.x1,g.x2),y=Math.min(g.y1,g.y2),rawW=Math.abs(g.x2-g.x1),rawH=Math.abs(g.y2-g.y1),tiny=rawW<40&&rawH<30,wd=tl?(rawW<200?320:rawW):(tiny?220:rawW),ht=tl?52:(tiny?140:rawH); this.PB_set({groups:s.groups.concat([{id:'g'+Date.now(),x,y,w:wd,h:ht,shape:g.shape,label:g.shape==='venn'?'교집합':(tl?'타임라인':'용의선상'),anchor:null}]), drawShape:null, tool:null, sel:{kind:'group',id:null}}); return; }
   }
-  PB_onBgDown(e){ const s=this.state.pb;
+  PB_onBgDown(e){ const s=this.PB;
     if(s.tool==='box'||s.tool==='venn'||s.tool==='timeline'){ const w=this.PB_toWorld(e); this.PB_set({drawShape:{x1:w.x,y1:w.y,x2:w.x,y2:w.y,shape:s.tool},sel:null}); return; }
     if(s.tool==='memo'){ const w=this.PB_toWorld(e); const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},s.memoText,{[id]:''}),memoOrder:s.memoOrder.concat([id]),placed:Object.assign({},s.placed,{[id]:{x:w.x,y:w.y}}),tool:null,sel:{kind:'piece',id}}); return; }
     if(s.tool==='label'){ const w=this.PB_toWorld(e); const id='l'+Date.now(); this.PB_set({labels:s.labels.concat([{id,x:w.x,y:w.y,text:''}]),tool:null,sel:{kind:'label',id}}); return; }
@@ -640,24 +842,24 @@ export default class App extends React.Component {
     if(s.mapLock){ this.PB_set({hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]}); return; }
     this.PB_set({panning:true,panStart:{x:e.clientX-s.pan.x,y:e.clientY-s.pan.y},hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]});
   }
-  PB_onPieceClick(id){ if(!this.state.pb.connectMode) return; const f=this.state.pb.connectFrom; if(!f){ this.PB_set({connectFrom:id}); return; } if(f===id){ this.PB_set({connectFrom:null}); return; } const pa=this.state.pb.placed[f],pb=this.state.pb.placed[id],rest=this.state.pb.strings.filter(x=>!((x.a===f&&x.b===id)||(x.a===id&&x.b===f))); this.PB_set({strings:rest.concat([{a:f,b:id,rel:'related'}]),relPicker:{a:f,b:id,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22},connectFrom:null}); }
-  PB_setRel(rel){ const rp=this.state.pb.relPicker; if(!rp)return; const rest=this.state.pb.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))); this.PB_set({strings:rest.concat([{a:rp.a,b:rp.b,rel}]),relPicker:null}); }
-  PB_delRel(){ const rp=this.state.pb.relPicker; this.PB_set({strings:this.state.pb.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))),relPicker:null}); }
-  PB_freshId(base){ if(!this.state.pb.placed[base]) return base; let n=2; while(this.state.pb.placed[base+'#'+n]) n++; return base+'#'+n; }
-  PB_addPiece(id){ const nid=this.PB_freshId(id); this.PB_set({placed:Object.assign({},this.state.pb.placed,{[nid]:{x:300+Math.random()*160,y:180+Math.random()*180}}),sel:{kind:'piece',id:nid}}); }
-  PB_dupPiece(id){ const d=this.PB_card(id),p=this.state.pb.placed[id]; if(!p)return; if(d.kind==='memo'){ const nid='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.state.pb.memoText,{[nid]:d.text}),memoOrder:this.state.pb.memoOrder.concat([nid]),placed:Object.assign({},this.state.pb.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); return; } const nid=this.PB_freshId(this.PB_baseId(id)); this.PB_set({placed:Object.assign({},this.state.pb.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); }
-  PB_removePiece(id){ const p=Object.assign({},this.state.pb.placed); delete p[id]; this.PB_set({placed:p,strings:this.state.pb.strings.filter(s=>s.a!==id&&s.b!==id)}); }
-  PB_newMemo(){ const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.state.pb.memoText,{[id]:''}),memoOrder:this.state.pb.memoOrder.concat([id]),placed:Object.assign({},this.state.pb.placed,{[id]:{x:320+Math.random()*120,y:200+Math.random()*140}}),sel:{kind:'piece',id}}); }
-  PB_deleteSel(){ const sel=this.state.pb.sel; if(!sel)return; if(sel.kind==='piece') this.PB_removePiece(sel.id); else if(sel.kind==='label') this.PB_set({labels:this.state.pb.labels.filter(x=>x.id!==sel.id)}); else if(sel.kind==='group') this.PB_set({groups:this.state.pb.groups.filter(x=>x.id!==sel.id)}); this.PB_set({sel:null,detailId:null}); }
-  PB_setZoom(z){ if(this.state.pb.mapLock)return; this.PB_set({zoom:Math.max(0.5,Math.min(1.6,z))}); }
+  PB_onPieceClick(id){ if(!this.PB.connectMode) return; const f=this.PB.connectFrom; if(!f){ this.PB_set({connectFrom:id}); return; } if(f===id){ this.PB_set({connectFrom:null}); return; } const pa=this.PB.placed[f],pb=this.PB.placed[id],rest=this.PB.strings.filter(x=>!((x.a===f&&x.b===id)||(x.a===id&&x.b===f))); this.PB_set({strings:rest.concat([{a:f,b:id,rel:'related'}]),relPicker:{a:f,b:id,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22},connectFrom:null}); }
+  PB_setRel(rel){ const rp=this.PB.relPicker; if(!rp)return; const rest=this.PB.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))); this.PB_set({strings:rest.concat([{a:rp.a,b:rp.b,rel}]),relPicker:null}); }
+  PB_delRel(){ const rp=this.PB.relPicker; this.PB_set({strings:this.PB.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))),relPicker:null}); }
+  PB_freshId(base){ if(!this.PB.placed[base]) return base; let n=2; while(this.PB.placed[base+'#'+n]) n++; return base+'#'+n; }
+  PB_addPiece(id){ const nid=this.PB_freshId(id); this.PB_set({placed:Object.assign({},this.PB.placed,{[nid]:{x:300+Math.random()*160,y:180+Math.random()*180}}),sel:{kind:'piece',id:nid}}); }
+  PB_dupPiece(id){ const d=this.PB_card(id),p=this.PB.placed[id]; if(!p)return; if(d.kind==='memo'){ const nid='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.PB.memoText,{[nid]:d.text}),memoOrder:this.PB.memoOrder.concat([nid]),placed:Object.assign({},this.PB.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); return; } const nid=this.PB_freshId(this.PB_baseId(id)); this.PB_set({placed:Object.assign({},this.PB.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); }
+  PB_removePiece(id){ const p=Object.assign({},this.PB.placed); delete p[id]; this.PB_set({placed:p,strings:this.PB.strings.filter(s=>s.a!==id&&s.b!==id)}); }
+  PB_newMemo(){ const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.PB.memoText,{[id]:''}),memoOrder:this.PB.memoOrder.concat([id]),placed:Object.assign({},this.PB.placed,{[id]:{x:320+Math.random()*120,y:200+Math.random()*140}}),sel:{kind:'piece',id}}); }
+  PB_deleteSel(){ const sel=this.PB.sel; if(!sel)return; if(sel.kind==='piece') this.PB_removePiece(sel.id); else if(sel.kind==='label') this.PB_set({labels:this.PB.labels.filter(x=>x.id!==sel.id)}); else if(sel.kind==='group') this.PB_set({groups:this.PB.groups.filter(x=>x.id!==sel.id)}); this.PB_set({sel:null,detailId:null}); }
+  PB_setZoom(z){ if(this.PB.mapLock)return; this.PB_set({zoom:Math.max(0.5,Math.min(1.6,z))}); }
   PB_clampPan(x,y){ return { x:Math.min(40,x), y:Math.min(40,y) }; }
   PB_laneIdx(x){ return Math.max(0,Math.min(3,Math.floor(x/450))); }
-  PB_bandOf(cx){ const ts=this.state.pb.times.slice().sort((a,b)=>a.x-b.x); if(!ts.length)return null; let owner=ts[0].id; for(const t of ts){ if(cx>=t.x-90) owner=t.id; } return owner; }
-  PB_onTimeDown(id,e){ const t=this.state.pb.times.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'time',dragOff:{x:w.x-t.x,y:0},moved:false}); e.stopPropagation(); }
-  PB_addTime(){ const xs=this.state.pb.times.map(t=>t.x),nx=(xs.length?Math.max.apply(null,xs):200)+250; const id='t'+Date.now(); this.PB_set({times:this.state.pb.times.concat([{id,x:nx,label:'새 시간'}]),sel:{kind:'time',id}}); }
-  PB_delTime(id){ this.PB_set({times:this.state.pb.times.filter(t=>t.id!==id),sel:null,hlTimeId:this.state.pb.hlTimeId===id?null:this.state.pb.hlTimeId}); }
+  PB_bandOf(cx){ const ts=this.PB.times.slice().sort((a,b)=>a.x-b.x); if(!ts.length)return null; let owner=ts[0].id; for(const t of ts){ if(cx>=t.x-90) owner=t.id; } return owner; }
+  PB_onTimeDown(id,e){ const t=this.PB.times.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'time',dragOff:{x:w.x-t.x,y:0},moved:false}); e.stopPropagation(); }
+  PB_addTime(){ const xs=this.PB.times.map(t=>t.x),nx=(xs.length?Math.max.apply(null,xs):200)+250; const id='t'+Date.now(); this.PB_set({times:this.PB.times.concat([{id,x:nx,label:'새 시간'}]),sel:{kind:'time',id}}); }
+  PB_delTime(id){ this.PB_set({times:this.PB.times.filter(t=>t.id!==id),sel:null,hlTimeId:this.PB.hlTimeId===id?null:this.PB.hlTimeId}); }
   PB_render(){ this.PB_key();
-    const s=this.state.pb;
+    const s=this.PB;
     const ln=this.state.lang;
     const placedIds=Object.keys(s.placed).filter(id=>this.PB_card(id));
     const cx={},cy={}; placedIds.forEach(id=>{ cx[id]=s.placed[id].x+90; cy[id]=s.placed[id].y+26; });
@@ -692,7 +894,17 @@ export default class App extends React.Component {
     const cd=s.connectDrag; const cdp=cd?portR(cd.from):null; const liveLine={show:!!cd,x1:cdp?cdp.x:0,y1:cdp?cdp.y:0,x2:cd?cd.cx:0,y2:cd?cd.cy:0};
     const placedSet={}; placedIds.forEach(id=>placedSet[id]=1);
     const revEv=this.PB_revEvidence;
-    const drawer=this.PB_KINDS.map(kd=>{ let ids=kd.k==='memo'?s.memoOrder.slice():this.PB_cards.filter(c=>c.kind===kd.k).map(c=>c.id);
+    const drawer=this.PB_KINDS.map(kd=>{
+      // 도판은 카드가 아니라 **이 탭의 바닥**이다. 하나만 켜지고, 다시 누르면 꺼진다
+      if(kd.k==='source') return { title:kd.title, isMemo:false, locked:false, lockedHint:'',
+        dot:{width:'7px',height:'7px',borderRadius:'2px',flex:'none',background:'var(--fg-3)'},
+        // 배지는 카드의 「몇 개 놓았나」를 위한 자리다. 바닥은 켜짐/꺼짐뿐이라
+        // 숫자를 넣으면 「평면도 0」이 찍힌다 — 처음에 `0` 을 넣어서 그렇게 나왔다
+        items:this.PB_SOURCES.map(d=>{ const placed=s.backdrop===d.src; const cnt='✓';
+          return { label:d.label, placed, count:cnt, onAdd:()=>this.PB_setBackdrop(d.src),
+            rowStyle:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 8px',border:'1px solid '+(placed?'var(--accent)':'var(--border-strong)'),borderRadius:'var(--r-sm)',cursor:'pointer',background:placed?'var(--accent-soft)':'transparent'},
+            badgeStyle:{fontSize:'10px',fontWeight:700,color:'var(--fg-on-accent)',background:'var(--accent)',borderRadius:'var(--r-pill)',padding:'0 6px',flex:'none'} }; }) };
+      let ids=kd.k==='memo'?s.memoOrder.slice():this.PB_cards.filter(c=>c.kind===kd.k).map(c=>c.id);
       if(kd.k==='evidence'&&revEv) ids=ids.filter(id=>revEv[id]);
       const locked=kd.k==='evidence'&&ids.length===0;
       return { title:kd.title, isMemo:kd.k==='memo', onNew:()=>this.PB_newMemo(), locked, lockedHint:'조사 전 · 없음',
@@ -741,7 +953,59 @@ export default class App extends React.Component {
     const mmMap=(e)=>{ const el=e.currentTarget.getBoundingClientRect(); const mx=(e.clientX-el.left)/scX, my=(e.clientY-el.top)/scY; return this.PB_clampPan(-(mx*s.zoom)+350, -(my*s.zoom)+260); };
     const minimap={dots,onDown:(e)=>{ if(s.mapLock)return; this._mmDrag=true; this.PB_set({pan:mmMap(e)}); },onMove:(e)=>{ if(this._mmDrag&&!s.mapLock) this.PB_set({pan:mmMap(e)}); },onUp:()=>{ this._mmDrag=false; },viewport:{pointerEvents:'none',position:'absolute',left:((-s.pan.x/s.zoom)*scX)+'px',top:((-s.pan.y/s.zoom)*scY)+'px',width:((700/s.zoom)*scX)+'px',height:((520/s.zoom)*scY)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)'}};
     const tool=s.tool;
-    return { drawer,pieces,strings,liveLine,groups,tempGroup,labels,markers,onAddTime:()=>this.PB_addTime(),tlStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },relPicker,minimap,toolbar,detail,timelineOn:s.timelineOn,
+    /**
+     * 배경(바닥). 탭마다 하나. 세계의 고정된 자리에 놓이고 **움직이지 않는다** —
+     * 「상황판 자체가 그 장소」라는 것이 사용자 결정이다(2026-05-26 → 2026-07-26).
+     *
+     * 도면은 `pointerEvents:'none'` 으로 막는다. 안 막으면 상황판에서 조사가
+     * 실행되고 격자 주장이 바뀐다. `zIndex:0` 이라 영역(1)·라벨(4)·조각(5)이
+     * 전부 그 위에 온다 — 서랍의 카드를 도면 위에 올리는 것이 이 기능의 목적이다.
+     *
+     * 시간대 전환은 **살린다**. `mapTime` 은 순수 화면 상태다.
+     */
+    const bdSrc = s.backdrop || null;
+    const bdW = s.backdropW || 760;
+    const backdrop = !bdSrc ? { show:false } : {
+      show:true, src:bdSrc, label:(this.PB_srcDef(bdSrc)||{}).label || bdSrc,
+      isPlan:bdSrc==='plan', isGrid:bdSrc==='grid', isGraph:bdSrc==='graph',
+      needsTimes:bdSrc==='plan',
+      wrapStyle:{position:'absolute',left:this.PB_BACKDROP_AT.x+'px',top:this.PB_BACKDROP_AT.y+'px',
+        width:bdW+'px',zIndex:0,pointerEvents:'none',userSelect:'none'},
+      capStyle:{pointerEvents:'auto',display:'flex',alignItems:'center',gap:'6px',marginBottom:'4px',
+        fontSize:'11px',fontWeight:500,color:'var(--fg-4)',letterSpacing:'.04em'},
+      // 시간대 전환만 살린다. 나머지 도면은 아래에서 `pointerEvents:none` 로 죽는다
+      timesStyle:{pointerEvents:'auto',marginBottom:'6px'},
+      onResizeDown:(e)=>{ if(e.stopPropagation)e.stopPropagation(); this.PB_set({dragId:'backdrop',dragKind:'backdrop-resize',moved:true}); },
+      resizeStyle:{pointerEvents:'auto',position:'absolute',right:'-6px',bottom:'-6px',width:'13px',height:'13px',
+        border:'1px solid var(--border-strong)',borderRadius:'2px',background:'var(--bg-elevated)',cursor:'nwse-resize'},
+      onClear:()=>this.PB_setBackdrop(bdSrc),
+      clearStyle:{pointerEvents:'auto',cursor:'pointer',color:'var(--fg-4)',fontSize:'11px'},
+    };
+    /** 탭 띠 — 스프레드시트 탭처럼 */
+    const boards=(s.boards||[]).map((b,i)=>({
+      name:b.name||('상황판 '+(i+1)), active:i===(s.active||0),
+      onGo:()=>this.PB_gotoBoard(i),
+      onName:(e)=>this.PB_renameBoard(i,e.target.value),
+      onDel:(e)=>{ if(e.stopPropagation)e.stopPropagation(); this.PB_delBoard(i); },
+      showDel:i===(s.active||0)&&(s.boards||[]).length>1,
+      backdropMark:(this.PB_srcDef(b.backdrop)||{}).label || '',
+      // 단축 `border` 와 `borderBottom` 을 섞으면 React 가 경고한다(재렌더 때
+      // 어느 쪽이 이기는지 보장이 없다). 세 변을 따로 적는다
+      tabStyle:{display:'flex',alignItems:'center',gap:'5px',padding:'4px 8px',flex:'none',cursor:'pointer',
+        borderRadius:'var(--r-sm) var(--r-sm) 0 0',
+        borderTop:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
+        borderLeft:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
+        borderRight:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
+        background:i===(s.active||0)?'var(--bg-elevated)':'transparent'},
+      nameStyle:{width:'82px',border:'none',background:'transparent',outline:'none',padding:0,
+        fontSize:'11px',fontWeight:i===(s.active||0)?600:400,
+        color:i===(s.active||0)?'var(--fg)':'var(--fg-3)'},
+      markStyle:{fontSize:'9px',color:'var(--fg-4)',whiteSpace:'nowrap'},
+      delStyle:{fontSize:'10px',color:'var(--fg-4)',cursor:'pointer'},
+    }));
+    const onAddBoard=()=>this.PB_addBoard();
+
+    return { drawer,pieces,strings,liveLine,groups,tempGroup,labels,markers,backdrop,boards,onAddBoard,onAddTime:()=>this.PB_addTime(),tlStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },relPicker,minimap,toolbar,detail,timelineOn:s.timelineOn,
       worldStyle:{position:'absolute',left:0,top:0,width:'2600px',height:'1600px',transformOrigin:'0 0',transform:'translate('+s.pan.x+'px,'+s.pan.y+'px) scale('+s.zoom+')'},
       tlBandTop: (s.mapLock?0:((-s.pan.y)/s.zoom))+'px',
       canvasCursor: tool?'copy':(s.panning?'grabbing':'default'),
@@ -755,15 +1019,64 @@ export default class App extends React.Component {
       zoomPct:Math.round(s.zoom*100)+'%',onZoomIn:()=>this.PB_setZoom(s.zoom+0.15),onZoomOut:()=>this.PB_setZoom(s.zoom-0.15),
       onHome:()=>this.PB_set({zoom:1,pan:{x:40,y:40}}),
       onFit:()=>{ const ids=placedIds; if(!ids.length){ this.PB_set({zoom:1,pan:{x:0,y:0}}); return; } let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const p=s.placed[id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+this.PB_cardW(id)); y1=Math.max(y1,p.y+this.PB_cardH(id)); }); const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2,z=Math.max(0.5,Math.min(1.3,Math.min(700/bw,520/bh))); this.PB_set({zoom:z,pan:{x:-(x0-pad)*z+40,y:-(y0-pad)*z+40}}); },
-      onReset:()=>this.PB_set({placed:{},memoText:{},memoOrder:[],labels:[],groups:[],strings:[],times:this.state.pb.times,sel:null,detailId:null,relPicker:null,pan:{x:0,y:0},zoom:1}),
+      onReset:()=>this.PB_set({placed:{},memoText:{},memoOrder:[],labels:[],groups:[],strings:[],times:this.PB.times,sel:null,detailId:null,relPicker:null,pan:{x:0,y:0},zoom:1}),
       onBgDown:(e)=>this.PB_onBgDown(e),onCanvasMove:(e)=>this.PB_onCanvasMove(e),onCanvasUp:(e)=>this.PB_onCanvasUp(e),
       marquee: s.marquee?{ style:{position:'absolute',left:Math.min(s.marquee.x1,s.marquee.x2)+'px',top:Math.min(s.marquee.y1,s.marquee.y2)+'px',width:Math.abs(s.marquee.x2-s.marquee.x1)+'px',height:Math.abs(s.marquee.y2-s.marquee.y1)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)',zIndex:30,pointerEvents:'none'} }:null,
       bindBox: null,
-      mselBar: (s.sel&&s.sel.kind==='bind'&&(this.state.pb.binds||[]).find(b=>b.id===s.sel.id))?{ bind:true, word:'결속', label:'해제', clearLabel:'선택 해제', count:((this.state.pb.binds||[]).find(b=>b.id===s.sel.id)||{mem:[]}).mem.length, onBlock:()=>this.PB_unbind(s.sel.id), onClear:()=>this.PB_set({sel:null}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } } : (s.msel.length>=2?{ word:'선택', label:'묶기', clearLabel:'해제', count:s.msel.length, onBlock:()=>this.PB_makeBlock(), onClear:()=>this.PB_set({msel:[]}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } }:null) };
+      mselBar: (s.sel&&s.sel.kind==='bind'&&(this.PB.binds||[]).find(b=>b.id===s.sel.id))?{ bind:true, word:'결속', label:'해제', clearLabel:'선택 해제', count:((this.PB.binds||[]).find(b=>b.id===s.sel.id)||{mem:[]}).mem.length, onBlock:()=>this.PB_unbind(s.sel.id), onClear:()=>this.PB_set({sel:null}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } } : (s.msel.length>=2?{ word:'선택', label:'묶기', clearLabel:'해제', count:s.msel.length, onBlock:()=>this.PB_makeBlock(), onClear:()=>this.PB_set({msel:[]}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } }:null) };
   }
 
-  PB_set(patch){ this.setState(s=>({ pb: Object.assign({}, s.pb, patch) })); }
-  PB_key(){ if(this._pbKey) return; this._pbKey=(e)=>{ const t=document.activeElement,tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA')return; if(this.state.view!=='board')return; if((e.key==='Delete'||e.key==='Backspace')&&this.state.pb&&this.state.pb.sel){ e.preventDefault(); this.PB_deleteSel(); } }; window.addEventListener('keydown',this._pbKey); }
+  /**
+   * 탭마다 따로 갖는 키. 나머지는 `pb` 루트에 남아 **모든 탭이 공유**한다.
+   *
+   * 갈라놓은 기준은 「사건에 대한 기록인가, 이 추리에 대한 배치인가」다 —
+   * 메모와 타임라인은 사건에 대한 것이라 탭을 넘나들고(한 탭에서 쓴 메모를 다른
+   * 탭에서도 쓴다), 배치·실·영역·라벨은 그 추리에만 속한다. 사용자 결정(2026-07-26).
+   */
+  PB_CONTENT = ['placed','strings','groups','binds','pins','size','labels','backdrop','backdropW'];
+  PB_newBoard(name){ return { name, backdrop:null, backdropW:760,
+    placed:{}, strings:[], groups:[], binds:[], pins:{}, size:{}, labels:[] }; }
+  /**
+   * 「루트 + 활성 탭」 병합 읽기 뷰.
+   *
+   * 이것이 탭 기능을 싸게 만든 열쇠다 — 상황판 코드 86곳이 `s.placed`·`s.pan` 을
+   * 섞어 읽는데, 병합해서 넘기면 **그 코드가 한 줄도 안 바뀐다.** 쓰기는
+   * `PB_set` 이 콘텐츠/화면으로 갈라 보낸다.
+   *
+   * `pb` 는 변경마다 새 객체로 갈리므로 **identity 로 캐시**한다. 캐시가 없으면
+   * 필터 콜백 안의 `this.PB.placed` 가 항목마다 병합을 새로 만든다.
+   */
+  get PB(){
+    const p=this.state.pb;
+    if(this._pbMemoFor===p) return this._pbMemo;
+    const b=(p.boards||[])[p.active||0]||{};
+    this._pbMemoFor=p; this._pbMemo=Object.assign({},p,b);
+    return this._pbMemo;
+  }
+  PB_set(patch){
+    this.setState(s=>{
+      const p=s.pb, cut={}, root={};
+      for(const k of Object.keys(patch)) (this.PB_CONTENT.indexOf(k)>=0?cut:root)[k]=patch[k];
+      if(!Object.keys(cut).length) return { pb: Object.assign({},p,root) };
+      const boards=(p.boards||[]).slice(); const i=p.active||0;
+      boards[i]=Object.assign({}, boards[i]||this.PB_newBoard('상황판 1'), cut);
+      return { pb: Object.assign({},p,root,{boards}) };
+    });
+  }
+  PB_addBoard(){
+    const p=this.state.pb, boards=(p.boards||[]).slice();
+    boards.push(this.PB_newBoard('상황판 '+(boards.length+1)));
+    this.PB_set({boards, active:boards.length-1, sel:null, msel:[], detailId:null, pan:{x:0,y:0}});
+  }
+  PB_gotoBoard(i){ this.PB_set({active:i, sel:null, msel:[], detailId:null, dragId:null, dragKind:null}); }
+  PB_renameBoard(i,name){ const b=(this.state.pb.boards||[]).slice(); b[i]=Object.assign({},b[i],{name}); this.PB_set({boards:b}); }
+  PB_delBoard(i){
+    const p=this.state.pb, boards=(p.boards||[]).slice();
+    if(boards.length<=1) return;                    // 마지막 하나는 남긴다
+    boards.splice(i,1);
+    this.PB_set({boards, active:Math.max(0,Math.min(i,boards.length-1)), sel:null, msel:[], detailId:null});
+  }
+  PB_key(){ if(this._pbKey) return; this._pbKey=(e)=>{ const t=document.activeElement,tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA')return; if(this.state.view!=='board')return; if((e.key==='Delete'||e.key==='Backspace')&&this.PB&&this.PB.sel){ e.preventDefault(); this.PB_deleteSel(); } }; window.addEventListener('keydown',this._pbKey); }
 
   applyTheme() { try { document.documentElement.setAttribute('data-theme', this.state.theme === 'light' ? 'light' : 'dark'); } catch (e) {} }
 
@@ -837,7 +1150,7 @@ export default class App extends React.Component {
     log.forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { if (!per[c.p]) return; const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; const isNew = seen.indexOf(k) < 0; const logKey = e.action + ':' + e.key; if (!per[c.p].slots[c.slot]) per[c.p].slots[c.slot] = { text: c.ko, isNew, logKey }; per[c.p].clues.push({ text: c.ko, action: e.actionLabel, isNew, logKey }); }); });
     const sd = [{ k: 'motive', l: t.slotMotive }, { k: 'opportunity', l: t.slotOpportunity }, { k: 'means', l: t.slotMeans }];
     const narrBy = {}; log.forEach(e => { if (e.desc && (e.action === 'belongings' || e.action === 'phone') && per[e.key]) { (narrBy[e.key] = narrBy[e.key] || []).push({ title: e.title, desc: e.desc, actionLabel: e.actionLabel, barColor: e.type === 'empty' ? 'var(--fg-4)' : e.type === 'solution' ? 'var(--g-confirm)' : e.type === 'redherring' ? 'var(--status-progress)' : 'var(--accent)' }); } });
-    return this.PEOPLE.map(p => { const d = per[p.id]; const memos = (this.state.memos || []).filter(m => m.targetType === 'person' && m.targetId === p.id); return { id: p.id, name: p.name, color: p.color, ini: p.ini, color: p.color, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age, rel: ln === 'ko' ? p.relKo : p.relEn, claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0, noClues: d.clues.length === 0,
+    return this.PEOPLE.map(p => { const d = per[p.id]; const memos = (this.state.memos || []).filter(m => m.targetType === 'person' && m.targetId === p.id); return { id: p.id, name: p.name, color: p.color, ini: p.ini, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age, rel: ln === 'ko' ? p.relKo : p.relEn, claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0, noClues: d.clues.length === 0,
       narr: narrBy[p.id] || [], hasNarr: !!(narrBy[p.id] || []).length,
       memos: memos.map(m => ({ quote: m.quote, hasQuote: !!m.quote, content: m.content })), hasMemos: memos.length > 0, noMemos: memos.length === 0, memoCount: memos.length,
       onOpen: () => this.openProfileDetail(p.id), onAddMemo: () => this.addMemoForPerson(p.id),
@@ -1327,7 +1640,11 @@ export default class App extends React.Component {
     const ln = this.state.lang, tsel = this.state.mapTime;
     const G = this.GEO, VW = G.vb.w, VH = G.vb.h;
     const px = v => (v / VW * 100), py = v => (v / VH * 100);
-    const annexOn = !!this.state.solved.s1;
+    // 가려진 건물의 **조건**은 엔진이 준다(`floor_plan.buildings[].revealed_after`).
+    // 아래 필터들이 아직 `'annex'` 를 이름으로 찾는 것은 남은 하드코딩이다 —
+    // 다른 건물을 가리는 사건이 오면 그때 필터를 데이터로 돌려야 한다
+    const gatedB = G.buildings.find(b => b.gate);
+    const annexOn = !gatedB || !!this.state.solved[gatedB.gate];
     const eps = 0.6;
 
     const secured = {}; (this.state.invLog || []).forEach(e => { secured[e.action + ':' + e.key] = true; });
@@ -1458,7 +1775,7 @@ export default class App extends React.Component {
     const scb = G.scale, scale = { x: scb.x, x2: scb.x + scb.len, y: scb.y, yt1: scb.y - 4, yt2: scb.y + 4 };
     const scaleLabel = { left: px(scb.x), top: py(scb.y + 18) };
 
-    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ 5m', narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings' };
+    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings' };
   }
   FLOOR_CLUES = [
     { logKey: 'search:annex', loc: 'annex', ko: '대포폰', en: 'Burner' },
@@ -1762,14 +2079,14 @@ export default class App extends React.Component {
         { title: ln === 'ko' ? '장 · 자동 완성' : 'Section · auto-complete', desc: ln === 'ko' ? '장 확인 버튼 없음. 공란을 모두 채우면 자동 완성되고 연동 정보가 공개됨. 채점은 하지 않음.' : 'No confirm button. Filling all blanks auto-completes and unlocks linked info. No grading.' },
         { title: ln === 'ko' ? '최종 제출 · 확인' : 'Final submit · confirm', desc: ln === 'ko' ? '아무 때나 제출 가능. 제출 후에만 채점되며 되돌릴 수 없음. 미채움 공란 개수를 경고.' : 'Submit anytime. Graded only after submission, irreversible. Warns of unfilled blanks.' },
         { title: ln === 'ko' ? '도착 신호 · 안 읽음' : 'Arrival · unread', desc: ln === 'ko' ? '새 정보가 공개되면 토스트로 위치만 알리고, 사이드바 항목에 안 읽음 점이 남음. 방문하면 사라짐.' : 'New info shows a toast pointing to where, and leaves an unread dot on the sidebar item; cleared on visit.' },
-        { title: ln === 'ko' ? '관계 그래프 · 알리바이 대조' : 'Graph · alibi cross-check', desc: ln === 'ko' ? '두 용의자 노드를 선택하면 대조 바가 뜨고, 실행하면 조사 1회로 관계가 드러남.' : 'Selecting two suspect nodes shows a cross-check bar; running it spends one investigation to reveal a link.' },
+        { title: ln === 'ko' ? '관계도 · 알리바이 대조' : 'Graph · alibi cross-check', desc: ln === 'ko' ? '두 용의자 노드를 선택하면 대조 바가 뜨고, 실행하면 조사 1회로 관계가 드러남.' : 'Selecting two suspect nodes shows a cross-check bar; running it spends one investigation to reveal a link.' },
         { title: ln === 'ko' ? '보드 모드 · 심증판' : 'Board mode', desc: ln === 'ko' ? '공란 슬롯에 용의자·확보 단어 카드를 드래그. 5장 도달 시 기본 열림.' : 'Drag suspect/term cards into blank slots. Opens by default at the final section.' },
         { title: ln === 'ko' ? '평면도 · 시간대별' : 'Floor plan · by time', desc: ln === 'ko' ? '시간대를 바꾸면 각 인물의 주장 위치가 점으로 이동. 판정하지 않음.' : 'Switching times moves each person’s claimed position. No judgment.' },
         { title: ln === 'ko' ? '평면도 · 미공개 장소' : 'Floor plan · hidden place', desc: ln === 'ko' ? '별채는 1장 완성 전까지 지도에 나타나지 않음.' : 'The annex does not appear until section 1 is complete.' },
         { title: ln === 'ko' ? '정독 · 하이라이트' : 'Reading · highlight', desc: ln === 'ko' ? '드래그 선택 → 확인·의심·모순 색 적용. 인용·복사 가능.' : 'Drag-select → apply verified/doubtful/contradiction. Quote or copy.' },
         { title: ln === 'ko' ? '현장 · 공간 조사' : 'Scene · search states', desc: ln === 'ko' ? '공간·고정물·시신을 눌러 조사. 미조사(회색)/빈손(초록 테두리)/물증 발견(청록)으로 구분.' : 'Click a space, fixture, or body to investigate. Unsearched (gray) / empty (green outline) / evidence found (accent).' },
         { title: ln === 'ko' ? '용의자 · 조사 버튼' : 'Suspect · investigate', desc: ln === 'ko' ? '카드에서 소지품 검사·통화내역 실행. 사용 가능 / 잔여 부족 / 조사 완료 3상태.' : 'Run belongings/phone from the card. Available / no budget / done.' },
-        { title: ln === 'ko' ? '관계 그래프 · 재구성' : 'Graph · reconstruction', desc: ln === 'ko' ? '빈 상태에서 시작해 조사·장 완성으로 숨은 관계가 드러남. 추측 관계는 그리지 않음.' : 'Starts empty; hidden relationships surface via investigation and section completions. No speculative edges.' },
+        { title: ln === 'ko' ? '관계도 · 재구성' : 'Graph · reconstruction', desc: ln === 'ko' ? '빈 상태에서 시작해 조사·장 완성으로 숨은 관계가 드러남. 추측 관계는 그리지 않음.' : 'Starts empty; hidden relationships surface via investigation and section completions. No speculative edges.' },
       ],
       sounds: [
         { title: ln === 'ko' ? '장 완성' : 'Complete section', desc: ln === 'ko' ? '장이 완성될 때 확정음.' : 'Tone when a section completes.' },
@@ -1909,6 +2226,122 @@ export default class App extends React.Component {
       themeSeg: { stDark: 'st' + (s.theme === 'dark' ? ' active' : ''), stLight: 'st' + (s.theme === 'light' ? ' active' : ''), onDark: () => { if (s.theme !== 'dark') this.toggleTheme(); }, onLight: () => { if (s.theme !== 'light') this.toggleTheme(); } },
       onToggleTheme: () => this.toggleTheme(), themeGlyph: s.theme === 'dark' ? '\u25D1' : '\u25D0',
     };
+  }
+
+  /**
+   * 현장 평면도 도면 — 컨테이너 · SVG · 절대배치 오버레이 한 벌.
+   *
+   * 현장 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * 블록은 **한 글자도 바꾸지 않고** 그대로 옮겼다 — 들여쓰기가 깊은 채로 남아
+   * 있는 것은 그 때문이다. 이식된 마크업이라 읽기 좋게 고치는 것보다 같은 것이 낫다.
+   *
+   * ⚠ **인자 이름 `V` 는 규약이다.** `scripts/port-check.mjs` 가 조건부 렌더와
+   *   반복 렌더에서 **참조 이름만** 뽑아 프로토타입과 비교한다. 여기서 `F` 로 받으면
+   *   `floor.sWalls` 가 `F.sWalls` 로 보여 **있던 갈래가 사라진 것처럼** 잡힌다.
+   *
+   *   대조기는 주석과 코드를 가리지 않는다 — 이 주석에 그 두 패턴을 문자 그대로
+   *   적었다가 이름 하나가 늘어 대조가 깨졌다. 그래서 여기선 말로만 쓴다.
+   */
+  renderPlanFigure(V) {
+    return (
+                  <div style={S("position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden")}>
+                    <svg viewBox="0 0 1000 625" style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")}>
+                      <defs><pattern id="fpHatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="9" stroke="var(--border)" strokeWidth="1"></line></pattern></defs>
+                      {arr(V.floor.sRoomFills).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill}></rect></React.Fragment>))}
+                      {arr(V.floor.sHatch).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill="url(#fpHatch)" stroke="var(--border)" strokeWidth="1" rx="4"></rect></React.Fragment>))}
+                      {arr(V.floor.sOffsite).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill="none" stroke="var(--border-strong)" strokeWidth="1.2" strokeDasharray="6 5" rx="6"></rect></React.Fragment>))}
+                      {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--border-strong)" strokeWidth="1.4" strokeDasharray="6 5"></line></React.Fragment>))}
+                      {arr(V.floor.sPoche).map((p,$index)=>(<React.Fragment key={$index}><path d={p.d} fill="none" stroke={p.color} strokeWidth={p.width} strokeLinejoin="miter"></path></React.Fragment>))}
+                      {arr(V.floor.sWalls).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--fg-3)" strokeWidth="4.5"></line></React.Fragment>))}
+                      {arr(V.floor.sDoorErase).map((d,$index)=>(<React.Fragment key={$index}><line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke="var(--bg-subtle)" strokeWidth="7"></line></React.Fragment>))}
+                      {arr(V.floor.sDoorLeaf).map((d,$index)=>(<React.Fragment key={$index}><line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke="var(--fg-3)" strokeWidth="1.4"></line></React.Fragment>))}
+                      {arr(V.floor.sDoorArc).map((d,$index)=>(<React.Fragment key={$index}><path d={d.d} fill="none" stroke="var(--fg-4)" strokeWidth="1.3"></path></React.Fragment>))}
+                      {arr(V.floor.sWin).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--accent)" strokeWidth="1.8"></line></React.Fragment>))}
+                      <g stroke="var(--fg-4)" strokeWidth="1.4"><line x1={V.floor.scale.x} y1={V.floor.scale.y} x2={V.floor.scale.x2} y2={V.floor.scale.y}></line><line x1={V.floor.scale.x} y1={V.floor.scale.yt1} x2={V.floor.scale.x} y2={V.floor.scale.yt2}></line><line x1={V.floor.scale.x2} y1={V.floor.scale.yt1} x2={V.floor.scale.x2} y2={V.floor.scale.yt2}></line></g>
+                    </svg>
+                    {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${w.mx}%;top:${w.my}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px`)}>{w.label}</span></React.Fragment>))}
+                    {arr(V.floor.locs).map((l,$index)=>(<React.Fragment key={$index}><div style={l.boxStyle} onClick={l.onSearch}>
+                      <div style={S("display:flex;align-items:center;gap:6px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
+                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:6px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
+                    </div></React.Fragment>))}
+                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
+                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span style={f.labelStyle}>{f.name}</span></React.Fragment>))}
+                    {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span title={pm.name} style={pm.style}></span></React.Fragment>))}
+                    {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span style={pm.labelStyle}>{pm.name}</span></React.Fragment>))}
+                    {arr(V.floor.doorLabels).map((dr,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${dr.left}%;top:${dr.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--fg-3);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{dr.label}</span></React.Fragment>))}
+                    {arr(V.floor.winLabels).map((wl,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${wl.left}%;top:${wl.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--accent);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{wl.label}</span></React.Fragment>))}
+                    <span style={S(`position:absolute;left:${V.floor.scaleLabel.left}%;top:${V.floor.scaleLabel.top}%;font-size:10px;color:var(--fg-4);z-index:5`)}>{V.floor.scaleText}</span>
+                  </div>
+    )
+  }
+
+  /**
+   * 주장 대조표(도식) — 인물 × 시간대 격자 한 벌.
+   *
+   * 현장·관계도 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * 블록은 **한 글자도 바꾸지 않고** 옮겼다 — 깊은 들여쓰기가 남은 것은 그 때문이다.
+   *
+   * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
+   */
+  renderClaimGridFigure(V) {
+    return (
+                    <div style={S("overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-md)")}>
+                      <div style={S("display:flex;min-width:720px;background:var(--bg-subtle);border-bottom:1px solid var(--border)")}>
+                        <div style={S("width:184px;flex:none;padding:9px 14px;position:sticky;left:0;background:var(--bg-subtle);z-index:3;border-right:1px solid var(--border)")}><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridPersonCol}</span></div>
+                        {arr(V.grid.times).map((tm,$index)=>(<React.Fragment key={$index}><div style={tm.headStyle}><span className="v-ui" style={tm.labelStyle}>{tm.label}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{tm.sub}</span></div></React.Fragment>))}
+                      </div>
+                      {arr(V.grid.rows).map((row,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;min-width:720px;border-bottom:1px solid var(--border)")}>
+                        <div style={S("width:184px;flex:none;display:flex;align-items:center;gap:9px;padding:0 14px;position:sticky;left:0;background:var(--bg-app);z-index:2;border-right:1px solid var(--border)")}><span style={S(`width:3px;align-self:stretch;background:${row.p.color};flex:none`)}></span>
+                          <span style={row.p.avStyle}>{row.p.ini}</span>
+                          <span style={S("display:flex;flex-direction:column;min-width:0")}><span className="v-ui" style={S("color:var(--fg);white-space:nowrap")}>{row.p.name}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{row.p.meta}</span></span>
+                        </div>
+                        {arr(row.cells).map((cell,$index)=>(<React.Fragment key={$index}><div className="g-cell" style={cell.style} onClick={cell.onClick}>
+                          {(cell.hasClaim)?(<><span className="g-cell-hoverable" style={cell.labelStyle}>{cell.label}</span>{(cell.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px;margin-left:auto")}>{V.ui.newBadge}</span></>):null}{(cell.marked)?(<><span style={cell.markDotStyle}></span></>):null}</>):null}
+                          {(cell.empty)?(<><span style={S("color:var(--fg-4)")}>{V.ui.noClaim}</span></>):null}
+                          {(cell.pickerOpen)?(<><div className="g-picker" style={cell.pickerStyle}>{arr(cell.opts).map((mo,$index)=>(<React.Fragment key={$index}><span onClick={mo.onPick} title={mo.label} style={mo.chipStyle}><span style={mo.dot}></span></span></React.Fragment>))}</div></>):null}
+                        </div></React.Fragment>))}
+                      </div></React.Fragment>))}
+                    </div>
+    )
+  }
+
+  /**
+   * 관계도 도면 — 컨테이너 · SVG · 노드/간선 오버레이 한 벌.
+   *
+   * 현장·관계도 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * 블록은 **한 글자도 바꾸지 않고** 옮겼다 — 깊은 들여쓰기가 남은 것은 그 때문이다.
+   *
+   * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
+   */
+  renderGraphFigure(V) {
+    return (
+                  <div style={S("position:relative;width:100%;aspect-ratio:16/11;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden")}>
+                    <svg style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")} viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {arr(V.graph.edges).map((e,$index)=>(<React.Fragment key={$index}><line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={e.stroke} strokeWidth={e.width}></line></React.Fragment>))}
+                    </svg>
+                    {arr(V.graph.edges).map((e,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${e.mx}%;top:${e.my}%;transform:translate(-50%,-50%);font-size:10px;font-weight:500;color:${e.labelColor};background:var(--bg-subtle);padding:0 4px;white-space:nowrap`)}>{e.label}</span></React.Fragment>))}
+                    {arr(V.graph.nodes).map((n,$index)=>(<React.Fragment key={$index}><span onClick={n.onClick} style={n.dotStyle}></span></React.Fragment>))}
+                    {arr(V.graph.nodes).map((n,$index)=>(<React.Fragment key={$index}><span style={n.labelStyle}>{n.label}</span></React.Fragment>))}
+                  </div>
+    )
+  }
+
+  /**
+   * 시간대 전환 띠 — 현장 화면과 **상황판 바닥**이 같이 쓴다.
+   *
+   * 평면도의 인물 마커는 `this.state.mapTime` 을 본다. 처음 상황판에 도면만
+   * 옮기고 이 띠를 빼먹었더니 **판 위 평면도가 현장에서 마지막에 고른 시간대로
+   * 굳어 있었다** (사용자가 「시간이 왜 안 따라오지」로 잡았다, 2026-07-26).
+   *
+   * `mapTime` 은 순수 화면 상태라 상황판에서 바꿔도 예산이 안 깎이고 아무것도
+   * 공개되지 않는다 — 그래서 바닥에서는 **이것만** 살아 있다.
+   *
+   * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
+   */
+  renderPlanTimes(V) {
+    return (
+                  <div className="segmented" style={S("margin-bottom:16px")}>{arr(V.floor.times).map((tm,$index)=>(<React.Fragment key={$index}><div onClick={tm.onClick} style={tm.style}>{tm.label}</div></React.Fragment>))}</div>
+    )
   }
 
   render() {
@@ -2329,35 +2762,8 @@ export default class App extends React.Component {
                 <div style={S("padding:18px 24px;max-width:1100px")}>
                   <div className="segmented" style={S("margin-bottom:16px")}><div onClick={V.onMapPlan} style={V.mapPlanStyle}>{V.ui.mapModePlan}</div><div onClick={V.onMapGrid} style={V.mapGridStyle}>{V.ui.mapModeGrid}</div></div>
                   {(V.mapPlanMode)?(<>
-                  <div className="segmented" style={S("margin-bottom:16px")}>{arr(V.floor.times).map((tm,$index)=>(<React.Fragment key={$index}><div onClick={tm.onClick} style={tm.style}>{tm.label}</div></React.Fragment>))}</div>
-                  <div style={S("position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden")}>
-                    <svg viewBox="0 0 1000 625" style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")}>
-                      <defs><pattern id="fpHatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="9" stroke="var(--border)" strokeWidth="1"></line></pattern></defs>
-                      {arr(V.floor.sRoomFills).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill}></rect></React.Fragment>))}
-                      {arr(V.floor.sHatch).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill="url(#fpHatch)" stroke="var(--border)" strokeWidth="1" rx="4"></rect></React.Fragment>))}
-                      {arr(V.floor.sOffsite).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill="none" stroke="var(--border-strong)" strokeWidth="1.2" strokeDasharray="6 5" rx="6"></rect></React.Fragment>))}
-                      {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--border-strong)" strokeWidth="1.4" strokeDasharray="6 5"></line></React.Fragment>))}
-                      {arr(V.floor.sPoche).map((p,$index)=>(<React.Fragment key={$index}><path d={p.d} fill="none" stroke={p.color} strokeWidth={p.width} strokeLinejoin="miter"></path></React.Fragment>))}
-                      {arr(V.floor.sWalls).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--fg-3)" strokeWidth="4.5"></line></React.Fragment>))}
-                      {arr(V.floor.sDoorErase).map((d,$index)=>(<React.Fragment key={$index}><line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke="var(--bg-subtle)" strokeWidth="7"></line></React.Fragment>))}
-                      {arr(V.floor.sDoorLeaf).map((d,$index)=>(<React.Fragment key={$index}><line x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke="var(--fg-3)" strokeWidth="1.4"></line></React.Fragment>))}
-                      {arr(V.floor.sDoorArc).map((d,$index)=>(<React.Fragment key={$index}><path d={d.d} fill="none" stroke="var(--fg-4)" strokeWidth="1.3"></path></React.Fragment>))}
-                      {arr(V.floor.sWin).map((w,$index)=>(<React.Fragment key={$index}><line x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} stroke="var(--accent)" strokeWidth="1.8"></line></React.Fragment>))}
-                      <g stroke="var(--fg-4)" strokeWidth="1.4"><line x1={V.floor.scale.x} y1={V.floor.scale.y} x2={V.floor.scale.x2} y2={V.floor.scale.y}></line><line x1={V.floor.scale.x} y1={V.floor.scale.yt1} x2={V.floor.scale.x} y2={V.floor.scale.yt2}></line><line x1={V.floor.scale.x2} y1={V.floor.scale.yt1} x2={V.floor.scale.x2} y2={V.floor.scale.yt2}></line></g>
-                    </svg>
-                    {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${w.mx}%;top:${w.my}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px`)}>{w.label}</span></React.Fragment>))}
-                    {arr(V.floor.locs).map((l,$index)=>(<React.Fragment key={$index}><div style={l.boxStyle} onClick={l.onSearch}>
-                      <div style={S("display:flex;align-items:center;gap:6px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
-                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:6px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
-                    </div></React.Fragment>))}
-                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
-                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span style={f.labelStyle}>{f.name}</span></React.Fragment>))}
-                    {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span title={pm.name} style={pm.style}></span></React.Fragment>))}
-                    {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span style={pm.labelStyle}>{pm.name}</span></React.Fragment>))}
-                    {arr(V.floor.doorLabels).map((dr,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${dr.left}%;top:${dr.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--fg-3);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{dr.label}</span></React.Fragment>))}
-                    {arr(V.floor.winLabels).map((wl,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${wl.left}%;top:${wl.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--accent);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{wl.label}</span></React.Fragment>))}
-                    <span style={S(`position:absolute;left:${V.floor.scaleLabel.left}%;top:${V.floor.scaleLabel.top}%;font-size:10px;color:var(--fg-4);z-index:5`)}>{V.floor.scaleText}</span>
-                  </div>
+                  {this.renderPlanTimes(V)}
+                  {this.renderPlanFigure(V)}
                   <div style={S("display:flex;flex-wrap:wrap;gap:12px;margin-top:12px")}>
                     {arr(V.floor.dotLegend).map((lg,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S(`width:10px;height:10px;border-radius:50%;background:${lg.color}`)}></span>{lg.name}</span></React.Fragment>))}
                     {(V.floor.hasClueMarks)?(<><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.floor.clueLegend}</span></>):null}
@@ -2376,23 +2782,7 @@ export default class App extends React.Component {
                       </div>
                       <span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridHint}</span>
                     </div>
-                    <div style={S("overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-md)")}>
-                      <div style={S("display:flex;min-width:720px;background:var(--bg-subtle);border-bottom:1px solid var(--border)")}>
-                        <div style={S("width:184px;flex:none;padding:9px 14px;position:sticky;left:0;background:var(--bg-subtle);z-index:3;border-right:1px solid var(--border)")}><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridPersonCol}</span></div>
-                        {arr(V.grid.times).map((tm,$index)=>(<React.Fragment key={$index}><div style={tm.headStyle}><span className="v-ui" style={tm.labelStyle}>{tm.label}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{tm.sub}</span></div></React.Fragment>))}
-                      </div>
-                      {arr(V.grid.rows).map((row,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;min-width:720px;border-bottom:1px solid var(--border)")}>
-                        <div style={S("width:184px;flex:none;display:flex;align-items:center;gap:9px;padding:0 14px;position:sticky;left:0;background:var(--bg-app);z-index:2;border-right:1px solid var(--border)")}><span style={S(`width:3px;align-self:stretch;background:${row.p.color};flex:none`)}></span>
-                          <span style={row.p.avStyle}>{row.p.ini}</span>
-                          <span style={S("display:flex;flex-direction:column;min-width:0")}><span className="v-ui" style={S("color:var(--fg);white-space:nowrap")}>{row.p.name}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{row.p.meta}</span></span>
-                        </div>
-                        {arr(row.cells).map((cell,$index)=>(<React.Fragment key={$index}><div className="g-cell" style={cell.style} onClick={cell.onClick}>
-                          {(cell.hasClaim)?(<><span className="g-cell-hoverable" style={cell.labelStyle}>{cell.label}</span>{(cell.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px;margin-left:auto")}>{V.ui.newBadge}</span></>):null}{(cell.marked)?(<><span style={cell.markDotStyle}></span></>):null}</>):null}
-                          {(cell.empty)?(<><span style={S("color:var(--fg-4)")}>{V.ui.noClaim}</span></>):null}
-                          {(cell.pickerOpen)?(<><div className="g-picker" style={cell.pickerStyle}>{arr(cell.opts).map((mo,$index)=>(<React.Fragment key={$index}><span onClick={mo.onPick} title={mo.label} style={mo.chipStyle}><span style={mo.dot}></span></span></React.Fragment>))}</div></>):null}
-                        </div></React.Fragment>))}
-                      </div></React.Fragment>))}
-                    </div>
+                    {this.renderClaimGridFigure(V)}
                   </div>
                   </>):null}
                   {(V.mapPlanMode)?(<>{(V.floor.hasNarr)?(<><div style={S("margin-top:22px")}>
@@ -2461,8 +2851,29 @@ export default class App extends React.Component {
             </div></>):null}
             {(V.pb.drawerClosed)?(<><div onClick={V.pb.onToggleDrawer} title="서랍 열기" style={S("position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:20;width:16px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);border-left:none;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px")}>›</div></>):null}
 
+            <div style={S("flex:1;display:flex;flex-direction:column;min-width:0")}>
+              <div style={S("display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;flex:none;background:var(--bg-app);border-bottom:1px solid var(--border-strong);overflow-x:auto")}>
+                {arr(V.pb.boards).map((b,$index)=>(<React.Fragment key={$index}><div onClick={b.onGo} style={b.tabStyle}>
+                  <input value={b.name} onChange={b.onName} onClick={b.onGo} style={b.nameStyle} />
+                  {(b.backdropMark)?(<><span style={b.markStyle}>{b.backdropMark}</span></>):null}
+                  {(b.showDel)?(<><span onClick={b.onDel} title="이 상황판 삭제" style={b.delStyle}>✕</span></>):null}
+                </div></React.Fragment>))}
+                <span onClick={V.pb.onAddBoard} title="상황판 추가" style={S("flex:none;padding:4px 10px;cursor:pointer;color:var(--fg-3);font-size:13px")}>＋</span>
+              </div>
             <div style={S(`position:relative;flex:1;overflow:hidden;background:var(--bg-subtle);touch-action:none;cursor:${V.pb.canvasCursor}`)} onPointerDown={V.pb.onBgDown} onPointerMove={V.pb.onCanvasMove} onPointerUp={V.pb.onCanvasUp}>
               <div data-canvas style={V.pb.worldStyle}>
+                {(V.pb.backdrop.show)?(<><div style={V.pb.backdrop.wrapStyle}>
+                  <div style={V.pb.backdrop.capStyle}>
+                    <span>{V.pb.backdrop.label}</span>
+                    <span style={S("flex:1")}></span>
+                    <span onClick={V.pb.backdrop.onClear} title="바닥 걷기" style={V.pb.backdrop.clearStyle}>✕</span>
+                  </div>
+                  {(V.pb.backdrop.needsTimes)?(<><div style={V.pb.backdrop.timesStyle}>{this.renderPlanTimes(V)}</div></>):null}
+                  {(V.pb.backdrop.isPlan)?(<>{this.renderPlanFigure(V)}</>):null}
+                  {(V.pb.backdrop.isGrid)?(<>{this.renderClaimGridFigure(V)}</>):null}
+                  {(V.pb.backdrop.isGraph)?(<>{this.renderGraphFigure(V)}</>):null}
+                  <span onPointerDown={V.pb.backdrop.onResizeDown} title="크기" style={V.pb.backdrop.resizeStyle}></span>
+                </div></>):null}
                 {(V.pb.timelineOn)?(<>
                   <div style={S(`position:absolute;left:0;top:${V.pb.tlBandTop};width:15000px;height:56px;border-bottom:1px dashed var(--border-strong);background:var(--bg-subtle)`)}>
                     <span className="v-micro" style={S("position:absolute;left:10px;top:7px;color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em")}>시간 →</span>
@@ -2556,6 +2967,7 @@ export default class App extends React.Component {
                 <span onClick={V.pb.mselBar.onBlock} style={S("display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--accent);color:var(--fg-on-accent);font-size:12px;font-weight:600;cursor:pointer")}>{V.pb.mselBar.label}</span>
               </div></>):null}
             </div>
+            </div>
           </div>
         </div>
                 </div>
@@ -2564,14 +2976,7 @@ export default class App extends React.Component {
               
               {(V.isGraph)?(<>
                 <div style={S("padding:18px 24px;max-width:1100px")}>
-                  <div style={S("position:relative;width:100%;aspect-ratio:16/11;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden")}>
-                    <svg style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")} viewBox="0 0 100 100" preserveAspectRatio="none">
-                      {arr(V.graph.edges).map((e,$index)=>(<React.Fragment key={$index}><line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={e.stroke} strokeWidth={e.width}></line></React.Fragment>))}
-                    </svg>
-                    {arr(V.graph.edges).map((e,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${e.mx}%;top:${e.my}%;transform:translate(-50%,-50%);font-size:10px;font-weight:500;color:${e.labelColor};background:var(--bg-subtle);padding:0 4px;white-space:nowrap`)}>{e.label}</span></React.Fragment>))}
-                    {arr(V.graph.nodes).map((n,$index)=>(<React.Fragment key={$index}><span onClick={n.onClick} style={n.dotStyle}></span></React.Fragment>))}
-                    {arr(V.graph.nodes).map((n,$index)=>(<React.Fragment key={$index}><span style={n.labelStyle}>{n.label}</span></React.Fragment>))}
-                  </div>
+                  {this.renderGraphFigure(V)}
                   <div style={S("display:flex;flex-wrap:wrap;gap:14px;margin-top:12px")}>
                     <span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:50%;background:var(--fg-2);box-shadow:0 0 0 2px var(--border-strong)")}></span>{V.graph.legendPerson}</span>
                     <span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.graph.legendEvidence}</span>

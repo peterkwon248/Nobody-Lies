@@ -4,8 +4,36 @@
 > `docs/MEMORY.md`다 (이 저장소는 MEMORY.md 단일 체제 — 별도 CONTEXT/TODO 없음).
 > 이식 전수 대조의 전 과정과 남은 목록은 `docs/PORT-AUDIT.md`.
 
-- **마지막 갱신**: 2026-07-26
-- **브랜치**: `dc-react-swap` (교체 작업 중 · `main` 은 손이식 앱 그대로)
+- **마지막 갱신**: 2026-07-27
+- **브랜치**: `main` — `dc-react-swap` 은 병합·삭제됐다
+
+---
+
+## ⛔ 「`REVEALS` 부터 — 가장 쌈」은 **거짓이다** (2026-07-27)
+
+앞선 워크로그가 엔진 재분리의 첫 타로 `REVEALS` 를 꼽았다. **잘못됐다.**
+`REVEALS` 는 데이터 이동이 아니라 `INV_ACTIONS` 와 같은 **모델 충돌**이다.
+`docs/MEMORY.md` 「REVEALS 불일치 (2026-07-24 발견)」가 이미 적어둔 것과 같은 사실이고,
+우선순위 메모만 그것과 모순돼 있었다.
+
+| 트리거 | 엔진 `reveals` | 앱 |
+|---|---|---|
+| 1장 완성 | `facts:[f_cause]` · `actions:[a_annex]` · narration | `targets:['search:annex']` · 유빈 flavor 진술 |
+| 2장 완성 | `add_claims` 나경 「새벽에 다인 언니가 저한테도 전화를 했었어요」 | `CLAIM_REVEALS.s3` 나경 t1 「통화 중 (본인 주장)」 **+ 진술 2건** |
+| 3장 완성 | `add_claims` 지안 「나경 걔가 요즘 돈 문제로…」 | **없음** |
+| 4장 완성 | **없음** | `REVEALS.s4` 나경 「그 소문… 세라 언니 쪽이었죠」 |
+| 조사 `a_autopsy` | `narrows_window:[t1,t2]` | `deathNarrowed()` 가 `invLog` 를 직접 훑는다 |
+| 조사 `a_briquette` | `surface:map` · path · narration | **없음** |
+
+겹치는 것은 `a_annex` ↔ `search:annex` 하나뿐이다. **트리거가 붙은 장이 다르고,
+화자가 다르고, 문안이 전부 다르다.** 옮기려면 어느 장이 무엇을 공개하고 누가
+말하는지를 정해야 한다 — 이식이 아니라 저작이다.
+
+부수로 확인된 죽은 필드 둘: `REVEALS[].yield`·`statements[].y` 는 **어디서도 읽지
+않는다.** `r.terms` 는 1044·1093행이 분기하는데 **`terms` 를 가진 항목이 없다.**
+
+> 다음 타는 `TERM_MAP`/`CLUE_MAP` 이 아니다 — 그 둘도 `INV_ACTIONS` 에 묶여 있다.
+> 남은 깨끗한 것은 `COLLECTED_POOL`(단, decoy 3은 난이도 결정)뿐이다.
 
 ---
 
@@ -17,8 +45,8 @@
 마크업을 기계로 가져오면 그 부류가 통째로 사라진다.
 
 ```
-app/src/App.jsx   2919줄 단일 클래스. 화면 전부 + GEO 평면도 엔진
-app/public/_ds/   Vector Design System 번들 (index.html 이 직접 로드)
+app/src/App.jsx   3254줄 단일 클래스. 화면 전부 + GEO 평면도 엔진
+app/public/_ds/   Vector Design System 번들 (main.jsx 가 React 를 심은 뒤 로드)
 ```
 
 **대가는 엔진이다.** 사건 데이터가 `App.jsx` 에 하드코딩돼 있어서 지금 앱은
