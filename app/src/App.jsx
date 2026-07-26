@@ -76,13 +76,13 @@ export default class App extends React.Component {
       nTitle: '사건 보고서', nSub: '공란을 모두 채우면 장이 완성됩니다 · 마지막에 제출', sTitle: '진술', sSub: '다섯 사람의 원문 진술',
       rTitle: '상태 레퍼런스', rSub: '공란 2상태 · 장 2상태 · 셀 마킹',
       segGrid: '구조 뷰', segOriginal: '진술',
-      ovVictimK: '피해자', ovVictimV: '김채원 (30) · 소설가', ovWhenK: '사망 추정', ovWhenV: '새벽 3시 ~ 오전 8시',
+      ovVictimK: '피해자', ovVictimV: '윤다인 (30) · 소설가', ovWhenK: '사망 추정', ovWhenV: '새벽 3시 ~ 오전 8시',
       ovBodyK: '시신', ovBodyV: '외상 없음', ovSceneK: '현장', ovSceneV: '방문·창가 테이프, 화로에 연탄',
       secOpen: '미확정', secSealed: '확정', secLocked: '대기', secLockedHint: '앞 장을 완성하면 열립니다', secLockedShort: '잠김', reopenBtn: '재개봉', reopenUsed: '재개봉 사용됨', reopenAvail: '재개봉 가능', reopenDone: '편집 완료', reopenWarn: '장당 한 번만 다시 열 수 있으며, 닫으면 더 이상 수정할 수 없습니다.',
       secDone: '완성', secTodo: '미완성', secFillHint: '공란을 모두 채우면 완성됩니다', clearBlank: '비우기',
       msgFill: '빈칸을 모두 채우세요.',
       kindPerson: '인물', kindPlace: '장소', kindTime: '시각', kindWeapon: '흉기·수단', kindTrick: '정황', kindMotive: '동기', kindClue: '단서', openCand: '열림', modeProse: '서술', modeList: '목록', modeBoard: '보드', listUnrev: '이전 항 확인 후',
-      vPerson: '인물', vPlace: '장소', vTime: '시각', vTool: '도구', vMotive: '동기', vIdentity: '정체', vConceal: '은폐수단', vStaging: '위장물', vAccomplice: '공범', vLastSeen: '마지막목격자', vContact: '접촉수단', vHideout: '은닉처', vCause: '사인', vItem: '물품', vTarget: '협박대상',
+      vPerson: '인물', vPlace: '장소', vTime: '시각', vTool: '도구', vMotive: '동기', vIdentity: '정체', vConceal: '은폐수단', vStaging: '위장물', vLastSeen: '마지막목격자', vContact: '접촉수단', vHideout: '은닉처', vCause: '사인', vItem: '물품', vTarget: '협박대상',
       srcClosed: '목록', srcCollected: '확보 단어', revealedBy: '장 완성으로 공개', addedStmt: '추가 진술', windowPrev: '이전 추정', newTargetTitle: '새 조사 대상 공개', winNarrowed: '사망 추정 축소',
       pickList: '후보에서 선택', pickWord: '확보 단어에서 선택',
       bankTitle: '확보 단어', bankHint: '흉기·동기처럼 조사로 발견해야 하는 열린 후보가 여기 모입니다.',
@@ -92,7 +92,7 @@ export default class App extends React.Component {
       gridPersonCol: '인물', markFlag: '표시', markConfirm: '확인', markSuspect: '의심', markContradict: '모순', markClear: '지우기', marksOnly: '표시만', fullText: '전체', noMarksHint: '아직 표시한 구절이 없습니다. 진술 원문에서 드래그해 표시하세요.',
       autoTag: '자동', autoTitle: '모순 자동 감지', noClaim: '언급 없음', gridTitle: '주장 대조', newBadge: '신규', layerClaim: '주장 · 미확정', layerFact: '확정 · 물증',
       gridHint: '셀을 눌러 확인·의심·모순을 표시하세요', timelineSort: '시간순 정렬', viewSettings: '보기 설정',
-      autoNote: '미야와키 사쿠라는 사망 추정 시간대 내내 별채에서 잤다고 주장한다. 별채↔본채는 도보 10분, 추정 구간은 5시간 — 왕복이 물리적으로 가능하다.',
+      autoNote: '문세라는 사망 추정 시간대 내내 별채에서 잤다고 주장한다. 별채↔본채는 도보 10분, 추정 구간은 5시간 — 왕복이 물리적으로 가능하다.',
       refIntro: '이 게임에서 쓰는 기호와 상태의 읽는 법입니다. 예시는 실제 사건과 무관한 견본이며, 정답을 담고 있지 않습니다.',
       refBlanks: '공란 상태', refSections: '장 상태', refMarks: '셀 마킹',
       refAnn: '주석 하이라이트', refProfSlot: '프로필 슬롯', refReveals: '장 완성 공개', refNewStates: '추가 화면 상태', refSounds: '사운드 지점',
@@ -140,7 +140,7 @@ export default class App extends React.Component {
       secDone: 'Complete', secTodo: 'Incomplete', secFillHint: 'Fill every blank to complete', clearBlank: 'Clear',
       msgFill: 'Fill every blank first.',
       kindPerson: 'Person', kindPlace: 'Place', kindTime: 'Time', kindWeapon: 'Means', kindTrick: 'Circumstance', kindMotive: 'Motive', kindClue: 'Clue', openCand: 'Open', modeProse: 'Prose', modeList: 'List', modeBoard: 'Board', listUnrev: 'After previous section',
-      vPerson: 'Person', vPlace: 'Place', vTime: 'Time', vTool: 'Tool', vMotive: 'Motive', vIdentity: 'Identity', vConceal: 'Concealment', vStaging: 'Staging', vAccomplice: 'Accomplice', vLastSeen: 'Last seen by', vContact: 'Contact', vHideout: 'Hideout', vCause: 'Cause', vItem: 'Item', vTarget: 'Blackmail target',
+      vPerson: 'Person', vPlace: 'Place', vTime: 'Time', vTool: 'Tool', vMotive: 'Motive', vIdentity: 'Identity', vConceal: 'Concealment', vStaging: 'Staging', vLastSeen: 'Last seen by', vContact: 'Contact', vHideout: 'Hideout', vCause: 'Cause', vItem: 'Item', vTarget: 'Blackmail target',
       srcClosed: 'List', srcCollected: 'Collected', revealedBy: 'revealed on complete', addedStmt: 'Added statement', windowPrev: 'was', newTargetTitle: 'New investigation target', winNarrowed: 'Death window narrowed',
       pickList: 'Choose a candidate', pickWord: 'Pick from collected terms',
       bankTitle: 'Collected terms', bankHint: 'Open candidates you must discover through investigation — means, motive — collect here.',
@@ -187,22 +187,22 @@ export default class App extends React.Component {
   };
 
   PEOPLE = [
-    { id: 'yena', name: '최예나', age: 31, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '댄스 강사', jobEn: 'Dance instructor', claimKo: '오전에 도착해 가장 먼저 연기를 발견했다고 진술.', ini: '예', color: '#4C8DFF', c1: '#4C8DFF', c2: '#2D9CDB' },
-    { id: 'yujin', name: '안유진', age: 27, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '아이돌', jobEn: 'Idol', claimKo: '요리를 도우러 일찍 도착, 예나와 함께 발견했다고 진술.', ini: '유', color: '#BB6BD9', c1: '#BB6BD9', c2: '#4C8DFF' },
-    { id: 'sakura', name: '미야와키 사쿠라', age: 32, sexKo: '여', sexEn: 'F', role: 'roleKeeper', relKo: '산장 거주', relEn: 'Lives on-site', jobKo: '산장지기', jobEn: 'Lodge keeper', claimKo: '전날 밤 본채에서 음주 후 별채에서 잤고, 오전까지 계속 잤다고 진술.', ini: '쿠', color: '#F2994A', c1: '#F2994A', c2: '#EB5757' },
-    { id: 'yuri', name: '조유리', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '가수', jobEn: 'Singer', claimKo: '장을 보고 유진과 함께 뒤늦게 도착했다고 진술.', ini: '리', color: '#4CB782', c1: '#4CB782', c2: '#2D9CDB' },
-    { id: 'wonyoung', name: '장원영', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'Absent, left late', jobKo: '아이돌', jobEn: 'Idol', claimKo: '새벽 3시 피해자의 전화를 받고 늦잠 후 늦게 출발했다고 진술.', ini: '원', color: '#F2C94C', c1: '#F2C94C', c2: '#F2994A' },
+    { id: 'yena', name: '서지안', age: 31, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '댄스 강사', jobEn: 'Dance instructor', claimKo: '오전에 도착해 가장 먼저 연기를 발견했다고 진술.', ini: '지', color: '#4C8DFF', c1: '#4C8DFF', c2: '#2D9CDB' },
+    { id: 'yujin', name: '한유빈', age: 27, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '아이돌', jobEn: 'Idol', claimKo: '요리를 도우러 일찍 도착, 지안과 함께 발견했다고 진술.', ini: '유', color: '#BB6BD9', c1: '#BB6BD9', c2: '#4C8DFF' },
+    { id: 'sakura', name: '문세라', age: 32, sexKo: '여', sexEn: 'F', role: 'roleKeeper', relKo: '산장 거주', relEn: 'Lives on-site', jobKo: '산장지기', jobEn: 'Lodge keeper', claimKo: '전날 밤 본채에서 음주 후 별채에서 잤고, 오전까지 계속 잤다고 진술.', ini: '세', color: '#F2994A', c1: '#F2994A', c2: '#EB5757' },
+    { id: 'yuri', name: '오나경', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '가수', jobEn: 'Singer', claimKo: '장을 보고 유빈과 함께 뒤늦게 도착했다고 진술.', ini: '나', color: '#4CB782', c1: '#4CB782', c2: '#2D9CDB' },
+    { id: 'wonyoung', name: '백리원', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'Absent, left late', jobKo: '아이돌', jobEn: 'Idol', claimKo: '새벽 3시 피해자의 전화를 받고 늦잠 후 늦게 출발했다고 진술.', ini: '리', color: '#F2C94C', c1: '#F2C94C', c2: '#F2994A' },
   ];
   CLUE_MAP = {
     'search:annex': [{ p: 'sakura', slot: 'motive', ko: '마약 유통망 \u2018김선생\u2019 거래 기록 (별채 대포폰)' }],
     'belongings:sakura': [{ p: 'sakura', slot: 'means', ko: '위장용 유서 초안·금고 열쇠' }],
     'belongings:wonyoung': [{ p: 'wonyoung', slot: 'motive', ko: '\u2018김선생\u2019 추적 정황' }, { p: 'sakura', slot: 'motive', ko: '추적 중이던 번호와 일치하는 연락처' }],
     'phone:wonyoung': [{ p: 'wonyoung', slot: 'opportunity', ko: '새벽 3시 통화·기지국상 원거리' }],
-    'alibi:yujin+yuri': [{ p: 'yuri', slot: 'opportunity', ko: '동선 일치 \u2014 사망 시간대 접근 불가' }, { p: 'yujin', slot: 'opportunity', ko: '예나·유리와 동선 일치' }],
-    'alibi:yena+yujin': [{ p: 'yena', slot: 'opportunity', ko: '도착 시각 상호 일치' }, { p: 'yujin', slot: 'opportunity', ko: '예나와 도착 시각 일치' }],
+    'alibi:yujin+yuri': [{ p: 'yuri', slot: 'opportunity', ko: '동선 일치 \u2014 사망 시간대 접근 불가' }, { p: 'yujin', slot: 'opportunity', ko: '지안·나경과 동선 일치' }],
+    'alibi:yena+yujin': [{ p: 'yena', slot: 'opportunity', ko: '도착 시각 상호 일치' }, { p: 'yujin', slot: 'opportunity', ko: '지안과 도착 시각 일치' }],
     'belongings:yuri': [{ p: 'yuri', slot: 'motive', ko: '약물 투약 흔적 (협박 정황)' }],
     'belongings:yena': [{ p: 'yena', slot: 'motive', ko: '유통 경로 추적 메모' }],
-    'belongings:yujin': [{ p: 'yujin', slot: 'motive', ko: '채원 의심 메모' }],
+    'belongings:yujin': [{ p: 'yujin', slot: 'motive', ko: '다인 의심 메모' }],
   };
 
   TIMES = [
@@ -222,7 +222,7 @@ export default class App extends React.Component {
   AUTO = { 'sakura-t2': true };
   LOCATIONS = [
     { id: 'main', ko: '본채', en: 'Main house', x: 30, y: 30, w: 44, h: 44 },
-    { id: 'room', ko: '채원의 방', en: "Chae-won's room", x: 42, y: 44, w: 26, h: 24, scene: true },
+    { id: 'room', ko: '다인의 방', en: "Chae-won's room", x: 42, y: 44, w: 26, h: 24, scene: true },
     { id: 'annex', ko: '별채', en: 'Annex', x: 80, y: 16, w: 16, h: 18, gated: 's1' },
     { id: 'approach', ko: '진입로', en: 'Approach', x: 30, y: 82, w: 26, h: 12 },
     { id: 'home', ko: '자택 (현장 밖)', en: 'Home (off-site)', x: 4, y: 6, w: 24, h: 15, offsite: true },
@@ -242,26 +242,26 @@ export default class App extends React.Component {
   };
 
   BLANKS = {
-    b1: { kind: 'vPerson', src: 'person', ans: '안유진', par: '이/가' },
-    b2: { kind: 'vPerson', src: 'person', ans: '최예나', par: '과/와' },
-    b3: { kind: 'vPlace', src: 'place', ans: '채원의 방', par: null },
+    b1: { kind: 'vPerson', src: 'person', ans: '한유빈', par: '이/가' },
+    b2: { kind: 'vPerson', src: 'person', ans: '서지안', par: '과/와' },
+    b3: { kind: 'vPlace', src: 'place', ans: '다인의 방', par: null },
     b4: { kind: 'vConceal', src: 'collected', ans: '테이프', par: '(으)로' },
     b5: { kind: 'vCause', src: 'collected', ans: '일산화탄소 중독', par: null },
     b6: { kind: 'vTool', src: 'collected', ans: '연탄', par: '을/를' },
     b7: { kind: 'vConceal', src: 'collected', ans: '테이프', par: '(으)로' },
     b8: { kind: 'vStaging', src: 'collected', ans: '유서', par: '을/를' },
-    b9: { kind: 'vLastSeen', src: 'person', ans: '미야와키 사쿠라', par: null },
+    b9: { kind: 'vLastSeen', src: 'person', ans: '문세라', par: null },
     b10: { kind: 'vTime', src: 'time', ans: '새벽 3시', par: null },
     b11: { kind: 'vPlace', src: 'place', ans: '본채', par: null },
-    b12: { kind: 'vPerson', src: 'person', ans: '장원영', par: '은/는' },
+    b12: { kind: 'vPerson', src: 'person', ans: '백리원', par: '은/는' },
     b13: { kind: 'vItem', src: 'collected', ans: '마약', par: '이/가' },
     b14: { kind: 'vIdentity', src: 'collected', ans: '김선생', par: null },
-    b15: { kind: 'vTarget', src: 'person', ans: '조유리', par: null },
-    b16: { kind: 'vPerson', src: 'person', ans: '장원영', par: '이/가' },
-    b17: { kind: 'vPerson', src: 'person', ans: '미야와키 사쿠라', par: null, nominate: true },
+    b15: { kind: 'vTarget', src: 'person', ans: '오나경', par: null },
+    b16: { kind: 'vPerson', src: 'person', ans: '백리원', par: '이/가' },
+    b17: { kind: 'vPerson', src: 'person', ans: '문세라', par: null, nominate: true },
     b18: { kind: 'vMotive', src: 'collected', ans: '폭로 임박', par: '(으)로' },
     b19: { kind: 'vHideout', src: 'collected', ans: '별채 대포폰', par: null },
-    b20: { kind: 'vPerson', src: 'person', ans: '미야와키 사쿠라', par: null },
+    b20: { kind: 'vPerson', src: 'person', ans: '문세라', par: null },
   };
   SEC_BLANKS = { s1: ['b1', 'b2', 'b3', 'b4'], s2: ['b5', 'b6', 'b7', 'b8'], s3: ['b9', 'b10', 'b11', 'b12'], s4: ['b13', 'b14', 'b15', 'b16', 'b20'], s5: ['b17', 'b18', 'b19'] };
 
@@ -270,20 +270,20 @@ export default class App extends React.Component {
       { text: '사건 당일 아침, 요리를 돕기로 한 ' }, { b: 'b1' }, { text: ' 남들보다 일찍 산장에 도착했다. 뒤이어 도착한 ' }, { b: 'b2' }, { text: ' 함께, 두 사람은 ' }, { b: 'b3' }, { text: '에서 새어 나오는 연기를 발견했다. 방문은 안에서 ' }, { b: 'b4' }, { text: ' 막혀 있어 쉽게 열리지 않았다.' },
     ] },
     { id: 's3', num: 2, tKo: '마지막 정황', tEn: 'Last known circumstances', parts: [
-      { text: '생전의 김채원을 마지막으로 본 사람은 ' }, { b: 'b9' }, { text: '였다. ' }, { b: 'b10' }, { text: '까지 두 사람은 ' }, { b: 'b11' }, { text: '에서 함께 술을 마셨다. 한편 ' }, { b: 'b12' }, { text: ' 같은 시각 피해자의 전화를 받았다고 진술했다.' },
+      { text: '생전의 윤다인을 마지막으로 본 사람은 ' }, { b: 'b9' }, { text: '였다. ' }, { b: 'b10' }, { text: '까지 두 사람은 ' }, { b: 'b11' }, { text: '에서 함께 술을 마셨다. 한편 ' }, { b: 'b12' }, { text: ' 같은 시각 피해자의 전화를 받았다고 진술했다.' },
     ] },
     { id: 's2', num: 3, tKo: '사인과 현장', tEn: 'Cause & scene', parts: [
       { text: '부검 결과 직접 사인은 ' }, { b: 'b5' }, { text: '으로 확인됐다. 범인은 화로에 ' }, { b: 'b6' }, { text: ' 피워 방을 채우고, 문과 창을 ' }, { b: 'b7' }, { text: ' 밀폐했다. 그리고 자살로 위장하기 위해 현장에 ' }, { b: 'b8' }, { text: ' 놓아두었다.' },
     ] },
     { id: 's4', num: 4, tKo: '감춰진 사건', tEn: 'The hidden crime', parts: [
-      { text: '산장에 흘러들던 ' }, { b: 'b13' }, { text: ' 사건의 이면을 드러냈다. 그것은 마약 유통망 ' }, { b: 'b14' }, { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: '의 입을 막으려 했고, 며칠 전 ' }, { b: 'b16' }, { text: ' 그 실체를 캐묻기 시작한 참이었다.' }, { text: ' 그리고 그 이름의 주인은 ' }, { b: 'b20' }, { text: '였다.' },
+      { text: '산장에 흘러들던 ' }, { b: 'b13' }, { text: ' 사건의 이면을 드러냈다. 그것은 마약 유통망 ' }, { b: 'b14' }, { text: '의 것이었다. 조직은 ' }, { b: 'b15' }, { text: ' 약물로 붙들어 두고 있었고, 며칠 전 ' }, { b: 'b16' }, { text: ' 그 실체를 캐묻기 시작한 참이었다.' }, { text: ' 그리고 그 이름의 주인은 ' }, { b: 'b20' }, { text: '였다.' },
     ] },
     { id: 's5', num: 5, tKo: '범인과 동기', tEn: 'Culprit & motive', parts: [
-      { text: '모든 정황이 한 사람을 가리켰다. 진범은 ' }, { b: 'b17' }, { text: '. 그는 조직이 드러나는 것을 막으려는 ' }, { b: 'b18' }, { text: ' 김채원을 살해했고, 증거를 ' }, { b: 'b19' }, { text: '에 감췄다.' },
+      { text: '모든 정황이 한 사람을 가리켰다. 진범은 ' }, { b: 'b17' }, { text: '. 그는 조직이 드러나는 것을 막으려는 ' }, { b: 'b18' }, { text: ' 윤다인을 살해했고, 증거를 ' }, { b: 'b19' }, { text: '에 감췄다.' },
     ] },
   ];
 
-  CAND = { person: ['최예나', '안유진', '미야와키 사쿠라', '조유리', '장원영', '김채원'], place: ['본채', '채원의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
+  CAND = { person: ['서지안', '한유빈', '문세라', '오나경', '백리원', '윤다인'], place: ['본채', '다인의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
   COLLECTED_POOL = ['테이프', '연탄', '일산화탄소 중독', '유서', '김선생', '마약', '폭로 임박', '별채 대포폰', '수면제', '둔기', '치정', '유산 상속'];
   SEED_TERMS = ['테이프', '연탄'];
   ICONS = {
@@ -318,14 +318,14 @@ export default class App extends React.Component {
     '사진': 'M3 3.5h10v9H3z M5.5 7a1 1 0 100-2 1 1 0 000 2z M3 11l3-3 2 2 3-3 2 2',
   };
   TERM_INFO = {
-    '테이프': { fk: '채원의 방 · 방문·창가', dk: '문틈과 창문 가장자리가 안쪽에서 발라져 있었다.', fe: "Chae-won's room · door & window", de: 'The door and window edges were taped over from the inside.' },
-    '연탄': { fk: '채원의 방 · 화로', dk: '방 안 화로에서 타고 있었다.', fe: "Chae-won's room · brazier", de: 'It was burning in a brazier inside the room.' },
+    '테이프': { fk: '다인의 방 · 방문·창가', dk: '문틈과 창문 가장자리가 안쪽에서 발라져 있었다.', fe: "Chae-won's room · door & window", de: 'The door and window edges were taped over from the inside.' },
+    '연탄': { fk: '다인의 방 · 화로', dk: '방 안 화로에서 타고 있었다.', fe: "Chae-won's room · brazier", de: 'It was burning in a brazier inside the room.' },
     '일산화탄소 중독': { fk: '시신 정밀 검사', dk: '외상은 없고, 혈중 일산화탄소 농도가 높았다.', fe: 'Detailed autopsy', de: 'No external wounds; blood carbon-monoxide levels were high.' },
-    '유서': { fk: '소지품 검사 · 미야와키 사쿠라', dk: '완성되지 않은 초안이었고, 필체가 원고와 달랐다.', fe: 'Belongings · Sakura', de: 'An unfinished draft; the handwriting differed from the manuscript.' },
+    '유서': { fk: '소지품 검사 · 문세라', dk: '완성되지 않은 초안이었고, 필체가 원고와 달랐다.', fe: 'Belongings · Sakura', de: 'An unfinished draft; the handwriting differed from the manuscript.' },
     '김선생': { fk: '별채 수색 · 소지품 검사', dk: '여러 기록에 반복 등장하는 호칭이었다.', fe: 'Annex search · belongings', de: 'A name that recurs across several records.' },
     '마약': { fk: '소지품 검사', dk: '작은 봉지 여러 개로 나뉘어 있었다.', fe: 'Belongings search', de: 'Divided into several small bags.' },
     '폭로 임박': { fk: '별채 수색 · 소지품 검사', dk: '기록에 남은 메시지가 같은 시점을 가리켰다.', fe: 'Annex search · belongings', de: 'Messages in the records pointed to the same moment.' },
-    '별채 대포폰': { fk: '별채 수색', dk: '별채 안쪽에 놓여 있던 또 다른 선불폰이었다.', fe: 'Annex search', de: 'Another prepaid phone, set inside the annex.' },
+    '별채 대포폰': { fk: '별채 수색', dk: '가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.', fe: 'Annex search', de: 'No subscriber on record; only one number was saved.' },
     '수면제': { fk: '수색 · 소지품', dk: '소지품에서 나온 약물이었다.', fe: 'Search · belongings', de: 'A drug found among belongings.' },
     '둔기': { fk: '현장 주변', dk: '현장 주변에 있던 단단한 물체였다.', fe: 'Around the scene', de: 'A hard object found near the scene.' },
     '치정': { fk: '진술 정황', dk: '진술에 관련 정황이 있었다.', fe: 'Statement context', de: 'Related context appeared in statements.' },
@@ -333,9 +333,18 @@ export default class App extends React.Component {
   };
   termIconPath(w) { return this.ICONS[w] || 'M4 4h8v8H4z'; }
   TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:yuri': ['마약', '치정'] };
-  PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '채원의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
+  PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '다인의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
+  /**
+   * 조사 예산. 엔진 `Case.budget` 과 같아야 한다.
+   *
+   * **DC export 는 5 로 왔다** — 2026-07-24 난이도 재조정 이전 값이다. 검증기가
+   * 기대 조사 6회를 계산하므로 5 면 완주가 막힌다. 여기저기 흩어져 있던 하드코딩
+   * 8곳을 이 상수로 모았다 — 두 벌이면 반드시 갈라진다.
+   */
+  BUDGET = 6;
+
   INV_ACTIONS = [{ id: 'belongings', k: 'actBelong', cost: 1, mode: 'person' }, { id: 'search', k: 'actSearch', cost: 1, mode: 'place' }, { id: 'phone', k: 'actPhone', cost: 1, mode: 'person' }, { id: 'alibi', k: 'actAlibi', cost: 1, mode: 'pair' }, { id: 'autopsy', k: 'actAutopsy', cost: 1, mode: 'none' }, { id: 'fixture', k: 'actFixture', cost: 1, mode: 'fixture' }];
-  PROLOG = ['산길 끝에 산장이 하나 있다. 김채원은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.', '분위기를 바꿔보려 했는지, 채원은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.', '그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.', '문이 열렸을 때, 김채원은 이미 숨을 쉬지 않았다.'];
+  PROLOG = ['산길 끝에 산장이 하나 있다. 윤다인은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.', '분위기를 바꿔보려 했는지, 다인은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.', '그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.', '문이 열렸을 때, 윤다인은 이미 숨을 쉬지 않았다.'];
   CASES = [
     { n: 1, real: true, titleKo: '산장 살인사건', titleEn: 'The Mountain Lodge', diff: 'hard', estKo: '40\u201360분', estEn: '40\u201360 min' },
     { n: 2, titleKo: '사건 02', titleEn: 'Case 02', diff: 'normal', estKo: '30\u201340분', estEn: '30\u201340 min' },
@@ -347,35 +356,35 @@ export default class App extends React.Component {
 
   STMT = {
     yena: [
-      '요즘에는 소속사에서 춤 레슨을 하고있어요. 채원이가 오랜만에 지인들 모은다길래 초대 받아서 왔어요. 제가 도착했을때에 딱 마침 유진이도 도착해서 오랜만에 인사를 나누고 있었는데, 창밖으로 무슨 연기같은게 나오고 있더라구요. 저는 또 채원이가 워낙 요리도 못하고 하니까 뭐 태워먹었나 싶었는데. 이게 방에서 나오고 있는거에요? 그래서 급하게 방문을 열려고 했는데. 문이 잠겨있지는 않았는데 이게 안에서 테이프 같은거라도 붙어있는지 아무리 밀고 당겨도 열리지가 않아서 유진이랑 같이 문을 미니까 그제서야 열렸어요.',
-      '문 열자마자 보인건 화로 같은데 피워져있는 연탄이랑 자욱한 연기.. 그리고 창가에도 붙어있는 테이프가 보이더라구요. 유진이랑 마음이 통했는지 서로 들어가는걸 말리게 됐어요. 그대로 들어가면 위험할 것 같아서 숨참고 들어가서 내가 창문을 열테니까 유진이보고 채원이를 들처업고 나오라고 지시했어요.',
-      '하지만 채원이는 이미.. 숨을 쉬고 있지 않았어요. 몸도 싸늘하게 식어있는걸 보니까 죽은지 좀 된 것 같더라구요.',
+      '요즘에는 소속사에서 춤 레슨을 하고있어요. 다인이가 오랜만에 지인들 모은다길래 초대 받아서 왔어요. 제가 도착했을때에 딱 마침 유빈이도 도착해서 오랜만에 인사를 나누고 있었는데, 창밖으로 무슨 연기같은게 나오고 있더라구요. 저는 또 다인이가 워낙 요리도 못하고 하니까 뭐 태워먹었나 싶었는데. 이게 방에서 나오고 있는거에요? 그래서 급하게 방문을 열려고 했는데. 문이 잠겨있지는 않았는데 이게 안에서 테이프 같은거라도 붙어있는지 아무리 밀고 당겨도 열리지가 않아서 유빈이랑 같이 문을 미니까 그제서야 열렸어요.',
+      '문 열자마자 보인건 화로 같은데 피워져있는 연탄이랑 자욱한 연기.. 그리고 창가에도 붙어있는 테이프가 보이더라구요. 유빈이랑 마음이 통했는지 서로 들어가는걸 말리게 됐어요. 그대로 들어가면 위험할 것 같아서 숨참고 들어가서 내가 창문을 열테니까 유빈이보고 다인이를 들처업고 나오라고 지시했어요.',
+      '하지만 다인이는 이미.. 숨을 쉬고 있지 않았어요. 몸도 싸늘하게 식어있는걸 보니까 죽은지 좀 된 것 같더라구요.',
     ],
     yujin: [
-      '저는 아직도 아이돌을 하고있어요. 원영이는 얼마전에 채원언니랑 싸워서 가기 싫다고 해서 안왔구요. 유리언니가 채원언니 요리 못믿겠다면서 자기가 장을 봐올테니까 조금일찍와서 음식 준비하는거 도와달라고 해서 일찍 도착하게되었어요. 그 이후는 예나언니가 말한 그대로에요. 예나언니가 확실히 예전에 저처럼 추리 프로그램을 해서 그런지 상황 파악이 빠르더라구요.',
+      '저는 아직도 아이돌을 하고있어요. 리원이는 얼마전에 다인언니랑 싸워서 가기 싫다고 해서 안왔구요. 나경언니가 다인언니 요리 못믿겠다면서 자기가 장을 봐올테니까 조금일찍와서 음식 준비하는거 도와달라고 해서 일찍 도착하게되었어요. 그 이후는 지안언니가 말한 그대로에요. 지안언니가 확실히 예전에 저처럼 추리 프로그램을 해서 그런지 상황 파악이 빠르더라구요.',
       '그런데 좀 이상하긴 해요. 자살할 생각인 사람이 우리를 왜 불렀을까요? 산장이라 너무 늦게발견될까봐 걱정됐던걸까요? 그리고 연탄도.. 좀 이상하고.',
     ],
     sakura: [
-      '저는 지금 아이돌 하다가 망하고 공적인 일을 하고 싶지 않아서 채원이 글쓰는거 도와주면서 지내고 있어요. 말이 산장지기지 그냥 채원이가 어질러둔거 좀 치워주고. 먹을꺼 정도 챙겨주는 정도만 하면되는데. 채원이가 벌어둔게 많아서 페이를 많이 챙겨줘서 지낼만 했죠. 그 이외에는 제가 좋아하는 게임 하면서 지내면 되니까 이만큼 좋은 직장이 있을까요?',
-      '채원이가 같은 공간에서 지내는거 별로 안좋아해서 전 별채에서 지내고 있어요. 여기서 그다지 멀지 않은데.. 한 걸어서 10분거리 정도?',
+      '저는 지금 아이돌 하다가 망하고 공적인 일을 하고 싶지 않아서 다인이 글쓰는거 도와주면서 지내고 있어요. 말이 산장지기지 그냥 다인이가 어질러둔거 좀 치워주고. 먹을꺼 정도 챙겨주는 정도만 하면되는데. 다인이가 벌어둔게 많아서 페이를 많이 챙겨줘서 지낼만 했죠. 그 이외에는 제가 좋아하는 게임 하면서 지내면 되니까 이만큼 좋은 직장이 있을까요?',
+      '다인이가 같은 공간에서 지내는거 별로 안좋아해서 전 별채에서 지내고 있어요. 여기서 그다지 멀지 않은데.. 한 걸어서 10분거리 정도?',
       '어제 새벽까지 둘이 술 마시다가 뭐 영감이 왔다 어쩐다 하면서 내쫒길래 저는 별채에 돌아와서 잠들었어요. 오랜만에 많이 마셔서 그런지 잠이 잘 오더라구요. 경찰들이 올때까지 저는 계속 자고있었습니다.',
     ],
     yuri: [
-      '저는 아직 가수생활을 하고있어요. 채원언니가 불렀을때부터 요리는 제가 대신해야겠다 생각하고있었죠. 쿠라언니가 옆에 있는거 알긴하는데 어차피 둘 요리실력이 거기서 거기니까.. 기왕 놀러가는김에 맛있는거 먹으면 좋잖아요?',
-      '멤버들 몇명이나 올지 몰라서 준비하려면 꽤 여유있게 준비해야하니까 유진이한테 도와달라고 연락 미리해놓고.. 장봐와서 도착했는데 이게 도대체 무슨일이에요..?',
+      '저는 아직 가수생활을 하고있어요. 다인언니가 불렀을때부터 요리는 제가 대신해야겠다 생각하고있었죠. 세라언니가 옆에 있는거 알긴하는데 어차피 둘 요리실력이 거기서 거기니까.. 기왕 놀러가는김에 맛있는거 먹으면 좋잖아요?',
+      '멤버들 몇명이나 올지 몰라서 준비하려면 꽤 여유있게 준비해야하니까 유빈이한테 도와달라고 연락 미리해놓고.. 장봐와서 도착했는데 이게 도대체 무슨일이에요..?',
     ],
     wonyoung: [
-      '새벽3시쯤에 채원언니한테 전화가 왔어요. 자기는 정말 모르는 일인데 너무 미안하다고. 자기도 쿠라언니한테 받은거였다고. 그래서 어차피 언니 둘 다 여기있고. 오랜만에 다들 모이니까 다 있는데서 사실을 확인하려고 왔어요. 그... 그런 소문 모르세요? 요즘 연예계에 마약이 돌고있다는 소문이요. 저도 당할뻔 했거든요 그거.',
-      '유진언니가 출발할때 원래 슬쩍 같이 타고 오려고 했는데, 새벽에 채원언니 때문에 깨서그런가 피곤해서 늦잠을 자버렸지 뭐에요. 그래서 급하게 준비하고 출발했는데...',
+      '새벽3시쯤에 다인언니한테 전화가 왔어요. 자기는 정말 모르는 일인데 너무 미안하다고. 자기도 세라언니한테 받은거였다고. 그래서 어차피 언니 둘 다 여기있고. 오랜만에 다들 모이니까 다 있는데서 사실을 확인하려고 왔어요. 그... 그런 소문 모르세요? 요즘 연예계에 마약이 돌고있다는 소문이요. 저도 당할뻔 했거든요 그거.',
+      '유빈언니가 출발할때 원래 슬쩍 같이 타고 오려고 했는데, 새벽에 다인언니 때문에 깨서그런가 피곤해서 늦잠을 자버렸지 뭐에요. 그래서 급하게 준비하고 출발했는데...',
     ],
   };
   HLWORDS = ['별채', '본채', '방', '새벽', '연탄', '테이프', '10분', '자고있', '잠들', '창문', '화로', '전화'];
   STMT_GESTURE = {
-    yena: { pre: '예나는 팔짱을 낀 채 담담하게 말했다.', post: '그러고는 잠시 말을 골랐다.' },
-    yujin: { pre: '유진은 손끝으로 탁자를 두어 번 두드리며 입을 열었다.', post: '말끝이 조금 흐려졌다.' },
-    sakura: { pre: '사쿠라는 빈 잔을 만지작거렸다.', post: '그러고는 잠깐, 창밖으로 시선을 돌렸다.' },
-    yuri: { pre: '유리는 장바구니를 아직 내려놓지 못한 채였다.', post: '되묻는 목소리에 물기가 배어 있었다.' },
-    wonyoung: { pre: '원영은 휴대폰을 두 손으로 감싸 쥐었다.', post: '화면을 몇 번 더 확인했다.' },
+    yena: { pre: '지안은 팔짱을 낀 채 담담하게 말했다.', post: '그러고는 잠시 말을 골랐다.' },
+    yujin: { pre: '유빈은 손끝으로 탁자를 두어 번 두드리며 입을 열었다.', post: '말끝이 조금 흐려졌다.' },
+    sakura: { pre: '세라는 빈 잔을 만지작거렸다.', post: '그러고는 잠깐, 창밖으로 시선을 돌렸다.' },
+    yuri: { pre: '나경은 장바구니를 아직 내려놓지 못한 채였다.', post: '되묻는 목소리에 물기가 배어 있었다.' },
+    wonyoung: { pre: '리원은 휴대폰을 두 손으로 감싸 쥐었다.', post: '화면을 몇 번 더 확인했다.' },
   };
 
   componentDidMount() {
@@ -396,15 +405,15 @@ export default class App extends React.Component {
   PB_REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
   PB_LANES = ['전날 밤','새벽 3시','3–8시','오전'];
   PB_CARDS = [
-    { id:'sakura', kind:'person', label:'미야와키 사쿠라', sub:'산장지기 · 산장 거주', ini:'쿠', c1:'#F2994A', c2:'#EB5757' },
-    { id:'wonyoung', kind:'person', label:'장원영', sub:'아이돌 · 불참', ini:'원', c1:'#F2C94C', c2:'#F2994A' },
-    { id:'yuri', kind:'person', label:'조유리', sub:'가수 · 아침 도착', ini:'리', c1:'#4CB782', c2:'#2D9CDB' },
+    { id:'sakura', kind:'person', label:'문세라', sub:'산장지기 · 산장 거주', ini:'세', c1:'#F2994A', c2:'#EB5757' },
+    { id:'wonyoung', kind:'person', label:'백리원', sub:'아이돌 · 불참', ini:'리', c1:'#F2C94C', c2:'#F2994A' },
+    { id:'yuri', kind:'person', label:'오나경', sub:'가수 · 아침 도착', ini:'나', c1:'#4CB782', c2:'#2D9CDB' },
     { id:'burner', kind:'evidence', label:'대포폰', sub:'별채에서 발견', icon:'M5 2.5h6v11H5z M7 12h2' },
     { id:'note', kind:'evidence', label:'위장 유서', sub:'금고 열쇠 동봉', icon:'M4 2.5h6l2.5 2.5v9H4z M9.5 2.5v3H12' },
     { id:'co', kind:'evidence', label:'일산화탄소', sub:'부검 · 직접 사인', icon:'M8 13c3 0 4-2 4-4 0-3-4-6-4-6S4 6 4 9c0 2 1 4 4 4z' },
-    { id:'q1', kind:'quote', label:'사쿠라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
-    { id:'q2', kind:'quote', label:'원영 진술', quote:'"새벽 3시쯤 채원 언니한테 전화가 왔어요."' },
-    { id:'q3', kind:'quote', label:'사쿠라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
+    { id:'q1', kind:'quote', label:'세라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
+    { id:'q2', kind:'quote', label:'리원 진술', quote:'"새벽 3시쯤 다인 언니한테 전화가 왔어요."' },
+    { id:'q3', kind:'quote', label:'세라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
   ];
   PB_KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'} ];
   get PB_cards(){ const seed=this.buildBoardSeed(); if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.PB_CARDS; }
@@ -699,21 +708,21 @@ export default class App extends React.Component {
   targetKey(action, targets) { const a = this.INV_ACTIONS.find(x => x.id === action); if (a.mode === 'none') return 'body'; if (a.mode === 'pair') return targets.slice().sort().join('+'); return targets[0]; }
   resultFor(a, k) {
     const M = {
-      'search:annex': { type: 'solution', tKo: '대포폰 발견', tEn: 'Burner phone', dKo: '별채 서랍에서 발신 전용 대포폰. \u2018김선생\u2019 명의 거래 메시지가 남아 있다.', dEn: 'A burner phone in the annex drawer, with dealing messages under the alias \u201cKim.\u201d', ev: 'annexPhone' },
-      'belongings:sakura': { type: 'solution', tKo: '유서 초안과 금고 열쇠', tEn: 'Draft note & safe key', dKo: '사쿠라의 짐에서 김채원 명의 유서 초안과 금고 열쇠가 나왔다. 위장에 쓰인 물건이다.', dEn: 'A forged draft note in Chae-won\u2019s name and a safe key, found in Sakura\u2019s things.' },
+      'search:annex': { type: 'solution', tKo: '대포폰 발견', tEn: 'Burner phone', dKo: '별채 게임기 뒤에서 발신 전용 대포폰.\u2018김선생\u2019 명의 거래 메시지가 남아 있다.', dEn: 'A burner phone behind the annex game console, with dealing messages under the alias \u201cKim.\u201d', ev: 'annexPhone' },
+      'belongings:sakura': { type: 'solution', tKo: '유서 초안과 금고 열쇠', tEn: 'Draft note & safe key', dKo: '세라의 짐에서 윤다인 명의 유서 초안과 금고 열쇠가 나왔다. 위장에 쓰인 물건이다.', dEn: 'A forged draft note in Chae-won\u2019s name and a safe key, found in Sakura\u2019s things.' },
       'autopsy:body': { type: 'solution', tKo: '일산화탄소 중독 확정', tEn: 'CO poisoning confirmed', dKo: '사인은 일산화탄소 중독. 외상과 약물 반응은 없다. 사망 추정이 새벽 3~5시로 좁혀졌다.', dEn: 'Cause of death is CO poisoning; no wounds or drugs. The window narrows to 03:00\u201305:00.' },
-      'belongings:wonyoung': { type: 'solution', tKo: '\u2018김선생\u2019 추적 메모', tEn: 'Trace on \u201cKim\u201d', dKo: '원영의 폰에 유통망 우두머리를 추적한 정황과 김선생 번호가 남아 있다.', dEn: 'Won-young\u2019s phone holds a trace on the ring\u2019s head and Kim\u2019s number.', ev: 'annexPhone' },
-      'phone:wonyoung': { type: 'exclusion', tKo: '새벽 3시 통화 확인', tEn: '03:00 call verified', dKo: '원영은 새벽 3시 김채원과 통화했다. 기지국 기록상 산장에서 멀리 떨어져 있었다.', dEn: 'Won-young called Chae-won at 03:00; cell records place him far from the lodge.' },
-      'alibi:yujin+yuri': { type: 'exclusion', tKo: '유리 동선 일치', tEn: 'Yuri\u2019s route checks out', dKo: '유리는 장을 보고 유진과 함께 도착했다. 사망 추정 시간대 현장 접근이 불가능하다.', dEn: 'Yuri shopped and arrived with Yujin \u2014 no access during the window.' },
-      'alibi:yena+yujin': { type: 'exclusion', tKo: '예나 동선 일치', tEn: 'Yena\u2019s route checks out', dKo: '예나와 유진의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.', dEn: 'Yena and Yujin\u2019s arrival times corroborate \u2014 both arrived only in the morning.' },
-      'belongings:yuri': { type: 'redherring', tKo: '약물 투약 흔적', tEn: 'Traces of drug use', dKo: '유리의 소지품에서 약물 흔적이 나왔다. 부끄러운 비밀이지만 살인과는 무관하다.', dEn: 'Signs of drug use in Yuri\u2019s things \u2014 a shameful secret, unrelated to the murder.' },
-      'belongings:yena': { type: 'redherring', tKo: '출처 추적 메모', tEn: 'Source-tracing notes', dKo: '예나가 유통 경로를 캐던 메모. 수상해 보이지만 범행과는 무관하다.', dEn: 'Yena\u2019s notes tracing the supply chain \u2014 suspicious-looking but unrelated.' },
-      'belongings:yujin': { type: 'redherring', tKo: '의심 메모', tEn: 'Suspicion notes', dKo: '유진이 파스 출처로 채원을 의심한 메모. 개인적 의심일 뿐이다.', dEn: 'Yujin\u2019s notes suspecting Chae-won \u2014 a private hunch, nothing more.' },
-      'phone:sakura': { type: 'empty', tKo: '개인폰 깨끗함', tEn: 'Personal phone is clean', dKo: '사쿠라의 개인 명의 폰에는 특이사항이 없다. 개인폰만으로는 아무것도 드러나지 않는다.', dEn: 'Nothing on Sakura\u2019s registered phone \u2014 the personal line alone reveals nothing.' },
+      'belongings:wonyoung': { type: 'solution', tKo: '\u2018김선생\u2019 추적 메모', tEn: 'Trace on \u201cKim\u201d', dKo: '리원의 폰에 유통망 우두머리를 추적한 정황과 김선생 번호가 남아 있다.', dEn: 'Won-young\u2019s phone holds a trace on the ring\u2019s head and Kim\u2019s number.', ev: 'annexPhone' },
+      'phone:wonyoung': { type: 'exclusion', tKo: '새벽 3시 통화 확인', tEn: '03:00 call verified', dKo: '리원은 새벽 3시 윤다인과 통화했다. 기지국 기록상 산장에서 멀리 떨어져 있었다.', dEn: 'Won-young called Chae-won at 03:00; cell records place him far from the lodge.' },
+      'alibi:yujin+yuri': { type: 'exclusion', tKo: '나경 동선 일치', tEn: 'Yuri\u2019s route checks out', dKo: '나경은 장을 보고 유빈과 함께 도착했다. 사망 추정 시간대 현장 접근이 불가능하다.', dEn: 'Yuri shopped and arrived with Yujin \u2014 no access during the window.' },
+      'alibi:yena+yujin': { type: 'exclusion', tKo: '지안 동선 일치', tEn: 'Yena\u2019s route checks out', dKo: '지안과 유빈의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.', dEn: 'Yena and Yujin\u2019s arrival times corroborate \u2014 both arrived only in the morning.' },
+      'belongings:yuri': { type: 'redherring', tKo: '약물 투약 흔적', tEn: 'Traces of drug use', dKo: '나경의 소지품에서 약물 흔적이 나왔다. 부끄러운 비밀이지만 살인과는 무관하다.', dEn: 'Signs of drug use in Yuri\u2019s things \u2014 a shameful secret, unrelated to the murder.' },
+      'belongings:yena': { type: 'redherring', tKo: '출처 추적 메모', tEn: 'Source-tracing notes', dKo: '지안이 유통 경로를 캐던 메모. 수상해 보이지만 범행과는 무관하다.', dEn: 'Yena\u2019s notes tracing the supply chain \u2014 suspicious-looking but unrelated.' },
+      'belongings:yujin': { type: 'redherring', tKo: '의심 메모', tEn: 'Suspicion notes', dKo: '유빈이 파스 출처로 다인을 의심한 메모. 개인적 의심일 뿐이다.', dEn: 'Yujin\u2019s notes suspecting Chae-won \u2014 a private hunch, nothing more.' },
+      'phone:sakura': { type: 'empty', tKo: '개인폰 깨끗함', tEn: 'Personal phone is clean', dKo: '세라의 개인 명의 폰에는 특이사항이 없다. 개인폰만으로는 아무것도 드러나지 않는다.', dEn: 'Nothing on Sakura\u2019s registered phone \u2014 the personal line alone reveals nothing.' },
       'search:room': { type: 'empty', tKo: '이미 아는 것뿐', tEn: 'Nothing new', dKo: '화로와 연탄은 이미 알려진 사실. 방에서 새 단서는 나오지 않는다.', dEn: 'The brazier and briquette are already known; the room adds nothing new.' },
       'fixture:hearth': { type: 'solution', tKo: '화로 · 연탄 확인', tEn: 'Brazier · briquette', dKo: '화로에 남은 연탄이 사인의 근원으로 확인됐다.', dEn: 'The briquette in the brazier is confirmed as the source of death.', ev: null },
       'fixture:window': { type: 'solution', tKo: '창문 밀폐 테이프', tEn: 'Window taped shut', dKo: '창틀에 안쪽에서 붙인 테이프. 밀폐 위장 장치다.', dEn: 'Tape applied from inside the window frame — a sealing device.' },
-      'fixture:safe': { type: 'solution', tKo: '금고 속 위장 유서', tEn: 'Fake note in safe', dKo: '금고에서 김채원 명의 위장 유서 초안이 나왔다.', dEn: 'A forged draft note in Chae-won\u2019s name, found in the safe.' },
+      'fixture:safe': { type: 'solution', tKo: '금고 속 위장 유서', tEn: 'Fake note in safe', dKo: '금고에서 윤다인 명의 위장 유서 초안이 나왔다.', dEn: 'A forged draft note in Chae-won\u2019s name, found in the safe.' },
     };
     return M[a + ':' + k];
   }
@@ -729,7 +738,7 @@ export default class App extends React.Component {
     const a = this.INV_ACTIONS.find(x => x.id === actionId); if (!a) return false;
     const need = a.mode === 'none' ? 0 : a.mode === 'pair' ? 2 : 1;
     if (a.mode !== 'none' && targets.length !== need) return false;
-    const key = this.targetKey(actionId, targets), remaining = 5 - this.invSpent();
+    const key = this.targetKey(actionId, targets), remaining = this.BUDGET - this.invSpent();
     if (a.cost > remaining) return false;
     if ((this.state.invLog || []).some(e => e.action === actionId && e.key === key)) return false;
     const r = this.resultFor(actionId, key) || { type: 'empty' }, ln = this.state.lang, t = this.T();
@@ -745,7 +754,7 @@ export default class App extends React.Component {
     const a = this.INV_ACTIONS.find(x => x.id === actionId); if (!a) return 'na';
     const key = this.targetKey(actionId, targets);
     if ((this.state.invLog || []).some(e => e.action === actionId && e.key === key)) return 'used';
-    if (a.cost > (5 - this.invSpent())) return 'nobudget';
+    if (a.cost > (this.BUDGET - this.invSpent())) return 'nobudget';
     return 'ok';
   }
   runInvestigation() {
@@ -754,7 +763,7 @@ export default class App extends React.Component {
   }
   buildInvConfirm() {
     const p = this.state.pendingInv, t = this.T(), ln = this.state.lang; if (!p) return { open: false };
-    const a = this.INV_ACTIONS.find(x => x.id === p.action); const remaining = 5 - this.invSpent();
+    const a = this.INV_ACTIONS.find(x => x.id === p.action); const remaining = this.BUDGET - this.invSpent();
     const label = a.mode === 'none' ? '' : a.mode === 'pair' ? p.targets.map(id => this.pname(id)).join(' · ') : this.pname(this.targetKey(p.action, p.targets));
     return { open: true, title: t[a.k] + (label ? ' · ' + label : ''),
       body: ln === 'ko' ? ('잔여 조사가 ' + a.cost + ' 차감됩니다. 남은 조사 ' + remaining + ' → ' + (remaining - a.cost) + '. 되돌릴 수 없습니다.') : ('Costs ' + a.cost + ' investigation' + (a.cost > 1 ? 's' : '') + '. ' + remaining + ' → ' + (remaining - a.cost) + '. This cannot be undone.'),
@@ -786,7 +795,7 @@ export default class App extends React.Component {
       badgeStyle: e.type === 'empty' ? { fontSize: '10px', fontWeight: 700, color: 'var(--fg-3)', background: 'var(--bg-elevated-2)', borderRadius: 'var(--r-pill)', padding: '2px 8px' } : { fontSize: '10px', fontWeight: 700, color: '#0A0A0B', background: tm[e.type].c, borderRadius: 'var(--r-pill)', padding: '2px 8px' },
       barStyle: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: tm[e.type].c, borderRadius: 'var(--r-md) 0 0 var(--r-md)' },
       cardStyle: { position: 'relative', border: '1px solid ' + (this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent)' : 'var(--border)'), borderRadius: 'var(--r-md)', padding: '12px 14px 12px 16px', marginBottom: '8px', background: this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent-soft)' : 'transparent', cursor: hasTerm ? 'pointer' : 'default', transition: 'background .2s, border-color .2s' } }); });
-    return { remaining, budget: 5, actions, mode, targets, showTargets: mode === 'person' || mode === 'place' || mode === 'pair', noneTarget: mode === 'none',
+    return { remaining, budget: this.BUDGET, actions, mode, targets, showTargets: mode === 'person' || mode === 'place' || mode === 'pair', noneTarget: mode === 'none',
       targetLabelHead: mode === 'place' ? t.invPickPlace : mode === 'pair' ? t.invPickPair : t.invPickPerson,
       canExec: can, showReason: !can, execReason: reason, onExec: () => this.runInvestigation(),
       execStyle: { opacity: can ? 1 : 0.45, pointerEvents: can ? 'auto' : 'none', width: '100%', justifyContent: 'center' },
@@ -817,13 +826,13 @@ export default class App extends React.Component {
         diffStyle: { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' },
         onClick: () => this.openDetail(c.n),
         cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
-    return { resumeShow: status === 'inProgress', resumeTitle: ln === 'ko' ? '산장 살인사건' : 'The Mountain Lodge', resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: 5 - this.invSpent(), onResume: () => this.resumeCase(), cases };
+    return { resumeShow: status === 'inProgress', resumeTitle: ln === 'ko' ? '산장 살인사건' : 'The Mountain Lodge', resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
   }
   buildDetail() {
     const t = this.T(), ln = this.state.lang, c = this.CASES[(this.state.selectedCase || 1) - 1] || this.CASES[0];
     const real = !!c.real, status = real ? this.caseStatus() : 'soon', chip = this.statusChip(status === 'soon' ? 'unplayed' : status);
     return { title: ln === 'ko' ? c.titleKo : (c.titleEn || c.titleKo), real, chipLabel: real ? chip.label : t.soonPrep, chipStyle: chip.style,
-      rows: [{ k: t.difficulty, v: c.diff }, { k: t.budgetLabel, v: real ? '5' : '\u2014' }, { k: t.estTime, v: ln === 'ko' ? c.estKo : c.estEn }, { k: t.suspects, v: real ? t.suspectsVal : '\u2014' }].map((r, i, a) => ({ k: r.k, v: r.v, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
+      rows: [{ k: t.difficulty, v: c.diff }, { k: t.budgetLabel, v: real ? String(this.BUDGET) : '\u2014' }, { k: t.estTime, v: ln === 'ko' ? c.estKo : c.estEn }, { k: t.suspects, v: real ? t.suspectsVal : '\u2014' }].map((r, i, a) => ({ k: r.k, v: r.v, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
       notPlayedNote: !real ? t.demoOnly : (status === 'unplayed' ? t.notPlayedYet : ''),
       primaryLabel: !real ? t.playSolo : status === 'clear' ? t.review : status === 'inProgress' ? t.resume : t.playSolo,
       onPrimary: !real ? (() => {}) : status === 'clear' ? (() => this.reviewCase()) : status === 'inProgress' ? (() => this.resumeCase()) : (() => this.startCase()),
@@ -843,8 +852,8 @@ export default class App extends React.Component {
   closeReopen(sid) { const ra = Object.assign({}, this.state.reopenActive || {}), e = Object.assign({}, this.state.secExpand || {}); delete ra[sid]; delete e[sid]; this.setState({ reopenActive: ra, secExpand: e, openPicker: null }); }
   REVEALS = {
     s1: { narrow: true, yield: 'narrow', targets: ['search:annex'], statements: [{ pid: 'yujin', y: 'flavor', text: '자살할 사람이 우리를 왜 불렀을까요? 초대장은 전날 밤에야 급하게 돌았어요.' }] },
-    s3: { yield: 'decoy', statements: [{ pid: 'wonyoung', y: 'path', text: '유진 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요.' }, { pid: 'yuri', y: 'decoy', text: '아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요.' }] },
-    s4: { yield: 'path', statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 쿠라 언니 쪽이었죠.' }] },
+    s3: { yield: 'decoy', statements: [{ pid: 'wonyoung', y: 'path', text: '유빈 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요.' }, { pid: 'yuri', y: 'decoy', text: '아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요.' }] },
+    s4: { yield: 'path', statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 세라 언니 쪽이었죠.' }] },
   };
   CLAIM_REVEALS = {
     s3: [{ pid: 'yuri', tid: 't1', ko: '통화 중 (본인 주장)', en: 'On a call (claim)' }],
@@ -996,7 +1005,7 @@ export default class App extends React.Component {
     const stuck = !done && remaining <= 0;
     const story = this.SECTIONS.map(s => ({ num: s.num, title: ln === 'ko' ? s.tKo : s.tEn, sealed: this.secComplete(s.id), sealedOpacity: this.secComplete(s.id) ? 1 : 0.45,
       text: this.SEC_BLANKS[s.id].map(id => this.BLANKS[id].ans + this.particle(this.BLANKS[id].ans, this.BLANKS[id].par)).join(' · ') }));
-    const CAT = { vTool: 'evi', vConceal: 'evi', vStaging: 'evi', vItem: 'evi', vHideout: 'evi', vCause: 'evi', vContact: 'evi', vPerson: 'circ', vPlace: 'circ', vTime: 'circ', vLastSeen: 'circ', vMotive: 'susp', vIdentity: 'susp', vTarget: 'susp', vAccomplice: 'susp' };
+    const CAT = { vTool: 'evi', vConceal: 'evi', vStaging: 'evi', vItem: 'evi', vHideout: 'evi', vCause: 'evi', vContact: 'evi', vPerson: 'circ', vPlace: 'circ', vTime: 'circ', vLastSeen: 'circ', vMotive: 'susp', vIdentity: 'susp', vTarget: 'susp' };
     const catMeta = { evi: ln === 'ko' ? '물증' : 'Evidence', circ: ln === 'ko' ? '정황' : 'Circumstance', susp: ln === 'ko' ? '심증' : 'Conviction' };
     const catAgg = { evi: [0, 0], circ: [0, 0], susp: [0, 0] };
     Object.keys(this.BLANKS).forEach(id => { const d = this.BLANKS[id]; if (d.nominate) return; const c = CAT[d.kind] || 'circ'; catAgg[c][1]++; if (this.state.blanks[id] === d.ans) catAgg[c][0]++; });
@@ -1005,7 +1014,7 @@ export default class App extends React.Component {
     const nomOk = nomId && this.state.blanks[nomId] === this.BLANKS[nomId].ans;
     const pColor = {}; this.PEOPLE.forEach(p => { pColor[p.name] = p.c1; });
     const ORDER = ['s1', 's3', 's2', 's4', 's5'];
-    const catL = { vTool: '도구', vConceal: '은폐수단', vStaging: '위장물', vItem: '물품', vHideout: '은닉처', vCause: '사인', vContact: '접촉수단', vPerson: '인물', vPlace: '장소', vTime: '시각', vLastSeen: '마지막목격자', vMotive: '동기', vIdentity: '정체', vTarget: '협박대상', vAccomplice: '공범' };
+    const catL = { vTool: '도구', vConceal: '은폐수단', vStaging: '위장물', vItem: '물품', vHideout: '은닉처', vCause: '사인', vContact: '접촉수단', vPerson: '인물', vPlace: '장소', vTime: '시각', vLastSeen: '마지막목격자', vMotive: '동기', vIdentity: '정체', vTarget: '협박대상' };
     const corrections = [];
     const mkNarr = (mode) => ORDER.map(sid => { const s = this.SECTIONS.find(x => x.id === sid); if (!s) return null;
       const runs = s.parts.map(part => { if (!part.b) return { isText: true, text: part.text };
@@ -1036,7 +1045,7 @@ export default class App extends React.Component {
       onHome: () => this.goHome() };
   }
   GRAPH_NODES = [
-    { id: 'victim', kind: 'victim', ko: '김채원', en: 'Kim Chae-won', x: 50, y: 50 },
+    { id: 'victim', kind: 'victim', ko: '윤다인', en: 'Kim Chae-won', x: 50, y: 50 },
     { id: 'yena', kind: 'person', x: 22, y: 22 },
     { id: 'yujin', kind: 'person', x: 50, y: 15 },
     { id: 'sakura', kind: 'person', x: 80, y: 30 },
@@ -1107,7 +1116,7 @@ export default class App extends React.Component {
       { id: 'annex', x: 712, y: 66, w: 228, h: 150, poche: 'var(--accent)' },
     ],
     rooms: [
-      { id: 'vroom', b: 'main', loc: 'room', x: 70, y: 60, w: 260, h: 485, ko: '채원의 방', en: "Chae-won's room", scene: true, tint: 'rgba(235,87,87,.10)', primary: true },
+      { id: 'vroom', b: 'main', loc: 'room', x: 70, y: 60, w: 260, h: 485, ko: '다인의 방', en: "Chae-won's room", scene: true, tint: 'rgba(235,87,87,.10)', primary: true },
       { id: 'living', b: 'main', loc: 'main', x: 330, y: 60, w: 272, h: 270, ko: '거실', en: 'Living', primary: true },
       { id: 'kitchen', b: 'main', loc: 'main', x: 330, y: 330, w: 272, h: 215, ko: '부엌', en: 'Kitchen' },
       { id: 'annexRoom', b: 'annex', loc: 'annex', x: 712, y: 66, w: 228, h: 150, ko: '별채', en: 'Annex', primary: true },
@@ -1421,11 +1430,20 @@ export default class App extends React.Component {
     if (cur < text.length) out.push({ text: text.slice(cur), style: {} });
     return out;
   }
+  /**
+   * 관계 칩 3종.
+   *
+   * **`S()` 로 감싼다** — DC 변환이 여기 하나를 빠뜨려서 CSS **문자열**이
+   * `style={st.relStyle}` 로 그대로 들어갔고, React 가
+   * *"The `style` prop expects a mapping … not a string"* 로 던지면서
+   * **진술 화면을 열면 앱이 통째로 언마운트됐다.** 콘솔에는 `<span>` 에서
+   * 에러가 났다는 경고만 찍혀서 빈 화면 말고는 단서가 없다.
+   */
   relChip(kind) {
     const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:var(--r-pill);padding:5px 12px;flex:none;white-space:nowrap;';
-    if (kind === 'onsite') return base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)';
-    if (kind === 'absent') return base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)';
-    return base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)';
+    if (kind === 'onsite') return S(base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)');
+    if (kind === 'absent') return S(base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)');
+    return S(base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)');
   }
   buildStatements() {
     const t = this.T(), sel = this.state.sel, ln = this.state.lang;
@@ -1628,7 +1646,7 @@ export default class App extends React.Component {
         graphCls: navCls('graph'), graphSeg: segCls(isGraph), onGraph: () => this.setView('graph'),
         boardCls: navCls('board'), boardSeg: segCls(isBoard), onBoard: () => this.setView('board'),
         logCls: navCls('log'), logSeg: segCls(isLog), onLog: () => this.setView('log'), logBadge: (s.invLog || []).length ? ('' + (s.invLog || []).length) : '',
-        narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length, invBadge: '' + (5 - this.invSpent()),
+        narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length, invBadge: '' + (this.BUDGET - this.invSpent()),
       },
       bottomNav: this.buildBottomNav(view),
       moreNav: this.buildMoreNav(view),
@@ -1644,14 +1662,14 @@ export default class App extends React.Component {
       board: this.buildBoard(),
       preventDefault: (e) => { if (e && e.preventDefault) e.preventDefault(); },
       reportHead: {
-        caseNo: 'CASE-001', subject: ln === 'ko' ? '김채원 (30)' : 'Kim Chae-won (30)',
+        caseNo: 'CASE-001', subject: ln === 'ko' ? '윤다인 (30)' : 'Kim Chae-won (30)',
         author: ln === 'ko' ? '담당 수사관' : 'Lead investigator',
         statusLabel: solvedCount === this.SECTIONS.length ? (ln === 'ko' ? '작성 완료' : 'Complete') : (ln === 'ko' ? '작성 중' : 'In progress'),
         statusDone: solvedCount === this.SECTIONS.length,
         statusChipStyle: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: solvedCount === this.SECTIONS.length ? 'var(--g-lock-bg)' : 'var(--bg-elevated-2)', color: solvedCount === this.SECTIONS.length ? 'var(--g-lock-mark)' : 'var(--fg-3)' },
         fields: [
           { k: ln === 'ko' ? '사건번호' : 'Case no.', v: 'CASE-001' },
-          { k: ln === 'ko' ? '대상' : 'Subject', v: ln === 'ko' ? '김채원 (30) · 소설가' : 'Kim Chae-won (30) · Novelist' },
+          { k: ln === 'ko' ? '대상' : 'Subject', v: ln === 'ko' ? '윤다인 (30) · 소설가' : 'Kim Chae-won (30) · Novelist' },
           { k: ln === 'ko' ? '작성' : 'Prepared by', v: ln === 'ko' ? '담당 수사관' : 'Lead investigator' },
         ],
       },
@@ -1706,7 +1724,7 @@ export default class App extends React.Component {
       ref: this.buildRef(),
       quotePickerOpen: !!s.quotePicker, quotePicker: (() => { const p = s.quotePins || {}; const ms = s.memos || []; const numOf = {}; ms.forEach((m, i) => { numOf[m.id] = i + 1; }); return ms.filter(m => p[m.id]).map(m => ({ num: '#' + numOf[m.id], excerpt: (((m.content || m.quote || '').split('\n')[0]) || ('메모 ' + numOf[m.id])).slice(0, 40), onPick: () => this.appendQuote(m.id, s.quotePicker) })); })(),
       onQuotePickNew: () => this.newMemoFromQuote(s.quotePicker), onQuotePickCancel: () => this.setState({ quotePicker: null }), stopModal: (e) => { try { e.stopPropagation(); } catch (x) {} },
-      status: { budget: (5 - this.invSpent()) + ' / 5' },
+      status: { budget: (this.BUDGET - this.invSpent()) + ' / ' + this.BUDGET },
       gridSort: { on: false, onToggle: () => {}, chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '6px', height: '26px', padding: '0 10px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--border-strong)'), background: s.viewOpts.timelineSort ? 'var(--accent-soft)' : 'transparent', color: s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 } },
       langSeg: { koCls: 'seg' + (ln === 'ko' ? ' active' : ''), enCls: 'seg' + (ln === 'en' ? ' active' : ''), stKo: 'st' + (ln === 'ko' ? ' active' : ''), stEn: 'st' + (ln === 'en' ? ' active' : ''), onKo: () => this.setLang('ko'), onEn: () => this.setLang('en') },
       themeSeg: { stDark: 'st' + (s.theme === 'dark' ? ' active' : ''), stLight: 'st' + (s.theme === 'light' ? ' active' : ''), onDark: () => { if (s.theme !== 'dark') this.toggleTheme(); }, onLight: () => { if (s.theme !== 'light') this.toggleTheme(); } },
