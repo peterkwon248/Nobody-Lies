@@ -412,6 +412,20 @@ export default class App extends React.Component {
     if (typeof c.budget === 'number') this.BUDGET = c.budget
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
+    /**
+     * 확보 단어의 출처·기록. 2026-07-26 대조에서 **엔진 쪽 네 문장이 쉼표에서
+     * 잘려 있는 것**을 잡아 고쳤다(`scripts/yaml-comma-check.mjs`).
+     *
+     * 엔진에 없는 단어(decoy 수면제·둔기·유산 상속)는 앱 값을 그대로 둔다 —
+     * 지우면 후보 풀이 줄어 난이도가 달라진다. 그건 설계 결정이다.
+     */
+    for (const t of c.terms ?? []) {
+      const cur = this.TERM_INFO[t.word]
+      if (!cur) continue
+      if (t.source) cur.fk = ko(t.source)
+      if (t.note) cur.dk = ko(t.note)
+    }
+
     // 인물 — **표시 속성(색·이니셜·역할·좌표)은 건드리지 않는다**
     for (const e of c.people ?? []) {
       const p = this.PEOPLE.find((x) => x.id === e.id)
@@ -462,6 +476,16 @@ export default class App extends React.Component {
         this.BLANKS[bid].ans = nameOf(b.label, b.answer)
         this.BLANKS[bid].par = b.particle ?? null
       })
+
+      // 장 제목과 서사 문장틀 — 사건 산문이므로 엔진이 정본이다
+      if (ch.title) sec.tKo = ch.title
+      if (ch.report?.length) {
+        sec.parts = ch.report.map((p) =>
+          (p.text != null ? { text: p.text } : { b: bids[p.blank] }))
+      }
+      // ⚠ `ch.opening`(장 도입 한 줄)은 **일부러 안 가져온다.** 프로토타입의
+      // SECTIONS 에 그 자리가 없다 — 넣어도 아무도 렌더하지 않는 죽은 데이터가
+      // 되고, 렌더할 자리를 새로 만들면 그건 이식이 아니라 발명이다.
     })
   }
 
