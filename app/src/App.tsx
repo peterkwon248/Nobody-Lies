@@ -15,8 +15,9 @@ import { Overview } from './screens/Overview'
 import { StatementList } from './screens/StatementList'
 import { FloorPlanView } from './screens/FloorPlanView'
 import { Investigate, ResultCard, actionState } from './screens/Investigate'
+import { Suspects } from './screens/Suspects'
 import { Shell, type View } from './shell/Shell'
-import { deriveTerms } from '@engine/verifier'
+import { deriveFacts, deriveTerms } from '@engine/verifier'
 import { TopBar } from './components/TopBar'
 import { Confirm, Toast } from './components/Confirm'
 
@@ -115,7 +116,7 @@ export default function App() {
   /** 화면 이름. 메모가 「어디서 적었나」를 남긴다 (원본 `memoMeta`) */
   const VIEW_LABEL: Record<View, string> = {
     overview: '사건 개요', report: '사건 보고서', statements: '진술', map: '현장',
-    investigate: '조사',
+    investigate: '조사', suspects: '용의자',
   }
 
   const addMemo = () =>
@@ -132,6 +133,22 @@ export default function App() {
       ...a,
       notes: a.notes.map((n) => (n.id === id ? { ...n, content } : n)),
     }))
+
+  /** 격자 셀 마킹. 진술 마킹과 같은 어휘를 쓰되 대상이 셀이다 */
+  const setCellMark = (person: string, slot: string, kind: '확인' | '의심' | '모순' | null) =>
+    setAnnotations((a) => {
+      const rest = a.cellMarks.filter((m) => !(m.person === person && m.slot === slot))
+      return { ...a, cellMarks: kind ? [...rest, { person, slot, kind }] : rest }
+    })
+
+  /** 심증 — 같은 값을 다시 누르면 해제된다. 되돌릴 수 없는 표시는 판정처럼 느껴진다 */
+  const setVerdict = (person: string, v: '제외' | '주목' | '유력') =>
+    setAnnotations((a) => {
+      const next = { ...a.verdicts }
+      if (next[person] === v) delete next[person]
+      else next[person] = v
+      return { ...a, verdicts: next }
+    })
 
   const deleteMemo = (id: string) =>
     setAnnotations((a) => ({ ...a, notes: a.notes.filter((n) => n.id !== id) }))
@@ -197,6 +214,29 @@ export default function App() {
     ? deriveTerms(c, new Set(progress.investigations.flatMap((iv) =>
         c.actions.find((a) => a.id === iv.actionId)?.gives ?? [])))
     : new Set<string>()
+
+  /** 확보한 사실. 슬롯(동기·기회·수단)이 여기서 나온다 */
+  const evidence = c
+    ? new Set(progress.investigations.flatMap((iv) =>
+        c.actions.find((a) => a.id === iv.actionId)?.gives ?? []))
+    : new Set<string>()
+  const facts = c
+    ? new Set(deriveFacts(c, evidence, progress.solved.length))
+    : new Set<string>()
+
+  /** 인물별 발견 단서 — 그 사람을 대상으로 한 조사에서 나온 물증 */
+  const cluesByPerson = new Map<string, { text: string; action: string }[]>()
+  if (c)
+    for (const iv of progress.investigations) {
+      const a = c.actions.find((x) => x.id === iv.actionId)
+      if (a?.target?.kind !== 'person') continue
+      const found = a.gives
+        .map((id) => c.evidence.find((e) => e.id === id))
+        .filter(Boolean)
+        .map((e) => ({ text: e!.description, action: a.label }))
+      if (found.length)
+        cluesByPerson.set(a.target.id, [...(cluesByPerson.get(a.target.id) ?? []), ...found])
+    }
 
   /**
    * 장 자동 완성. **`장 확인` 버튼은 없다** — 공란을 다 채우면 완성되고 다음 장이 열린다.
@@ -360,6 +400,15 @@ export default function App() {
               onQuote={(q) => quoteToMemo(q, '확정')}
             />
           )}
+          {view === 'suspects' && (
+            <Suspects
+              c={c}
+              facts={facts}
+              cluesByPerson={cluesByPerson}
+              annotations={annotations}
+              onVerdict={setVerdict}
+            />
+          )}
           {view === 'investigate' && (
             <Investigate
               c={c}
@@ -389,6 +438,8 @@ export default function App() {
                 return { action: a, state: st }
               }}
               onAsk={setPending}
+              annotations={annotations}
+              onCellMark={setCellMark}
             />
           )}
           {view === 'statements' && (

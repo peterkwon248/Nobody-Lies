@@ -17,7 +17,7 @@ import { DetailPanel } from './DetailPanel'
  * 만들지 않는다. 남은 예산처럼 사실인 것만 적는다.
  */
 
-export type View = 'overview' | 'report' | 'statements' | 'map' | 'investigate'
+export type View = 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'investigate'
 
 /** 아이콘은 프로토타입 84~118행의 인라인 SVG 그대로다 */
 const ICONS: Record<View | 'home', React.ReactNode> = {
@@ -25,6 +25,8 @@ const ICONS: Record<View | 'home', React.ReactNode> = {
   overview: <><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></>,
   report: <><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></>,
   statements: <><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></>,
+  // 원본 100행
+  suspects: <><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></>,
   // 원본 104행
   map: <><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></>,
   // 원본 113행 — 돋보기
@@ -36,6 +38,7 @@ const META: Record<View, { title: string; sub: string }> = {
   overview: { title: '사건 개요', sub: '확인된 사실만 적혀 있습니다' },
   report: { title: '사건 보고서', sub: '공란을 모두 채우면 장이 완성됩니다 · 마지막에 제출' },
   statements: { title: '진술', sub: '다섯 사람의 원문 진술' },
+  suspects: { title: '용의자', sub: '확보한 사실만 채워집니다 · 심증은 내 판단일 뿐입니다' },
   map: { title: '현장', sub: '시간대별 주장 위치 · 지도는 판정하지 않습니다' },
   investigate: { title: '조사', sub: '예산을 쓰는 유일한 자리 · 되돌릴 수 없습니다' },
 }
@@ -47,6 +50,7 @@ const NAV: { group: string; items: { id: View; label: string }[] }[] = [
   ] },
   { group: '단서', items: [
     { id: 'statements', label: '진술' },
+    { id: 'suspects', label: '용의자' },
     { id: 'map', label: '현장 평면도' },
     { id: 'investigate', label: '조사' },
   ] },

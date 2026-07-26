@@ -2210,3 +2210,358 @@ body {
 .nl-map-fix-hot:hover {
   filter: brightness(1.25);
 }
+
+/* ── 용의자 ──────────────────────────────────────────────────────────
+   원본 837~871행.
+
+   ★ 다섯 카드는 완전히 같게 생긴다 ★
+   다른 것은 플레이어가 찍은 심증뿐이고 그건 게임의 판정이 아니다. */
+
+.nl-sus {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.nl-sus-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 14px 16px 14px 0;
+  display: flex;
+}
+
+.nl-sus-rail {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: none;
+  margin-right: 13px;
+}
+
+.nl-sus-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nl-sus-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nl-sus-av {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.nl-sus-memo-count {
+  font-size: 10px;
+  font-weight: var(--fw-semi, 600);
+  padding: 2px 7px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--bg-elevated-2);
+  color: var(--fg-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+
+/* 심증 — 내 판단일 뿐 · 점수 무관 */
+.nl-sus-verdict {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-vchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: var(--fw-medium, 500);
+}
+
+.nl-vchip-on {
+  background: var(--bg-active);
+  font-weight: var(--fw-semi, 600);
+}
+
+.nl-vdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.nl-sus-cap {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.nl-sus-claim {
+  color: var(--fg-2);
+  line-height: 1.55;
+  margin-bottom: 14px;
+  word-break: keep-all;
+}
+
+.nl-sus-clues {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.nl-sus-clue {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.nl-sus-bullet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 6px;
+  flex: none;
+}
+
+.nl-sus-none {
+  color: var(--fg-4);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.nl-sus-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.nl-sus-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nl-sus-slot-k {
+  color: var(--fg-4);
+  width: 40px;
+  flex: none;
+}
+
+.nl-sus-slot-v {
+  color: var(--fg-2);
+  flex: 1;
+  word-break: keep-all;
+}
+
+/* 미확인. **점선이지 물음표가 아니다** — 게임은 여기서 아무 말도 하지 않는다 */
+.nl-sus-dash {
+  flex: 1;
+  border-bottom: 1.5px dashed var(--border-strong);
+}
+
+/* ── 주장 대조(도식) ─────────────────────────────────────────────────
+   원본 522~551행. 현장 화면의 두 번째 탭.
+
+   ★ 게임은 이 표를 읽지 않는다 ★ 모순 자동 탐지 없음.
+   칸 색은 플레이어가 찍은 것이다. */
+
+.nl-map-modes {
+  margin-bottom: 16px;
+}
+
+.nl-grid-wrap {
+  margin-top: 2px;
+}
+
+.nl-grid-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.nl-grid-keys {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.nl-grid-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nl-grid-key-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.nl-grid {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+}
+
+.nl-grid-head,
+.nl-grid-row {
+  display: flex;
+  min-width: 720px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-grid-head {
+  background: var(--bg-subtle);
+}
+
+.nl-grid-row:last-child {
+  border-bottom: none;
+}
+
+.nl-grid-namecol {
+  width: 184px;
+  flex: none;
+  padding: 9px 14px;
+  position: sticky;
+  left: 0;
+  background: var(--bg-subtle);
+  z-index: 3;
+  border-right: 1px solid var(--border);
+}
+
+.nl-grid-namecell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  background: var(--bg-app);
+  z-index: 2;
+}
+
+.nl-grid-rail {
+  width: 3px;
+  align-self: stretch;
+  flex: none;
+}
+
+.nl-grid-av {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+.nl-grid-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nl-grid-th {
+  flex: 1;
+  min-width: 130px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 1px solid var(--border);
+}
+
+/* 사망 시간대. **사건의 사실이지 판정이 아니다** */
+.nl-grid-th-window,
+.nl-grid-cell-window {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nl-grid-cell {
+  position: relative;
+  flex: 1;
+  min-width: 130px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-left: 1px solid var(--border);
+  min-height: 46px;
+}
+
+.nl-grid-cell-hot {
+  cursor: pointer;
+}
+
+.nl-grid-claim {
+  font-size: 12.5px;
+  color: var(--fg-2);
+  font-weight: var(--fw-medium, 500);
+}
+
+.nl-grid-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  margin-left: auto;
+}
+
+.nl-grid-picker {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 8px;
+  z-index: 41;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  box-shadow: var(--shadow-popover);
+  padding: 4px;
+}
+
+.nl-grid-picker-r {
+  left: auto;
+  right: 8px;
+}
+
+.nl-grid-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+}
+
+.nl-grid-opt:hover {
+  background: var(--bg-hover);
+}
+
+.nl-grid-opt-clear {
+  color: var(--fg-4);
+  font-size: 12px;
+}

@@ -3,6 +3,8 @@ import type { Action, Case } from '@engine/types'
 import { claimedLocationAt } from '@engine/deriver'
 import { buildGeometry, markerSpot, pctX, pctY } from '../map/geometry'
 import { personColor } from '../case/people'
+import { ClaimGrid } from './ClaimGrid'
+import type { PlayerAnnotations } from '../state/stores'
 
 /**
  * 현장 평면도 — 프로토타입 481~520행.
@@ -23,6 +25,8 @@ export function FloorPlanView({
   investigatedLocs,
   actionAt,
   onAsk,
+  annotations,
+  onCellMark,
 }: {
   c: Case
   /** 완성된 장 인덱스. 별채가 여기서 열린다 */
@@ -32,9 +36,13 @@ export function FloorPlanView({
   /** 이 지점에 걸린 조사와 그 상태. 없으면 누를 수 없다 */
   actionAt: (kind: 'location' | 'fixture', id: string) => { action: Action; state: string } | null
   onAsk: (a: Action) => void
+  annotations: PlayerAnnotations
+  onCellMark: (person: string, slot: string, kind: '확인' | '의심' | '모순' | null) => void
 }) {
   const fp = c.floorPlan
   const [slot, setSlot] = useState(c.slots[0]?.id ?? '')
+  /** 원본 484행 — 현장은 두 모드다. 같은 주장을 공간으로 / 표로 본다 */
+  const [mode, setMode] = useState<'plan' | 'grid'>('plan')
 
   if (!fp)
     return (
@@ -65,6 +73,17 @@ export function FloorPlanView({
 
   return (
     <div className="nl-map">
+      {/* 원본 484행 — 평면도 / 도식 */}
+      <div className="segmented nl-map-modes">
+        <div className={mode === 'plan' ? 'nl-map-time nl-map-time-on' : 'nl-map-time'}
+          onClick={() => setMode('plan')}>평면도</div>
+        <div className={mode === 'grid' ? 'nl-map-time nl-map-time-on' : 'nl-map-time'}
+          onClick={() => setMode('grid')}>도식</div>
+      </div>
+
+      {mode === 'grid'
+        ? <ClaimGrid c={c} annotations={annotations} onMark={onCellMark} />
+        : <>
       {/* 시간대. 넘기면 주장 위치가 움직인다 */}
       <div className="segmented nl-map-times">
         {c.slots.map((s) => (
@@ -233,6 +252,7 @@ export function FloorPlanView({
       <div className="v-meta nl-map-hint">
         시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.
       </div>
+        </>}
     </div>
   )
 }

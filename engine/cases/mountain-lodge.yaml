@@ -203,6 +203,7 @@ floor_plan:
 people:
   - id: sakura
     name: 문세라
+    claim_summary: "전날 밤 본채에서 음주 후 별채에서 잤고, 오전까지 계속 잤다고 진술."
     age: 32
     sex: 여
     job: 산장지기
@@ -233,6 +234,7 @@ people:
 
   - id: yena
     name: 서지안
+    claim_summary: "오전에 도착해 가장 먼저 연기를 발견했다고 진술."
     age: 31
     sex: 여
     job: 댄스 강사
@@ -252,6 +254,7 @@ people:
 
   - id: yujin
     name: 한유빈
+    claim_summary: "요리를 도우러 일찍 도착, 지안과 함께 발견했다고 진술."
     age: 27
     sex: 여
     job: 아이돌
@@ -271,6 +274,7 @@ people:
 
   - id: yuri
     name: 오나경
+    claim_summary: "장을 보고 유빈과 함께 뒤늦게 도착했다고 진술."
     age: 29
     sex: 여
     job: 가수
@@ -291,6 +295,7 @@ people:
 
   - id: wonyoung
     name: 백리원
+    claim_summary: "새벽 3시 피해자의 전화를 받고 늦잠 후 늦게 출발했다고 진술."
     age: 26
     sex: 여
     job: 아이돌

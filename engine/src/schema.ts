@@ -195,6 +195,7 @@ export function parseCase(raw: unknown, source: string): Case {
     return {
       id: x?.id, name: x?.name, age: x?.age, job: x?.job,
       ...(x?.sex ? { sex: x.sex } : {}),
+      ...(x?.claim_summary ? { claimSummary: text(x.claim_summary)! } : {}),
       hiddenRole: x?.hidden_role,
       presence: cells(x?.presence, p, `${at}.presence`, slots, locations),
       // claim 을 적지 않으면 presence 와 같다 = 무고한 사람은 거짓말하지 않는다.

@@ -31,6 +31,14 @@ export type PlayerAnnotations = {
     context?: string
   }[]
   cellMarks: { person: PersonId; slot: SlotId; kind: '확인' | '의심' | '모순' }[]
+  /**
+   * 심증 — **플레이어 자신의 판단**이다. 게임은 여기에 관여하지 않는다.
+   *
+   * 절대 규칙(프로필의 유죄 판정 금지)에 걸리지 않는 이유가 그것이다.
+   * 게임이 「기회 있음 ✓」이라고 말하는 것과 플레이어가 「유력」이라고 찍는 것은
+   * 정반대다. **점수와 무관하고 채점에 쓰이지 않는다.**
+   */
+  verdicts: Record<PersonId, '제외' | '주목' | '유력'>
   boardItems: {
     id: string
     kind: 'person' | 'evidence' | 'note'
@@ -44,6 +52,7 @@ export const emptyAnnotations = (): PlayerAnnotations => ({
   highlights: [],
   notes: [],
   cellMarks: [],
+  verdicts: {},
   boardItems: [],
 })
 
