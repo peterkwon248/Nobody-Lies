@@ -104,6 +104,13 @@ export type Board = {
     shape: '영역' | '교집합' | '타임라인'
     label: string
   }[]
+  /**
+   * 결속 — **같이 움직이는 조각들**. 영역(`groups`)과 다르다.
+   *
+   * 영역은 판 위의 자리이고 결속은 조각들끼리의 관계다. 그래서 결속은 흩어져
+   * 있어도 되고, 하나를 끌면 전부 따라온다 (원본 `binds` · `PB_makeBlock`).
+   */
+  binds: { id: string; mem: string[] }[]
   /** 타임라인 시간 마커 */
   times: { id: string; x: number; label: string }[]
   /** 고정. 켜면 드래그가 안 된다 — 다 짜맞춘 판을 실수로 흐트러뜨리지 않도록 */
@@ -112,7 +119,7 @@ export type Board = {
 
 export const emptyBoard = (): Board => ({
   placed: {}, size: {}, memoText: {}, memoOrder: [],
-  strings: [], labels: [], groups: [], times: [], pins: {},
+  strings: [], labels: [], groups: [], binds: [], times: [], pins: {},
 })
 
 export const emptyAnnotations = (): PlayerAnnotations => ({

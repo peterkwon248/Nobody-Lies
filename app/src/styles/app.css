@@ -4045,7 +4045,8 @@ body {
   border-radius: var(--r-sm, 6px);
   background: var(--bg-app);
   overflow: hidden;
-  pointer-events: none;
+  touch-action: none;
+  cursor: pointer;
 }
 
 .nl-pb-mm-dot {
@@ -4192,4 +4193,50 @@ body {
   font-size: 15px;
   font-weight: var(--fw-semi, 600);
   width: 140px;
+}
+
+/* ── 상황판 3층 · 범위 선택 · 결속 ─────────────────────────────────
+   원본 644행(마퀴) · 708~711행(묶기 바). Shift+드래그가 팬이 아니라 선택이다. */
+
+.nl-pb-marquee {
+  position: absolute;
+  z-index: 30;
+  border: 1px solid var(--accent);
+  background: rgba(76, 141, 255, 0.08);
+  pointer-events: none;
+}
+
+.nl-pb-mselbar {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  box-shadow: var(--shadow-popover);
+  padding: 6px 8px 6px 14px;
+}
+
+.nl-pb-mselbar-n {
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.nl-pb-mselbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--fg-on-accent, #0a0a0b);
+  font-size: 12px;
+  font-weight: var(--fw-semi, 600);
+  cursor: pointer;
 }

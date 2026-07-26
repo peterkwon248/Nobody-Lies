@@ -51,10 +51,17 @@ type Sel =
   | { kind: 'piece'; id: string }
   | { kind: 'group'; id: string }
   | { kind: 'label'; id: string }
+  | { kind: 'bind'; id: string }
   | null
 type Drag =
-  | { kind: 'piece' | 'label' | 'group' | 'resize'; id: string; ox: number; oy: number; moved: boolean }
+  | {
+    kind: 'piece' | 'label' | 'group' | 'resize' | 'bind'
+    id: string; ox: number; oy: number; moved: boolean
+    /** 결속·다중 이동일 때 조각별 잡은 지점 */
+    offs?: Record<string, { x: number; y: number }>
+  }
   | null
+type Marquee = { x1: number; y1: number; x2: number; y2: number } | null
 type Connect = { from: string; cx: number; cy: number } | null
 type DrawShape = { x1: number; y1: number; x2: number; y2: number; shape: '영역' | '교집합' } | null
 
@@ -88,6 +95,9 @@ export function BoardView({
   const [tool, setTool] = useState<Tool | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [draw, setDraw] = useState<DrawShape>(null)
+  /** 여러 개 고른 상태. 마퀴(Shift+드래그)나 Shift+클릭으로 모은다 */
+  const [msel, setMsel] = useState<string[]>([])
+  const [marquee, setMarquee] = useState<Marquee>(null)
   const canvas = useRef<HTMLDivElement>(null)
 
   const set = (patch: Partial<Board>) => onBoard({ ...b, ...patch })
@@ -174,6 +184,14 @@ export function BoardView({
       setSel({ kind: 'label', id }); setTool(null)
       return
     }
+    // Shift+드래그는 팬이 아니라 **범위 선택**이다 (원본 `PB_onBgDown`)
+    if (e.shiftKey && !lock) {
+      const w = toWorld(e)
+      setMarquee({ x1: w.x, y1: w.y, x2: w.x, y2: w.y })
+      setMsel([])
+      return
+    }
+    setMsel([])
     if (lock) return
     setPanning({ x: e.clientX - pan.x, y: e.clientY - pan.y })
   }
@@ -184,7 +202,12 @@ export function BoardView({
       if (!drag.moved) setDrag({ ...drag, moved: true })
       const nx = Math.max(0, w.x - drag.ox)
       const ny = Math.max(0, w.y - drag.oy)
-      if (drag.kind === 'label') {
+      if (drag.kind === 'bind' && drag.offs) {
+        const placed = { ...b.placed }
+        for (const [id, o] of Object.entries(drag.offs))
+          if (placed[id]) placed[id] = { x: Math.max(0, w.x - o.x), y: Math.max(0, w.y - o.y) }
+        set({ placed })
+      } else if (drag.kind === 'label') {
         set({ labels: b.labels.map((l) => (l.id === drag.id ? { ...l, x: nx, y: ny } : l)) })
       } else if (drag.kind === 'group') {
         // 영역을 옮기면 **안에 든 조각도 같이 간다.** 안 그러면 묶은 것이 풀린다
@@ -207,6 +230,7 @@ export function BoardView({
       return
     }
     if (draw) { const w = toWorld(e); setDraw({ ...draw, x2: w.x, y2: w.y }); return }
+    if (marquee) { const w = toWorld(e); setMarquee({ ...marquee, x2: w.x, y2: w.y }); return }
     if (connect) {
       const w = toWorld(e)
       setConnect({ ...connect, cx: w.x, cy: w.y })
@@ -217,9 +241,27 @@ export function BoardView({
 
   const onCanvasUp = (e: React.PointerEvent) => {
     if (drag) {
-      if (!drag.moved)
-        setSel({ kind: drag.kind === 'resize' ? 'group' : drag.kind, id: drag.id } as Sel)
+      if (!drag.moved) {
+        const bind = bindOf(drag.id)
+        setSel(bind
+          ? { kind: 'bind', id: bind.id }
+          : { kind: drag.kind === 'resize' ? 'group' : drag.kind, id: drag.id } as Sel)
+      }
       setDrag(null)
+      return
+    }
+    if (marquee) {
+      // 스치기만 해도 잡힌다 — 완전히 감쌀 필요는 없다 (원본 `PB_onCanvasUp`)
+      const x0 = Math.min(marquee.x1, marquee.x2)
+      const y0 = Math.min(marquee.y1, marquee.y2)
+      const x1 = Math.max(marquee.x1, marquee.x2)
+      const y1 = Math.max(marquee.y1, marquee.y2)
+      setMsel(Object.keys(b.placed).filter((id) => {
+        if (!cardOf(id)) return false
+        const p = b.placed[id]
+        return p.x + wOf(id) >= x0 && p.x <= x1 && p.y + hOf(id) >= y0 && p.y <= y1
+      }))
+      setMarquee(null); setSel(null)
       return
     }
     if (draw) {
@@ -263,10 +305,30 @@ export function BoardView({
     setPanning(null)
   }
 
+  const bindOf = (id: string) => b.binds.find((x) => x.mem.includes(id))
+
   const onPieceDown = (id: string, e: React.PointerEvent) => {
     e.stopPropagation()
+    // Shift+클릭은 고르기다. 이미 고른 것을 다시 누르면 빠진다
+    if (e.shiftKey) {
+      setMsel((m) => {
+        const base = m.length === 0 && sel?.kind === 'piece' && sel.id !== id ? [sel.id] : m
+        return base.includes(id) ? base.filter((x) => x !== id) : [...base, id]
+      })
+      setSel(null)
+      return
+    }
     if (b.pins[id]) { setSel({ kind: 'piece', id }); return }
     const w = toWorld(e)
+    const bind = bindOf(id)
+    if (bind) {
+      // 결속된 조각을 끌면 **전부 같이** 온다. 그게 묶은 이유다
+      const offs: Record<string, { x: number; y: number }> = {}
+      for (const mid of bind.mem)
+        if (b.placed[mid]) offs[mid] = { x: w.x - b.placed[mid].x, y: w.y - b.placed[mid].y }
+      setDrag({ kind: 'bind', id, ox: 0, oy: 0, moved: false, offs })
+      return
+    }
     const p = b.placed[id]
     setDrag({ kind: 'piece', id, ox: w.x - p.x, oy: w.y - p.y, moved: false })
   }
@@ -455,6 +517,16 @@ export function BoardView({
               )
             })}
 
+            {marquee && (
+              <div
+                className="nl-pb-marquee"
+                style={{
+                  left: Math.min(marquee.x1, marquee.x2), top: Math.min(marquee.y1, marquee.y2),
+                  width: Math.abs(marquee.x2 - marquee.x1), height: Math.abs(marquee.y2 - marquee.y1),
+                }}
+              />
+            )}
+
             {draw && (
               <div
                 className="nl-pb-group nl-pb-draw"
@@ -538,7 +610,10 @@ export function BoardView({
               const card = cardOf(id)!
               const p = b.placed[id]
               const size = sizeOf(id)
-              const on = sel?.kind === 'piece' && sel.id === id
+              const bind = bindOf(id)
+              const on = (sel?.kind === 'piece' && sel.id === id)
+                || (sel?.kind === 'bind' && bind?.id === sel.id)
+                || msel.includes(id)
               const isMemo = card.kind === 'memo'
               return (
                 <div
@@ -640,8 +715,52 @@ export function BoardView({
             </div>
           )}
 
-          {/* 미니맵 — 원본 704~707행 */}
-          <div className="nl-pb-minimap">
+          {/* 묶기 바 — 원본 708~711행. 둘 이상 골라야 뜬다 */}
+          {(msel.length >= 2 || sel?.kind === 'bind') && (
+            <div className="nl-pb-mselbar" onPointerDown={(e) => e.stopPropagation()}>
+              {sel?.kind === 'bind' ? (
+                <>
+                  <span className="v-ui nl-pb-mselbar-n">
+                    {b.binds.find((x) => x.id === sel.id)?.mem.length ?? 0}개 결속
+                  </span>
+                  <span
+                    className="nl-pb-mselbar-btn"
+                    onClick={() => { set({ binds: b.binds.filter((x) => x.id !== sel.id) }); setSel(null) }}
+                  >
+                    해제
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="v-ui nl-pb-mselbar-n">{msel.length}개 선택</span>
+                  <span
+                    className="nl-pb-mselbar-btn"
+                    onClick={() => {
+                      const id = `b${Date.now()}`
+                      set({ binds: [...b.binds, { id, mem: msel.filter((x) => b.placed[x]) }] })
+                      setMsel([]); setSel({ kind: 'bind', id })
+                    }}
+                  >
+                    묶기
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* 미니맵 — 원본 704~707행. 누르면 그 자리로 화면이 옮겨간다 */}
+          <div
+            className="nl-pb-minimap"
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              if (lock) return
+              const r = e.currentTarget.getBoundingClientRect()
+              const cv = canvas.current!.parentElement!.getBoundingClientRect()
+              const wx = ((e.clientX - r.left) / r.width) * 2600
+              const wy = ((e.clientY - r.top) / r.height) * 1600
+              setPan(clamp(cv.width / 2 - wx * zoom, cv.height / 2 - wy * zoom))
+            }}
+          >
             {pieces.map((id) => {
               const p = b.placed[id]
               return (
