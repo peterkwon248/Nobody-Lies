@@ -766,6 +766,7 @@ export default function App() {
           {view === 'map' && (
             <FloorPlanView
               c={c}
+              progress={progress}
               solved={progress.solved}
               /* 조사 시스템(P) 이 붙으면 실제 수색 기록이 들어온다 */
               investigatedLocs={new Set(

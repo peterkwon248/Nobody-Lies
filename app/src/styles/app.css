@@ -4666,3 +4666,64 @@ body {
   gap: 2px;
   margin-right: 8px;
 }
+
+/* 장소 상자 안의 단서 칩 — 원본 `l.clues`. 확보 단어 은행과 같은 아이콘 */
+.nl-map-clues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.nl-map-clue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  font-size: 10px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* 도면 아래 조사 서술 — 원본 `floor.narrations` */
+.nl-map-narrs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.nl-map-narr {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 13px 16px 13px 18px;
+}
+
+.nl-map-narr-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--r-md, 8px) 0 0 var(--r-md, 8px);
+}
+
+.nl-map-narr-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.nl-map-narr-body {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}

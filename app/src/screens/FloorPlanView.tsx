@@ -4,7 +4,8 @@ import { claimedLocationAt } from '@engine/deriver'
 import { buildGeometry, markerSpot, pctX, pctY } from '../map/geometry'
 import { personColor } from '../case/people'
 import { ClaimGrid } from './ClaimGrid'
-import type { PlayerAnnotations } from '../state/stores'
+import { iconOf } from './TermBank'
+import type { CaseProgress, PlayerAnnotations } from '../state/stores'
 
 /**
  * 현장 평면도 — 프로토타입 481~520행.
@@ -21,6 +22,7 @@ import type { PlayerAnnotations } from '../state/stores'
  */
 export function FloorPlanView({
   c,
+  progress,
   solved,
   investigatedLocs,
   actionAt,
@@ -29,6 +31,7 @@ export function FloorPlanView({
   onCellMark,
 }: {
   c: Case
+  progress: CaseProgress
   /** 완성된 장 인덱스. 별채가 여기서 열린다 */
   solved: number[]
   /** 이미 수색한 장소 id */
@@ -43,6 +46,36 @@ export function FloorPlanView({
   const [slot, setSlot] = useState(c.slots[0]?.id ?? '')
   /** 원본 484행 — 현장은 두 모드다. 같은 주장을 공간으로 / 표로 본다 */
   const [mode, setMode] = useState<'plan' | 'grid'>('plan')
+
+  /**
+   * 그 장소에서 나온 것 — 원본 `l.clues` · `floor.narrations`.
+   *
+   * 용의자 쪽의 `case/suspect.ts` 와 같은 모양이다(수행한 조사 → 대상 일치 →
+   * 물증·결과문). 대상이 인물이냐 장소냐만 다르다.
+   */
+  const done = progress.investigations
+    .map((iv) => c.actions.find((a) => a.id === iv.actionId))
+    .filter((a): a is Action => !!a)
+  const atLoc = (locId: string) => done.filter(
+    (a) => a.target?.kind === 'location' && a.target.id === locId,
+  )
+  const cluesAt = (locId: string) => atLoc(locId).flatMap((a) =>
+    a.gives.map((id) => c.evidence.find((e) => e.id === id)?.description).filter(Boolean) as string[])
+
+  /** 조사 결과 전문. 조사 기록과 같은 것을 현장에서도 읽는다 (§0.3) */
+  const YIELD: Record<string, string> = {
+    solution: 'var(--g-confirm)', redherring: 'var(--status-progress)',
+    exclusion: 'var(--accent)', empty: 'var(--fg-4)',
+  }
+  const narrations = done
+    .filter((a) => a.target?.kind === 'location' && a.result)
+    .map((a) => ({
+      id: a.id,
+      title: a.result!.title.ko,
+      desc: a.result!.body.ko,
+      locName: c.locations.find((l) => l.id === (a.target as { id: string }).id)?.label ?? '',
+      color: YIELD[a.yield] ?? YIELD.empty,
+    }))
 
   if (!fp)
     return (
@@ -186,6 +219,19 @@ export function FloorPlanView({
                   </span>
                 )}
               </div>
+              {/* 그 장소에서 나온 물증 — 원본 `l.clues`. 확보 단어 은행과 같은 아이콘 */}
+              {a.loc && cluesAt(a.loc).length > 0 && (
+                <div className="nl-map-clues">
+                  {cluesAt(a.loc).map((t, n) => (
+                    <span key={n} className="nl-map-clue">
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+                        <path d={iconOf(t)} />
+                      </svg>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}
@@ -252,6 +298,23 @@ export function FloorPlanView({
       <div className="v-meta nl-map-hint">
         시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.
       </div>
+
+      {/* 도면 아래 조사 서술 — 원본 `floor.narrations`. 조사 기록과 같은 전문을
+          현장에서도 읽는다. *"한 번 보여주고 사라지는 텍스트는 버그다"*(§0.3) */}
+      {narrations.length > 0 && (
+        <div className="nl-map-narrs">
+          {narrations.map((n) => (
+            <div key={n.id} className="nl-map-narr">
+              <span className="nl-map-narr-bar" style={{ background: n.color }} />
+              <div className="nl-map-narr-head">
+                <span className="v-ui" style={{ color: 'var(--fg)' }}>{n.title}</span>
+                <span className="v-micro" style={{ color: 'var(--fg-4)' }}>{n.locName}</span>
+              </div>
+              <div className="nl-map-narr-body">{n.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
         </>}
     </div>
   )
