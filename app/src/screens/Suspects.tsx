@@ -59,6 +59,8 @@ export function Suspects({
       {c.people.map((p, i) => {
         // 카드와 상세가 **같은 계산**을 본다 — 원본 `buildProfiles()` 하나가 둘 다 먹인다
         const { clues, slots } = suspectView(c, progress, facts, p.id)
+        // 「신규」는 마지막으로 이 화면을 떠난 뒤 도착한 것에 붙는다 (원본 `cl.isNew`·`sl.isNew`)
+        const seen = new Set(annotations.seenClues)
         const memos = annotations.notes.filter(
           (n) => n.targetType === '인물' && n.target === p.id && n.content.trim(),
         )
@@ -121,6 +123,7 @@ export function Suspects({
                       <span className="nl-sus-bullet" />
                       <div style={{ minWidth: 0 }}>
                         <span className="v-meta" style={{ color: 'var(--fg-2)' }}>{cl.text}</span>
+                        {!seen.has(cl.actionId) && <span className="nl-pd-new">신규</span>}
                         <div className="v-micro" style={{ color: 'var(--fg-4)', marginTop: 1 }}>{cl.action}</div>
                       </div>
                     </div>
@@ -164,7 +167,10 @@ export function Suspects({
                     <div key={s.kind} className="nl-sus-slot">
                       <span className="v-meta nl-sus-slot-k">{s.label}</span>
                       {f ? (
-                        <span className="v-meta nl-sus-slot-v">{f.content}</span>
+                        <span className="v-meta nl-sus-slot-v">
+                          {f.content}
+                          {s.actionId && !seen.has(s.actionId) && <span className="nl-pd-new">신규</span>}
+                        </span>
                       ) : (
                         <>
                           <span className="nl-sus-dash" />
