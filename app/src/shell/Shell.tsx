@@ -23,7 +23,8 @@ import { DetailPanel } from './DetailPanel'
  * `view` 만 바꾼다).
  */
 export type View =
-  | 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'relations' | 'log' | 'memo' | 'result'
+  | 'overview' | 'report' | 'statements' | 'suspects' | 'map' | 'relations'
+  | 'log' | 'board' | 'memo' | 'result'
 
 /** 사이드바에 실제로 서는 항목. `result` 는 여기 없다 */
 type NavView = Exclude<View, 'result'>
@@ -42,6 +43,13 @@ const ICONS: Record<NavView | 'home', React.ReactNode> = {
   log: <><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></>,
   // 원본 121행 — 줄 세 개가 든 종이. 맨 아랫줄만 짧다
   memo: <><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></>,
+  // 원본 1841행 `ICONS.board` — 네모 셋과 그 사이를 잇는 짧은 선
+  board: <>
+    <rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" />
+    <rect x="9" y="2.5" width="4.5" height="4.5" rx="1" />
+    <rect x="2.5" y="9" width="4.5" height="4.5" rx="1" />
+    <path d="M7 4.75h2M4.75 7v2" />
+  </>,
   // 원본 1839행 `ICONS.graph` — 점 셋과 그 사이를 잇는 선
   relations: <>
     <circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" />
@@ -59,6 +67,7 @@ const META: Record<View, { title: string; sub: string }> = {
   // 원본 `t.navGraph` · `t.graphHint`
   relations: { title: '관계 그래프', sub: '조사로 드러난 인물·사건의 연결' },
   log: { title: '조사 기록', sub: '수행한 조사가 전문 그대로 남습니다' },
+  board: { title: '상황판', sub: '무엇을 옆에 두는지가 곧 추리입니다 · 게임은 판정하지 않습니다' },
   // 원본 2831~2832행 — `t.memoTitle` · `t.annHint`
   memo: { title: '메모장', sub: '문장을 눌러 표시하거나 인용하세요' },
   /** 제목은 채점 결과로 갈리므로 App 이 `heading` 으로 덮어쓴다 (원본 2831행) */
@@ -80,6 +89,8 @@ const NAV: { group: string; items: { id: NavView; label: string }[] }[] = [
   // 원본 111행 — 조사 기록·상황판·메모·표기 안내가 여기 산다
   { group: '도구', items: [
     { id: 'log', label: '조사 기록' },
+    // 원본 [도구] 순서 — navBoard · navMemo · navReference
+    { id: 'board', label: '상황판' },
     { id: 'memo', label: '메모' },
   ] },
 ]

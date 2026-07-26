@@ -3628,3 +3628,429 @@ body {
   font-size: 12px;
   cursor: pointer;
 }
+
+/* ── 상황판 ──────────────────────────────────────────────────────────
+   원본 583~714행. 판 · 서랍 · 조각 3단 · 연결선 · 미니맵.
+   pb-* 인라인 스타일(54~72행)과 마크업을 합쳐 옮겼다. */
+
+.nl-pb {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nl-pb-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nl-pb-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nl-pb-chip-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nl-pb-zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.nl-pb-zoom-pct {
+  color: var(--fg-4);
+  width: 40px;
+  text-align: center;
+}
+
+.nl-pb-btn-wide { width: auto; padding: 0 8px; font-size: 11px; }
+.nl-pb-btn-danger { color: var(--label-red); }
+
+.nl-pb-wrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  position: relative;
+}
+
+/* ── 서랍 ── */
+
+.nl-pb-drawer {
+  width: 186px;
+  flex: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  overflow: auto;
+  padding: 0 10px 20px;
+}
+
+.nl-pb-drawer-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 2px 8px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.nl-pb-cap {
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nl-pb-drawer-x,
+.nl-pb-drawer-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--fg-3);
+  cursor: pointer;
+  font-size: 13px;
+  flex: none;
+}
+
+.nl-pb-drawer-x {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm, 6px);
+}
+
+.nl-pb-drawer-open {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 16px;
+  height: 52px;
+  border-left: none;
+  border-radius: 0 var(--r-sm, 6px) var(--r-sm, 6px) 0;
+}
+
+.nl-pb-sec { margin-bottom: 14px; }
+
+.nl-pb-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.nl-pb-sec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* 아직 없는 것은 「조사 전 · 없음」 — **뭐가 나올지는 말하지 않는다** */
+.nl-pb-locked {
+  padding: 8px 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm, 6px);
+  color: var(--fg-4);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.nl-pb-draw-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+
+.nl-pb-draw-row:hover { background: var(--bg-elevated); }
+
+.nl-pb-draw-label {
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 판에 몇 개 올렸나. 사실이지 재촉이 아니다 */
+.nl-pb-draw-badge {
+  font-size: 10px;
+  font-weight: var(--fw-semi, 600);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  color: var(--fg-3);
+  flex: none;
+}
+
+/* ── 판 ── */
+
+.nl-pb-canvas {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  touch-action: none;
+}
+
+.nl-pb-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+.nl-pb-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+/* 연결선 라벨 — 관계는 **플레이어의 어휘**다. 게임은 맞다 틀리다 하지 않는다 */
+.nl-pb-rel {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  background: var(--bg-subtle);
+  padding: 0 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nl-pb-piece {
+  position: absolute;
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.nl-pb-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  background: var(--bg-app);
+  padding: 9px 11px;
+  transition: box-shadow 0.12s, border-color 0.12s;
+}
+
+.nl-pb-piece:hover > .nl-pb-card { border-color: var(--fg-4); }
+
+.nl-pb-chip-card {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.nl-pb-chip-label {
+  color: var(--fg);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nl-pb-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.nl-pb-type-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.nl-pb-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nl-pb-ini {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  color: #0a0a0b;
+}
+
+.nl-pb-card-label {
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nl-pb-card-sub {
+  color: var(--fg-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nl-pb-quote {
+  color: var(--fg-2);
+  font-style: italic;
+  line-height: 1.55;
+  margin-top: 7px;
+  max-height: 44px;
+  overflow: hidden;
+}
+
+.nl-pb-memo {
+  width: 100%;
+  min-height: 40px;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.nl-pb-pin {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  z-index: 9;
+}
+
+/* 연결 손잡이. 평소엔 흐리고 조각에 올리면 진해진다 (원본 .pb-handle) */
+.nl-pb-handle {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--accent);
+  opacity: 0.42;
+  transition: opacity 0.12s;
+  cursor: crosshair;
+}
+
+.nl-pb-piece:hover .nl-pb-handle { opacity: 1; }
+
+.nl-pb-relpicker {
+  position: absolute;
+  z-index: 40;
+  min-width: 150px;
+}
+
+.nl-pb-rel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+  margin-right: 7px;
+  display: inline-block;
+}
+
+.nl-pb-relpicker-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.nl-pb-rel-del { color: var(--label-red); }
+
+/* 선택 툴바 — 판 아래 가운데 */
+.nl-pb-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  box-shadow: var(--shadow-popover);
+  padding: 6px 10px;
+}
+
+.nl-pb-toolbar > span {
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+  color: var(--fg-2);
+  cursor: pointer;
+}
+
+.nl-pb-toolbar > span:hover { color: var(--fg); }
+.nl-pb-toolbar .nl-pb-del { color: var(--label-red); }
+
+.nl-pb-minimap {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 150px;
+  height: 100px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm, 6px);
+  background: var(--bg-app);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nl-pb-mm-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+}

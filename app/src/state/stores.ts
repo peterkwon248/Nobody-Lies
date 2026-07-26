@@ -70,14 +70,50 @@ export type PlayerAnnotations = {
    * 기록 전체를 한꺼번에 본 것으로 처리한다. 세 겹으로 두면 같은 값을 세 벌 적는다.
    */
   seenClues: string[]
-  boardItems: {
-    id: string
-    kind: 'person' | 'evidence' | 'note'
-    x: number
-    y: number
-    links: string[]
-  }[]
+  board: Board
 }
+
+/** 연결선의 관계. 원본 `PB_REL`(1623행) 다섯 그대로 */
+export type Relation = '모순' | '뒷받침' | '동일인' | '시간충돌' | '관련'
+
+/**
+ * 상황판 — 원본 `state.pb`.
+ *
+ * **여기가 이 게임에서 유일하게 「플레이어가 지은 것」이 남는 자리다.** 메모는
+ * 글이고 마킹은 표시지만, 상황판은 배치다. 그래서 저장 구조가 화면 상태와
+ * 섞이면 안 된다 — `pan`·`zoom`·선택은 **저장하지 않는다**(다시 열면 처음 화면).
+ *
+ * 한때 여기가 `boardItems: {id,kind,x,y,links}[]` 하나였다. 조각 위치와 연결선만
+ * 있는 모양이라 그룹·라벨·시간축·크기를 담을 자리가 없었다 — stub 이었다.
+ */
+export type Board = {
+  /** 판에 놓인 조각. key 는 카드 id(`p_yena`·`e_연탄`·`q_yena`·`m…`) */
+  placed: Record<string, { x: number; y: number }>
+  /** 조각 크기. 없으면 `full` */
+  size: Record<string, 'dot' | 'chip' | 'full'>
+  /** 판 위에서 쓴 메모. 메모장(`notes`)과 **다른 것이다** — 이건 배치물이다 */
+  memoText: Record<string, string>
+  memoOrder: string[]
+  /** 연결선. 같은 짝은 하나만 남는다 */
+  strings: { a: string; b: string; rel: Relation }[]
+  /** 자유 텍스트 라벨 */
+  labels: { id: string; x: number; y: number; text: string }[]
+  /** 영역 · 교집합 · 타임라인 밴드 */
+  groups: {
+    id: string; x: number; y: number; w: number; h: number
+    shape: '영역' | '교집합' | '타임라인'
+    label: string
+  }[]
+  /** 타임라인 시간 마커 */
+  times: { id: string; x: number; label: string }[]
+  /** 고정. 켜면 드래그가 안 된다 — 다 짜맞춘 판을 실수로 흐트러뜨리지 않도록 */
+  pins: Record<string, boolean>
+}
+
+export const emptyBoard = (): Board => ({
+  placed: {}, size: {}, memoText: {}, memoOrder: [],
+  strings: [], labels: [], groups: [], times: [], pins: {},
+})
 
 export const emptyAnnotations = (): PlayerAnnotations => ({
   highlights: [],
@@ -85,7 +121,7 @@ export const emptyAnnotations = (): PlayerAnnotations => ({
   cellMarks: [],
   verdicts: {},
   seenClues: [],
-  boardItems: [],
+  board: emptyBoard(),
 })
 
 /**
