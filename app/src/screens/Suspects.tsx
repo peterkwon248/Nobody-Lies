@@ -1,4 +1,4 @@
-import type { Case, Fact, PersonId } from '@engine/types'
+import type { Action, Case, Fact, PersonId } from '@engine/types'
 import { ko } from '../case/loadCase'
 import { initialOf, personColor, relationOf } from '../case/people'
 import type { PlayerAnnotations } from '../state/stores'
@@ -36,6 +36,8 @@ export function Suspects({
   cluesByPerson,
   annotations,
   onVerdict,
+  actionsFor,
+  onAsk,
 }: {
   c: Case
   /** 지금까지 확보한 사실. 엔진 `deriveFacts` 의 결과 */
@@ -44,6 +46,9 @@ export function Suspects({
   cluesByPerson: Map<PersonId, { text: string; action: string }[]>
   annotations: PlayerAnnotations
   onVerdict: (person: PersonId, v: '제외' | '주목' | '유력') => void
+  /** 이 사람을 대상으로 한 조사와 상태. 원본 buildProfiles 15~19행 */
+  actionsFor: (person: PersonId) => { action: Action; state: string }[]
+  onAsk: (a: Action) => void
 }) {
   return (
     <div className="nl-sus">
@@ -115,6 +120,27 @@ export function Suspects({
               ) : (
                 <div className="v-meta nl-sus-none">아직 조사로 확보한 단서가 없습니다.</div>
               )}
+
+              {/* 인물 조사 — 원본은 프로필 카드에서 실행한다. 소지품·통화내역.
+                  세 상태(가능·잔여 부족·완료)만 사실로 표시한다 */}
+              <div className="nl-sus-acts">
+                {actionsFor(p.id).map(({ action, state }) => (
+                  <button
+                    key={action.id}
+                    className={`nl-sus-act nl-sus-act-${state}`}
+                    disabled={state !== 'ok'}
+                    onClick={state === 'ok' ? () => onAsk(action) : undefined}
+                  >
+                    <span style={{ flex: 1, textAlign: 'left' }}>{action.label}</span>
+                    <span className="v-micro" style={{ color: 'var(--fg-4)' }}>
+                      {state === 'used' ? '조사 완료'
+                        : state === 'nobudget' ? '잔여 부족'
+                        : state === 'locked' ? `${action.availableAfter}장 완성 후`
+                        : `비용 ${action.cost}`}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
               {/* 동기 · 기회 · 수단.
                   ★ **조사로 얻은 사실만** 들어간다 ★

@@ -2565,3 +2565,117 @@ body {
   color: var(--fg-4);
   font-size: 12px;
 }
+
+/* 인물 조사 버튼 — 원본은 프로필 카드에서 실행한다 */
+.nl-sus-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.nl-sus-act {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--fg-4);
+  font: var(--fw-medium, 500) 12px var(--font-sans);
+  cursor: default;
+}
+
+.nl-sus-act-ok {
+  background: var(--bg-elevated);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.nl-sus-act-ok:hover {
+  border-color: var(--accent);
+}
+
+.nl-sus-act-used {
+  border-color: var(--g-confirm);
+  background: rgba(76, 183, 130, 0.08);
+}
+
+/* ── 조사 기록 ───────────────────────────────────────────────────────
+   원본 565~578행. **전문 보존** — 결과 카드에서 한 번 읽고 끝나지 않는다.
+
+   ★ 유형 색은 결과의 종류이지 유용도가 아니다 ★
+   「단서」와 「무관」이 같은 크기·같은 자리에 온다. */
+
+.nl-log {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 24px 64px;
+}
+
+.nl-log-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  padding: 26px;
+  text-align: center;
+  color: var(--fg-4);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.nl-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nl-log-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 13px 16px 13px 18px;
+}
+
+.nl-log-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--r-md, 8px) 0 0 var(--r-md, 8px);
+}
+
+.nl-log-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nl-log-title {
+  color: var(--fg);
+  margin-bottom: 3px;
+}
+
+.nl-log-desc {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--fg-2);
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+
+.nl-log-sep {
+  margin: 28px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* 기록 화면 안에 얹히므로 자체 여백을 뺀다 */
+.nl-log .nl-inv {
+  max-width: none;
+  padding: 0;
+}

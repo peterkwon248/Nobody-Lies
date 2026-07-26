@@ -14,7 +14,8 @@ import { Report } from './screens/Report'
 import { Overview } from './screens/Overview'
 import { StatementList } from './screens/StatementList'
 import { FloorPlanView } from './screens/FloorPlanView'
-import { Investigate, ResultCard, actionState } from './screens/Investigate'
+import { ResultCard, actionState } from './screens/Investigate'
+import { InvestigationLog } from './screens/InvestigationLog'
 import { Suspects } from './screens/Suspects'
 import { Shell, type View } from './shell/Shell'
 import { deriveFacts, deriveTerms } from '@engine/verifier'
@@ -116,7 +117,7 @@ export default function App() {
   /** 화면 이름. 메모가 「어디서 적었나」를 남긴다 (원본 `memoMeta`) */
   const VIEW_LABEL: Record<View, string> = {
     overview: '사건 개요', report: '사건 보고서', statements: '진술', map: '현장',
-    investigate: '조사', suspects: '용의자',
+    log: '조사 기록', suspects: '용의자',
   }
 
   const addMemo = () =>
@@ -407,16 +408,18 @@ export default function App() {
               cluesByPerson={cluesByPerson}
               annotations={annotations}
               onVerdict={setVerdict}
-            />
-          )}
-          {view === 'investigate' && (
-            <Investigate
-              c={c}
-              used={new Set(progress.investigations.map((iv) => iv.actionId))}
-              remaining={c.budget - progress.actionsUsed}
-              solvedCount={progress.solved.length}
+              actionsFor={(pid) => {
+                const used = new Set(progress.investigations.map((iv) => iv.actionId))
+                const left = c.budget - progress.actionsUsed
+                return c.actions
+                  .filter((a) => a.target?.kind === 'person' && a.target.id === pid)
+                  .map((a) => ({ action: a, state: actionState(c, a, used, left, progress.solved.length) }))
+              }}
               onAsk={setPending}
             />
+          )}
+          {view === 'log' && (
+            <InvestigationLog c={c} progress={progress} onAsk={setPending} />
           )}
           {view === 'map' && (
             <FloorPlanView
