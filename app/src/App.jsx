@@ -107,7 +107,7 @@ export default class App extends React.Component {
       invRemaining: '잔여 조사', invExec: '조사 실행', invLogTitle: '조사 기록', invEmptyLog: '아직 수행한 조사가 없습니다. 왼쪽에서 행동을 골라 실행하세요.', sealRecord: '장 완성',
       invPickAction: '행동을 선택하세요', invPickPerson: '인물 선택', invPickPlace: '장소 선택', invPickPair: '두 인물 선택', invNoTarget: '대상 없음',
       reasonBudget: '잔여 부족', reasonUsed: '이미 사용함', resSolution: '결정적 단서', resRed: '무고한 자의 비밀', resExcl: '용의자 배제', resEmpty: '아무것도 없음', resEmptyTag: '배제 정보',
-      cost: '비용', invHint: '조사 예산은 5. 시신 정밀 검사만 2가 든다.', invDone: '조사 완료',
+      cost: '비용', invHint: '조사는 되돌릴 수 없다. 같은 대상은 한 번만 조사한다.', invDone: '조사 완료',
       homeTitle: '사건 파일', resume: '이어하기', campaign: '캠페인', daily: '오늘의 사건', workshop: '워크샵', coop: '협동',
       locked: '잠김', cleared: '클리어', inProgress: '진행 중', unplayed: '미플레이', start: '시작', review: '다시 보기', abandon: '포기', cancel: '취소', quit: '포기하기',
       detailBack: '사건 목록', budgetLabel: '조사 예산', estTime: '예상 소요', estTimeVal: '40\u201360분', suspects: '용의자', suspectsVal: '5명', clearedLabel: '클리어', more: '더 보기',
@@ -165,7 +165,7 @@ export default class App extends React.Component {
       invRemaining: 'Investigations left', invExec: 'Run', invLogTitle: 'Investigation log', invEmptyLog: 'No investigations yet. Pick an action on the left and run it.', sealRecord: 'Section complete',
       invPickAction: 'Select an action', invPickPerson: 'Pick a person', invPickPlace: 'Pick a place', invPickPair: 'Pick two people', invNoTarget: 'No target needed',
       reasonBudget: 'Not enough left', reasonUsed: 'Already used', resSolution: 'Decisive clue', resRed: "An innocent's secret", resExcl: 'Suspect ruled out', resEmpty: 'Nothing found', resEmptyTag: 'exclusion',
-      cost: 'Cost', invHint: 'Budget is 5. Only the detailed autopsy costs 2.', invDone: 'Investigated',
+      cost: 'Cost', invHint: 'Investigations cannot be undone. Each target can be investigated once.', invDone: 'Investigated',
       homeTitle: 'Case files', resume: 'Continue', campaign: 'Campaign', daily: 'Daily case', workshop: 'Workshop', coop: 'Co-op',
       locked: 'Locked', cleared: 'Cleared', inProgress: 'In progress', unplayed: 'Not played', start: 'Start', review: 'Review', abandon: 'Abandon', cancel: 'Cancel', quit: 'Abandon',
       detailBack: 'Cases', budgetLabel: 'Budget', estTime: 'Est. time', estTimeVal: '40\u201360 min', suspects: 'Suspects', suspectsVal: '5', clearedLabel: 'cleared', more: 'More',
@@ -778,7 +778,7 @@ export default class App extends React.Component {
       onClose: () => this.closeInvResult(), saveLabel: this.state.lang === 'ko' ? '조사 기록에 보관' : 'Save to log' };
   }
   buildInvestigation() {
-    const t = this.T(), ln = this.state.lang, s = this.state.invSel, spent = this.invSpent(), remaining = 5 - spent;
+    const t = this.T(), ln = this.state.lang, s = this.state.invSel, spent = this.invSpent(), remaining = this.BUDGET - spent;
     const actions = this.INV_ACTIONS.map(a => ({ id: a.id, label: t[a.k], cost: a.cost, onSelect: () => this.selectAction(a.id),
       style: { display: 'flex', alignItems: 'center', gap: '10px', height: '40px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (s.action === a.id ? 'var(--accent)' : 'var(--border-strong)'), background: s.action === a.id ? 'var(--accent-soft)' : 'transparent', color: s.action === a.id ? 'var(--fg)' : 'var(--fg-2)', cursor: 'pointer' } }));
     const a = s.action ? this.INV_ACTIONS.find(x => x.id === s.action) : null, mode = a ? a.mode : null;
@@ -1001,7 +1001,7 @@ export default class App extends React.Component {
     const total = Object.keys(this.BLANKS).length;
     const correct = Object.keys(this.BLANKS).filter(id => this.state.blanks[id] === this.BLANKS[id].ans).length;
     const done = this.allSealed();
-    const spent = this.invSpent(), remaining = 5 - spent;
+    const spent = this.invSpent(), remaining = this.BUDGET - spent;
     const stuck = !done && remaining <= 0;
     const story = this.SECTIONS.map(s => ({ num: s.num, title: ln === 'ko' ? s.tKo : s.tEn, sealed: this.secComplete(s.id), sealedOpacity: this.secComplete(s.id) ? 1 : 0.45,
       text: this.SEC_BLANKS[s.id].map(id => this.BLANKS[id].ans + this.particle(this.BLANKS[id].ans, this.BLANKS[id].par)).join(' · ') }));
@@ -1038,7 +1038,7 @@ export default class App extends React.Component {
       nomStyle: { fontSize: '12px', fontWeight: 700, color: nomOk ? 'var(--g-confirm)' : 'var(--g-contradict)' },
       titleLabel: done ? (ln === 'ko' ? '사건 종결' : 'Case closed') : (ln === 'ko' ? '미결' : 'Unresolved'),
       metrics: [
-        { k: ln === 'ko' ? '사용한 조사' : 'Investigations', v: spent + ' / 5' },
+        { k: ln === 'ko' ? '사용한 조사' : 'Investigations', v: spent + ' / ' + this.BUDGET },
         { k: ln === 'ko' ? '정확도' : 'Accuracy', v: correct + ' / ' + total },
         { k: ln === 'ko' ? '소요 시간' : 'Time', v: '—' },
       ],
