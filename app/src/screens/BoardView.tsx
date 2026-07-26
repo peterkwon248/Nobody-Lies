@@ -55,7 +55,7 @@ type Sel =
   | null
 type Drag =
   | {
-    kind: 'piece' | 'label' | 'group' | 'resize' | 'bind'
+    kind: 'piece' | 'label' | 'group' | 'resize' | 'bind' | 'time'
     id: string; ox: number; oy: number; moved: boolean
     /** 결속·다중 이동일 때 조각별 잡은 지점 */
     offs?: Record<string, { x: number; y: number }>
@@ -98,6 +98,9 @@ export function BoardView({
   /** 여러 개 고른 상태. 마퀴(Shift+드래그)나 Shift+클릭으로 모은다 */
   const [msel, setMsel] = useState<string[]>([])
   const [marquee, setMarquee] = useState<Marquee>(null)
+  const [timeline, setTimeline] = useState(true)
+  /** 강조한 시간대. 그 밴드의 조각만 밝고 나머지는 흐려진다 (원본 `hlTimeId`) */
+  const [hlTime, setHlTime] = useState<string | null>(null)
   const canvas = useRef<HTMLDivElement>(null)
 
   const set = (patch: Partial<Board>) => onBoard({ ...b, ...patch })
@@ -202,7 +205,11 @@ export function BoardView({
       if (!drag.moved) setDrag({ ...drag, moved: true })
       const nx = Math.max(0, w.x - drag.ox)
       const ny = Math.max(0, w.y - drag.oy)
-      if (drag.kind === 'bind' && drag.offs) {
+      if (drag.kind === 'time') {
+        // 시간 마커는 **가로로만** 움직인다. 세로로 흔들리면 시간축이 아니다
+        set({ times: b.times.map((t) => (t.id === drag.id
+          ? { ...t, x: Math.max(40, w.x - drag.ox) } : t)) })
+      } else if (drag.kind === 'bind' && drag.offs) {
         const placed = { ...b.placed }
         for (const [id, o] of Object.entries(drag.offs))
           if (placed[id]) placed[id] = { x: Math.max(0, w.x - o.x), y: Math.max(0, w.y - o.y) }
@@ -307,6 +314,26 @@ export function BoardView({
 
   const bindOf = (id: string) => b.binds.find((x) => x.mem.includes(id))
 
+  /**
+   * 이 x 좌표가 어느 시간대에 드나. 원본 `PB_bandOf`.
+   *
+   * **마커의 90px 앞부터** 그 시간대다 — 카드를 마커에 딱 맞춰 놓지 않아도
+   * 되도록. 첫 마커보다 왼쪽은 첫 시간대로 떨어진다.
+   */
+  const bandOf = (cx: number): string | null => {
+    const ts = [...b.times].sort((p, q) => p.x - q.x)
+    if (!ts.length) return null
+    let owner = ts[0].id
+    for (const t of ts) if (cx >= t.x - 90) owner = t.id
+    return owner
+  }
+
+  const addTime = () => {
+    const xs = b.times.map((t) => t.x)
+    const id = `t${Date.now()}`
+    set({ times: [...b.times, { id, x: (xs.length ? Math.max(...xs) : 200) + 250, label: '새 시간' }] })
+  }
+
   const onPieceDown = (id: string, e: React.PointerEvent) => {
     e.stopPropagation()
     // Shift+클릭은 고르기다. 이미 고른 것을 다시 누르면 빠진다
@@ -334,7 +361,7 @@ export function BoardView({
   }
 
   const onGrabDown = (
-    kind: 'label' | 'group' | 'resize',
+    kind: 'label' | 'group' | 'resize' | 'time',
     id: string,
     at: { x: number; y: number },
     e: React.PointerEvent,
@@ -379,6 +406,12 @@ export function BoardView({
             </div>
           )}
         </div>
+        <span
+          className={timeline ? 'nl-pb-chip nl-pb-chip-on' : 'nl-pb-chip'}
+          onClick={() => { setTimeline((v) => !v); setHlTime(null) }}
+        >
+          타임라인
+        </span>
         <span
           className={lock ? 'nl-pb-chip nl-pb-chip-on' : 'nl-pb-chip'}
           onClick={() => setLock((v) => !v)}
@@ -459,6 +492,63 @@ export function BoardView({
             className="nl-pb-world"
             style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
           >
+            {/* 타임라인 — 원본 620~630행. 판 맨 위 56px 띠가 시간축이고,
+                조각을 그 안에 올려두면 그 시간대에 속한다 */}
+            {timeline && (
+              <>
+                <div className="nl-pb-tl-band" style={{ top: lock ? 0 : -pan.y / zoom }}>
+                  <span className="v-micro nl-pb-tl-cap">시간 →</span>
+                  <span
+                    className="nl-pb-tl-add"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={addTime}
+                  >
+                    ＋시간
+                  </span>
+                  {[...b.times].sort((p, q) => p.x - q.x).map((t) => {
+                    const active = hlTime === t.id
+                    return (
+                      <div
+                        key={t.id}
+                        className="nl-pb-tl-marker"
+                        style={{ left: t.x }}
+                        onPointerDown={(e) => onGrabDown('time', t.id, { x: t.x, y: 0 }, e)}
+                      >
+                        <span
+                          className={active ? 'nl-pb-tl-tick nl-pb-tl-tick-on' : 'nl-pb-tl-tick'}
+                          title="시간 강조"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={() => setHlTime(active ? null : t.id)}
+                        />
+                        <input
+                          className="nl-pb-tl-input"
+                          value={t.label}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onChange={(e) => set({ times: b.times.map((x) =>
+                            x.id === t.id ? { ...x, label: e.target.value } : x) })}
+                        />
+                        <span
+                          className="nl-pb-tl-del"
+                          title="삭제"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={() => {
+                            set({ times: b.times.filter((x) => x.id !== t.id) })
+                            if (hlTime === t.id) setHlTime(null)
+                          }}
+                        >
+                          삭제
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* 세로 안내선. 시간축이 판 아래까지 이어진다는 표시 */}
+                {b.times.map((t) => (
+                  <div key={t.id} className="nl-pb-tl-guide" style={{ left: t.x }} />
+                ))}
+              </>
+            )}
+
             {/* 그룹 — 조각보다 **아래**에 깔린다. 묶는 것이지 덮는 것이 아니다 */}
             {b.groups.map((g) => {
               const on = sel?.kind === 'group' && sel.id === g.id
@@ -615,11 +705,20 @@ export function BoardView({
                 || (sel?.kind === 'bind' && bind?.id === sel.id)
                 || msel.includes(id)
               const isMemo = card.kind === 'memo'
+              // 띠 안(y < 56)에 올려둔 조각은 그 시간대에 속한다 (원본 `laned`)
+              const laned = timeline && p.y < 56
+              const own = laned ? bandOf(p.x + cardW(size) / 2) : null
+              const timeLabel = own ? (b.times.find((t) => t.id === own)?.label ?? '') : ''
+              // 시간대를 강조하면 **다른 시간대가 흐려진다.** 지우지 않는다
+              const dim = hlTime !== null && laned && own !== hlTime
               return (
                 <div
                   key={id}
                   className="nl-pb-piece"
-                  style={{ left: p.x, top: p.y, zIndex: on ? 20 : 5, width: cardW(size) }}
+                  style={{
+                    left: p.x, top: p.y, zIndex: on ? 20 : 5, width: cardW(size),
+                    opacity: dim ? 0.32 : 1, transition: 'opacity .15s',
+                  }}
                   onPointerDown={(e) => onPieceDown(id, e)}
                 >
                   {size === 'chip' ? (
@@ -632,6 +731,9 @@ export function BoardView({
                       <div className="nl-pb-card-head">
                         <span className="nl-pb-type-dot" style={{ background: KIND_COLOR[card.kind] }} />
                         <span className="v-micro nl-pb-cap">{KIND_LABEL[card.kind]}</span>
+                        {laned && timeLabel && (
+                          <span className="v-micro" style={{ color: 'var(--accent)' }}>· {timeLabel}</span>
+                        )}
                       </div>
                       {isMemo ? (
                         <textarea

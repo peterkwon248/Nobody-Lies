@@ -4240,3 +4240,94 @@ body {
   font-weight: var(--fw-semi, 600);
   cursor: pointer;
 }
+
+/* ── 상황판 4층 · 타임라인 ───────────────────────────────────────────
+   원본 620~630행. 판 맨 위 56px 띠가 시간축이다.
+   조각을 띠 안에 올려두면 그 시간대에 속하고, 시간을 강조하면 나머지가 흐려진다.
+   ★ 지우지 않고 흐리게만 한다 ★ 지우면 「그 시간대에 아무도 없다」가 되어버린다. */
+
+.nl-pb-tl-band {
+  position: absolute;
+  left: 0;
+  width: 15000px;
+  height: 56px;
+  border-bottom: 1px dashed var(--border-strong);
+  background: var(--bg-subtle);
+  z-index: 3;
+}
+
+.nl-pb-tl-cap {
+  position: absolute;
+  left: 10px;
+  top: 7px;
+  color: var(--fg-4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nl-pb-tl-add {
+  position: absolute;
+  left: 70px;
+  top: 6px;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.nl-pb-tl-marker {
+  position: absolute;
+  top: 26px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+/* 눈금. 누르면 그 시간대만 밝아진다 */
+.nl-pb-tl-tick {
+  width: 2px;
+  height: 12px;
+  background: var(--border-strong);
+  border-radius: 1px;
+  flex: none;
+  cursor: pointer;
+}
+
+.nl-pb-tl-tick-on { background: var(--accent); height: 16px; }
+
+.nl-pb-tl-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: var(--fw-semi, 600);
+  width: 74px;
+  padding: 1px 2px;
+  border-radius: 3px;
+}
+
+.nl-pb-tl-del {
+  font-size: 10px;
+  color: var(--label-red);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.nl-pb-tl-marker:hover .nl-pb-tl-del { opacity: 1; }
+
+/* 세로 안내선 — 시간축이 판 아래까지 이어진다는 표시. 아주 흐리다 */
+.nl-pb-tl-guide {
+  position: absolute;
+  top: 56px;
+  width: 1px;
+  height: 1600px;
+  background: var(--border);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
