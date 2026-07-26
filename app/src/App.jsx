@@ -387,7 +387,79 @@ export default class App extends React.Component {
     wonyoung: { pre: '리원은 휴대폰을 두 손으로 감싸 쥐었다.', post: '화면을 몇 번 더 확인했다.' },
   };
 
+  /**
+   * ─────────────────────────────────────────────────────────────────
+   *  진행 저장
+   * ─────────────────────────────────────────────────────────────────
+   *
+   * DC export 에는 저장이 **한 줄도 없었다.** 프로토타입은 원래 그래도 되지만
+   * 새로고침 한 번에 전부 날아가는 것을 플레이테스터에게 줄 수는 없다.
+   *
+   * ★ 저장 목록은 화이트리스트다 ★
+   * 상태를 통째로 저장하면 열려 있던 모달·드래그 중이던 좌표까지 되살아나서
+   * **깨진 화면으로 복귀한다.** 무엇을 저장할지 고르는 순간 상태가 갈래로
+   * 나뉘고, 그 구분이 곧 엔진 재분리의 절반이다:
+   *
+   *   진행   게임이 어디까지 갔나        — 나중에 `CaseProgress`
+   *   주석   플레이어가 무엇을 적었나    — 나중에 `PlayerAnnotations`
+   *   설정   어떻게 보고 있나
+   *   (나머지는 전부 휘발 — 열린 메뉴·선택·드래그·라우트)
+   *
+   * `route` 는 일부러 저장하지 않는다. 새로고침하면 홈으로 나오고 「이어하기」로
+   * 돌아간다 — `caseStatus()` 가 `started`·`solved` 만 보므로 그것으로 충분하다.
+   */
+  SAVE_KEY = 'nobody-lies:mountain-lodge';
+  /** 구조를 바꾸면 올린다. 옛 저장은 조용히 버려진다 — 깨진 채 복구하는 것보다 낫다 */
+  SAVE_VERSION = 1;
+
+  SAVED = {
+    progress: ['blanks', 'solved', 'reopenActive', 'reopenUsed', 'evidence', 'invLog',
+      'readDone', 'readIdx', 'started', 'stage', 'seenClaims', 'seenClues'],
+    annotations: ['memos', 'readMemos', 'hls', 'annMarks', 'cellMarks', 'verdicts', 'quotePins'],
+    prefs: ['lang', 'theme', 'narrMode', 'stmtMode', 'viewOpts'],
+  };
+  /** 상황판에서 저작에 해당하는 것만. `pan`·`zoom`·드래그 중간값은 화면 상태다 */
+  SAVED_PB = ['placed', 'memoText', 'memoOrder', 'labels', 'strings', 'groups',
+    'binds', 'pins', 'size', 'times'];
+
+  loadSave() {
+    let raw;
+    try { raw = localStorage.getItem(this.SAVE_KEY); } catch (e) { return null; }
+    if (!raw) return null;
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { return null; }
+    if (!data || data.v !== this.SAVE_VERSION) return null;
+    const next = {};
+    for (const group of Object.values(this.SAVED))
+      for (const k of group) if (k in data) next[k] = data[k];
+    if (data.pb) next.pb = Object.assign({}, this.state.pb, data.pb);
+    return next;
+  }
+
+  save() {
+    const s = this.state;
+    const out = { v: this.SAVE_VERSION };
+    for (const group of Object.values(this.SAVED)) for (const k of group) out[k] = s[k];
+    out.pb = {};
+    for (const k of this.SAVED_PB) out.pb[k] = s.pb[k];
+    try { localStorage.setItem(this.SAVE_KEY, JSON.stringify(out)); } catch (e) { /* 용량 초과 등 — 게임을 막지 않는다 */ }
+  }
+
+  /** 메모 타이핑마다 쓰지 않도록 묶는다 */
+  scheduleSave() {
+    clearTimeout(this._saveT);
+    this._saveT = setTimeout(() => this.save(), 400);
+  }
+
+  /**
+   * 「포기」는 따로 지우지 않는다 — `abandon()` 이 상태를 되돌리면
+   * 그 되돌린 상태가 그대로 저장된다. 지우는 경로를 따로 두면 둘이 갈라진다.
+   */
+  componentDidUpdate() { this.scheduleSave(); }
+
   componentDidMount() {
+    const saved = this.loadSave();
+    if (saved) this.setState(saved, () => this.applyTheme());
     this.applyTheme();
     this._onResize = () => { const el = this._root && this._root.closest ? this._root.closest('.app') : null; const w = (el && el.clientWidth) || document.documentElement.clientWidth || window.innerWidth; const n = w < 820; if (n !== this.state.isNarrow) this.setState({ isNarrow: n }); };
     this._root = document.querySelector('.app');
@@ -400,7 +472,7 @@ export default class App extends React.Component {
     };
     document.addEventListener('click', this._onDocClick, true);
   }
-  componentWillUnmount() { window.removeEventListener('resize', this._onResize); if (this._ro) this._ro.disconnect(); document.removeEventListener('click', this._onDocClick, true); }
+  componentWillUnmount() { clearTimeout(this._saveT); this.save(); window.removeEventListener('resize', this._onResize); if (this._ro) this._ro.disconnect(); document.removeEventListener('click', this._onDocClick, true); }
 
   PB_REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
   PB_LANES = ['전날 밤','새벽 3시','3–8시','오전'];
