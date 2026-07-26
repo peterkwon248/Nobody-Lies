@@ -12,6 +12,7 @@
     "typecheck": "npm run typecheck -w engine && npm run typecheck -w nobody-lies-app",
     "verify": "npm run verify -w engine",
     "case": "npm run export-case -w nobody-lies-engine",
-    "dev": "npm run dev -w nobody-lies-app"
+    "dev": "npm run dev -w nobody-lies-app",
+    "port-check": "node scripts/port-check.mjs"
   }
 }
