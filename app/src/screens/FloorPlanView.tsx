@@ -92,6 +92,22 @@ export function FloorPlanView({
   const X = (v: number) => pctX(fp, v)
   const Y = (v: number) => pctY(fp, v)
 
+  /**
+   * 장을 완성해서 열린 건물 — 원본 2453행 `gatedNew` · `revealNote`.
+   *
+   * **한 번 열리면 배지가 계속 남는다**(원본도 그렇다). 「그동안 뭐가 열렸나」가
+   * 아니라 「이건 원래 없던 공간이다」를 적는 것이라서, 본 뒤에 지우면 안 된다.
+   */
+  const revealNote = (building?: string) => {
+    const after = building
+      ? fp.buildings.find((b) => b.id === building)?.revealedAfter
+      : undefined
+    return after && solved.length >= after ? `${after}장 완성으로 공개` : ''
+  }
+
+  /** 원본 2488행 `hasAnyClue` — 물증이 하나라도 찍혀 있을 때만 범례에 넣는다 */
+  const hasClueMarks = g.areas.some((a) => a.loc && cluesAt(a.loc).length > 0)
+
   // 인물 마커 — 같은 장소에 여럿이면 흩어 놓는다
   const seen = new Map<string, number>()
   const markers = c.people.map((p, i) => {
@@ -210,6 +226,11 @@ export function FloorPlanView({
                   style={{ color: scene ? 'var(--g-contradict)' : offsite ? 'var(--fg-4)' : 'var(--fg-2)' }}>
                   {a.label}
                 </span>
+                {/* 원본 504행 — 장 완성으로 열린 공간에 붙는다.
+                    구역(zone)은 건물에 속하지 않아 해당 없다 */}
+                {'building' in a && revealNote(a.building) && (
+                  <span className="nl-map-reveal">{revealNote(a.building)}</span>
+                )}
                 <span className="nl-fs-spacer" />
                 {a.primary && (
                   <span className="nl-map-status"
@@ -293,6 +314,13 @@ export function FloorPlanView({
             {p.name}
           </span>
         ))}
+        {/* 원본 517행 — 물증 칩이 도면에 하나라도 있을 때만. 없는 것을 설명하지 않는다 */}
+        {hasClueMarks && (
+          <span className="nl-map-key">
+            <span className="nl-map-key-sq" />
+            확보 물증
+          </span>
+        )}
       </div>
 
       <div className="v-meta nl-map-hint">

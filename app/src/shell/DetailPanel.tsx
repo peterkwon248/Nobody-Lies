@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import type { Case } from '@engine/types'
+import type { Action, Case } from '@engine/types'
 import { ko } from '../case/loadCase'
-import type { PlayerAnnotations } from '../state/stores'
+import type { CaseProgress, PlayerAnnotations } from '../state/stores'
+import { kindOf } from '../case/investigation'
 import { initialOf, personColor } from '../case/people'
 import { markColor, markStyle, refOf, segments, type Highlight } from '../marks/marks'
 
@@ -23,6 +24,7 @@ type Tab = 'statements' | 'invlog' | 'memo'
 
 export function DetailPanel({
   c,
+  progress,
   annotations,
   onClose,
   onAddMemo,
@@ -32,6 +34,8 @@ export function DetailPanel({
   onEditing,
 }: {
   c: Case
+  /** 조사 기록 탭이 본다 */
+  progress: CaseProgress
   annotations: PlayerAnnotations
   onClose: () => void
   onAddMemo: () => void
@@ -67,7 +71,7 @@ export function DetailPanel({
 
       <div className="nl-right-body">
         {tab === 'statements' && <StatementsTab c={c} highlights={annotations.highlights} />}
-        {tab === 'invlog' && <InvLogTab />}
+        {tab === 'invlog' && <InvLogTab c={c} progress={progress} />}
         {tab === 'memo' && (
           <MemoTab
             annotations={annotations}
@@ -177,14 +181,55 @@ function StatementsTab({ c, highlights }: { c: Case; highlights: Highlight[] }) 
 /**
  * 조사 기록 탭 — 원본 957~959행.
  *
- * 조사 시스템이 아직 없어 빈 상태만 나오지만 **카드 마크업을 미리 옮겨둔다** —
- * 조사가 붙을 때 이 파일을 다시 열지 않기 위해서다.
+ * **조사 기록 화면의 축소판이다.** 카드는 같은 것이지만 좁은 패널이라
+ * 「배제 정보」 태그와 「발견」 표시가 빠지고 본문이 `v-micro` 로 줄어든다 —
+ * 원본이 959행에서 그렇게 다르게 그린다. 보고서를 쓰면서 곁눈질하는 자리라
+ * 전문은 조사 기록 화면이 맡는다.
  */
-function InvLogTab() {
+function InvLogTab({ c, progress }: { c: Case; progress: CaseProgress }) {
+  const done = progress.investigations
+    .map((iv) => c.actions.find((x) => x.id === iv.actionId))
+    .filter((a): a is Action => !!a)
+
+  if (done.length === 0)
+    return (
+      <div className="v-meta nl-right-empty">
+        아직 수행한 조사가 없습니다. 현장이나 용의자 카드에서 조사를 실행하세요.
+      </div>
+    )
+
   return (
-    <div className="v-meta nl-right-empty">
-      아직 수행한 조사가 없습니다. 왼쪽에서 행동을 골라 실행하세요.
-    </div>
+    <>
+      {done.map((a) => {
+        const k = kindOf(a)
+        const empty = a.yield === 'empty'
+        return (
+          <div key={a.id} className="nl-right-log">
+            <div className="nl-log-bar" style={{ background: k.color }} />
+            <div className="nl-right-log-top">
+              <span
+                className="nl-result-badge"
+                style={{
+                  color: empty ? 'var(--fg-3)' : '#0A0A0B',
+                  background: empty ? 'var(--bg-elevated-2)' : k.color,
+                }}
+              >
+                {k.label}
+              </span>
+              <span className="nl-fs-spacer" />
+              <span className="v-micro" style={{ color: 'var(--fg-4)' }}>{a.label}</span>
+            </div>
+            <div className="v-ui nl-right-log-title">
+              {ko(a.result?.title) || '아무것도 없음'}
+            </div>
+            <div className="v-micro nl-right-log-desc">
+              {ko(a.result?.body)
+                || '여기서는 새로운 단서가 나오지 않았다. 이 대상은 배제해도 좋다.'}
+            </div>
+          </div>
+        )
+      })}
+    </>
   )
 }
 

@@ -1,6 +1,7 @@
 import type { Action, Case, Fact, PersonId } from '@engine/types'
 import type { CaseProgress } from '../state/stores'
 import { ko } from './loadCase'
+import { RESULT_KIND } from './investigation'
 
 /**
  * 용의자 한 사람에 대해 **지금까지 드러난 것**.
@@ -46,13 +47,8 @@ export const SLOT_KINDS: { label: string; kind: Fact['kind'] }[] = [
   { label: '수단', kind: 'means' },
 ]
 
-/** 조사 기록과 같은 색표 (`InvestigationLog`) */
-const YIELD_COLOR: Record<string, string> = {
-  solution: 'var(--g-confirm)',
-  redherring: 'var(--status-progress)',
-  exclusion: 'var(--accent)',
-  empty: 'var(--fg-4)',
-}
+/** 조사 기록·결과 카드와 같은 색표. 정본은 `case/investigation.ts` */
+const YIELD_COLOR = (y: string) => (RESULT_KIND[y] ?? RESULT_KIND.empty).color
 
 /** 수행한 조사만. 안 한 조사는 존재를 알려서도 안 된다 */
 const performed = (c: Case, progress: CaseProgress): Action[] =>
@@ -97,7 +93,7 @@ export function suspectView(
       title: ko(a.result?.title),
       body: ko(a.result?.body),
       label: a.label,
-      color: YIELD_COLOR[a.yield] ?? YIELD_COLOR.empty,
+      color: YIELD_COLOR(a.yield),
     }))
 
   return { clues, slots, narrations }

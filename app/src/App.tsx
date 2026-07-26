@@ -724,7 +724,15 @@ export default function App() {
             />
           )}
           {view === 'log' && (
-            <InvestigationLog c={c} progress={progress} onAsk={setPending} highlight={hlLog} />
+            <InvestigationLog
+              c={c}
+              progress={progress}
+              notes={annotations.notes}
+              onAsk={setPending}
+              highlight={hlLog}
+              onQuote={(q, term) =>
+                routeQuote({ quote: q, source: '확정', targetType: '물증', target: term })}
+            />
           )}
           {view === 'relations' && (
             <Relations c={c} progress={progress} onAsk={setPending} />
@@ -805,6 +813,7 @@ export default function App() {
               solved={progress.solved}
               reopened={progress.reopensUsed}
               terms={terms}
+              notes={annotations.notes}
               reopenOpen={progress.reopensOpen}
               onAnswer={setAnswer}
               onReopen={reopen}

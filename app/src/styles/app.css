@@ -1939,6 +1939,12 @@ body {
   flex: 1;
   overflow: auto;
   min-height: 0;
+  /**
+   * 상황판(`.nl-pb`)이 `position:absolute; inset:0` 이다. 여기가 static 이면
+   * 그 기준이 셸 바깥으로 올라가서 **판이 상단 헤더를 덮는다.**
+   * 모달은 전부 `position:fixed` 라 이 영향을 받지 않는다.
+   */
+  position: relative;
 }
 
 .nl-toolbar {
@@ -2661,6 +2667,87 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+}
+
+/* 확보 단어가 나온 조사는 눌러서 그 단어를 연다 (원본 2015행 cardStyle.cursor) */
+.nl-log-card-term {
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.nl-log-card-term:hover {
+  background: var(--bg-elevated);
+}
+
+/* 장 완성으로 열린 공간의 배지. 원본 504행 */
+.nl-map-reveal {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill, 999px);
+  padding: 1px 5px;
+  flex: none;
+}
+
+/* 범례의 물증 표식 — 인물 점과 달리 네모다. 원본 517행 */
+.nl-map-key-sq {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--accent);
+  flex: none;
+}
+
+/* 우측 패널의 조사 기록 카드 — 원본 959행. 기록 화면보다 촘촘하다 */
+.nl-right-log {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 8px);
+  padding: 10px 12px 10px 14px;
+  margin-bottom: 8px;
+}
+
+.nl-right-log-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.nl-right-log-title {
+  color: var(--fg);
+  font-size: 12.5px;
+  margin-bottom: 2px;
+}
+
+.nl-right-log-desc {
+  color: var(--fg-3);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 확보 단어 다이얼로그의 메모 개수 배지. 원본 1147행 */
+.nl-dlg-memos {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--r-pill, 999px);
+  background: var(--bg-elevated-2);
+  color: var(--fg-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  margin-right: 6px;
+}
+
+/* 「발견」 — 이 조사가 확보 단어를 줬다는 표시. 원본 572행 */
+.nl-log-term {
+  color: var(--fg-4);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .nl-log-title {

@@ -1,5 +1,6 @@
 import type { Action, Case } from '@engine/types'
 import { ko } from '../case/loadCase'
+import { kindOf } from '../case/investigation'
 
 /**
  * 조사 — 예산을 쓰는 유일한 자리. 프로토타입 875~911행.
@@ -84,16 +85,9 @@ export function Investigate({
   )
 }
 
-/** 조사 결과 카드 — 원본 1231~1243행. 유형별 색은 **결과의 종류**이지 유용도가 아니다 */
-const KIND: Record<string, { label: string; color: string }> = {
-  solution:   { label: '단서', color: 'var(--g-confirm)' },
-  redherring: { label: '무관', color: 'var(--status-progress)' },
-  exclusion:  { label: '배제', color: 'var(--accent)' },
-  empty:      { label: '없음', color: 'var(--fg-4)' },
-}
-
+/** 조사 결과 카드 — 원본 1231~1243행. 유형별 색은 `case/investigation.ts` 한 벌 */
 export function ResultCard({ a, onClose }: { a: Action; onClose: () => void }) {
-  const k = KIND[a.yield] ?? KIND.empty
+  const k = kindOf(a)
   const empty = a.yield === 'empty'
   return (
     <div className="nl-scrim">

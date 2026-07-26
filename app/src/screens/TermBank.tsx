@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Case } from '@engine/types'
 import { ko } from '../case/loadCase'
+import type { PlayerAnnotations } from '../state/stores'
 
 /**
  * 확보 단어 은행 — 보고서 오른쪽에 붙는 292px 패널.
@@ -36,12 +37,15 @@ export function TermBank({
   c,
   terms,
   answers,
+  notes,
   onQuote,
 }: {
   c: Case
   /** 지금 손에 있는 확보 단어. 엔진 `deriveTerms` 의 결과 */
   terms: Set<string>
   answers: Record<string, string>
+  /** 단어 다이얼로그의 메모 개수 배지에 쓴다 */
+  notes: PlayerAnnotations['notes']
   /** 인용문과 **어느 단어에서 나왔는지**. 메모가 그 단어를 대상으로 잡는다 */
   onQuote: (quote: string, term: string) => void
 }) {
@@ -49,7 +53,6 @@ export function TermBank({
   const words = [...terms].sort()
   // 이미 답으로 쓴 단어. **플레이어 자신의 행동**이라 누설이 아니다
   const used = new Set(Object.values(answers))
-  const info = c.terms?.find((t) => t.word === open)
 
   return (
     <aside className="nl-bank">
@@ -85,42 +88,80 @@ export function TermBank({
         ))}
       </div>
 
-      {/* 확보 단어 다이얼로그 — 원본 1141~1159행.
-          두 줄뿐이다: 어디서 나왔나 · 무엇이었나. **뜻은 적지 않는다** */}
       {open && (
-        <div className="nl-scrim" onClick={() => setOpen(null)}>
-          <div className="nl-dlg" onClick={(e) => e.stopPropagation()}>
-            <div className="nl-dlg-head">
-              <span className="nl-dlg-icon">
-                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="var(--fg-2)" strokeWidth="1.4">
-                  <path d={iconOf(open)} />
-                </svg>
-              </span>
-              <div className="v-ui nl-dlg-title">{open}</div>
-              <span className="iconbtn" onClick={() => setOpen(null)} style={{ flex: 'none' }}>✕</span>
-            </div>
-            <div className="nl-dlg-body">
-              <Line k="발견" v={ko(info?.source) || '—'} />
-              <Line k="기록" v={ko(info?.note) || '—'} />
-            </div>
-            <div className="nl-dlg-foot">
-              <span
-                className="linklike nl-dlg-quote"
-                /* 인용문은 기록 그 자체다. 단어는 메모의 **대상**으로 붙으므로
-                   문장에 다시 적지 않는다 (원본 `quoteTermToMemo`) */
-                onClick={() => { onQuote(ko(info?.note) || open, open); setOpen(null) }}
-              >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M4 4h5v4l-2 -1.2L5 8V4z" />
-                  <path d="M4 12h8" />
-                </svg>
-                메모에 인용
-              </span>
-            </div>
-          </div>
-        </div>
+        <TermDialog c={c} word={open} notes={notes} onClose={() => setOpen(null)} onQuote={onQuote} />
       )}
     </aside>
+  )
+}
+
+/**
+ * 확보 단어 다이얼로그 — 원본 1141~1159행.
+ * 두 줄뿐이다: 어디서 나왔나 · 무엇이었나. **뜻은 적지 않는다**
+ *
+ * 은행의 칩과 **조사 기록 카드**(원본 572행 `e.onOpen`) 둘 다 이것을 연다.
+ */
+export function TermDialog({
+  c,
+  word,
+  notes,
+  onClose,
+  onQuote,
+}: {
+  c: Case
+  word: string
+  /** 이 단어를 대상으로 쓴 메모. 개수만 배지로 보인다 (원본 2109행 `mc`) */
+  notes?: PlayerAnnotations['notes']
+  onClose: () => void
+  onQuote: (quote: string, term: string) => void
+}) {
+  const info = c.terms?.find((t) => t.word === word)
+  const memoCount = (notes ?? []).filter(
+    (n) => n.targetType === '물증' && n.target === word,
+  ).length
+
+  return (
+    <div className="nl-scrim" onClick={onClose}>
+      <div className="nl-dlg" onClick={(e) => e.stopPropagation()}>
+        <div className="nl-dlg-head">
+          <span className="nl-dlg-icon">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="var(--fg-2)" strokeWidth="1.4">
+              <path d={iconOf(word)} />
+            </svg>
+          </span>
+          <div className="v-ui nl-dlg-title">{word}</div>
+          {/* 원본 1147행 — 이 단어에 메모를 몇 개 달았나. **개수뿐이다** ·
+              내용은 메모장에서 본다. 없으면 배지 자체가 안 뜬다 */}
+          {memoCount > 0 && (
+            <span className="nl-dlg-memos">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" />
+              </svg>
+              {memoCount}
+            </span>
+          )}
+          <span className="iconbtn" onClick={onClose} style={{ flex: 'none' }}>✕</span>
+        </div>
+        <div className="nl-dlg-body">
+          <Line k="발견" v={ko(info?.source) || '—'} />
+          <Line k="기록" v={ko(info?.note) || '—'} />
+        </div>
+        <div className="nl-dlg-foot">
+          <span
+            className="linklike nl-dlg-quote"
+            /* 인용문은 기록 그 자체다. 단어는 메모의 **대상**으로 붙으므로
+               문장에 다시 적지 않는다 (원본 `quoteTermToMemo`) */
+            onClick={() => { onQuote(ko(info?.note) || word, word); onClose() }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 4h5v4l-2 -1.2L5 8V4z" />
+              <path d="M4 12h8" />
+            </svg>
+            메모에 인용
+          </span>
+        </div>
+      </div>
+    </div>
   )
 }
 

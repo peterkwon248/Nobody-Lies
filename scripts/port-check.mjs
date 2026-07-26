@@ -85,7 +85,7 @@ const total = inventory.reduce((n, s) => n + s.items.length, 0)
 
 if (process.argv.includes('--list')) {
   for (const s of inventory) {
-    console.log(`\n${s.screen}  ${s.from}~${s.to}  (${s.items.length})`)
+    console.log(`\n${s.screen}  ${s.at.join(' · ')}  (${s.items.length})`)
     console.log('  ' + s.items.join(' '))
   }
   console.log(`\n총 ${inventory.length}화면 · 분기/반복 ${total}개`)

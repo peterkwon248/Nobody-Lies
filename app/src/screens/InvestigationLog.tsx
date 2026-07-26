@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import type { Action, Case } from '@engine/types'
 import { ko } from '../case/loadCase'
 import { Investigate } from './Investigate'
-import type { CaseProgress } from '../state/stores'
+import { TermDialog } from './TermBank'
+import { kindOf, termsOf } from '../case/investigation'
+import type { CaseProgress, PlayerAnnotations } from '../state/stores'
 
 /**
  * 조사 기록 — 프로토타입 565~578행. 사이드바 [도구] 그룹.
@@ -19,28 +22,29 @@ import type { CaseProgress } from '../state/stores'
  * 조사(알리바이 대조)는 도면에도 카드에도 걸 자리가 없어서 여기서만 실행된다.
  */
 
-const KIND: Record<string, { label: string; color: string }> = {
-  solution: { label: '단서', color: 'var(--g-confirm)' },
-  redherring: { label: '무관', color: 'var(--status-progress)' },
-  exclusion: { label: '배제', color: 'var(--accent)' },
-  empty: { label: '없음', color: 'var(--fg-4)' },
-}
-
 export function InvestigationLog({
   c,
   progress,
+  notes,
   onAsk,
+  onQuote,
   highlight,
 }: {
   c: Case
   progress: CaseProgress
   onAsk: (a: Action) => void
+  /** 확보 단어 다이얼로그의 메모 개수 배지 */
+  notes: PlayerAnnotations['notes']
+  /** 확보 단어 다이얼로그의 「메모에 인용」. 은행의 칩과 같은 경로다 */
+  onQuote: (quote: string, term: string) => void
   /**
    * 「출처 보기 ↗」로 뛰어온 조사. **테두리만 accent 로 바뀌고 2.2초 뒤 꺼진다**
    * (원본 `hlLog`, 2015행). 계속 켜두면 그게 「여길 봐」가 된다
    */
   highlight?: string | null
 }) {
+  const [openTerm, setOpenTerm] = useState<string | null>(null)
+
   const done = progress.investigations
     .map((iv) => ({ iv, a: c.actions.find((x) => x.id === iv.actionId) }))
     .filter((x): x is { iv: typeof x.iv; a: Action } => !!x.a)
@@ -57,12 +61,15 @@ export function InvestigationLog({
       ) : (
         <div className="nl-log-list">
           {done.map(({ a }) => {
-            const k = KIND[a.yield] ?? KIND.empty
+            const k = kindOf(a)
             const empty = a.yield === 'empty'
+            // 이 조사가 확보 단어를 줬는가. 줬으면 카드를 눌러 그 단어를 연다 (원본 2012행)
+            const terms = termsOf(c, a)
             return (
               <div
                 key={a.id}
-                className="nl-log-card"
+                className={terms.length ? 'nl-log-card nl-log-card-term' : 'nl-log-card'}
+                onClick={terms.length ? () => setOpenTerm(terms[0]) : undefined}
                 style={highlight === a.id ? { borderColor: 'var(--accent)' } : undefined}
               >
                 <div className="nl-log-bar" style={{ background: k.color }} />
@@ -76,7 +83,22 @@ export function InvestigationLog({
                   >
                     {k.label}
                   </span>
+                  {/* 원본 572행 — 「없음」 옆에 붙는 태그. 아무것도 안 나온 것도
+                      배제라는 정보다. 이게 없으면 빈 조사가 그냥 손해로 읽힌다 */}
+                  {empty && (
+                    <span className="v-micro" style={{ color: 'var(--fg-4)' }}>배제 정보</span>
+                  )}
                   <span className="nl-fs-spacer" />
+                  {/* 확보 단어가 나온 조사. **유용도가 아니라 사실이다** —
+                      단어는 은행에 이미 보이고 여기는 그 출처를 잇는 표시다 */}
+                  {terms.length > 0 && (
+                    <span className="v-micro nl-log-term">
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+                        <path d="M6 4l4 4-4 4" />
+                      </svg>
+                      발견
+                    </span>
+                  )}
                   <span className="v-micro" style={{ color: 'var(--fg-4)' }}>{a.label}</span>
                 </div>
                 <div className="v-title nl-log-title">
@@ -102,6 +124,16 @@ export function InvestigationLog({
         solvedCount={progress.solved.length}
         onAsk={onAsk}
       />
+
+      {openTerm && (
+        <TermDialog
+          c={c}
+          word={openTerm}
+          notes={notes}
+          onClose={() => setOpenTerm(null)}
+          onQuote={onQuote}
+        />
+      )}
     </div>
   )
 }

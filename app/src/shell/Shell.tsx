@@ -324,6 +324,7 @@ export function Shell({
       {rightOpen && (
         <DetailPanel
           c={c}
+          progress={progress}
           annotations={annotations}
           onClose={() => setRightOpen(false)}
           onAddMemo={onAddMemo}

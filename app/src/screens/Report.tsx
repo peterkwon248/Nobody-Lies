@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Blank, Case, Chapter } from '@engine/types'
+import type { PlayerAnnotations } from '../state/stores'
 import { josa } from '../text/josa'
 import { caseNo } from '../case/catalog'
 import { TermBank } from './TermBank'
@@ -54,6 +55,7 @@ export function Report({
   reopened,
   reopenOpen,
   terms,
+  notes,
   onAnswer,
   onReopen,
   onCloseReopen,
@@ -66,6 +68,8 @@ export function Report({
   reopened: Record<number, boolean>
   reopenOpen: Record<number, boolean>
   terms: Set<string>
+  /** 확보 단어 다이얼로그의 메모 개수 배지 (원본 1147행) */
+  notes: PlayerAnnotations['notes']
   onAnswer: (key: string, value: string) => void
   onReopen: (order: number) => void
   onCloseReopen: (order: number) => void
@@ -129,7 +133,7 @@ export function Report({
       ))}
     </div>
 
-      <TermBank c={c} terms={terms} answers={answers} onQuote={onQuote} />
+      <TermBank c={c} terms={terms} answers={answers} notes={notes} onQuote={onQuote} />
     </div>
   )
 }
@@ -159,8 +163,12 @@ function ChapterBlock({
   onReopen: (order: number) => void
   onCloseReopen: (order: number) => void
 }) {
-  // 완성된 장은 접힌 채로 시작한다. 지금 쓰는 장에 시선이 가야 한다
-  const [collapsed, setCollapsed] = useState(state === 'done')
+  /**
+   * **접고 펴는 것은 완성된 장뿐이다** (원본 2187행 `expanded = complete && …`).
+   * 지금 쓰는 장은 항상 펼쳐져 있고 머리글도 눌리지 않는다 — 작성 중인 장을
+   * 접을 수 있게 하면 「다 했다」와 「접었다」가 같은 모양이 된다.
+   */
+  const [expanded, setExpanded] = useState(false)
   const [picker, setPicker] = useState<number | null>(null)
 
   // 잠긴 장은 번호만 남는다. 제목도 공란 개수도 보이지 않는다 —
@@ -184,21 +192,33 @@ function ChapterBlock({
   // **`reopened`(썼다) 가 아니라 `reopenOpen`(지금 열려 있다) 이 편집을 연다.**
   // 하나로 두면 「편집 완료」를 눌러도 계속 고칠 수 있다
   const editable = state === 'open' || reopenOpen
-  const body = !collapsed
+  const done = state === 'done'
+  const collapsed = done && !expanded
+  // 원본 2200행 `showBody: open || (complete && expanded)`
+  const body = state === 'open' || (done && expanded)
 
   return (
     <section className={`nl-chapter ${state === 'open' ? 'nl-chapter-open' : ''} ${collapsed ? 'nl-chapter-collapsed' : ''}`}>
-      <div className="nl-chapter-head" onClick={() => setCollapsed((v) => !v)}>
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={{ flex: 'none' }}>
-          {collapsed ? <path d="M6 4l4 4-4 4" /> : <path d="M4 6l4 4 4-4" />}
-        </svg>
-        {/* 원본 209행 — Vector StatusIcon. 상태이지 강조가 아니다 */}
-        <StatusIcon status={state === 'done' ? 'done' : 'progress'} size={16} />
+      <div
+        className="nl-chapter-head"
+        style={done ? undefined : { cursor: 'default' }}
+        onClick={done ? () => setExpanded((v) => !v) : undefined}
+      >
+        {/* 셰브런은 **완성된 장에만** (원본 2195행 `showChevron: complete`).
+            작성 중인 장에는 접을 것이 없으므로 화살표도 없다 */}
+        {done && (
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={{ flex: 'none' }}>
+            {collapsed ? <path d="M6 4l4 4-4 4" /> : <path d="M4 6l4 4 4-4" />}
+          </svg>
+        )}
+        {/* 원본 209행 — Vector StatusIcon. **열린 장에만** 뜬다
+            (2196행 `showStatusIcon: open`). 완성 표시는 셰브런과 우측 문구가 한다 */}
+        {state === 'open' && <StatusIcon status="progress" size={16} />}
         <span className="v-meta v-num nl-chapter-num">{ch.order}장</span>
         <span className="v-h3">{ch.title}</span>
         <span className="nl-fs-spacer" />
         {/* 접힌 완성 장의 우측 문구 (원본 213행 `reopenStatusLabel`) */}
-        {state === 'done' && collapsed && (
+        {collapsed && (
           <span className="v-meta" style={{ color: 'var(--fg-4)' }}>
             {reopened ? '재개봉 사용됨' : '재개봉 가능'}
           </span>
