@@ -4,7 +4,9 @@ import {
   KIND_COLOR, KIND_LABEL, baseId, boardCards, cardH, cardW,
   type Card, type CardKind,
 } from '../case/board'
-import type { Board, PlayerAnnotations, Relation } from '../state/stores'
+import { ko } from '../case/loadCase'
+import { suspectView } from '../case/suspect'
+import type { Board, CaseProgress, PlayerAnnotations, Relation } from '../state/stores'
 
 /**
  * 상황판 — 프로토타입 581~717행 · `PB_*` 41개 함수(1620~1825행).
@@ -67,12 +69,17 @@ type DrawShape = { x1: number; y1: number; x2: number; y2: number; shape: '영�
 
 export function BoardView({
   c,
+  progress,
   terms,
+  facts,
   annotations,
   onBoard,
 }: {
   c: Case
+  progress: CaseProgress
   terms: Set<string>
+  /** 확보한 사실. 상세 팝업의 동기·기회·수단이 여기서 나온다 */
+  facts: Set<string>
   annotations: PlayerAnnotations
   onBoard: (next: Board) => void
 }) {
@@ -101,6 +108,9 @@ export function BoardView({
   const [timeline, setTimeline] = useState(true)
   /** 강조한 시간대. 그 밴드의 조각만 밝고 나머지는 흐려진다 (원본 `hlTimeId`) */
   const [hlTime, setHlTime] = useState<string | null>(null)
+  /** 펼쳐 본 조각. 「상세」로 열고 ✕ 로 닫는다 (원본 `detailId`) */
+  const [detail, setDetail] = useState<string | null>(null)
+  const [detailFull, setDetailFull] = useState(false)
   const canvas = useRef<HTMLDivElement>(null)
 
   const set = (patch: Partial<Board>) => onBoard({ ...b, ...patch })
@@ -161,6 +171,25 @@ export function BoardView({
     })
     setSel({ kind: 'piece', id })
   }
+
+  /**
+   * 교집합 안에 든 조각 — 원본 `PB_inVennOverlap`.
+   *
+   * 두 원 **둘 다**에 들어야 한다. 겹친 자리에 놓았다는 것이 곧 「이 둘의
+   * 공통점이다」라는 플레이어의 말이고, 그래서 테두리가 accent 로 바뀐다.
+   * 원의 반지름은 상자의 32%(가로) · 50%(세로), 중심은 32%/68% 지점.
+   */
+  const inVennOverlap = (id: string) =>
+    b.groups.some((g) => {
+      if (g.shape !== '교집합') return false
+      const cc = centerOf(id)
+      const rx = g.w * 0.32
+      const ry = g.h * 0.5
+      const cy = g.y + g.h / 2
+      const ins = (cx: number) =>
+        ((cc.x - cx) ** 2) / (rx * rx) + ((cc.y - cy) ** 2) / (ry * ry) <= 1
+      return ins(g.x + g.w * 0.32) && ins(g.x + g.w * 0.68)
+    })
 
   /** 영역 안에 든 조각. 중심이 기준이다 (원본 `PB_regionMembers`) */
   const membersOf = (g: Board['groups'][number]) =>
@@ -701,9 +730,11 @@ export function BoardView({
               const p = b.placed[id]
               const size = sizeOf(id)
               const bind = bindOf(id)
+              // 교집합에 놓인 것도 선택과 **같은 표시**를 받는다 (원본 `on`)
               const on = (sel?.kind === 'piece' && sel.id === id)
                 || (sel?.kind === 'bind' && bind?.id === sel.id)
                 || msel.includes(id)
+                || inVennOverlap(id)
               const isMemo = card.kind === 'memo'
               // 띠 안(y < 56)에 올려둔 조각은 그 시간대에 속한다 (원본 `laned`)
               const laned = timeline && p.y < 56
@@ -774,6 +805,92 @@ export function BoardView({
               )
             })}
 
+            {/* 조각 상세 — 원본 687~696행. 카드가 작아도 내용은 다 읽을 수 있어야 한다 */}
+            {detail && b.placed[detail] && cardOf(detail) && (() => {
+              const card = cardOf(detail)!
+              const p = b.placed[detail]
+              const pid = detail.startsWith('p_') || detail.startsWith('q_')
+                ? baseId(detail).slice(2) : null
+              const person = pid ? c.people.find((x) => x.id === pid) : undefined
+              const isProfile = detail.startsWith('p_')
+              const view = person && isProfile
+                ? suspectView(c, progress, facts, person.id) : null
+              const term = detail.startsWith('e_')
+                ? c.terms?.find((t) => t.word === baseId(detail).slice(2)) : undefined
+              const full = person ? (person.statement?.paragraphs ?? []).map(ko).join('\n\n') : ''
+
+              return (
+                <div
+                  className="nl-pb-detail"
+                  style={{ left: p.x + cardW(sizeOf(detail)) + 12, top: p.y }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <div className="nl-pb-detail-head">
+                    <span className="nl-pb-type-dot" style={{ background: KIND_COLOR[card.kind] }} />
+                    <span className="v-micro nl-pb-cap">{KIND_LABEL[card.kind]}</span>
+                    <span className="nl-fs-spacer" />
+                    <span className="nl-pb-detail-x" onClick={() => setDetail(null)}>✕</span>
+                  </div>
+                  <div className="v-title" style={{ color: 'var(--fg)', marginBottom: 4 }}>{card.label}</div>
+                  {card.sub && <div className="v-meta nl-pb-detail-sub">{card.sub}</div>}
+
+                  {isProfile && person && (
+                    <>
+                      <div className="v-micro nl-pb-cap">본인 주장</div>
+                      <div className="v-meta nl-pb-detail-body">{ko(person.claimSummary)}</div>
+                    </>
+                  )}
+
+                  {view && view.clues.length > 0 && (
+                    <>
+                      <div className="v-micro nl-pb-cap">발견된 단서</div>
+                      <div className="nl-pb-detail-clues">
+                        {view.clues.map((cl, n) => (
+                          <div key={n} className="nl-pb-detail-clue">
+                            <span style={{ color: 'var(--accent)', flex: 'none' }}>·</span>
+                            <span className="v-meta" style={{ color: 'var(--fg-2)' }}>{cl.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {term && <div className="v-meta nl-pb-detail-body">{ko(term.note)}</div>}
+                  {card.quote && !isProfile && (
+                    <div className="v-meta nl-pb-detail-body" style={{ fontStyle: 'italic' }}>{card.quote}</div>
+                  )}
+
+                  {view && (
+                    <div className="nl-pb-detail-slots">
+                      {view.slots.map((s) => (
+                        <div key={s.kind} className="nl-pb-detail-slot">
+                          <span className="v-micro nl-pb-detail-slot-k">{s.label}</span>
+                          {s.fact ? (
+                            <span className="v-meta" style={{ color: 'var(--fg-2)' }}>{s.fact.content}</span>
+                          ) : (
+                            <>
+                              <span className="nl-pb-detail-dash" />
+                              <span className="v-micro" style={{ color: 'var(--fg-4)', flex: 'none' }}>미확인</span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {full && (
+                    <div className="nl-pb-detail-full">
+                      <div className="nl-pb-detail-fulltoggle" onClick={() => setDetailFull((v) => !v)}>
+                        <span style={{ transform: detailFull ? 'rotate(90deg)' : 'none' }}>▸</span>
+                        진술 전문
+                      </div>
+                      {detailFull && <div className="v-meta nl-pb-detail-fulltext">{full}</div>}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
             {picker && (
               <div
                 className="v-menu nl-pb-relpicker"
@@ -811,6 +928,10 @@ export function BoardView({
           {sel?.kind === 'piece' && b.placed[sel.id] && (
             <div className="nl-pb-toolbar" onPointerDown={(e) => e.stopPropagation()}>
               <span onClick={() => cycleSize(sel.id)}>{sizeOf(sel.id) === 'chip' ? '크게' : '작게'}</span>
+              {/* 메모는 카드 안에서 이미 다 읽힌다 — 펼칠 것이 없다 (원본 1771행) */}
+              {cardOf(sel.id)?.kind !== 'memo' && (
+                <span onClick={() => { setDetail(sel.id); setDetailFull(false) }}>상세</span>
+              )}
               <span onClick={() => addPiece(baseId(sel.id))}>복제</span>
               <span onClick={() => togglePin(sel.id)}>{b.pins[sel.id] ? '고정 해제' : '고정'}</span>
               <span className="nl-pb-del" onClick={() => removePiece(sel.id)}>삭제</span>

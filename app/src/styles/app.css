@@ -4331,3 +4331,114 @@ body {
   pointer-events: none;
   z-index: 0;
 }
+
+/* ── 상황판 5층 · 조각 상세 ──────────────────────────────────────────
+   원본 687~696행. 카드가 작아도 내용은 다 읽을 수 있어야 한다.
+   조각 옆에 붙으므로 판과 함께 확대/축소된다. */
+
+.nl-pb-detail {
+  position: absolute;
+  z-index: 40;
+  width: 280px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md, 8px);
+  box-shadow: var(--shadow-popover);
+  padding: 12px 14px;
+}
+
+.nl-pb-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.nl-pb-detail-x {
+  cursor: pointer;
+  color: var(--fg-4);
+  font-size: 12px;
+}
+
+.nl-pb-detail-sub {
+  color: var(--fg-3);
+  margin-bottom: 8px;
+}
+
+.nl-pb-detail-body {
+  color: var(--fg-2);
+  line-height: 1.6;
+  margin: 3px 0 10px;
+  word-break: keep-all;
+}
+
+.nl-pb-detail-clues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 10px;
+}
+
+.nl-pb-detail-clue {
+  display: flex;
+  gap: 6px;
+}
+
+.nl-pb-detail-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid var(--border);
+  padding-top: 9px;
+  margin-top: 2px;
+}
+
+.nl-pb-detail-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nl-pb-detail-slot-k {
+  color: var(--fg-4);
+  width: 36px;
+  flex: none;
+}
+
+.nl-pb-detail-dash {
+  flex: 1;
+  border-bottom: 1px dashed var(--border-strong);
+}
+
+.nl-pb-detail-full {
+  border-top: 1px solid var(--border);
+  margin-top: 10px;
+  padding-top: 9px;
+}
+
+.nl-pb-detail-fulltoggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: var(--fw-med, 500);
+}
+
+.nl-pb-detail-fulltoggle > span {
+  display: inline-block;
+  transition: transform 0.12s;
+}
+
+.nl-pb-detail-fulltext {
+  color: var(--fg-2);
+  line-height: 1.7;
+  margin-top: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}

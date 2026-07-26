@@ -660,7 +660,9 @@ export default function App() {
           {view === 'board' && (
             <BoardView
               c={c}
+              progress={progress}
               terms={terms}
+              facts={facts}
               annotations={annotations}
               onBoard={(board) => setAnnotations((a) => ({ ...a, board }))}
             />
