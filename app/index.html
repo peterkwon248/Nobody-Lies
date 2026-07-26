@@ -6,9 +6,22 @@
     <link rel="icon" type="image/svg+xml" href="/mark.svg" />
     <meta name="theme-color" content="#08090A" />
     <title>노바디 라이즈</title>
+
+    <!--
+      Vector Design System — DC export 가 요구하는 로드 순서 그대로다.
+      `_ds_bundle.js` 가 `window.VectorDesignSystem_490b73` 을 심고 `App.jsx` 의
+      Button·StatusIcon 래퍼가 그것을 집어간다. **module 로 바꾸거나 순서를
+      뒤집으면 렌더 시점에 전역이 없어서 조용히 폴백된다.**
+    -->
+    <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/colors_and_type.css">
+    <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/app.css">
+    <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/sidebar-hover-actions.css">
+    <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/ui_kits/app/numeric-typography.css">
+    <link rel="stylesheet" href="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/styles.css">
+    <script src="/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6/_ds_bundle.js"></script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

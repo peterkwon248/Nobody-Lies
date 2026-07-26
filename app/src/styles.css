@@ -1,0 +1,45 @@
+/* App-level CSS that cannot be inline: fonts, keyframes, resets,
+   scrollbars, and the .pb-* board classes. Design tokens come from the
+   Vector Design System stylesheets loaded in index.html. */
+
+@keyframes gSettle { 0% { background: var(--accent-soft); } 100% { background: var(--g-lock-bg); } }
+[data-surface="vector"] {
+  --g-empty-line: var(--fg-4);
+  --g-fill-fg: var(--accent);
+  --g-fill-bg: var(--accent-soft);
+  --g-lock-fg: var(--fg);
+  --g-lock-bg: rgba(76,183,130,0.12);
+  --g-lock-mark: var(--status-review);
+  --g-confirm: var(--status-review);
+  --g-suspect: var(--status-progress);
+  --g-contradict: var(--label-red);
+}
+.g-blank-trigger:hover { filter: brightness(1.12); }
+.g-word:hover { border-color: var(--accent) !important; }
+.g-cell:hover .g-cell-hoverable { color: var(--fg); }
+.content::-webkit-scrollbar { width: 10px; }
+[data-surface="vector"] *::-webkit-scrollbar { width: 10px; height: 10px; }
+[data-surface="vector"] *::-webkit-scrollbar-track { background: transparent; }
+[data-surface="vector"] *::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 5px; }
+[data-surface="vector"] *::-webkit-scrollbar-thumb:hover { background: var(--fg-4); }
+[data-surface="vector"] *::-webkit-scrollbar-corner { background: transparent; }
+[data-surface="vector"] * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
+/* ===== inlined board (pb-*) styles ===== */
+.pb-piece { position:absolute; user-select:none; touch-action:none; }
+.pb-wrap ::-webkit-scrollbar { width:10px; height:10px; }
+.pb-wrap ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:5px; }
+.pb-piece > .pb-card { transition:box-shadow .12s, border-color .12s; }
+.pb-piece:hover > .pb-card { border-color:var(--fg-4); }
+.pb-zone { position:absolute; top:0; bottom:0; width:22px; z-index:8; }
+.pb-zone-l { left:-8px; } .pb-zone-r { right:-8px; }
+.pb-zone:hover .pb-handle { opacity:1; }
+.pb-piece:hover .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-sel .pb-handle { opacity:1; }
+.pb-handle { opacity:.42; transition:opacity .12s; }
+.pb-draw:hover { background:var(--bg-elevated) !important; }
+.pb-grip { opacity:0; transition:opacity .12s; }
+.pb-box:hover .pb-grip { opacity:1; }
+.pb-lbl { background:transparent; border:none; outline:none; box-shadow:none; color:var(--fg-2); font:600 15px var(--font-sans); width:140px; border-radius:4px; padding:1px 4px; }
+

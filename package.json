@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "npm run typecheck -w engine && npm run verify -w engine && npm run port-check && npm run build -w nobody-lies-app",
-    "typecheck": "npm run typecheck -w engine && npm run typecheck -w nobody-lies-app",
+    "typecheck": "npm run typecheck -w engine",
     "verify": "npm run verify -w engine",
     "case": "npm run export-case -w nobody-lies-engine",
     "dev": "npm run dev -w nobody-lies-app",
