@@ -6,6 +6,7 @@ import {
 } from '../case/board'
 import { ko } from '../case/loadCase'
 import { suspectView } from '../case/suspect'
+import { iconOf } from './TermBank'
 import type { Board, CaseProgress, PlayerAnnotations, Relation } from '../state/stores'
 
 /**
@@ -18,10 +19,15 @@ import type { Board, CaseProgress, PlayerAnnotations, Relation } from '../state/
  * 연결선의 관계(모순·뒷받침·동일인·시간충돌·관련)는 **플레이어의 어휘**다.
  * 게임은 그것이 맞는지 틀린지 말하지 않고 채점에도 쓰지 않는다 — 심증과 같다.
  *
- * ⚠ **2층까지 옮겼다.** 판·팬/줌·서랍·카드 3단·드래그·핀·연결선·선택 툴바·
- * 미니맵(1층) + ＋생성 메뉴·그룹(영역·교집합)·자유 라벨·그룹 이동/크기(2층).
- * 남은 것은 **타임라인 밴드 · 마퀴 다중선택 · 조각 상세 팝업 · 미니맵 드래그**이고
- * `Board.times` 자리는 이미 있다. `docs/NEXT-ACTION.md` 참조.
+ * 판·팬/줌·서랍·조각 3단·드래그·핀·연결선·툴바·미니맵 · ＋생성 메뉴·영역·교집합·
+ * 자유 라벨 · 마퀴·묶기 · 타임라인·시간 강조 · 상세 팝업·벤 판정.
+ *
+ * ⚠ **아직 안 옮긴 것 하나** — `connectMode`(원본 `PB_onPieceClick`·`connectFrom`).
+ * 조각을 **클릭해서** 잇는 모드다. 지금은 오른쪽 손잡이를 끄는 길만 있다.
+ * 원본에도 그 모드를 켜는 버튼이 헤더에 없어서 도달 경로부터 확인해야 한다.
+ *
+ * `dot` 단은 옮기지 않았다 — 원본 `PB_cycleSize` 가 full↔chip 만 돌고
+ * 어디서도 `size` 를 `'dot'` 으로 만들지 않는다. 죽은 코드다.
  */
 
 const REL: Record<Relation, string> = {
@@ -754,7 +760,16 @@ export function BoardView({
                 >
                   {size === 'chip' ? (
                     <div className="nl-pb-card nl-pb-chip-card" style={on ? { borderColor: 'var(--accent)' } : undefined}>
-                      <span className="nl-pb-ini" style={{ background: card.color }}>{card.ini}</span>
+                      {/* 칩 단은 16px 점 하나 — 인물만 동그라미다 (원본 `chipDot`) */}
+                      <span
+                        className="nl-pb-chipdot"
+                        style={{
+                          background: card.kind === 'person' ? card.color : KIND_COLOR[card.kind],
+                          borderRadius: card.kind === 'person' ? '50%' : 4,
+                        }}
+                      >
+                        {card.ini}
+                      </span>
                       <span className="v-ui nl-pb-chip-label">{card.label}</span>
                     </div>
                   ) : (
@@ -777,7 +792,18 @@ export function BoardView({
                       ) : (
                         <>
                           <div className="nl-pb-card-row">
-                            <span className="nl-pb-ini" style={{ background: card.color }}>{card.ini}</span>
+                            {/* 원본 672~673행 — 인물은 아바타, 물증은 아이콘.
+                                진술 카드는 **앞에 아무것도 안 붙는다** */}
+                            {card.kind === 'person' && (
+                              <span className="nl-pb-ini" style={{ background: card.color }}>{card.ini}</span>
+                            )}
+                            {card.kind === 'evidence' && (
+                              <span className="nl-pb-evicon">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.4">
+                                  <path d={iconOf(card.label)} />
+                                </svg>
+                              </span>
+                            )}
                             <div style={{ minWidth: 0 }}>
                               <div className="v-ui nl-pb-card-label">{card.label}</div>
                               {card.sub && <div className="v-micro nl-pb-card-sub">{card.sub}</div>}
@@ -790,6 +816,10 @@ export function BoardView({
                   )}
 
                   {b.pins[id] && <span className="nl-pb-pin" title="고정됨">📌</span>}
+
+                  {/* 왼쪽은 **받는 자리**다 (원본 679행 `pb-zone-l`). 끌어온 선을
+                      여기 놓으면 이어진다 — 조각 어디에 놓아도 되지만 여기가 표적이다 */}
+                  <span className="nl-pb-port" title="연결 입력" />
 
                   {/* 오른쪽 손잡이를 끌면 선이 따라 나온다 (원본 pb-zone-r) */}
                   <span

@@ -4604,3 +4604,46 @@ body {
   padding: 0 5px;
   flex: none;
 }
+
+/* 물증 카드 아이콘 — 원본 673행. 확보 단어 은행과 **같은 아이콘**을 쓴다.
+   한때 여기가 빈 동그라미였다 — 인물의 이니셜 자리를 물증이 그대로 물려받아서. */
+.nl-pb-evicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* 칩 단의 점. 인물만 동그라미고 나머지는 사각이다 (원본 `chipDot`) */
+.nl-pb-chipdot {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: var(--fw-semi, 600);
+  color: #0a0a0b;
+}
+
+/* 연결을 **받는** 자리. 왼쪽에 있고, 조각에 올려야 보인다 */
+.nl-pb-port {
+  position: absolute;
+  left: -6px;
+  top: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-app);
+  opacity: 0;
+  transition: opacity 0.12s;
+  pointer-events: none;
+}
+
+.nl-pb-piece:hover .nl-pb-port { opacity: 0.42; }

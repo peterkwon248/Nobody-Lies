@@ -29,7 +29,8 @@ const ICONS: Record<string, string> = {
   '물자국': 'M8 3.5c2 2.5 3 4 3 5.3a3 3 0 11-6 0c0-1.3 1-2.8 3-5.3z',
 }
 
-const iconOf = (word: string) => ICONS[word] ?? 'M4 4h8v8H4z'
+/** 원본 `termIconPath(w)` — 없는 단어는 네모. 상황판 물증 카드도 같은 것을 쓴다 */
+export const iconOf = (word: string) => ICONS[word] ?? 'M4 4h8v8H4z'
 
 export function TermBank({
   c,
