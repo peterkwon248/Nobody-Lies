@@ -438,6 +438,10 @@ evidence:
         - { side: in,  at: 11월 12일, text: 다인 언니한테 다 말할 거예요 }
     yields_terms: [별채 대포폰, 김선생, 폭로 임박]
 
+  # ⚠ 기록이 비어 있어 9-8f 경고가 상주한다. **의도한 것이다** —
+  # 금고를 무엇으로 만들지가 아직 미결이고(`MEMORY.md` §유서가 두 곳에서 나온다:
+  # ① 열쇠 없으면 못 여는 잠긴 금고 ② 유서의 두 번째 경로 ③ 다른 것),
+  # 그 결정 전에 기록을 쓰면 결정을 문장으로 먼저 내려버린다.
   - id: e_safes
     description: 별채 금고 두 개
 
@@ -503,9 +507,11 @@ evidence:
 
   - id: e_yuri_call
     description: 나경 통화내역 — 새벽 피해자와 통화
+    record: 새벽 3시대에 윤다인과 오간 통화가 한 건 남아 있었다.
 
   - id: e_wy_call_log
     description: 리원 통화내역 — 새벽 3시 수신
+    record: 새벽 3시에 윤다인의 번호로부터 걸려 온 통화가 한 건 남아 있었다.
 
   - id: e_mutual
     description: 지안과 유빈의 상호 보증
@@ -716,6 +722,12 @@ actions:
     gives: [e_yuri_call]
     salience: 0.5
     yield: exclusion
+    # 프로토타입에 대응 텍스트가 없어 새로 썼다 (2026-07-28 · PROSE-BRIEF 서식).
+    # 2장 완성 때 본인이 덧붙인 주장(grid t1 「통화 중 (본인 주장)」)을 기록이 확인한다.
+    # 짝인 a_ph_wy 와 같은 온도로 맞췄다 — 둘 다 exclusion 이고 한쪽만 길면 그게 유용도 표시다.
+    result:
+      title: { ko: "새벽 통화 기록", en: "Early-hours call log" }
+      body:  { ko: "나경의 통화내역에 새벽 3시 무렵 윤다인과 오간 기록이 남아 있다. 본인이 덧붙인 말과 시각이 맞물렸다.", en: "Na-gyeong's call log shows a call with Da-in around 03:00. It lined up with the time she had volunteered." }
     target: { kind: person, id: yuri }
   - id: a_ph_wy
     label: 통화내역 조회 · 백리원
