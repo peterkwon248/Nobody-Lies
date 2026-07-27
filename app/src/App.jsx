@@ -293,7 +293,17 @@ export default class App extends React.Component {
   ];
 
   CAND = { person: ['서지안', '한유빈', '문세라', '오나경', '백리원', '윤다인'], place: ['본채', '다인의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
-  COLLECTED_POOL = ['테이프', '연탄', '일산화탄소 중독', '유서', '김선생', '마약', '폭로 임박', '별채 대포폰', '수면제', '둔기', '치정', '유산 상속'];
+  /**
+   * 확보 단어 풀. **`applyCase` 가 엔진 `terms` 순서로 다시 만든다** — 이 값은
+   * 사건 데이터가 없을 때의 기본값이다.
+   *
+   * 2026-07-27 에 `수면제`·`둔기`·`유산 상속` 셋을 뺐다. **어느 경로로도 공개되지
+   * 않는 단어였다** — 공개하는 곳은 `SEED_TERMS`(2) · `TERM_MAP`(7) ·
+   * `REVEALS[].terms`(0, `terms` 를 가진 항목이 없다) 셋뿐이고, 이 배열을 읽는
+   * 일곱 곳이 **전부** `revealedTerms()` 로 거른다. 후보에 든 적이 없으므로
+   * 난이도에 영향이 0이다.
+   */
+  COLLECTED_POOL = ['테이프', '연탄', '일산화탄소 중독', '유서', '김선생', '마약', '폭로 임박', '별채 대포폰', '치정'];
   SEED_TERMS = ['테이프', '연탄'];
   ICONS = {
     '테이프': 'M3 6h10v4H3z M5 6l6 4',
@@ -307,10 +317,7 @@ export default class App extends React.Component {
     '폭로 임박': 'M8 2v6 M8 11v.5 M2.5 13l5.5-9 5.5 9z',
     '별채 대포폰': 'M5 2.5h6v11H5z M7 12h2 M3 5l1-1',
     '별채': 'M3 7l5-4 5 4v6H3z',
-    '수면제': 'M5 8a3 3 0 106 0 3 3 0 00-6 0z M8 5v6',
-    '둔기': 'M4 12l5-5 M9 7l3-3 1 1-3 3z',
     '치정': 'M8 13S3 9.5 3 6.2A2.2 2.2 0 018 5a2.2 2.2 0 015 1.2C13 9.5 8 13 8 13z',
-    '유산 상속': 'M4 6h8v7H4z M6 6V4h4v2 M6.5 9h3',
     '화로': 'M3.5 8h9 M4.5 8c.5 2.5 1.8 3.5 3.5 3.5s3-1 3.5-3.5 M5.5 11.5l-1 1.5 M10.5 11.5l1 1.5 M8 3c1.3 1.4 1.3 2.8 0 4.2C6.7 5.8 6.7 4.4 8 3z',
     '창문': 'M3 3h10v10H3z M8 3v10 M3 8h10',
     '금고': 'M3 3h10v10H3z M10 8a2 2 0 11-4 0 2 2 0 014 0z M11 5.5v.1M11 10.5v.1',
@@ -335,10 +342,7 @@ export default class App extends React.Component {
     '마약': { fk: '소지품 검사', dk: '작은 봉지 여러 개로 나뉘어 있었다.', fe: 'Belongings search', de: 'Divided into several small bags.' },
     '폭로 임박': { fk: '별채 수색 · 소지품 검사', dk: '기록에 남은 메시지가 같은 시점을 가리켰다.', fe: 'Annex search · belongings', de: 'Messages in the records pointed to the same moment.' },
     '별채 대포폰': { fk: '별채 수색', dk: '가입자 정보가 없었고, 저장된 번호는 하나뿐이었다.', fe: 'Annex search', de: 'No subscriber on record; only one number was saved.' },
-    '수면제': { fk: '수색 · 소지품', dk: '소지품에서 나온 약물이었다.', fe: 'Search · belongings', de: 'A drug found among belongings.' },
-    '둔기': { fk: '현장 주변', dk: '현장 주변에 있던 단단한 물체였다.', fe: 'Around the scene', de: 'A hard object found near the scene.' },
     '치정': { fk: '진술 정황', dk: '진술에 관련 정황이 있었다.', fe: 'Statement context', de: 'Related context appeared in statements.' },
-    '유산 상속': { fk: '기록 정황', dk: '기록에 관련 정황이 있었다.', fe: 'Record context', de: 'Related context appeared in records.' },
   };
   termIconPath(w) { return this.ICONS[w] || 'M4 4h8v8H4z'; }
   TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:yuri': ['마약', '치정'] };
@@ -422,17 +426,42 @@ export default class App extends React.Component {
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
     /**
-     * 확보 단어의 출처·기록. 2026-07-26 대조에서 **엔진 쪽 네 문장이 쉼표에서
-     * 잘려 있는 것**을 잡아 고쳤다(`scripts/yaml-comma-check.mjs`).
+     * 확보 단어 — 출처·기록·**풀 자체**가 엔진 정본이다. 2026-07-26 대조에서
+     * 엔진 쪽 네 문장이 쉼표에서 잘려 있던 것을 잡아 고쳤다
+     * (`scripts/yaml-comma-check.mjs`).
      *
-     * 엔진에 없는 단어(decoy 수면제·둔기·유산 상속)는 앱 값을 그대로 둔다 —
-     * 지우면 후보 풀이 줄어 난이도가 달라진다. 그건 설계 결정이다.
+     * **영문도 함께 받는다 (2026-07-27).** 예전엔 `ko` 만 덮어써서 엔진이 써둔
+     * `en` 이 버려지고 앱의 낡은 값이 영문 모드에 그대로 렌더됐다 — `테이프`·
+     * `연탄` 의 출처가 **피해자 옛 이름** `"Chae-won's room"` 이었다.
+     * `GRAPH_NODES` 에서 같은 부류를 잡은 바로 그날 이쪽은 살아 있었다.
+     *
+     * **풀은 엔진 순서로 다시 만든다.** 단 앱에 표시 정보(`TERM_INFO`)가 없는
+     * 단어는 넣지 않는다 — 지금은 `영수증`·`물자국` 둘이고, 엔진에서는 트릭의
+     * 핵심(`e_receipt` 시각 · `e_dryice` 가짜 연기)인데 앱에 대응 화면이 없다.
+     * **조용히 버리지 않고 콘솔에 남긴다** — 이 침묵이 위 영문 결함을 살려뒀다.
      */
+    const en = (t) => (t && typeof t === 'object' ? t.en : '') || ''
+    const pool = []
+    const dropped = []
     for (const t of c.terms ?? []) {
       const cur = this.TERM_INFO[t.word]
-      if (!cur) continue
-      if (t.source) cur.fk = ko(t.source)
-      if (t.note) cur.dk = ko(t.note)
+      if (!cur) {
+        dropped.push(t.word)
+        continue
+      }
+      if (t.source) {
+        cur.fk = ko(t.source)
+        if (en(t.source)) cur.fe = en(t.source)
+      }
+      if (t.note) {
+        cur.dk = ko(t.note)
+        if (en(t.note)) cur.de = en(t.note)
+      }
+      pool.push(t.word)
+    }
+    if (pool.length) this.COLLECTED_POOL = pool
+    if (dropped.length && typeof console !== 'undefined') {
+      console.warn('[case] 엔진 확보 단어가 앱에 없어 풀에서 빠졌다:', dropped.join(' · '))
     }
 
     // 인물 — **표시 속성(색·이니셜·역할·좌표)은 건드리지 않는다**
