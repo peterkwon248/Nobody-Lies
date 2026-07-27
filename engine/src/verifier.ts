@@ -792,6 +792,60 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * 9-8. **반대 방향 — 데이터를 주는데 산문이 침묵한다** (2026-07-28 신설)
+   *
+   * 9-7 의 (a)~(d)는 전부 *산문이 데이터보다 더 말하는가*를 본다. 유서 버그가
+   * 그 방향이었다 — 「찾았다」고 말해놓고 단어를 안 줬다. **거울상은 검사가
+   * 없었다**: 주는데 말하지 않는 것.
+   *
+   * 플레이어에게는 두 방향의 피해가 같다. 예산 1을 쓰고 얻은 것이 화면에
+   * 안 뜨면, 준 것이 없는 것과 구별되지 않는다.
+   */
+  {
+    // (e) 물증을 주는데 결과문이 없다.
+    //     6.55 가 이미 그 반대(`yield` 는 있는데 `gives` 가 없다)를 오류로 잡는다.
+    //     같은 자리의 같은 피해이므로 등급도 같다 — `resultFor` 가 undefined 면
+    //     앱이 공통 「아무것도 없음」 폴백으로 떨어뜨린다. **게임이 거짓말을 한다.**
+    for (const a of c.actions)
+      if (a.gives.length && !a.result)
+        errors.push(
+          `'${a.label}' 이 물증을 주는데 결과문이 없다 — ` +
+            `플레이어는 예산을 쓰고 공통 「아무것도 없음」을 본다`,
+        )
+
+    // (f) 아무도 쓰지 않는 물증.
+    //
+    //     물증이 **쓰인다**는 네 가지 중 하나다:
+    //       논리   fact 가 가리킨다
+    //       트릭   props·staging·인상·이탈·허점이 가리킨다
+    //       어휘   확보 단어를 준다
+    //       읽을거리 카드에 기록이 있다 (읽는 것도 쓰는 것이다)
+    //
+    //     넷 다 아니면 물증 목록에 **이름만** 있는 것이고, 그것을 주는 조사는
+    //     예산만 먹는다. 다만 저작 중간 상태일 수 있어(아직 안 이은 것) 경고다.
+    const evUsed = new Set<EvidenceId>()
+    for (const f of c.facts) f.revealedBy.forEach((e) => evUsed.add(e))
+    const tk = c.trick
+    for (const e of [...(tk.props ?? []), ...(tk.staging ?? [])]) evUsed.add(e)
+    for (const il of tk.illusions ?? [])
+      for (const e of [...(il.madeBy ?? []), ...(il.brokenBy ?? [])]) evUsed.add(e)
+    for (const e of [...(tk.exit?.enabledBy ?? []), ...(tk.exit?.brokenBy ?? [])]) evUsed.add(e)
+    for (const e of tk.flaw?.plantedIn ?? []) evUsed.add(e)
+    for (const e of c.evidence)
+      if ((e.yieldsTerms?.length ?? 0) > 0 || e.record || e.extra) evUsed.add(e.id)
+
+    for (const e of c.evidence)
+      if (!evUsed.has(e.id)) {
+        const from = c.actions.filter((a) => a.gives.includes(e.id)).map((a) => a.label)
+        warnings.push(
+          `물증 '${e.id}'(${e.description})을 아무도 쓰지 않는다 — ` +
+            `fact·트릭·확보 단어·기록 어디에도 없다` +
+            (from.length ? ` · 주는 조사: ${from.join('·')}` : ''),
+        )
+      }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
