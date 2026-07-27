@@ -230,9 +230,17 @@ export type FloorPlan = {
   /**
    * 고정물 — 화로·창문·금고·시신. 눌러서 조사한다.
    *
-   * 키는 조사 대상 id 이고 값은 도면 위 좌표다.
+   * 키는 조사 대상 id 이고 값은 도면 위 좌표와 이름표다.
+   *
+   * `label` 은 **도면 위에 그려지는 한국어 이름표**다. 사건마다 다른 어휘이므로
+   * 엔진이 정본이다 — 사건 2번의 고정물은 이름이 다르다. `doors`·`windows` 의
+   * `label` 과 같은 규약이고, **영문은 앱에 남는다**(평면도 로마자 표기가
+   * 아직 결정되지 않았다 — 결정되면 방 이름과 함께 받는다).
+   *
+   * 아이콘은 **앱이 정한다.** 어느 글리프를 쓰는지는 표시 속성이고, 인물의
+   * 색·이니셜과 같은 부류다. 없으면 공통 표식으로 떨어진다.
    */
-  fixtures?: Record<string, { x: number; y: number }>
+  fixtures?: Record<string, { x: number; y: number; label?: string }>
 }
 
 export type Fact = {

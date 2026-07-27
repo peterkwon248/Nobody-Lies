@@ -604,9 +604,14 @@ export default class App extends React.Component {
      *
      * ⚠ **창은 `id` 가 없다** — 양쪽 다 없다. 좌표 네 값으로 잇는다(셋 다 유일).
      *
-     * 앱 `FIXTURES`(화로·테이프·금고·시신의 라벨·아이콘)는 **가져오지 않는다.**
-     * 엔진엔 설비의 좌표(`floor_plan.fixtures`)만 있고 이름이 없다 — 조사 대상
-     * id 로만 존재한다. 없는 것을 만들면 이식이 아니라 발명이다.
+     * 앱 `FIXTURES`(화로·테이프·금고·시신) 중 **한국어 이름표는 엔진이 정본이다**
+     * (2026-07-27 `floor_plan.fixtures[].label` 신설). 사건마다 다른 어휘이고
+     * 사건 2번의 고정물은 이름이 다르다 — `doors`·`windows` 의 `label` 과 같은
+     * 규약이다.
+     *
+     * **영문과 아이콘은 앱에 남는다.** 영문은 평면도 로마자 표기가 미결이라
+     * 방 이름(`"Chae-won's room"`)과 같은 처지이고, 아이콘은 어느 글리프를
+     * 쓰느냐라서 인물의 색·이니셜과 같은 표시 속성이다.
      */
     const fp = c.floorPlan
     if (fp) {
@@ -649,13 +654,19 @@ export default class App extends React.Component {
         if (e.min != null) r.min = e.min
       }
 
-      // 설비 좌표는 표가 아니라 map 이다. 키 집합이 같을 때만 받는다
+      // 설비 좌표·이름표는 표가 아니라 map 이다. 키 집합이 같을 때만 받는다
       if (fp.fixtures) {
         const ak = Object.keys(G.fixtures).sort().join(','), ek = Object.keys(fp.fixtures).sort().join(',')
-        if (ak !== ek) console.warn('[nobody-lies] 평면도 설비 좌표: 엔진과 키가 다르다 — 앱 값을 쓴다')
+        if (ak !== ek) console.warn('[nobody-lies] 평면도 설비: 엔진과 키가 다르다 — 앱 값을 쓴다')
         else for (const k of Object.keys(G.fixtures)) {
           const e = fp.fixtures[k]
           if (e.x != null && e.y != null) G.fixtures[k] = { x: e.x, y: e.y }
+          // 이름표는 사건 어휘다 — 사건 2번의 고정물은 이름이 다르다.
+          // 영문·아이콘은 앱이 계속 정본이다 (로마자 표기 미결 · 표시 속성)
+          if (e.label) {
+            const f = this.FIXTURES.find((x) => x.id === k)
+            if (f) f.ko = String(e.label)
+          }
         }
       }
     }

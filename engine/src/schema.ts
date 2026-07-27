@@ -149,7 +149,10 @@ function floorPlan(raw: Raw): FloorPlan {
       ...(w.min !== undefined ? { min: num(w.min) } : {}),
     })),
     ...(raw.fixtures ? { fixtures: Object.fromEntries(
-      Object.entries(raw.fixtures as Raw).map(([k, v]) => [k, { x: num((v as Raw).x), y: num((v as Raw).y) }]),
+      Object.entries(raw.fixtures as Raw).map(([k, v]) => [k, {
+        x: num((v as Raw).x), y: num((v as Raw).y),
+        ...((v as Raw).label ? { label: String((v as Raw).label) } : {}),
+      }]),
     ) } : {}),
   }
 }
