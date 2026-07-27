@@ -36,6 +36,42 @@ const DS_BUNDLE = '/_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef
  * 번들은 재export 로 되돌아오므로 고칠 자리는 여기다. 로드하는 동안만
  * `createRoot` 를 빈 루트로 바꿔 그 한 줄을 삼킨다.
  */
+/**
+ * 번들은 실패해도 예외를 던지지 않고 `__errors` 에 적어둔다. 조용히 지나가면
+ * 화면이 어긋난 채로 돈다 — 콘솔에라도 남긴다.
+ *
+ * **다만 전부 빨갛게 찍으면 경보가 죽는다.** 2026-07-27 기준 항상 1건이
+ * 올라온다 — `ui_kits/app/Panels.jsx` 의 `StatusIcon is not defined`. 진단 결과:
+ *
+ * 번들은 모듈마다 `try { (() => { … })() }` 로 감싸고 **공유는 `__ds_scope`
+ * 하나로만 한다.** 그런데 `ui_kits/app/*` 데모 파일에는 그 구조분해
+ * (`const { StatusIcon } = __ds_scope`)를 **한 줄도 안 넣는다.** 그래서 그
+ * 파일들의 프리미티브 참조는 전부 미해결 자유 변수다 — `StatusIcon` 을 쓰는
+ * 데모가 **13개**인데 그중 `Panels.jsx` 만 터지는 이유는, **모듈 초기화 중에
+ * 그 참조를 실제로 평가하는 유일한 파일**이라서다(`statusOpt()` 를 그 자리에서
+ * 부른다). 나머지는 함수 안에 있어 렌더될 때까지 안 돈다.
+ *
+ * **우리 앱과 무관하다.** 우리는 내보내진 프리미티브 8개만 쓰고
+ * (`App.jsx` 의 `DS()`) `ui_kits/app/*` 데모는 하나도 렌더하지 않는다.
+ * 번들은 재생성 산물이라 거기서 고치면 다음 export 에 사라진다.
+ *
+ * 그래서 **경로로 가른다** — 우리가 쓰는 `package/src/*` 가 실패하면 진짜
+ * 결함이니 `error`, 데모 파일이면 한 줄 `debug` 로 접는다. 새 결함이
+ * 데모 소음에 묻히지 않게 하는 것이 목적이다.
+ */
+function reportDsErrors(errs) {
+  if (!errs?.length) return;
+  const real = errs.filter((e) => !String(e.path || '').startsWith('ui_kits/app/'));
+  const demo = errs.filter((e) => String(e.path || '').startsWith('ui_kits/app/'));
+  if (real.length) console.error('[nobody-lies] 디자인 시스템 컴파일 실패:', real);
+  if (demo.length) {
+    console.debug(
+      `[nobody-lies] DS 데모 파일 ${demo.length}건 컴파일 실패 (앱은 안 쓴다):`,
+      demo.map((e) => e.path).join(' · '),
+    );
+  }
+}
+
 function loadDesignSystem() {
   return new Promise((resolve) => {
     const real = window.ReactDOM.createRoot;
@@ -45,10 +81,7 @@ function loadDesignSystem() {
     s.src = DS_BUNDLE;
     s.onload = () => {
       done();
-      const errs = window.VectorDesignSystem_490b73?.__errors;
-      // 번들은 실패해도 예외를 던지지 않고 `__errors` 에 적어둔다. 조용히 지나가면
-      // 화면이 어긋난 채로 돈다 — 콘솔에라도 남긴다
-      if (errs?.length) console.error('[nobody-lies] 디자인 시스템 컴파일 실패:', errs);
+      reportDsErrors(window.VectorDesignSystem_490b73?.__errors);
       resolve();
     };
     s.onerror = () => { done(); console.error('[nobody-lies] 디자인 시스템 번들을 못 읽었다'); resolve(); };
