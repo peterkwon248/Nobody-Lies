@@ -76,6 +76,13 @@ machine: "KWONKYUNGHUN (새 기계 · OneDrive 아래)"
 
 - **작업 기계가 넷이 됐다.** 이 기계(`KWONKYUNGHUN`)는 **OneDrive 아래**에 있다
 - **기계를 옮기면 `git pull` 다음 `npm install`** (07-24 이후 `js-yaml` 이 늘었다)
+- **새 기계는 `git config --local user.name/user.email` 부터 한다.** 없으면 첫 커밋이
+  `Author identity unknown` 으로 튕긴다. 기존 커밋은 전부
+  `peterkwon248 <vmfhxhtmwkd7@gmail.com>` 이다 — **`--local` 로 저장소에만 건다**
+- **살아 있는 목록은 `NEXT-ACTION.md` §다음 즉시 액션 하나뿐이다.** `PORT-AUDIT.md`
+  의 「남은 것」 표는 07-25 스냅샷이고 다섯 줄 중 넷이 이미 닫혀 있었다 —
+  2026-07-28에 ⏭ 배너를 달았다. **`NEXT-ACTION` 이 그 파일을 가리키고 있어서
+  다음 기계가 속을 자리였다**
 - **`app/public/cases/mountain-lodge.json` 은 추적 안 된다** — `npm run case` 산출물이고
   `dev`·`build` 둘 다 앞에서 굽는다
 - 이 저장소는 **직접 main 푸시** (feature 브랜치·PR 없음)
@@ -88,3 +95,4 @@ machine: "KWONKYUNGHUN (새 기계 · OneDrive 아래)"
 - `engine/templates/PROSE-BRIEF.md` — 짝 포함 규칙 · `evidence[].record` · 9-8 합격 기준
 - `docs/MEMORY.md` — §반대 방향 신설 · 🔴 미해결 절을 ✅ 로 · 현재 단계 갱신
 - `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md`
+- `docs/PORT-AUDIT.md` — 「남은 것」 표에 ⏭ 스냅샷 배너 (넷은 이미 닫혔다)
