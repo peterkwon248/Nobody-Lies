@@ -600,6 +600,7 @@ facts:
 actions:
   - id: a_yuri
     label: 소지품 검사 · 오나경
+    verb: belongings
     cost: 1
     gives: [e_yuri_threat]
     salience: 0.9
@@ -611,6 +612,7 @@ actions:
     target: { kind: person, id: yuri }
   - id: a_yena
     label: 소지품 검사 · 서지안
+    verb: belongings
     cost: 1
     gives: [e_yena_info]
     salience: 0.8
@@ -622,6 +624,7 @@ actions:
     target: { kind: person, id: yena }
   - id: a_yujin
     label: 소지품 검사 · 한유빈
+    verb: belongings
     cost: 1
     gives: [e_yujin_patch]
     salience: 0.75
@@ -635,6 +638,7 @@ actions:
   # 사인은 부검으로만 확보된다 = 필수 조사. 비용 2면 여유가 0이 되어 1로 내렸다
   - id: a_autopsy
     label: 시신 정밀 검사
+    verb: autopsy
     cost: 1
     gives: [e_time]
     salience: 0.7
@@ -645,17 +649,14 @@ actions:
       body:  { ko: "사인은 일산화탄소 중독. 외상과 약물 반응은 없다. 사망 추정이 새벽 3~5시로 좁혀졌다.", en: "Cause of death is CO poisoning; no wounds or drugs. The window narrows to 03:00-05:00." }
     target: { kind: fixture, id: body }
 
-  # 영수증의 2번째 경로. 핵심 물증은 경로가 둘 이상이어야 한다
-  - id: a_briquette
-    label: 연탄 수색
-    cost: 1
-    gives: [e_receipt]
-    salience: 0.6
-    available_after: 2
-    yield: solution
-    target: { kind: fixture, id: hearth }
+  # a_briquette(연탄 수색)은 2026-07-27 에 a_hearth 로 합쳤다 — 둘 다
+  # fixture:hearth 라서 앱에서는 애초에 같은 조사 하나였다. a_hearth 가
+  # e_receipt 를 게이트 없이 이미 주고 있었으므로 도달성은 그대로다.
+  # ⚠ 「핵심 물증은 경로가 둘 이상」이라는 규약은 이 물증에서 깨졌다.
+  #   두 경로가 같은 고정물에 걸려 있어 앱 입도에서는 애초에 하나였다.
   - id: a_wy
     label: 소지품 검사 · 백리원
+    verb: belongings
     cost: 1
     gives: [e_wy_text]
     salience: 0.5
@@ -668,6 +669,7 @@ actions:
     target: { kind: person, id: wonyoung }
   - id: a_sakura
     label: 소지품 검사 · 문세라
+    verb: belongings
     cost: 1
     gives: [e_note, e_key]
     salience: 0.35
@@ -680,6 +682,7 @@ actions:
     target: { kind: person, id: sakura }
   - id: a_annex
     label: 별채 수색
+    verb: search
     cost: 1
     gives: [e_burner, e_safes]
     salience: 0.3
@@ -695,6 +698,7 @@ actions:
   # 통화내역
   - id: a_ph_yuri
     label: 통화내역 조회 · 오나경
+    verb: phone
     cost: 1
     gives: [e_yuri_call]
     salience: 0.5
@@ -702,6 +706,7 @@ actions:
     target: { kind: person, id: yuri }
   - id: a_ph_wy
     label: 통화내역 조회 · 백리원
+    verb: phone
     cost: 1
     gives: [e_wy_call_log]
     salience: 0.45
@@ -713,6 +718,7 @@ actions:
     target: { kind: person, id: wonyoung }
   - id: a_ph_sakura
     label: 통화내역 조회 · 문세라
+    verb: phone
     cost: 1
     gives: []
     salience: 0.3
@@ -724,6 +730,7 @@ actions:
     target: { kind: person, id: sakura }
   - id: a_ph_yena
     label: 통화내역 조회 · 서지안
+    verb: phone
     cost: 1
     gives: []
     salience: 0.35
@@ -731,6 +738,7 @@ actions:
     target: { kind: person, id: yena }
   - id: a_ph_yujin
     label: 통화내역 조회 · 한유빈
+    verb: phone
     cost: 1
     gives: []
     salience: 0.3
@@ -740,6 +748,7 @@ actions:
   # 알리바이 대조
   - id: a_alibi_yy
     label: 알리바이 대조 · 서지안 × 한유빈
+    verb: alibi
     # 관계 도식에서 이 둘을 고르면 열린다. 매달 지점이 없어 target 이 아니다
     pair: [yena, yujin]
     cost: 1
@@ -752,6 +761,7 @@ actions:
       body:  { ko: "지안과 유빈의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.", en: "Ji-an and Yu-bin’s arrival times corroborate - both arrived only in the morning." }
   - id: a_alibi_yr
     label: 알리바이 대조 · 오나경 × 한유빈
+    verb: alibi
     pair: [yuri, yujin]
     cost: 1
     gives: [e_yuri_alibi]
@@ -766,6 +776,7 @@ actions:
   # 화로에 트릭의 핵심 셋이 몰려 있다 — 영수증(시각) · 물자국(가짜 연기) · 식은 정도
   - id: a_hearth
     label: 화로 조사
+    verb: fixture
     cost: 1
     gives: [e_hearth_cold, e_dryice, e_receipt]
     salience: 0.55
@@ -777,6 +788,7 @@ actions:
     target: { kind: fixture, id: hearth }
   - id: a_window
     label: 문틈과 창가 조사
+    verb: fixture
     cost: 1
     gives: [e_tape_inside]
     salience: 0.45
@@ -786,29 +798,20 @@ actions:
       title: { ko: "창문 밀폐 테이프", en: "Window taped shut" }
       body:  { ko: "창틀과 문틈에 안쪽에서 붙인 테이프. 밀폐 위장 장치다.", en: "Tape applied from inside the window frame and door gap - a sealing device." }
     target: { kind: fixture, id: window }
-  - id: a_kitchen
-    label: 주방 수색
-    cost: 1
-    gives: []
-    salience: 0.2
-    yield: empty
-    target: { kind: location, id: main }
-  - id: a_living
-    label: 거실 수색
+  # 주방·거실은 2026-07-27 에 「본채 수색」 하나로 합쳤다. 창고는 별채 수색
+  # (a_annex)에 흡수됐다 — 셋 다 gives: [] 인 빈손 조사라 잃은 물증이 없다.
+  # 게임이 제공하는 입도가 정본이다: 앱은 장소를 본채·별채·진입로로만 센다
+  - id: a_main
+    label: 본채 수색
+    verb: search
     cost: 1
     gives: []
     salience: 0.25
     yield: empty
     target: { kind: location, id: main }
-  - id: a_storage
-    label: 창고 수색
-    cost: 1
-    gives: []
-    salience: 0.2
-    yield: empty
-    target: { kind: location, id: annex }
   - id: a_drive
     label: 진입로 수색
+    verb: search
     cost: 1
     gives: []
     salience: 0.15
@@ -816,9 +819,10 @@ actions:
     target: { kind: location, id: approach }
 
   # 피해자
-  - { id: a_victim_bel, label: 소지품 검사 · 피해자, cost: 1, gives: [e_victim_phone], salience: 0.5, yield: exclusion }
+  - { id: a_victim_bel, label: 소지품 검사 · 피해자, verb: belongings, cost: 1, gives: [e_victim_phone], salience: 0.5, yield: exclusion }
   - id: a_manuscript
     label: 원고 조사
+    verb: fixture
     cost: 1
     gives: []
     salience: 0.25
@@ -1009,7 +1013,7 @@ reveals:
       - { speaker: yena, content: 나경 걔가 요즘 돈 문제로 힘들다고 했었어요, target: statement }
     narration: 현장 정리가 끝나자 서지안이 조심스레 말을 보탰다.
 
-  - trigger: { on: action, action_id: a_briquette }
+  - trigger: { on: action, action_id: a_hearth }
     yield: path
     surface: map
     narration: 연탄에서 나온 영수증. 구매자는 별채 거주자였다.

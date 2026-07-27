@@ -286,9 +286,24 @@ export type Evidence = {
   yieldsTerms?: string[]
 }
 
+/**
+ * 조사 **동사**. 게임이 제공하는 조사 갈래이고 사건이 바뀌어도 이 여섯이다.
+ *
+ * 이것이 없으면 `label` 산문 접두(「소지품 검사 · 」「통화내역 조회 · 」)를
+ * 파싱해야 동사를 안다. `target.kind` 로도 못 가른다 — `belongings` 와 `phone`
+ * 이 **둘 다 person** 을 겨눈다.
+ *
+ * 앱이 조사를 `동사:대상id` 로 키잉하므로(`TERM_MAP`·`CLUE_MAP`·`FLOOR_CLUES`)
+ * **`verb` + `target.id` 가 곧 그 키다.** 2026-07-27 에 신설했다.
+ */
+export type ActionVerb =
+  | 'belongings' | 'search' | 'phone' | 'alibi' | 'autopsy' | 'fixture'
+
 export type Action = {
   id: string
   label: string
+  /** 조사 갈래. 앱 키 = `verb:target.id` */
+  verb?: ActionVerb
   cost: number
   gives: EvidenceId[]
   salience: number

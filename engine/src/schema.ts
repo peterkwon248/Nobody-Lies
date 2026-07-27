@@ -41,6 +41,8 @@ const FACT_KINDS = new Set([
   'motive', 'means', 'contradiction', 'context',
 ])
 const YIELDS = new Set(['solution', 'redherring', 'exclusion', 'empty'])
+/** 조사 갈래. 앱 `INV_ACTIONS` 여섯과 같은 집합이다 (`types.ts` `ActionVerb`) */
+const ACTION_VERBS = new Set(['belongings', 'search', 'phone', 'alibi', 'autopsy', 'fixture'])
 const REVEAL_YIELDS = new Set(['path', 'narrow', 'decoy', 'flavor'])
 const SURFACES = new Set(['statement', 'map', 'graph', 'suspect', 'overview'])
 const HIDDEN_ROLES = new Set([
@@ -298,6 +300,8 @@ export function parseCase(raw: unknown, source: string): Case {
     if (!a?.id) p.add(at, 'id 가 없다')
     if (!a?.label) p.add(at, 'label 이 없다')
     if (!YIELDS.has(a?.yield)) p.add(`${at}.yield`, `알 수 없는 값 '${a?.yield}'`)
+    if (a?.verb !== undefined && !ACTION_VERBS.has(a.verb))
+      p.add(`${at}.verb`, `알 수 없는 조사 갈래 '${a?.verb}'`)
     for (const e of arr(a?.gives))
       if (!evidenceIds.has(e)) p.add(`${at}.gives`, `물증 '${e}' 가 없다`)
     for (const b of arr(a?.boosted_by))
@@ -305,6 +309,7 @@ export function parseCase(raw: unknown, source: string): Case {
     return {
       id: a?.id, label: a?.label, cost: a?.cost, gives: arr(a?.gives),
       salience: a?.salience, yield: a?.yield,
+      ...(a?.verb ? { verb: a.verb as Action['verb'] } : {}),
       ...(a?.boosted_by ? { boostedBy: a.boosted_by } : {}),
       ...(a?.available_after !== undefined ? { availableAfter: a.available_after } : {}),
       ...(a?.pair ? { pair: arr(a.pair) as [string, string] } : {}),
