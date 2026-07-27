@@ -639,6 +639,37 @@ export function verify(c: Case): VerifyResult {
     for (const id of fixIds)
       if (!targeted.has(`fixture:${id}`))
         warnings.push(`고정물 '${id}' 에 걸린 조사가 없다 — 눌러도 아무 일이 없다`)
+
+    /**
+     * **지목할 수 없는 조사** (2026-07-27 신설).
+     *
+     * 앱은 조사를 `verb:target.id` 로 키잉해 평면도·용의자 카드에 매단다.
+     * `target` 도 `pair` 도 없으면 **키가 `verb:(none)` 이 되어 어느 화면에도
+     * 걸리지 않는다** — 검증기는 통과하는데 플레이어는 영영 실행할 수 없다.
+     *
+     * 실제로 `a_victim_bel`(소지품 검사 · 피해자)이 그 상태였고, 그것이 주는
+     * `e_victim_phone` 은 **트릭 허점이 심긴 두 자리 중 하나**다. 앱에서는
+     * 허점을 만날 길이 하나(인물)로 줄어 있었다.
+     *
+     * 위 `personIds` 가 `c.victim` 을 이미 포함하므로 피해자를 겨누는 것은
+     * 데이터만 채우면 된다 — 대상 검사에서 막히지 않는다.
+     */
+    for (const a of c.actions)
+      if (!a.target && !a.pair)
+        warnings.push(
+          `조사 '${a.label}' 를 지목할 수 없다 — target 도 pair 도 없어 화면에 걸리지 않는다`,
+        )
+
+    /**
+     * **허점이 심긴 자리는 얻을 수 있어야 한다.**
+     *
+     * 위 9-1 은 자리가 *존재하는지*만 본다. 인상(`illusions`)은 이미
+     * `routesTo(e) === 0` 으로 획득 경로를 검사하는데 허점은 안 했다 —
+     * 같은 이유로 같은 검사가 필요하다. 만날 수 없는 허점은 없는 허점이다.
+     */
+    for (const site of c.trick.flaw?.plantedIn ?? [])
+      if (allEv.has(site) && routesTo(site) === 0)
+        errors.push(`허점이 심긴 물증 '${site}' 를 얻을 조사가 없다 — 만날 수 없다`)
   }
 
   // 9-5. 관계 도식 ↔ 인물·조사 정합 (2026-07-26 신설)
