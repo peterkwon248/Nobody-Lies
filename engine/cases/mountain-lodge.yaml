@@ -1019,6 +1019,11 @@ reopen_per_chapter: 1
 #     (docs/MEMORY.md 「그 밖의 미해결」 참조)
 
 reveals:
+  # ─────────────────────────────────────────────────────────────────
+  #  2026-07-27 — 앱 REVEALS·CLAIM_REVEALS 를 여기로 옮겼다.
+  #  갈리던 곳은 앱 문안을 택했다(플레이테스트를 거친 쪽이다).
+  #  narration 은 앱에 대응 화면이 없다 — 장 인터루드를 만들 때 쓴다.
+  # ─────────────────────────────────────────────────────────────────
   - trigger: { on: chapterComplete, chapter_order: 1 }
     yield: path
     facts: [f_cause]
@@ -1029,12 +1034,22 @@ reveals:
     narration: >-
       이른 오후, 부검 예비 소견이 올라왔다.
       그리고 본채에서 도보 십 분 거리에 별채가 하나 더 있다는 것을 뒤늦게 들었다.
+    # 트릭의 허점이 심긴 세 번째 자리. 한유빈이 무심코 말하는 형태다
+    add_claims:
+      - { speaker: yujin, target: statement,
+          content: 자살할 사람이 우리를 왜 불렀을까요? 초대장은 전날 밤에야 급하게 돌았어요. }
 
   - trigger: { on: chapterComplete, chapter_order: 2 }
     yield: decoy
     surface: statement
+    # 같은 새벽 통화가 두 표면에 뜬다 — 진술은 말한 그대로, 격자는 짧은 라벨.
+    # 격자 라벨에 '(본인 주장)' 이 붙는 이유: 확정 층이 아니라 주장 층이다
     add_claims:
-      - { speaker: yuri, content: 새벽에 다인 언니가 저한테도 전화를 했었어요, target: statement }
+      - { speaker: wonyoung, target: statement,
+          content: "유빈 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요." }
+      - { speaker: yuri, target: statement,
+          content: "아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요." }
+      - { speaker: yuri, target: grid, slot: t1, content: 통화 중 (본인 주장) }
     narration: 마지막 정황을 정리하자, 오나경이 머뭇거리며 덧붙였다.
 
   - trigger: { on: action, action_id: a_autopsy }
@@ -1055,3 +1070,15 @@ reveals:
     yield: path
     surface: map
     narration: 연탄에서 나온 영수증. 구매자는 별채 거주자였다.
+
+  # 4장은 엔진에 없었고 앱에만 있던 것이다 (2026-07-27 이관)
+  - trigger: { on: chapterComplete, chapter_order: 4 }
+    yield: path
+    surface: statement
+    add_claims:
+      - { speaker: yuri, target: statement,
+          content: 그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 세라 언니 쪽이었죠. }
+    # 검증기가 요구해서 새로 썼다(2026-07-27) — 장 완성 공개는 **전부 서사를 갖거나
+    # 전부 없거나**여야 한다. 셋만 있으면 서사의 유무가 곧 유용도 신호가 된다.
+    # 2·3장과 같은 틀: [장이 닫히는 정황]하자, [인물]이 [태도] 덧붙였다
+    narration: 감춰진 일들이 정리되자, 오나경이 잠시 망설이다 덧붙였다.

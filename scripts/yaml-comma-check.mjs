@@ -23,6 +23,20 @@
  * 같은 문장의 뒷부분이라는 뜻이다.
  *
  * `}` 앞의 후행 쉼표(`{ a: 1, }`)는 뒤가 비어 있으므로 걸리지 않는다.
+ *
+ * ## 여러 줄 flow mapping (2026-07-27 확장)
+ *
+ * 처음 판은 `line.includes('{')` 인 줄만 봤다. 그래서 **줄을 넘긴 flow mapping**
+ * 이 통째로 빠졌다:
+ *
+ * ```yaml
+ * - { speaker: wonyoung, target: statement,
+ *     content: 유빈 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 늦잠을 자버렸어요. }
+ * ```
+ *
+ * 둘째 줄에 `{` 가 없어서 검사에서 빠졌고, `content` 는 「…했는데」에서 잘린 채
+ * **초록불로 통과했다.** reveals 이관 때 화면에 잘린 문장이 떠서야 보였다.
+ * 이제 중괄호 깊이를 줄 사이에 이어서 센다.
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -37,8 +51,16 @@ const NEXT_KEY = /^,\s*[A-Za-z_][A-Za-z0-9_]*:/
 let bad = 0
 for (const file of readdirSync(CASES).filter((f) => f.endsWith('.yaml'))) {
   const lines = readFileSync(join(CASES, file), 'utf8').split(/\r?\n/)
+  // flow mapping 은 줄을 넘길 수 있다. 깊이를 줄 사이에 이어서 센다 —
+  // 「이 줄에 `{` 가 있나」로 보면 둘째 줄부터가 통째로 빠진다
+  let depth = 0
   lines.forEach((line, i) => {
-    if (!line.includes('{')) return
+    const code = line.replace(/#.*$/, '')
+    const opens = (code.match(/\{/g) || []).length
+    const closes = (code.match(/\}/g) || []).length
+    const insideAtStart = depth > 0
+    depth = Math.max(0, depth + opens - closes)
+    if (!insideAtStart && opens === 0) return
     for (const m of line.matchAll(KEY_VALUE)) {
       const after = line.slice(m.index + m[0].length)
       if (!after.startsWith(',')) continue

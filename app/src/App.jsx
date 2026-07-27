@@ -548,6 +548,50 @@ export default class App extends React.Component {
       if (Object.keys(clueMap).length) this.CLUE_MAP = clueMap
 
       /**
+       * 장 완성 공개 (`REVEALS` · `CLAIM_REVEALS`). 2026-07-27 이관.
+       *
+       * ⚠ **장 번호 → 절 id 는 `SECTIONS` 배열 순서다.** `SECTIONS` 가
+       * `s1,s3,s2,s4,s5` 순이므로 **2장은 `s3`, 3장은 `s2`** 다. id 숫자로
+       * 이으면 2·3장이 통째로 뒤바뀐다 — 공란 이관 때와 같은 함정이다.
+       *
+       * `addClaims` 가 두 표면으로 갈린다:
+       * - `target: 'statement'` → `REVEALS[].statements` (진술에 문단 추가)
+       * - `target: 'grid'` → `CLAIM_REVEALS[]` (격자 칸 · `slot` 이 열)
+       *
+       * `narrow` 는 **좁히기가 아니라 배지 라우팅**이다(`deathNarrowed()` 는
+       * `invLog` 의 `autopsy` 를 따로 본다). 엔진 `surface` 가 그 용도로
+       * 문서화돼 있어 그대로 쓴다 — `overview` 로 도착하면 배지를 띄운다.
+       */
+      const idToKey = {}
+      for (const [k, a] of Object.entries(byKey)) idToKey[a.id] = k
+      const revs = {}
+      const claimRevs = {}
+      for (const r of c.reveals ?? []) {
+        if (r.trigger?.on !== 'chapterComplete') continue
+        const sid = this.SECTIONS[r.trigger.chapterOrder - 1]?.id
+        if (!sid) continue
+        const statements = []
+        for (const cl of r.addClaims ?? []) {
+          if (cl.target === 'grid') {
+            if (!cl.slot) continue
+            ;(claimRevs[sid] = claimRevs[sid] || []).push({
+              pid: cl.speaker, tid: cl.slot, ko: cl.content, en: cl.content,
+            })
+          } else {
+            statements.push({ pid: cl.speaker, text: cl.content })
+          }
+        }
+        const targets = (r.actions ?? []).map((id) => idToKey[id]).filter(Boolean)
+        const entry = {}
+        if (r.surface === 'overview') entry.narrow = true
+        if (targets.length) entry.targets = targets
+        if (statements.length) entry.statements = statements
+        if (Object.keys(entry).length) revs[sid] = entry
+      }
+      if (Object.keys(revs).length) this.REVEALS = revs
+      if (Object.keys(claimRevs).length) this.CLAIM_REVEALS = claimRevs
+
+      /**
        * **피해자를 조사 대상으로 세운다** (2026-07-27).
        *
        * 앱의 인물 대상은 `PEOPLE`(용의자 5)뿐이었다. 엔진 `a_victim_bel` 이
@@ -1515,11 +1559,22 @@ export default class App extends React.Component {
   toggleSecExpand(sid) { const e = Object.assign({}, this.state.secExpand || {}); e[sid] = !e[sid]; this.setState({ secExpand: e }); }
   reopenSection(sid) { const ra = Object.assign({}, this.state.reopenActive || {}), ru = Object.assign({}, this.state.reopenUsed || {}); ra[sid] = true; ru[sid] = true; this.setState({ reopenActive: ra, reopenUsed: ru, openPicker: null }); }
   closeReopen(sid) { const ra = Object.assign({}, this.state.reopenActive || {}), e = Object.assign({}, this.state.secExpand || {}); delete ra[sid]; delete e[sid]; this.setState({ reopenActive: ra, secExpand: e, openPicker: null }); }
+  /**
+   * 장 완성 공개. **`applyCase` 가 엔진 `reveals` 에서 다시 만든다** — 이 값은
+   * 사건 데이터가 없을 때의 기본값이다 (2026-07-27 이관).
+   *
+   * `yield` 와 `statements[].y` 는 **어디서도 읽지 않는다**(죽은 필드).
+   * `terms` 는 분기가 있는데 가진 항목이 하나도 없다. 그래서 도출에서 뺐다.
+   */
   REVEALS = {
     s1: { narrow: true, yield: 'narrow', targets: ['search:annex'], statements: [{ pid: 'yujin', y: 'flavor', text: '자살할 사람이 우리를 왜 불렀을까요? 초대장은 전날 밤에야 급하게 돌았어요.' }] },
     s3: { yield: 'decoy', statements: [{ pid: 'wonyoung', y: 'path', text: '유빈 언니가 출발할 때 같이 타려 했는데, 새벽에 깨서 그런지 늦잠을 자버렸어요.' }, { pid: 'yuri', y: 'decoy', text: '아 맞다, 저 그날 새벽에 잠깐 통화한 데가 있긴 한데… 그건 이 일이랑 상관없어요.' }] },
     s4: { yield: 'path', statements: [{ pid: 'yuri', y: 'path', text: '그 소문… 저도 어디서 흘러나온 건지 알 것 같아요. 세라 언니 쪽이었죠.' }] },
   };
+  /**
+   * 격자 칸 주장 공개. **엔진 `reveals[].addClaims` 의 `target: 'grid'` 에서
+   * 나온다** (2026-07-27). 이 값은 사건 데이터가 없을 때의 기본값이다.
+   */
   CLAIM_REVEALS = {
     s3: [{ pid: 'yuri', tid: 't1', ko: '통화 중 (본인 주장)', en: 'On a call (claim)' }],
   };
