@@ -1,96 +1,90 @@
 ---
-session_date: "2026-07-27 오후"
+session_date: "2026-07-28"
 project: "노바디 라이즈 (Nobody Lies)"
-working_directory: "C:/Users/kwonkyunghun/Desktop/Nobody Lies"
-machine: "DESKTOP-JCJTAH8 (집)"
+working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
+machine: "KWONKYUNGHUN (새 기계 · OneDrive 아래)"
 ---
 
 ## Completed Work
 
-**15커밋 전부 `main` 에 푸시됨 (`c282204..e16d94c`). 작업 트리 깨끗 · 빌드 게이트 5단 초록 · 콘솔 에러 0.**
+**작업 트리 깨끗 · 빌드 게이트 5단 초록(exit 0) · 콘솔 에러 0 · 난이도 불변.**
 
-### 이번 세션이 닫은 것 — 엔진 재분리 완주
-
-논리와 **산문이 전부 사건 파일 안에** 들어왔다. 이것이 `docs/MEMORY.md`
-§오케스트레이터가 못박은 **자동 생성의 선행 조건**이었다 —
-*"산문이 스키마 밖에 있으면 산문가도 검열관도 설 자리가 없다."*
+### 이번 세션이 닫은 것 — §9-8 검사 둘 + 산문가 서식 첫 실사용
 
 ```
-✅ ① 산문을 스키마로   TERM_MAP·CLUE_MAP·REVEALS·CLAIM_REVEALS·결과문·고정물·verb
-⬜ ② 산문가            ← 서식(PROSE-BRIEF.md)까지 만들었다. 다음은 실사용
-⬜ ③ 검열관            ← 첫 조각(검증기 §9-7, 4종)은 이미 있다
+✅ ① 산문을 스키마로   (2026-07-27 완주)
+🔨 ② 산문가            서식 첫 실사용 완료 — 구멍 셋을 잡아 서식에 반영  ← 지금 여기
+⬜ ③ 검열관            §9-7 4종 + §9-8 2종. 반대 방향까지 덮었다
 ⬜ ④ campaign 작가
 ```
 
 ### 항목별
 
-1. **문서 정합성 보정** — NEXT-ACTION 이 MEMORY 와 정면 모순(「DC 가 마스터」 vs
-   「App.jsx 정본」). MEMORY 파일 지도가 **삭제된 파일**을 가리켰다(`port-ledger.json`,
-   옛 앱 52파일, `nl-` 접두사)
-2. **확보 단어 풀** → 엔진. 「decoy 3은 난이도 결정」이 **거짓**이었다 — 셋은 어느
-   경로로도 공개되지 않아 난이도 영향 0. 풀 12→9 · `everyPoolWordReachable = true`
-3. **고정물 이름표** → 엔진(`fixtures[].label`). ⚠ `schema.ts` 가 필드를 화이트리스트로
-   재구성해서 **빌드 초록인데 배포 JSON 엔 없었다** — no-op 를 실을 뻔했다
-4. **`INV_ACTIONS` 모델 충돌 해소** — 「6동사 ↔ 23구체」가 실은 **3쌍**. 23→20,
-   **난이도 불변**. 진짜 원인은 `verb` 필드 부재 → `ActionVerb` 신설. 앱 키 20, 충돌 0
-5. **`TERM_MAP`·`CLUE_MAP`·`REVEALS`·`CLAIM_REVEALS`** 전부 이관. 매번 도출값이
-   하드코딩과 같은지 실측(`identical: true`)
-6. **산문 ↔ 데이터 정합 검사 신설**(§9-7, 4종). 음성 테스트에서 **유서 버그를 그대로
-   재현해 잡는 것** 확인
-7. **피해자 조사 연결** — 트릭 허점의 두 자리 중 하나가 앱에서 막혀 있었다
-8. **`ds.__errors` 진단 완료** — 우리와 무관(번들이 데모에 `__ds_scope` 구조분해를
-   안 넣는다). 경로로 갈라 `debug` 로 접었다 → **콘솔 에러 0**
-9. **상황판 기하 실측** — 스크린샷 없이 치수로. 타임라인 띠 56 ↔ 바닥 76, **여유 20px**
-10. **`yaml-comma-check` 확장** — 여러 줄 flow mapping 을 못 보고 있었다
-11. **`PROSE-BRIEF.md`** — 사람이 Claude 웹에 붙여 넣는 산문 의뢰 서식
+1. **새 기계 세팅** — `.claude/` 가 있어 `git clone` 이 거부돼 `init`+`fetch` 로 제자리에
+   받았다. `npm install` 후 게이트 5단이 **한 번에 초록**. `npm install` 이
+   `package-lock.json` 에 `"peer": true` 표시만 지우는 무의미한 차분을 남겨 되돌렸다
+2. **§9-8 신설** — 9-7 의 거울상. **(e) 물증을 주는데 `result` 없음 → 오류**
+   (6.55 의 정반대이고 피해가 같아 등급도 같다) · **(f) 아무도 안 쓰는 물증 → 경고**
+3. **(f)의 「쓰인다」는 넷** — 논리·트릭·어휘·**읽을거리(`record`·`extra`)**.
+   마지막 것이 없으면 읽히기만 하는 물증이 전부 걸려 **경보가 소음이 된다**
+4. **경고가 셋 나왔다** — 문서는 `e_yuri_call` 하나만 알고 있었다.
+   `e_wy_call_log` 는 기록을 붙여 닫고, **`e_safes` 는 일부러 열어뒀다**(아래)
+5. **`a_ph_yuri` 결과문 + `e_yuri_call` 기록** — `PROSE-BRIEF.md` 서식으로 받았다.
+   짝인 `a_ph_wy` 를 브리프에 넣어 **문장 수·길이를 맞췄다**
+6. **서식 구멍 셋 반영** — `evidence[].record` 누락 · 합격 기준이 검증기보다 낡음 ·
+   **「같은 온도」의 맞출 대상을 안 줌**
+
+### 검증한 것
+
+| | |
+|---|---|
+| 배포 JSON 적재 | `schema.ts` 화이트리스트 통과 — 두 필드 다 온전히 실렸다 |
+| 쉼표 절단 | 없음 (문장 끝까지 살아 있다) |
+| 앱이 집는가 | 키 `phone:yuri` 가 하드코딩 `M` 에 **없어서 엔진 폴백이 실제로 발동** |
+| 난이도 | **불변** — 오라클 4 · 기대 6(밴드 4~7) · `hard` |
+| 콘솔 | 에러 0 · 의도한 신호 둘(`영수증·물자국`)만 |
 
 ## In Progress
 
-없음. 전부 커밋·푸시 완료.
+없음.
 
 ## Remaining Tasks
 
-- [ ] **🎯 산문 템플릿 실사용** — `engine/templates/PROSE-BRIEF.md` 로 `a_ph_yuri`
-      결과문부터 받아본다. 서식이 도는지 + 검증기가 무는지 한 번에 확인된다
-- [ ] **`a_ph_yuri` 가 「아무것도 없음」으로 뜬다** — 물증(`e_yuri_call`)을 주는데
-      결과문이 없다. 그 물증을 참조하는 **fact·reveal 이 0건**이라 조사가 예산만 먹는다.
-      검사 둘을 더할 자리: ① `gives` 있는데 `result` 없음 ② 아무도 안 쓰는 물증
-- [ ] **색·대비·질감** — 기하는 다 쟀다. **스크린샷이 두 기계 다 막혀 있다**
-      (창이 표시 상태가 아니면 compositing 이 없다). 창을 띄우면 바로 된다
-- [ ] **바닥 위 배치 스냅 여부** — 사용자 결정 대기 (§0.2 자동 분석 경계에 가깝다)
-- [ ] **표기 안내 문안**(changeset 9) · **장 인터루드 렌더**(데이터는 다 찼다)
+- [ ] **🎯 산문가를 나머지 산문으로 넓힌다** — 다음 후보는 **진술 원문 5명**(가장 크고
+      규칙이 가장 많다: 지문 전원/전무 · 말투 구분 · 불안 편중 금지)과 **장 서사 5**.
+      **한 번에 받지 말고 한 인물씩** 받아 검증기에 물린다
+- [ ] **`e_safes` 를 무엇으로 만들지** — 9-8f 경고 상주. **의도한 것이다**: 금고가
+      ① 잠긴 금고 ② 유서의 두 번째 경로 ③ 다른 것 중 미결이고, **그 전에 기록을 쓰면
+      결정을 문장으로 먼저 내려버린다.** YAML 에 주석으로 박아뒀다
+- [ ] **`a_ph_yuri` 에 `clues` 를 붙일지** — 짝 `a_ph_wy` 는 프로필 한 줄을 남기는데
+      이쪽은 안 남긴다. 대칭으로는 맞지만 **화면 동작 변경**이라 손대지 않았다
+- [ ] **색·대비·질감** — 기하는 다 쟀다. **스크린샷이 세 기계째 막혀 있다**
+- [ ] **바닥 위 배치 스냅 여부** · **표기 안내 문안**(changeset 9) · **장 인터루드 렌더**
 
 ## Blockers / Issues
 
-- ⚠️ **「모델이 다르다」고 세 번 오진했고 세 번 다 틀렸다** — `INV_ACTIONS`(실은 3쌍) ·
-  `CLUE_MAP`(얹을 자리를 잘못 고름) · `CLAIM_REVEALS`(`target` 값 하나 모자람).
-  **못 옮긴다가 아니라 자리를 잘못 골랐던 것**
-- ⚠️ **검사기가 있다고 그 부류가 잡히는 건 아니다** — 쉼표 절단이 07-25·26·27
-  **세 번** 나왔고 07-26 에 만든 검사기가 07-27 것을 놓쳤다(여러 줄 flow mapping)
-- ⚠️ **`doInvestigate` 는 저장에 쓴다** — 검증 중 저장이 더럽혀져 「고친 코드가
-  안 고쳐진 것처럼」 보였다. 상태를 쓰는 함수를 부르면 그 자리에서 원복
+- ⚠️ **검사를 만들면 아는 것보다 많이 나온다** — (f)가 문서가 아는 1건이 아니라 3건을
+  물었다. 07-25 우측 패널 3건이 45건이었던 것과 같은 형태다. **세기 전에는 모른다**
+- ⚠️ **서식이 검증기보다 낡는다** — 첫 실사용에서 바로 드러났다. `verifier.ts` 에 검사를
+  더하면 `PROSE-BRIEF.md` 합격 기준도 **같이** 고친다
+- ⚠️ **「같은 온도로 쓰라」는 맞출 대상이 브리프에 있어야 지켜진다** — 없으면 산문가가
+  온도를 혼자 정하고, 한쪽이 길어지는 순간 그게 **유용도 표시**다(절대 규칙 위반)
+- ⚠️ **`doInvestigate` 는 저장에 쓴다** — 그래서 브라우저에서 조사를 실행하지 않고
+  서빙되는 JSON 과 키 도출을 읽어 확인했다
 
 ## Notes for Next Session
 
-- **기계를 옮기면 `git pull` 다음 `npm install`.** 07-24 이후 `js-yaml` 이 늘어
-  `npm run verify` 가 `ERR_MODULE_NOT_FOUND` 로 죽어 있었다
+- **작업 기계가 넷이 됐다.** 이 기계(`KWONKYUNGHUN`)는 **OneDrive 아래**에 있다
+- **기계를 옮기면 `git pull` 다음 `npm install`** (07-24 이후 `js-yaml` 이 늘었다)
 - **`app/public/cases/mountain-lodge.json` 은 추적 안 된다** — `npm run case` 산출물이고
-  `dev`·`build` 둘 다 앞에서 굽는다. 새 클론이어도 문제없다
-- **Max 구독 ≠ API 과금.** 산문가는 빌드타임이라 비용이 *사건 개수*에 비례
-  (Opus 5 기준 사건 1건 ≈ $0.65). **가격보다 검열관 통과율로 모델을 고른다**
+  `dev`·`build` 둘 다 앞에서 굽는다
 - 이 저장소는 **직접 main 푸시** (feature 브랜치·PR 없음)
 
 ## Files Modified
 
-- `engine/src/types.ts` — `ActionVerb`·`ProfileSlot`·`ActionClue`·`clues`·
-  `fixtures[].label`·`addClaims.target:'grid'`+`slot`
-- `engine/src/schema.ts` — 위 필드 전부 파싱·검증 (**화이트리스트라 여기 안 넣으면 죽는다**)
-- `engine/src/verifier.ts` — §9-7 산문↔데이터 정합 4종 · 지목 불가 조사 · 허점 도달성
-- `engine/cases/mountain-lodge.yaml` — 조사 23→20 · `verb` 20 · `clues` 12 ·
-  reveals 내용 이관 · 고정물 라벨 · `a_victim_bel` target+result
-- `app/src/App.jsx` — `applyCase` 도출(풀·TERM_MAP·CLUE_MAP·REVEALS·CLAIM_REVEALS·
-  `CASE_ACTIONS`·`VICTIM_TARGET`) · `resultFor` 엔진 폴백 · `pname` 피해자
-- `app/src/main.jsx` — `reportDsErrors()` 경로 분리
-- `scripts/yaml-comma-check.mjs` — 여러 줄 flow mapping
-- `engine/templates/PROSE-BRIEF.md` — **신설**
-- `docs/MEMORY.md` · `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md`
+- `engine/src/verifier.ts` — **§9-8 신설** (e 오류 · f 경고)
+- `engine/cases/mountain-lodge.yaml` — `a_ph_yuri.result` · `e_yuri_call.record` ·
+  `e_wy_call_log.record` · `e_safes` 에 「일부러 비워둔다」 주석
+- `engine/templates/PROSE-BRIEF.md` — 짝 포함 규칙 · `evidence[].record` · 9-8 합격 기준
+- `docs/MEMORY.md` — §반대 방향 신설 · 🔴 미해결 절을 ✅ 로 · 현재 단계 갱신
+- `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md`
