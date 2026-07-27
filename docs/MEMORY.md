@@ -388,6 +388,9 @@ export 가 옛 마스터에서 뽑혀 `DC-SYNC-CHANGESET` 1~7 + 예산이 전부
 
 ## 이식 대조기 (2026-07-26) — 끝났다고 말하기 전에 돌린다
 
+> ⏭ **이 절은 장부 시절의 기록이다.** 장부는 앱 교체 후 **버렸고** 지금은
+> 프로토타입과 `App.jsx` 를 직접 비교한다 — 아래 §그리고 장부를 버렸다.
+
 ```bash
 npm run port-check
 ```
@@ -602,10 +605,12 @@ docs/         설계 정본
   MEMORY.md                이 파일
   NEXT-ACTION.md           다음 세션이 가장 먼저 읽는 파일
   PORT-AUDIT.md            2026-07-25 전수 대조 45건의 전 과정
-  port-ledger.json         ★ 이식 장부 — 분기·반복 326개의 상태 (port-check 가 읽는다)
+  ※ port-ledger.json 은 **삭제됐다** (앱 교체 후). 대조기가 프로토타입과
+    App.jsx 를 직접 비교하므로 사람이 적는 장부가 필요 없어졌다 — 아래 §장부를 버렸다
 
 scripts/
-  port-check.mjs           이식 대조기. `npm run port-check`
+  port-check.mjs           이식 대조기. `npm run port-check` (APP_ONLY · staleAllow)
+  yaml-comma-check.mjs     YAML flow mapping 쉼표 절단 검사. `npm run yaml-check`
 
 engine/       사건 검증기 (TypeScript). 이식 원본이지 앱 코드가 아니다
   src/types.ts             사건 데이터 스키마 정본
@@ -629,23 +634,23 @@ prototype/    Claude Design 프로토타입 (DC 런타임). 배포 대상 아님
   support.js               DC 런타임. 수정 금지
   playtest/                Nobody Lies (노바디 라이즈).html — 단일 파일 export 3.6MB
   PROTOTYPE-NOTES.md       프로토타입 인계 노트 (2026-07-24 핸드오프본으로 교체)
-  DC-SYNC-CHANGESET.md     ★ DC 툴에 아직 안 들어간 데이터 수정 5건 (살아 있는 TODO)
+  DC-SYNC-CHANGESET.md     **닫힌 파일** (2026-07-27). export 동결로 12건 전부 반영
+                           불필요 — 9번(표기 안내 문안)만 앱 할 일. 기록으로 남긴다
 
 design/       아이콘 탐색(32턴, 건메탈 확정) · 비교 스크랩 · 세션 캡처
 
-app/          프로덕션 — 2026-07-25 착수. Vite + React 19 + TS
-  src/case/       사건 로드 · 캠페인 카탈로그
-  src/state/      저장소 3분리 (Case / PlayerAnnotations / CaseProgress)
-  src/shell/      자유 진행 셸 · 우측 디테일 패널
-  src/screens/    홈 · 사건 상세 · 프롤로그 · 브리핑 · 진술 정독 · 보고서 · 개요 · 진술 목록
-  src/components/ Reader(프롤로그·인터루드 공용) · TopBar · Mark
-  src/text/josa   한국어 조사 처리
-  src/styles/     app.css(nl- 접두사) + vector/(디자인 시스템 사본)
+app/          프로덕션 — DC React export 가 앱이다 (2026-07-26 교체). Vite + React 19
+  src/App.jsx     ★ **정본.** 단일 클래스 — 화면 전부 + GEO 평면도 엔진 + 상황판
+  src/main.jsx    React 를 전역에 심고 DS 번들 로드 · 번들 자기 마운트 차단
+  src/styles.css  폰트 · 키프레임 · `pb-*` 만 (스타일은 인라인 우선 · `S()` 로 감싼다)
+  public/_ds/     Vector Design System 번들 — **여기만 여전히 export 산물이다**
+  public/cases/   `mountain-lodge.json` ← `npm run case` 가 엔진 YAML 에서 굽는다
 ```
 
-**앱 클래스는 전부 `nl-` 접두사다.** Vector 가 `.detail`·`.chip` 같은 일반적인 이름을
-광범위하게 점유해서, 접두사가 없으면 조용히 남의 스타일을 먹는다 (실제로 사건 상세
-화면이 `.detail { display:flex }` 때문에 가로로 무너진 적이 있다).
+> ⚠ **옛 손이식 앱은 삭제됐다** (`82f764a`, 52파일). `src/case/`·`src/state/`·
+> `src/shell/`·`src/screens/`·`src/components/`·`src/text/josa`·`src/styles/` 와
+> **`nl-` 접두사 관례는 전부 없어졌다.** 같은 계산이 `App.jsx` 안에 있다 —
+> 엔진을 다시 뺄 때 그 자리를 되살린다.
 
 ---
 
