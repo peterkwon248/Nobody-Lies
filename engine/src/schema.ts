@@ -405,8 +405,19 @@ export function parseCase(raw: unknown, source: string): Case {
       if (!factIds.has(f)) p.add(`${at}.facts`, `사실 '${f}' 가 없다`)
     for (const a of arr(r?.actions))
       if (!actionIds.has(a)) p.add(`${at}.actions`, `조사 '${a}' 가 없다`)
-    for (const cl of arr(r?.add_claims))
-      if (!personIds.has(cl?.speaker)) p.add(`${at}.add_claims`, `인물 '${cl?.speaker}' 가 없다`)
+    arr(r?.add_claims).forEach((cl: Raw, ci: number) => {
+      const cat = `${at}.add_claims[${ci}]`
+      if (!personIds.has(cl?.speaker)) p.add(cat, `인물 '${cl?.speaker}' 가 없다`)
+      const tg = cl?.target ?? 'statement'
+      if (tg !== 'statement' && tg !== 'grid')
+        p.add(`${cat}.target`, `'statement' 또는 'grid' 여야 한다 ('${tg}')`)
+      // 격자는 칸이다 — 어느 시간대인지 없으면 **채울 자리가 없어 조용히 사라진다**
+      if (tg === 'grid') {
+        if (!cl?.slot) p.add(`${cat}.slot`, `target: grid 는 slot 이 필수다 — 격자의 열이 시간대다`)
+        else if (slots.size && !slots.has(cl.slot as string))
+          p.add(`${cat}.slot`, `slots 에 없는 슬롯 '${cl.slot}'`)
+      }
+    })
     for (const s of arr(r?.narrows_window))
       if (slots.size && !slots.has(s)) p.add(`${at}.narrows_window`, `slots 에 없는 슬롯 '${s}'`)
     return {
@@ -416,7 +427,8 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(r?.narrows_window ? { narrowsWindow: r.narrows_window } : {}),
       ...(r?.add_claims ? { addClaims: arr(r.add_claims).map((cl: Raw) => ({
         speaker: cl?.speaker, content: cl?.content, target: cl?.target ?? 'statement',
-      })) } : {}),
+        ...(cl?.slot ? { slot: cl.slot } : {}),
+      })) as Reveal['addClaims'] } : {}),
       ...(r?.narration ? { narration: r.narration } : {}),
     }
   })

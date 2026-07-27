@@ -563,7 +563,29 @@ export type Reveal = {
   facts?: FactId[]
   actions?: string[]
   narrowsWindow?: [SlotId, SlotId]
-  addClaims?: { speaker: PersonId; content: string; target: 'statement' }[]
+  /**
+   * 장 완성·조사로 **새로 열리는 주장.** 도착하는 표면이 둘이다.
+   *
+   * | `target` | 어디에 | 문장 길이 |
+   * |---|---|---|
+   * | `statement` | 그 인물의 진술에 문단이 하나 붙는다 | 말한 그대로 |
+   * | `grid` | 진술 격자의 `(인물, slot)` 칸이 채워진다 | **짧은 라벨** |
+   *
+   * 같은 사건이 두 표면에 다 뜨기도 한다 — 오나경의 새벽 통화가 진술에서는
+   * 「새벽에 다인 언니가 저한테도 전화를 했었어요」로, 격자에서는
+   * 「통화 중 (본인 주장)」으로 뜬다. **격자는 칸이라 길면 안 들어간다.**
+   *
+   * `grid` 는 `slot` 이 필수다 — 격자의 열이 시간대이기 때문이다.
+   * 2026-07-27 신설. 그전엔 `target: 'statement'` 하나뿐이라 **진술만 늘리고
+   * 격자는 못 건드렸다**(앱 `CLAIM_REVEALS` 가 엔진 밖에 남아 있던 이유).
+   */
+  addClaims?: {
+    speaker: PersonId
+    content: string
+    target: 'statement' | 'grid'
+    /** `target: 'grid'` 일 때 필수. 격자의 어느 시간대 칸인가 */
+    slot?: SlotId
+  }[]
   /** 공개 시 함께 뜨는 서사 조각 */
   narration?: string
   /** 이 정보가 도착하는 화면. 배지·라우팅용 */
