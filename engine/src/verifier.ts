@@ -719,6 +719,79 @@ export function verify(c: Case): VerifyResult {
       warnings.push(`조사 '${a.label}' 에 pair 와 target 이 둘 다 있다 — 실행 지점이 둘이다`)
   }
 
+  /**
+   * 9-7. **산문 ↔ 데이터 정합** (2026-07-27 신설)
+   *
+   * `MEMORY.md` §오케스트레이터가 「이 역할이 비어 있다」고 적어둔 자리다.
+   * 비어 있던 동안 세 건이 살아서 나갔다 — 유서가 「찾았다」는데 단어를 안 준
+   * 것, 관계 도식이 답을 그린 것, 결말이 옛 트릭을 서술한 것.
+   *
+   * 뿌리는 하나다: **문장과 데이터가 다른 파일에 있으면 어긋나도 아무도 모른다.**
+   * 이제 한 파일에 있으므로 기계가 대조한다.
+   *
+   * 이것이 곧 **산문가(LLM)의 합격 기준**이다 — 생성된 문장이 여기를 통과해야
+   * 사건에 들어간다. 사람이 쓴 문장에도 같은 자를 댄다.
+   */
+  {
+    const words = (c.terms ?? []).map((t) => t.word).sort((a, b) => b.length - a.length)
+    const seeded = new Set(c.seedTerms ?? [])
+    const evById = new Map(c.evidence.map((e) => [e.id, e]))
+    const termsOf = (ids: string[]) => {
+      const out = new Set<string>()
+      for (const id of ids) for (const w of evById.get(id)?.yieldsTerms ?? []) out.add(w)
+      return out
+    }
+    const grantedAnywhere = new Set<string>([
+      ...seeded,
+      ...c.actions.flatMap((a) => [...termsOf(a.gives)]),
+      ...c.evidence.filter((e) => e.atScene).flatMap((e) => e.yieldsTerms ?? []),
+    ])
+
+    // (a) 어디서도 얻을 수 없는 단어 — 사전에는 있는데 손에 들어올 길이 없다.
+    //     앱에 죽은 풀 항목 셋이 아이콘·문안까지 갖춘 채 살아 보였던 그 부류다
+    for (const w of words)
+      if (!grantedAnywhere.has(w))
+        errors.push(`확보 단어 '${w}' 를 얻을 길이 없다 — 씨앗도 아니고 주는 조사도 없다`)
+
+    // (b) 프롤로그는 **새 정보 0** 이다. 브리핑·진술에 이미 있는 것만 다룬다.
+    //     분위기 한 줄이 조사로 얻어야 할 것을 무료로 풀면 난이도가 무너진다
+    for (const [i, p] of (c.prologue ?? []).entries()) {
+      const t = typeof p === 'string' ? p : p?.ko ?? ''
+      const leaked = words.filter((w) => !seeded.has(w) && t.includes(w))
+      if (leaked.length)
+        errors.push(`프롤로그 ${i + 1}번째 줄이 조사로 얻을 단어를 말한다: ${leaked.join('·')}`)
+    }
+
+    // (c) 조사의 문장이 **그 조사가 주지 않는 단어**를 말한다 — 유서 버그의 형태다.
+    //     플레이어는 문장에서 그 단어를 보는데 은행에는 안 들어온다.
+    //     씨앗은 이미 손에 있으므로 언급해도 된다. 다른 조사가 주는 단어를
+    //     가리키는 것은 정당할 수도 있어(이미 확인된 것을 되짚기) 경고로 둔다
+    for (const a of c.actions) {
+      const own = termsOf(a.gives)
+      const text = [a.result?.title?.ko, a.result?.body?.ko].filter(Boolean).join(' ')
+      if (!text) continue
+      const ghost = words.filter((w) => !seeded.has(w) && !own.has(w) && text.includes(w))
+      if (ghost.length)
+        warnings.push(
+          `조사 '${a.label}' 의 결과문이 이 조사가 주지 않는 단어를 말한다: ${ghost.join('·')}`,
+        )
+    }
+
+    // (d) 조사에 걸린 서사도 같은 자를 댄다
+    for (const r of c.reveals) {
+      const tr = r.trigger
+      if (!r.narration || tr.on !== 'action') continue
+      const a = c.actions.find((x) => x.id === tr.actionId)
+      if (!a) continue
+      const own = termsOf(a.gives)
+      const ghost = words.filter((w) => !seeded.has(w) && !own.has(w) && r.narration!.includes(w))
+      if (ghost.length)
+        warnings.push(
+          `조사 '${a.label}' 의 서사가 이 조사가 주지 않는 단어를 말한다: ${ghost.join('·')}`,
+        )
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
