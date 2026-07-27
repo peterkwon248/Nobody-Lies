@@ -43,6 +43,8 @@ const FACT_KINDS = new Set([
 const YIELDS = new Set(['solution', 'redherring', 'exclusion', 'empty'])
 /** 조사 갈래. 앱 `INV_ACTIONS` 여섯과 같은 집합이다 (`types.ts` `ActionVerb`) */
 const ACTION_VERBS = new Set(['belongings', 'search', 'phone', 'alibi', 'autopsy', 'fixture'])
+/** 프로필 카드의 세 칸. 유죄 조건 셋과 같다 (`types.ts` `ProfileSlot`) */
+const PROFILE_SLOTS = new Set(['motive', 'means', 'opportunity'])
 const REVEAL_YIELDS = new Set(['path', 'narrow', 'decoy', 'flavor'])
 const SURFACES = new Set(['statement', 'map', 'graph', 'suspect', 'overview'])
 const HIDDEN_ROLES = new Set([
@@ -302,6 +304,15 @@ export function parseCase(raw: unknown, source: string): Case {
     if (!YIELDS.has(a?.yield)) p.add(`${at}.yield`, `알 수 없는 값 '${a?.yield}'`)
     if (a?.verb !== undefined && !ACTION_VERBS.has(a.verb))
       p.add(`${at}.verb`, `알 수 없는 조사 갈래 '${a?.verb}'`)
+    arr(a?.clues).forEach((cl: Raw, ci: number) => {
+      const cat = `${at}.clues[${ci}]`
+      if (!PROFILE_SLOTS.has(cl?.slot as string))
+        p.add(`${cat}.slot`, `프로필 칸이 아니다 '${cl?.slot}' (motive · means · opportunity)`)
+      if (!text(cl?.text)) p.add(cat, 'text 가 없다')
+      // 프로필 카드는 **용의자** 것이다. 피해자에겐 카드가 없으므로 붙일 자리도 없다
+      if (!suspectIds.has(cl?.person as string))
+        p.add(`${cat}.person`, `용의자가 아니다 '${cl?.person}' — 프로필 칸이 없다`)
+    })
     for (const e of arr(a?.gives))
       if (!evidenceIds.has(e)) p.add(`${at}.gives`, `물증 '${e}' 가 없다`)
     for (const b of arr(a?.boosted_by))
@@ -310,6 +321,9 @@ export function parseCase(raw: unknown, source: string): Case {
       id: a?.id, label: a?.label, cost: a?.cost, gives: arr(a?.gives),
       salience: a?.salience, yield: a?.yield,
       ...(a?.verb ? { verb: a.verb as Action['verb'] } : {}),
+      ...(a?.clues ? { clues: arr(a.clues).map((cl: Raw) => ({
+        person: cl.person, slot: cl.slot, text: text(cl.text) ?? { ko: '' },
+      })) as Action['clues'] } : {}),
       ...(a?.boosted_by ? { boostedBy: a.boosted_by } : {}),
       ...(a?.available_after !== undefined ? { availableAfter: a.available_after } : {}),
       ...(a?.pair ? { pair: arr(a.pair) as [string, string] } : {}),

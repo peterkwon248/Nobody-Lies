@@ -299,11 +299,40 @@ export type Evidence = {
 export type ActionVerb =
   | 'belongings' | 'search' | 'phone' | 'alibi' | 'autopsy' | 'fixture'
 
+/**
+ * 용의자 프로필의 세 칸. 조사가 여기에 한 줄씩 꽂는다.
+ *
+ * `facts` 의 `kind` 와 **다른 것이다.** `kind` 는 검증기가 유죄를 따지는
+ * 논리 명제이고(`context`·`identity`·`no_opportunity` 까지 있다), 이쪽은
+ * **플레이어가 보는 카드의 칸**이다. 셋뿐인 이유는 유죄 조건이 셋이라서다.
+ */
+export type ProfileSlot = 'motive' | 'means' | 'opportunity'
+
+/**
+ * 조사가 프로필에 남기는 한 줄.
+ *
+ * **조사 대상과 다른 사람에게 붙을 수 있다** — 백리원의 소지품에서 문세라에
+ * 관한 것이 나오는 식이다. 그래서 `person` 을 명시한다.
+ *
+ * ★ 3인칭 관찰만 적는다 ★ 「~이므로 범인이다」 금지. 프로필의 유죄 판정은
+ * 절대 규칙이 금지한 것이고, 이 칸이 그 규칙을 어기기 가장 쉬운 자리다.
+ */
+export type ActionClue = { person: PersonId; slot: ProfileSlot; text: Text }
+
 export type Action = {
   id: string
   label: string
   /** 조사 갈래. 앱 키 = `verb:target.id` */
   verb?: ActionVerb
+  /**
+   * 이 조사가 용의자 프로필에 남기는 줄들. 앱 `CLUE_MAP` 의 정본이다
+   * (2026-07-27 신설).
+   *
+   * `gives` 와 층이 다르다 — `gives` 는 **논리**(물증 id, 검증기가 읽는다),
+   * 이쪽은 **화면**(프로필 카드에 뜨는 문장)이다. 같은 조사가 물증은 하나
+   * 주면서 프로필에는 두 사람 몫을 남길 수 있다.
+   */
+  clues?: ActionClue[]
   cost: number
   gives: EvidenceId[]
   salience: number

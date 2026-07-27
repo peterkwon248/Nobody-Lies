@@ -202,6 +202,11 @@ export default class App extends React.Component {
     { id: 'yuri', name: '오나경', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrived AM', jobKo: '가수', jobEn: 'Singer', claimKo: '장을 보고 유빈과 함께 뒤늦게 도착했다고 진술.', ini: '나', color: '#4CB782', c1: '#4CB782', c2: '#2D9CDB' },
     { id: 'wonyoung', name: '백리원', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'Absent, left late', jobKo: '아이돌', jobEn: 'Idol', claimKo: '새벽 3시 피해자의 전화를 받고 늦잠 후 늦게 출발했다고 진술.', ini: '리', color: '#F2C94C', c1: '#F2C94C', c2: '#F2994A' },
   ];
+  /**
+   * 프로필 단서. **`applyCase` 가 엔진 `action.clues` 에서 다시 만든다** —
+   * 이 값은 사건 데이터가 없을 때의 기본값이다. 2026-07-27 이관 당시 도출값이
+   * 이것과 **정확히 같음을 실측했다**(9키 · 12항목).
+   */
   CLUE_MAP = {
     'search:annex': [{ p: 'sakura', slot: 'motive', ko: '마약 유통망 \u2018김선생\u2019 거래 기록 (별채 대포폰)' }],
     'belongings:sakura': [{ p: 'sakura', slot: 'means', ko: '위장용 유서 초안·금고 열쇠' }],
@@ -521,6 +526,26 @@ export default class App extends React.Component {
         console.warn('[case] 조사가 주는 단어가 풀에 없어 빠졌다:', [...skipped].join(' · '))
       }
       this.CASE_ACTIONS = byKey
+
+      /**
+       * 프로필 단서 (`CLUE_MAP`). 2026-07-27 이관.
+       *
+       * 엔진 `action.clues` → `{ 앱키: [{p, slot, ko}] }`. 이 표는 오래
+       * **「모델이 달라 못 옮긴다」**로 남아 있었는데, 그건 `facts` 로 옮기려
+       * 했기 때문이다. `facts` 는 검증기가 유죄를 따지는 **논리 명제**이고
+       * 이 표는 **화면에 뜨는 문장**이라 층이 다르다 — 한 조사가 물증은 하나
+       * 주면서 프로필에는 두 사람 몫을 남기기도 한다. 그래서 `facts` 에
+       * 얹지 않고 조사에 **별도 필드**로 달았다.
+       *
+       * 영문은 아직 없다(원래 `ko` 만 있던 표다). 스키마는 `Text` 라 번역이
+       * 들어오면 그대로 채워진다.
+       */
+      const clueMap = {}
+      for (const [k, a] of Object.entries(byKey)) {
+        if (!a.clues?.length) continue
+        clueMap[k] = a.clues.map((cl) => ({ p: cl.person, slot: cl.slot, ko: ko(cl.text) }))
+      }
+      if (Object.keys(clueMap).length) this.CLUE_MAP = clueMap
 
       /**
        * **피해자를 조사 대상으로 세운다** (2026-07-27).

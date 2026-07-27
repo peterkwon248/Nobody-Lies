@@ -600,6 +600,8 @@ facts:
 actions:
   - id: a_yuri
     label: 소지품 검사 · 오나경
+    clues:
+      - { person: yuri, slot: motive, text: "약물 투약 흔적 (협박 정황)" }
     verb: belongings
     cost: 1
     gives: [e_yuri_threat]
@@ -612,6 +614,8 @@ actions:
     target: { kind: person, id: yuri }
   - id: a_yena
     label: 소지품 검사 · 서지안
+    clues:
+      - { person: yena, slot: motive, text: "유통 경로 추적 메모" }
     verb: belongings
     cost: 1
     gives: [e_yena_info]
@@ -624,6 +628,8 @@ actions:
     target: { kind: person, id: yena }
   - id: a_yujin
     label: 소지품 검사 · 한유빈
+    clues:
+      - { person: yujin, slot: motive, text: "다인 의심 메모" }
     verb: belongings
     cost: 1
     gives: [e_yujin_patch]
@@ -656,6 +662,9 @@ actions:
   #   두 경로가 같은 고정물에 걸려 있어 앱 입도에서는 애초에 하나였다.
   - id: a_wy
     label: 소지품 검사 · 백리원
+    clues:
+      - { person: wonyoung, slot: motive, text: "‘김선생’ 추적 정황" }
+      - { person: sakura, slot: motive, text: "추적 중이던 번호와 일치하는 연락처" }
     verb: belongings
     cost: 1
     gives: [e_wy_text]
@@ -669,6 +678,8 @@ actions:
     target: { kind: person, id: wonyoung }
   - id: a_sakura
     label: 소지품 검사 · 문세라
+    clues:
+      - { person: sakura, slot: means, text: "위장용 유서 초안·금고 열쇠" }
     verb: belongings
     cost: 1
     gives: [e_note, e_key]
@@ -682,6 +693,8 @@ actions:
     target: { kind: person, id: sakura }
   - id: a_annex
     label: 별채 수색
+    clues:
+      - { person: sakura, slot: motive, text: "마약 유통망 ‘김선생’ 거래 기록 (별채 대포폰)" }
     verb: search
     cost: 1
     gives: [e_burner, e_safes]
@@ -706,6 +719,8 @@ actions:
     target: { kind: person, id: yuri }
   - id: a_ph_wy
     label: 통화내역 조회 · 백리원
+    clues:
+      - { person: wonyoung, slot: opportunity, text: "새벽 3시 통화·기지국상 원거리" }
     verb: phone
     cost: 1
     gives: [e_wy_call_log]
@@ -748,6 +763,9 @@ actions:
   # 알리바이 대조
   - id: a_alibi_yy
     label: 알리바이 대조 · 서지안 × 한유빈
+    clues:
+      - { person: yena, slot: opportunity, text: "도착 시각 상호 일치" }
+      - { person: yujin, slot: opportunity, text: "지안과 도착 시각 일치" }
     verb: alibi
     # 관계 도식에서 이 둘을 고르면 열린다. 매달 지점이 없어 target 이 아니다
     pair: [yena, yujin]
@@ -761,6 +779,9 @@ actions:
       body:  { ko: "지안과 유빈의 도착 시각이 서로 일치한다. 두 사람 모두 오전에야 도착했다.", en: "Ji-an and Yu-bin’s arrival times corroborate - both arrived only in the morning." }
   - id: a_alibi_yr
     label: 알리바이 대조 · 오나경 × 한유빈
+    clues:
+      - { person: yuri, slot: opportunity, text: "동선 일치 — 사망 시간대 접근 불가" }
+      - { person: yujin, slot: opportunity, text: "지안·나경과 동선 일치" }
     verb: alibi
     pair: [yuri, yujin]
     cost: 1
