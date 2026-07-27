@@ -345,6 +345,11 @@ export default class App extends React.Component {
     '치정': { fk: '진술 정황', dk: '진술에 관련 정황이 있었다.', fe: 'Statement context', de: 'Related context appeared in statements.' },
   };
   termIconPath(w) { return this.ICONS[w] || 'M4 4h8v8H4z'; }
+  /**
+   * 어느 조사가 어느 단어를 주는가. **`applyCase` 가 엔진에서 다시 만든다**
+   * (조사 → `gives` → 물증 → `yieldsTerms`) — 이 값은 사건 데이터가 없을 때의
+   * 기본값이다. 2026-07-27 이관 당시 도출값이 이것과 **정확히 같음을 실측했다.**
+   */
   TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:yuri': ['마약', '치정'] };
   PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '다인의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
   /**
@@ -462,6 +467,52 @@ export default class App extends React.Component {
     if (pool.length) this.COLLECTED_POOL = pool
     if (dropped.length && typeof console !== 'undefined') {
       console.warn('[case] 엔진 확보 단어가 앱에 없어 풀에서 빠졌다:', dropped.join(' · '))
+    }
+
+    /**
+     * 어느 조사가 어느 단어를 주는가 (`TERM_MAP`). 2026-07-27 이관.
+     *
+     * 경로는 **조사 → `gives` → 물증 → `yieldsTerms`** 다. 앱 키는
+     * `verb:target.id` 이고 그 `verb` 가 2026-07-27 에 엔진에 생겼다 —
+     * 그전에는 동사가 `label` 산문 접두에만 있어 이을 수가 없었다.
+     *
+     * 거르는 것 둘:
+     * - **풀에 없는 단어** — `영수증`·`물자국`. 엔진 전용 물증이고 앱에 표시
+     *   정보가 없다. 넣어도 읽는 쪽이 전부 풀로 거르므로 죽은 값이 된다
+     * - **씨앗 단어**(`SEED_TERMS`) — 진술 정독으로 이미 무조건 주어진다.
+     *   여기 적으면 조사 기록에 **「발견」 배지만 거짓으로 뜬다**(이미 가진
+     *   단어를 새로 찾았다고 말하는 것이다)
+     *
+     * 두 필터를 거치면 결과가 **앱 하드코딩과 정확히 같다** — 이관이지
+     * 동작 변경이 아니다. 실측으로 확인했다.
+     */
+    if (c.actions?.length && c.evidence?.length) {
+      const yields = {}
+      for (const e of c.evidence) if (e.yieldsTerms?.length) yields[e.id] = e.yieldsTerms
+      const inPool = new Set(this.COLLECTED_POOL)
+      const seeds = new Set(this.SEED_TERMS || [])
+      const map = {}
+      const skipped = new Set()
+      for (const a of c.actions) {
+        if (!a.verb) continue
+        const k = a.pair
+          ? a.verb + ':' + a.pair.slice().sort().join('+')
+          : a.target ? a.verb + ':' + a.target.id : null
+        if (!k) continue
+        const words = []
+        for (const eid of a.gives ?? []) {
+          for (const w of yields[eid] ?? []) {
+            if (!inPool.has(w)) { skipped.add(w); continue }
+            if (seeds.has(w)) continue
+            if (!words.includes(w)) words.push(w)
+          }
+        }
+        if (words.length) map[k] = words
+      }
+      if (Object.keys(map).length) this.TERM_MAP = map
+      if (skipped.size && typeof console !== 'undefined') {
+        console.warn('[case] 조사가 주는 단어가 풀에 없어 빠졌다:', [...skipped].join(' · '))
+      }
     }
 
     // 인물 — **표시 속성(색·이니셜·역할·좌표)은 건드리지 않는다**
