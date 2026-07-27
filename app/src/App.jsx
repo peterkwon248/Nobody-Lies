@@ -493,12 +493,19 @@ export default class App extends React.Component {
       const seeds = new Set(this.SEED_TERMS || [])
       const map = {}
       const skipped = new Set()
+      /**
+       * 앱 키(`verb:대상`) → 엔진 조사. `resultFor` 폴백과 조사 대상 목록이 읽는다.
+       * 키를 만들 수 없는 조사(`target` 도 `pair` 도 없는 것)는 **앱이 지목할 수
+       * 없다** — 검증기가 2026-07-27부터 경고한다.
+       */
+      const byKey = {}
       for (const a of c.actions) {
         if (!a.verb) continue
         const k = a.pair
           ? a.verb + ':' + a.pair.slice().sort().join('+')
           : a.target ? a.verb + ':' + a.target.id : null
         if (!k) continue
+        byKey[k] = a
         const words = []
         for (const eid of a.gives ?? []) {
           for (const w of yields[eid] ?? []) {
@@ -512,6 +519,22 @@ export default class App extends React.Component {
       if (Object.keys(map).length) this.TERM_MAP = map
       if (skipped.size && typeof console !== 'undefined') {
         console.warn('[case] 조사가 주는 단어가 풀에 없어 빠졌다:', [...skipped].join(' · '))
+      }
+      this.CASE_ACTIONS = byKey
+
+      /**
+       * **피해자를 조사 대상으로 세운다** (2026-07-27).
+       *
+       * 앱의 인물 대상은 `PEOPLE`(용의자 5)뿐이었다. 엔진 `a_victim_bel` 이
+       * 피해자를 겨누는데 앱에 그 칸이 없어서 **트릭 허점이 심긴 두 자리 중
+       * 하나(`e_victim_phone`)가 막혀 있었다.**
+       *
+       * `PEOPLE` 에 넣지 않는다 — 그 배열은 용의자 카드·격자·관계도가 전부
+       * 읽는다. 피해자가 거기 들어가면 **용의자로 보인다.** 조사 대상 목록에만
+       * 세운다.
+       */
+      if (c.victim && c.victimProfile?.name) {
+        this.VICTIM_TARGET = { id: c.victim, name: c.victimProfile.name }
       }
     }
 
@@ -1283,7 +1306,10 @@ export default class App extends React.Component {
       prevStyle: { opacity: this.state.readIdx > 0 ? 1 : 0.35, pointerEvents: this.state.readIdx > 0 ? 'auto' : 'none' },
       dots: this.PEOPLE.map((pp, i) => ({ onClick: () => this.gotoRead(i), style: { width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer', background: i === this.state.readIdx ? 'var(--accent)' : (i < this.state.readIdx ? 'var(--fg-3)' : 'var(--border-strong)') } })) };
   }
-  pname(id) { const p = this.PEOPLE.find(x => x.id === id); if (p) return p.name; const pl = this.PLACES.find(x => x.id === id); if (pl) return this.state.lang === 'ko' ? pl.ko : pl.en; const fx = (this.FIXTURES || []).find(x => x.id === id); if (fx) return this.state.lang === 'ko' ? fx.ko : fx.en; return id; }
+  // 피해자는 `PEOPLE` 에 없다(용의자 배열이다). 여기서만 이름을 붙인다 —
+  // 조사 기록·결과 카드·우측 패널이 전부 이 함수를 지나므로 한 자리면 된다.
+  // 빠뜨리면 화면에 `chaewon` 이 그대로 찍힌다 (2026-07-27에 실제로 그랬다)
+  pname(id) { const p = this.PEOPLE.find(x => x.id === id); if (p) return p.name; const v = this.VICTIM_TARGET; if (v && v.id === id) return v.name; const pl = this.PLACES.find(x => x.id === id); if (pl) return this.state.lang === 'ko' ? pl.ko : pl.en; const fx = (this.FIXTURES || []).find(x => x.id === id); if (fx) return this.state.lang === 'ko' ? fx.ko : fx.en; return id; }
   selectAction(id) { this.setState({ invSel: { action: id, targets: [] } }); }
   onGraphNode(id) { const p = this.PEOPLE.find(x => x.id === id); if (!p) return; let sel = (this.state.graphSel || []).slice(); const i = sel.indexOf(id); if (i >= 0) sel.splice(i, 1); else { sel.push(id); if (sel.length > 2) sel.shift(); } this.setState({ graphSel: sel }); }
   toggleTarget(id) { const s = this.state.invSel; if (!s.action) return; const a = this.INV_ACTIONS.find(x => x.id === s.action); let tg = s.targets.slice(); if (a.mode === 'pair') { const i = tg.indexOf(id); if (i >= 0) tg.splice(i, 1); else if (tg.length < 2) tg.push(id); } else tg = [id]; this.setState({ invSel: { action: s.action, targets: tg } }); }
@@ -1307,7 +1333,27 @@ export default class App extends React.Component {
       'fixture:window': { type: 'solution', tKo: '창문 밀폐 테이프', tEn: 'Window taped shut', dKo: '창틀에 안쪽에서 붙인 테이프. 밀폐 위장 장치다.', dEn: 'Tape applied from inside the window frame — a sealing device.' },
       'fixture:safe': { type: 'solution', tKo: '금고 속 위장 유서', tEn: 'Fake note in safe', dKo: '금고에서 윤다인 명의 위장 유서 초안이 나왔다.', dEn: 'A forged draft note in Chae-won\u2019s name, found in the safe.' },
     };
-    return M[a + ':' + k];
+    /**
+     * 앱에 문안이 없으면 **엔진의 `action.result` 로 떨어진다** (2026-07-27).
+     *
+     * 조사 결과문은 사건 산문이므로 층 규칙상 엔진이 정본이다. 다만 기존 키의
+     * 문안을 지금 갈아끼우면 **이식이 아니라 동작 변경**이 되므로(문장이 달라진다)
+     * 덮어쓰지 않고 **폴백으로만** 둔다 — 앱에 있는 것은 앱 것을 쓴다.
+     *
+     * 이게 없으면 앱 표에 없는 조사가 `resultFor` 에서 `undefined` 를 받아
+     * **공통 「빈손」 폴백으로 떨어진다.** 물증을 주는 조사가 빈손으로 보이는 것이
+     * 제일 나쁘다 — `a_victim_bel` 이 정확히 그 상태였다.
+     */
+    const hit = M[a + ':' + k]
+    if (hit) return hit
+    const eng = this.CASE_ACTIONS?.[a + ':' + k]
+    if (!eng?.result) return undefined
+    const TYPE = { solution: 'solution', redherring: 'redherring', exclusion: 'exclusion', empty: 'empty' }
+    return {
+      type: TYPE[eng.yield] || 'empty',
+      tKo: eng.result.title?.ko || '', tEn: eng.result.title?.en || eng.result.title?.ko || '',
+      dKo: eng.result.body?.ko || '', dEn: eng.result.body?.en || eng.result.body?.ko || '',
+    }
   }
   askInvestigate(actionId, targets) {
     const a = this.INV_ACTIONS.find(x => x.id === actionId); if (!a) return;
@@ -1366,7 +1412,18 @@ export default class App extends React.Component {
       style: { display: 'flex', alignItems: 'center', gap: '10px', height: '40px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (s.action === a.id ? 'var(--accent)' : 'var(--border-strong)'), background: s.action === a.id ? 'var(--accent-soft)' : 'transparent', color: s.action === a.id ? 'var(--fg)' : 'var(--fg-2)', cursor: 'pointer' } }));
     const a = s.action ? this.INV_ACTIONS.find(x => x.id === s.action) : null, mode = a ? a.mode : null;
     let targets = [];
-    if (mode === 'person' || mode === 'pair') targets = this.PEOPLE.map(p => this.targetChip(p.id, p.name, s.targets));
+    if (mode === 'person' || mode === 'pair') {
+      targets = this.PEOPLE.map(p => this.targetChip(p.id, p.name, s.targets));
+      /**
+       * 피해자는 **소지품 검사에만** 붙는다. 엔진에 `belongings:피해자` 조사가
+       * 있을 때만이고(`CASE_ACTIONS` 로 확인), 알리바이 대조(`pair`)에는 절대
+       * 안 붙인다 — 죽은 사람과 동선을 맞출 수는 없다. 통화내역도 엔진에 없다.
+       */
+      const v = this.VICTIM_TARGET;
+      if (v && mode === 'person' && this.CASE_ACTIONS?.[s.action + ':' + v.id]) {
+        targets = targets.concat([this.targetChip(v.id, v.name, s.targets)]);
+      }
+    }
     else if (mode === 'place') targets = this.PLACES.map(p => this.targetChip(p.id, ln === 'ko' ? p.ko : p.en, s.targets));
     const need = mode === 'none' ? 0 : mode === 'pair' ? 2 : 1;
     let reason = '', can = false;

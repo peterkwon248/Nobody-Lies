@@ -819,7 +819,24 @@ actions:
     target: { kind: location, id: approach }
 
   # 피해자
-  - { id: a_victim_bel, label: 소지품 검사 · 피해자, verb: belongings, cost: 1, gives: [e_victim_phone], salience: 0.5, yield: exclusion }
+  # 대상이 피해자다. 2026-07-27 이전에는 target 이 없어 **앱이 지목할 수 없었고**,
+  # 이것이 주는 e_victim_phone 이 트릭 허점의 두 자리 중 하나라 앱에서는 허점을
+  # 만날 길이 한유빈 하나뿐이었다. personIds 가 victim 을 포함하므로 대상 검사를 지난다
+  - id: a_victim_bel
+    label: 소지품 검사 · 피해자
+    verb: belongings
+    cost: 1
+    gives: [e_victim_phone]
+    salience: 0.5
+    yield: exclusion
+    target: { kind: person, id: chaewon }
+    # 2026-07-27 신설. 3인칭 관찰만 — 「자살할 사람이 왜 초대했는가」는 적지 않는다.
+    # 그것이 허점이고, 허점은 플레이어가 세우는 것이다.
+    # 내용은 e_victim_phone.description 과 프롤로그(초대장은 전날 밤에 돌았고,
+    # 다섯 사람이 답했다)의 재진술이다 — 새 사실을 넣지 않았다.
+    result:
+      title: { ko: 피해자 휴대폰, en: The victim's phone }
+      body:  { ko: 전날 밤 다섯 사람에게 초대 메시지를 보낸 발신 기록이 남아 있었다., en: Outgoing records showed invitation messages sent to five people the night before. }
   - id: a_manuscript
     label: 원고 조사
     verb: fixture
