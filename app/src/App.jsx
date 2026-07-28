@@ -436,6 +436,142 @@ export default class App extends React.Component {
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
     /**
+     * ─────────────────────────────────────────────────────────────
+     *  구조 이관 (2026-07-29) — 인물 · 진술 · 시간 · 장소
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 여기까지 오기 전에는 **사건 파일을 갈아끼워도 앱이 산장 사건을 렌더했다.**
+     * 이름·나이·직업·진술이 전부 이 파일에 하드코딩돼 있었기 때문이다.
+     * 검증기를 통과한 생성 사건이 「검증 통과 + 렌더 불가」였던 이유가 이것이다.
+     *
+     * ★ 앱 표는 엔진의 상위집합이다 ★ 색·이니셜·아바타·영문·역할 라벨은 엔진에
+     * 없다. 그래서 통째로 갈지 않고 **엔진이 가진 필드만** 덮어쓰고 나머지는 같은
+     * 자리의 앱 값을 물려받는다 — `COLLECTED_POOL` 이 쓴 방식과 같다.
+     *
+     * ★ 용의자는 언제나 5명이다 ★ (`SYSTEM-DECISIONS.md` §3) 그래서 자리 수가
+     * 이미 맞고, 인원을 맞추는 코드가 필요 없다. 어긋나면 경고를 남긴다.
+     */
+    if (c.people?.length) {
+      const slots = this.PEOPLE
+      if (c.people.length !== slots.length && typeof console !== 'undefined') {
+        console.warn(
+          `[case] 엔진 인물 ${c.people.length}명 · 앱 자리 ${slots.length}칸 — 용의자는 5명이어야 한다`,
+        )
+      }
+
+      /**
+       * ★ 자리는 인덱스가 아니라 `id` 로 맞춘다 ★
+       *
+       * 엔진 인물 순서와 앱 자리 순서가 다르다(엔진은 `sakura` 가 먼저, 앱은
+       * `yena` 가 먼저). 인덱스로 물려받으면 **같은 인물의 색이 뒤바뀌고**
+       * 「같은 인물인가」 판정이 전부 거짓이 되어 **영문이 통째로 버려진다** —
+       * 2026-07-27 에 확보 단어에서 잡았던 그 결함과 같은 부류다.
+       *
+       * 그리고 **앱 자리 순서를 유지한다.** 진술 정독 순서는 저작이지 데이터가
+       * 아니다 — 엔진 순서로 재배열하면 범인이 첫 번째로 읽히게 된다.
+       */
+      const engineById = new Map(c.people.map((p) => [p.id, p]))
+      const matched = slots.filter((s) => engineById.has(s.id))
+      const freeSlots = slots.filter((s) => !engineById.has(s.id))
+      const newcomers = c.people.filter((p) => !slots.some((s) => s.id === p.id))
+
+      /**
+       * **같은 인물이면 앱 문안을 물려받고 새 인물이면 버린다.**
+       * 남기면 생성 사건의 인물에 「산장 거주」 같은 거짓 라벨이 붙는다 —
+       * 엔진에 대응 필드가 없는 것(`relKo`·영문)은 지우는 쪽이 맞다.
+       */
+      const merge = (slot, p, same) => {
+        const nm = p.name || slot.name || ''
+        return {
+          ...slot,
+          id: p.id,
+          name: nm,
+          age: p.age ?? slot.age,
+          // 이니셜은 이름 둘째 글자다 (서지안 → 지 · 문세라 → 세)
+          ini: nm.slice(1, 2) || nm.slice(0, 1) || slot.ini,
+          jobKo: p.job || (same ? slot.jobKo : ''),
+          jobEn: same ? slot.jobEn : '',
+          sexKo: p.sex || (same ? slot.sexKo : ''),
+          sexEn: same ? slot.sexEn : '',
+          claimKo: ko(p.claimSummary) || (same ? slot.claimKo : ''),
+          relKo: same ? slot.relKo : '',
+          relEn: same ? slot.relEn : '',
+        }
+      }
+
+      this.PEOPLE = [
+        ...matched.map((s) => merge(s, engineById.get(s.id), true)),
+        ...newcomers.map((p, i) => merge(freeSlots[i] || slots[slots.length - 1] || {}, p, false)),
+      ]
+
+      /**
+       * 진술 원문과 지문. **전원분이 있을 때만 갈아끼운다** — 일부만 덮어쓰면
+       * 새 사건의 인물과 산장 사건의 진술이 한 화면에 섞인다. 부분은 경고로 남긴다
+       * (조용한 탈락이 2026-07-27 에 영문 결함을 살려뒀다).
+       */
+      const stmt = {}
+      const gest = {}
+      for (const p of c.people) {
+        if (p.statement?.paragraphs?.length) stmt[p.id] = p.statement.paragraphs.map(ko)
+        const g = p.statement?.gesture
+        if (g && (g.pre || g.post)) gest[p.id] = { pre: ko(g.pre), post: ko(g.post) }
+      }
+      const full = (m) => Object.keys(m).length === c.people.length
+      if (full(stmt)) this.STMT = stmt
+      else if (Object.keys(stmt).length && typeof console !== 'undefined') {
+        console.warn(`[case] 진술 원문이 ${Object.keys(stmt).length}/${c.people.length}명분뿐이라 갈아끼우지 않았다`)
+      }
+      if (full(gest)) this.STMT_GESTURE = gest
+      else if (Object.keys(gest).length && typeof console !== 'undefined') {
+        console.warn(`[case] 지문이 ${Object.keys(gest).length}/${c.people.length}명분뿐이라 갈아끼우지 않았다`)
+      }
+    }
+
+    /**
+     * 시간 축. 격자의 열이고 개수가 사건마다 다를 수 있다 —
+     * 산장은 넷(`t0~t3`), 생성 사건은 셋이다.
+     *
+     * `window`(사망 추정 구간)를 **매번 다시 만든다.** `...old` 로 물려받으면
+     * 엔진이 옮긴 사망 구간이 옛 열에 그대로 남아 두 곳이 된다.
+     */
+    if (c.slots?.length) {
+      const prev = {}
+      for (const t of this.TIMES) prev[t.id] = t
+      this.TIMES = c.slots.map((s) => {
+        const old = prev[s.id] || {}
+        return {
+          id: s.id,
+          ko: s.label || old.ko || s.id,
+          en: old.en || '',
+          subKo: old.subKo || '',
+          subEn: old.subEn || '',
+          ...(s.isWindow ? { window: true } : {}),
+        }
+      })
+    }
+
+    /**
+     * 장소는 **이름표만** 받는다. 좌표·건물·해치는 평면도이고 엔진에 없다.
+     *
+     * ⚠ 그래서 **앱 도면에 없는 장소는 아직 갈 수 없다.** 생성 사건의
+     * `hall`·`away` 가 여기 걸린다 — 좌표 생성은 다음 단계다. 조용히 버리지
+     * 않고 콘솔에 남긴다.
+     */
+    if (c.locations?.length) {
+      const byId = {}
+      for (const l of c.locations) byId[l.id] = l
+      this.LOCATIONS = this.LOCATIONS.map((l) => {
+        const e = byId[l.id]
+        return e ? { ...l, ko: e.label || l.ko } : l
+      })
+      const known = new Set(this.LOCATIONS.map((l) => l.id))
+      const missing = c.locations.filter((l) => !known.has(l.id)).map((l) => l.label || l.id)
+      if (missing.length && typeof console !== 'undefined') {
+        console.warn('[case] 엔진 장소가 앱 평면도에 없어 갈 수 없다:', missing.join(' · '))
+      }
+    }
+
+    /**
      * 확보 단어 — 출처·기록·**풀 자체**가 엔진 정본이다. 2026-07-26 대조에서
      * 엔진 쪽 네 문장이 쉼표에서 잘려 있던 것을 잡아 고쳤다
      * (`scripts/yaml-comma-check.mjs`).
