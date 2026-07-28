@@ -21,3 +21,6 @@ Thumbs.db
 # 사건 JSON 은 engine 이 YAML 에서 방출하는 빌드 산출물이다
 app/public/cases/
 app/dist/
+
+# 생성 사건 임시 방출 (--emit 산출물)
+out/
