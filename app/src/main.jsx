@@ -113,14 +113,35 @@ function caseName() {
   try {
     const raw = new URLSearchParams(window.location.search).get('case');
     if (!raw) return CASE_DEFAULT;
-    return /^[A-Za-z0-9_-]+$/.test(raw) ? raw : CASE_DEFAULT;
+    // `local:` 접두는 localStorage 에서 읽는다(생성기 산출물). 나머지는 파일명 조각.
+    // 어느 쪽이든 경로 구분자와 점은 막는다 — 상위 디렉터리로 새지 않게
+    return /^(local:)?[A-Za-z0-9_-]+$/.test(raw) ? raw : CASE_DEFAULT;
   } catch {
     return CASE_DEFAULT;
   }
 }
 
+/**
+ * 생성기가 만든 사건은 `localStorage` 에 산다 — `?case=local:<id>`.
+ * 서버에 파일이 없으므로 fetch 로는 못 읽는다.
+ */
+function loadLocalCase(name) {
+  try {
+    const all = JSON.parse(localStorage.getItem('nobody-lies:generated') || '{}');
+    const c = all[name];
+    if (c) return c;
+    console.warn(`[nobody-lies] 생성 사건 '${name}' 이 이 브라우저에 없다 — 내장 값으로 돈다`);
+  } catch (e) {
+    console.warn('[nobody-lies] 생성 사건을 못 읽었다:', e.message);
+  }
+  return null;
+}
+
 function loadCase() {
   const name = caseName();
+  if (name.startsWith('local:')) {
+    return Promise.resolve(loadLocalCase(decodeURIComponent(name.slice(6))));
+  }
   return fetch('/cases/' + name + '.json')
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
     .then((c) => {
@@ -176,9 +197,22 @@ class Boundary extends React.Component {
 
 const root = createRoot(document.getElementById('root'));
 
-Promise.all([loadDesignSystem(), loadCase()])
-  .then(([, caseData]) => root.render(
-    <Boundary>
-      <App caseData={caseData} />
-    </Boundary>,
-  ));
+/**
+ * `/?generate` → 캠페인 생성기.
+ *
+ * 게임과 별도 화면이라 `App.jsx` 를 건드리지 않는다 — 그 파일은 프로토타입과
+ * `port-check` 로 대조되고 있어서, 화면을 더하면 대조 대상이 늘어난다.
+ * 생성기는 프로토타입에 없는 **신설 화면**이므로 밖에 둔다.
+ */
+if (new URLSearchParams(window.location.search).has('generate')) {
+  import('./Generator.jsx').then(({ default: Generator }) => {
+    root.render(<Boundary><Generator /></Boundary>);
+  });
+} else {
+  Promise.all([loadDesignSystem(), loadCase()])
+    .then(([, caseData]) => root.render(
+      <Boundary>
+        <App caseData={caseData} />
+      </Boundary>,
+    ));
+}
