@@ -80,6 +80,12 @@ machine: "DESKTOP-JCJTAH8"
 
 ## Notes for Next Session
 
+- **기계를 옮기면 세계는 남고 사건은 사라진다.**
+  남는 것: `engine/cases/mountain-lodge.yaml` · `case-template.yaml` ·
+  `palette-museum.json` · `palette-example.json`.
+  사라지는 것: `app/public/cases/*.json`(gitignore) · localStorage 의 생성 사건.
+  → 새 기계에서 **홈 → ＋ 캠페인 생성 → 팔레트 붙여넣기**로 같은 세계를 다시 만든다.
+  단 **seed 가 무작위**라 사건 자체는 다르다
 - **직전 머신은 `DESKTOP-JCJTAH8`.** 07-28은 `KWONKYUNGHUN`(OneDrive 아래)이었다.
   ⚠ 머신 이름 `KWONKYUNGHUN` 과 이 기계의 **사용자명** `kwonkyunghun` 이 겹친다 —
   `$env:COMPUTERNAME` 과 경로를 같이 봐야 오진하지 않는다
