@@ -17,8 +17,15 @@ import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './type
  * **팔레트 하나로 사건 여러 개가 나온다.** LLM 호출은 사건 수가 아니라
  * 세계 수에 비례한다 — 이것이 「적은 비용으로 많이」의 실제 근거다.
  *
- * 장 수는 daily 고정이다 — 2장·7공란. campaign 규모(5장·19공란)를 조합으로
- * 만들면 검증 실패율이 급등하고 서사가 무너진다(`SYSTEM-DECISIONS.md` §생성).
+ * ⚠ **장 수는 더 이상 daily 고정이 아니다** — 이 머리말이 아래 `GenerateOptions`
+ * 주석과 어긋난 채 남아 있어서 2026-07-29에 고쳤다. 원문은 이랬다:
+ * *"장 수는 daily 고정이다 — 2장·7공란. campaign 규모(5장·19공란)를 조합으로
+ * 만들면 검증 실패율이 급등하고 서사가 무너진다(`SYSTEM-DECISIONS.md` §생성)."*
+ *
+ * **그 예측은 게이트가 반증했다.** 기본값이 2 → 5(캠페인 규모)로 바뀐 뒤에도
+ * `gen-check` 가 100% 로 통과한다 — 그 명령은 `--chapters` 를 안 주므로 기본값
+ * 5를 쓰고(`cli.ts:40`), `--min-pass 100` 이다. 실패율 급등은 일어나지 않았다.
+ * **남은 경계는 규모가 아니라 산문이다**(`MEMORY.md` §캠페인 자동 생성).
  *
  * ★ 용의자는 언제나 5명이다 ★ 규모가 바뀌어도 이것만은 안 바뀐다.
  * 2026-07-29 사용자 결정 — 오프라인 플레이 경험에서 나온 것이고, 이 프로젝트가
@@ -29,14 +36,21 @@ import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './type
 /** 용의자 수. ★ 고정이다 ★ 손잡이가 아니다 — `SYSTEM-DECISIONS.md` §3 */
 const SUSPECTS = 5
 
-/**
- * 빈손 조사 개수.
+/*
+ * ⛔ `EMPTY_SPOTS = 14` 가 여기 있었다 — **선언만 되고 아무도 안 읽었다**
+ * (2026-07-29에 지웠다). 근거 주석이 *"예산이 7~8로 나오므로 24개가 필요하다"*
+ * 였는데 그 예산은 **장 2 고정 시절** 숫자다. 머리말이 낡았던 것과 같은 뿌리다.
  *
- * 조사 대상이 **예산의 3배 이상**이어야 선택이 소거가 아니라 판단이 된다.
- * 나머지 조사가 11개(해답 4 + 레드 헤링 4 + 배제 1 + 트릭 전용 2)이고
- * 예산이 7~8로 나오므로 24개가 필요하다 → 14개.
+ * 지우는 쪽을 골랐다. 빈손은 상수가 아니라 **남은 `(동사:대상)` 조합 전부**로
+ * 만들어진다(아래 §빈손 조사) — 숫자를 고쳐 두면 그 숫자가 무언가를 정하는
+ * 것처럼 보여서, 다음 사람이 여기를 만지고 아무 일도 안 일어나는 데 시간을 쓴다.
+ * 죽은 풀 항목 셋이 아이콘·문안까지 갖춘 채 살아 보였던 그 부류다.
+ *
+ * ⚠ 같은 처지가 하나 더 있다: **`Palette.spots`** 도 선언·기본값이 있고
+ * `palette-residency.json` 이 실제로 주는데 **읽는 곳이 없다.**
+ * `PALETTE-BRIEF.md` 는 요구조차 안 한다. 지우지 않고 남겨둔다 — 빈손 이름을
+ * 팔레트 어휘로 짓는 데 쓸 수 있는 자리이고, 그건 저작 결정이다.
  */
-const EMPTY_SPOTS = 14
 
 /**
  * 결정론적 PRNG. 같은 seed 는 같은 사건.
@@ -102,6 +116,32 @@ export type Palette = {
    * 모자라면 코드가 기본값으로 채운다.
    */
   records?: string[]
+  /**
+   * ★ 인물 층 ★ — **무고한 사람이 감추는 것** (2026-07-29 신설)
+   *
+   * 이 게임의 핵심 규칙이 *"무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은
+   * 말하지 않는다"* 인데, **생성 사건에는 감출 것이 하나도 없었다.** 다섯이
+   * 전부 동선만 읊고 끝났다 — 규칙이 작동할 자리가 없었던 것이다.
+   *
+   * 여기 오는 것은 **사건과 무관한 창피한 사실**이다. 살인과 이어지면 안 된다 —
+   * 그러면 무고한 자가 용의자가 되고 논리가 무너진다.
+   *
+   * ⚠ **확보 단어와 겹치는 낱말을 쓰지 마라.** 진술이 조사로 얻을 것을 먼저
+   * 말하면 조사할 이유가 사라진다 — 검증기 §9-10 이 잡는다.
+   *
+   * **다섯 명 전원이 하나씩 갖는다.** 범인만 없거나 범인만 있으면 그 자체가
+   * 범인 표시다(소지품 검사가 범인만 없어서 범인을 가리키던 것과 같은 부류).
+   * 그래서 5개 이상 필요하고, 모자라면 코드가 기본값으로 채운다.
+   */
+  secrets?: string[]
+  /**
+   * ★ 인물 층 ★ — **진술을 여는 말버릇.** 사람마다 다른 하나를 받는다.
+   *
+   * 말투가 다르면 다섯이 구분되지만, **길이가 달라지면 그게 유용도 표시**다
+   * (§9-9). 그래서 어투만 바꾸고 **문단 수·구조는 전원 같게** 유지한다.
+   * 5개 이상 필요하다.
+   */
+  openers?: string[]
 }
 
 const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } = {
@@ -130,6 +170,29 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   records: [
     '출입 기록', '통화 내역', '남겨진 쪽지', '장부의 여백', '빌린 열쇠',
     '미납 청구서', '접힌 지도', '낡은 명함', '배송 전표', '깨진 액자',
+  ],
+  /**
+   * 전부 **사건과 무관한** 것이어야 한다. 살인과 이어지는 비밀을 무고한 자에게
+   * 주면 그 사람이 용의자가 되고, 검증기가 강제하는 「무고한 넷은 배제된다」가
+   * 문장과 어긋난다.
+   */
+  secrets: [
+    '그 시간에 다른 사람을 만나고 있었다는 것',
+    '허락 없이 자리를 비웠다는 것',
+    '빌린 돈을 아직 갚지 못했다는 것',
+    '이력서에 적은 경력 하나가 사실이 아니라는 것',
+    '몰래 다른 곳에 지원서를 넣었다는 것',
+    '누군가의 험담을 옮긴 적이 있다는 것',
+    '규정을 어기고 물건을 들여왔다는 것',
+    '그날 술을 마셨다는 것',
+  ],
+  openers: [
+    '몇 번을 말씀드렸지만,',
+    '기억나는 대로 말씀드리면,',
+    '정확히는 모르겠지만,',
+    '적어둔 게 있어서 확실합니다.',
+    '글쎄요,',
+    '그날은 정신이 없어서요.',
   ],
 }
 
@@ -342,6 +405,13 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   // 폴백하고, 그 이름이 용의자로도 뽑히면 **피해자와 용의자가 같은 사람**이 된다
   const names = shuffled(nonEmpty(P.names, DEFAULT_PALETTE.names)).slice(0, SUSPECTS + 2)
   const jobs = nonEmpty(P.jobs, DEFAULT_PALETTE.jobs)
+  /**
+   * 인물 층. **섞어서 쓴다** — 팔레트가 준 순서대로 주면 목록 순서와 진술 순서가
+   * 같아져, 팔레트를 본 사람에게는 누가 몇 번째인지가 드러난다.
+   * 모자라면 자리 나누기(`i % length`)가 순환시키므로 개수가 적어도 안 죽는다.
+   */
+  const openers = shuffled(nonEmpty(P.openers, DEFAULT_PALETTE.openers))
+  const secrets = shuffled(nonEmpty(P.secrets, DEFAULT_PALETTE.secrets))
 
   /**
    * 빈손 조사 자리. **모자라면 기본값으로 채운다.**
@@ -507,27 +577,58 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 무고한 자가 하나가 되어 **문단 수가 곧 범인 표시**가 된다. 그래서 슬롯
    * 전체를 훑고 없던 시간대는 「없었다」로 말한다 — 전원 네 문단.
    *
-   * 이것은 자리표시 산문이다(`prose.source: 'template'`). 말투도 재미도 없다 —
-   * 그건 ②산문가가 `PROSE-BRIEF.md` 로 덮어쓴다.
+   * ★ 말버릇과 비밀이 붙었다 ★ (2026-07-29)
+   *
+   * 전에는 다섯이 **글자 하나까지 같은 뼈대**였다 — 동선만 읊고 「그 밖에는 따로
+   * 드릴 말씀이 없습니다」로 끝났다. 그래서 이 게임의 핵심 규칙
+   * *"무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다"* 가
+   * **생성 사건에서는 작동할 자리가 없었다.** 감출 것이 없었기 때문이다.
+   *
+   * 이제 팔레트가 `openers`(말버릇)와 `secrets`(감출 것)를 주면 코드가 얹는다.
+   * **왕복을 하나 더 만들지 않는 이유**: 말투와 비밀은 사건이 아니라 **세계의
+   * 속성**이라 팔레트에 들어간다 — 팔레트는 이미 내장이라 왕복 0회다.
+   *
+   * ⚠ **전원 네 문단으로 못박는다.** 시간대 3(첫 문단에 말버릇을 얹는다) + 비밀 1.
+   * 말버릇을 따로 떼면 문단이 다섯이 되는데, 그럴 이유가 없다 — 전에도 넷이었다.
+   * 비밀을 가진 사람만 한 문단 길어지면 **문단 수가 곧 표시**가 되고, 그건
+   * §9-9(진술 길이 쏠림)가 오류로 잡는 바로 그것이다. 범인도 똑같이 하나 받는다 —
+   * 범인의 진짜 비밀은 살인이지만, **겉으로 감추는 것은 남들과 같은 결**이어야 한다.
+   *
+   * 여전히 LLM 산문보다는 못하다(`prose.source: 'template'`). 5번 절이 그대로
+   * 남아 있으므로 더 좋게 쓰고 싶으면 `PROSE-BRIEF.md` 로 덮어쓴다.
    */
-  const statementOf = (cells: { slot: string; location: string }[]) => {
+  const statementOf = (
+    cells: { slot: string; location: string }[],
+    opener: string,
+    secret: string,
+  ) => {
     const at = new Map(cells.map((x) => [x.slot, x.location]))
+    const line = (s: string, first: boolean) => {
+      const loc = at.get(s)
+      const body = loc
+        ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.`
+        : `${slotLabel[s]}에는 그곳에 없었습니다.`
+      return { ko: first ? `${opener} ${body}` : body }
+    }
     return [
-      ...['t0', 't1', 't2'].map((s) => {
-        const loc = at.get(s)
-        return {
-          ko: loc
-            ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.`
-            : `${slotLabel[s]}에는 그곳에 없었습니다.`,
-        }
-      }),
-      { ko: '그 밖에는 따로 드릴 말씀이 없습니다.' },
+      line('t0', true),
+      line('t1', false),
+      line('t2', false),
+      // 감추지만 **거짓말은 아니다** — 있다는 것은 인정하고 내용을 안 밝힌다.
+      // 이 문장이 곧 제목의 규칙이다
+      { ko: `${secret}은 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.` },
     ]
   }
 
   // 무고한 넷은 t2에 홀로 도착한다 — 사망 구간(t1)에 현장에 없다.
   // 이 배치가 곧 배제이고, 검증기가 이것을 검사한다.
   const innocentPresence = [{ slot: 't2', location: 'hall' }]
+  /**
+   * 말버릇·비밀은 **자리로 나눈다** — `r()` 로 뽑으면 두 사람이 같은 것을 받을 수
+   * 있고, 겹치는 순간 그 둘만 닮아 보인다. 팔레트가 모자라면 순환시켜 채운다.
+   */
+  const openerOf = (i: number) => openers[i % openers.length]
+  const secretOf = (i: number) => secrets[i % secrets.length]
   const person = (id: PersonId, i: number) => ({
     id,
     name: names[i],
@@ -539,7 +640,11 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     ...(id === culprit ? { claim: t.claim } : {}),
     statement: {
       // 진술에서 말하는 것은 주장이다 — 범인은 claim, 나머지는 presence
-      paragraphs: statementOf(id === culprit ? t.claim : innocentPresence),
+      paragraphs: statementOf(
+        id === culprit ? t.claim : innocentPresence,
+        openerOf(i),
+        secretOf(i),
+      ),
     },
   })
 
@@ -574,7 +679,10 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       verb: 'belongings' as const, target: { kind: 'person' as const, id },
       result: res(HERRING[i].ev, HERRING[i].res),
     })),
-    { id: 'a_alibi', label: '알리바이 대조', cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
+    // 짝을 이름으로 적는다 — 아래 빈손 아홉 쌍과 **같은 모양**이어야 한다.
+    // 이것만 「알리바이 대조」로 밋밋하면 목록에서 그 자체가 유용도 표시다
+    { id: 'a_alibi', label: `알리바이 대조 · ${names[ids.indexOf(innocents[0])]} ↔ ${names[ids.indexOf(innocents[1])]}`,
+      cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
       verb: 'alibi', pair: [innocents[0], innocents[1]],
       result: res('맞물리는 시각', '네 사람이 말한 도착 시각이 서로 맞물렸다.') },
   ]
@@ -630,6 +738,54 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   for (const id of locIds) addEmpty('fixture', 'location', id, `${label.get(id)} 설비 확인`)
   ids.forEach((p, i) => addEmpty('phone', 'person', p, `통화내역 조회 · ${names[i]}`))
 
+  /**
+   * 피해자도 조사 대상이다 (2026-07-29 신설).
+   *
+   * **골든 케이스에는 있는데 생성기에만 없었다** — `mountain-lodge.yaml` 의
+   * `a_victim_bel`(소지품 검사 · 피해자)이다. 앱도 이미 받는다: `applyCase` 가
+   * `c.victim` + `c.victimProfile.name` 을 보고 `VICTIM_TARGET` 을 세우고,
+   * 생성 사건은 그 둘을 **원래 내고 있었다.** 자리만 안 만들어 준 것이다.
+   */
+  const victimName = names[SUSPECTS + 1]
+  addEmpty('belongings', 'person', 'victim', `소지품 검사 · ${victimName}`)
+  addEmpty('phone', 'person', 'victim', `통화내역 조회 · ${victimName}`)
+
+  /**
+   * ★ 알리바이 대조는 **모든 쌍**이 사건 파일에 있어야 한다 ★ (2026-07-29 신설)
+   *
+   * **앱은 이미 열 쌍을 전부 실행한다.** 관계도에서 두 용의자를 고르면 그대로
+   * 돌고(`App.jsx` `graphSel` → `askInvestigate('alibi', sel)`), 선언되지 않은
+   * 쌍은 `resultFor(...) || { type: 'empty' }` 로 **공통 폴백**에 떨어진다 —
+   * 앱은 사건 파일의 조사 목록에 대고 검사하지 않는다.
+   *
+   * 그런데 엔진은 **한 쌍만 선언했다.** 그래서 「조사 대상」이 아홉 개 적게
+   * 세어졌다. §9-8(데이터를 주는데 산문이 침묵한다)의 **거울상**이다 —
+   * 이쪽은 **앱이 주는데 사건 파일이 모른다.**
+   *
+   * 그 과소 계상이 곧 「선택이 소거가 된다」 경고의 정체다. 나머지 다섯 동사는
+   * 이미 포화라 늘릴 자리가 없다 — `belongings`·`phone` 이 인물 전원,
+   * `search`·`fixture` 가 장소 전원, `autopsy` 는 시신 하나. 그래서 장이 늘면
+   * 가닥이 `(동사:대상)` 키를 빼앗아 빈손이 정확히 그만큼 줄고, **총량이 34로
+   * 못박혀** 있었다(3장 22빈손 · 8장 17빈손, 합계는 둘 다 34).
+   *
+   * 쌍은 `resolveKeys` 가 건너뛰므로(`if (a.pair) return a`) **가닥에 안 뺏긴다.**
+   * 그래서 이 아홉이 장 수와 무관하게 남는 바닥이 된다.
+   */
+  const usedPairs = new Set([[innocents[0], innocents[1]].slice().sort().join('|')])
+  for (let i = 0; i < ids.length; i++)
+    for (let j = i + 1; j < ids.length; j++) {
+      const k = [ids[i], ids[j]].slice().sort().join('|')
+      if (usedPairs.has(k)) continue
+      usedPairs.add(k)
+      empties.push({
+        id: `a_e${empties.length + 1}`,
+        label: `알리바이 대조 · ${names[i]} ↔ ${names[j]}`,
+        cost: 1, gives: [], yield: 'empty', verb: 'alibi',
+        salience: Math.max(0.04, 0.22 - empties.length * 0.008),
+        pair: [ids[i], ids[j]],
+      })
+    }
+
   const allActions = [...named, ...empties]
 
   return {
@@ -642,6 +798,27 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       scene: 'room',
     },
     prose: { source: 'template' },
+
+    /**
+     * 프롤로그 (2026-07-29 신설).
+     *
+     * **없으면 앱이 산장 것을 그대로 띄운다.** `App.jsx` 는 `if (c.prologue?.length)`
+     * 일 때만 갈아끼우므로, 안 주면 하드코딩된 *"산길 끝에 산장이 하나 있다…"* 가
+     * 남는다 — 박물관 사건을 열었는데 산장 프롤로그가 나온다(2026-07-29 실측).
+     * **제목만 안 읽던 07-28 결함과 같은 부류**이고, 이번엔 엔진이 안 준 쪽이다.
+     *
+     * ⚠ **새 정보 0.** 검증기 §9-7(b)가 「프롤로그가 조사로 얻을 단어를 말한다」를
+     * **오류**로 잡는다. 그래서 여기서는 가명·동기·기록 이름을 절대 쓰지 않는다 —
+     * 무대·피해자·모인 정황·발견까지만 말한다.
+     *
+     * 말맛은 ②산문가가 덮어쓴다. 이건 「다른 세계의 글이 뜨는 것」을 막는 바닥이다.
+     */
+    prologue: [
+      { ko: `${P.setting ?? DEFAULT_PALETTE.setting}. ${victimName}은 그곳에서 지내고 있었다.` },
+      { ko: `${slotLabel.t0}, 사람들이 ${places.hall}에 모였다. 다섯이 자리에 있었다.` },
+      { ko: `${slotLabel.t2}, 가장 먼저 일어난 사람이 ${places.room} 문을 열었다.` },
+      { ko: `${victimName}은 이미 숨을 쉬지 않았다.` },
+    ],
 
     /**
      * 평면도. **조사 화면이 곧 도면이라 좌표가 없으면 갈 수가 없다.**

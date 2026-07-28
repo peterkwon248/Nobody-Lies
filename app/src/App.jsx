@@ -949,6 +949,30 @@ export default class App extends React.Component {
       if (c.victim && c.victimProfile?.name) {
         this.VICTIM_TARGET = { id: c.victim, name: c.victimProfile.name }
       }
+
+      /**
+       * ★ 피해자 표시줄도 사건에서 읽는다 ★ (2026-07-29)
+       *
+       * `VICTIM_TARGET`(조사 대상)만 잇고 **화면에 뜨는 「대상」 줄은 하드코딩으로
+       * 남아 있었다** — 레지던시 사건을 열었는데 보고서 머리가 `윤다인 (30) · 소설가`
+       * 였다. 사건 파일의 피해자는 `구민아 (33) · 전시 기획자`인데도(실측).
+       * **07-28 「제목만 안 읽었다」와 같은 부류다** — 옆의 것은 이었는데 이건 놓쳤다.
+       *
+       * ⚠ **영문은 제목과 똑같은 세 갈래로 가른다** (위 §제목 참조). 처음에
+       * `en: vp.en ?? line` 로 썼는데, 그러면 산장의 `Kim Chae-won (30) · Novelist`
+       * 가 한국어로 뭉개진다 — 사건 파일에 `en` 이 없어서다. **07-28에 제목으로
+       * 물린 바로 그 자리를 그대로 다시 밟을 뻔했다.**
+       *
+       *   사건이 영문을 주면 → 그것
+       *   없는데 **다른 사건**이면 → 한국어 (산장 영문이 남아 엉뚱한 사람을 가리키는 것보다 낫다)
+       *   없는데 **산장**이면 → 손대지 않는다 (앱 값이 산다)
+       */
+      const vp = c.victimProfile
+      if (vp?.name) {
+        const line = `${vp.name}${vp.age ? ` (${vp.age})` : ''}${vp.job ? ` · ${vp.job}` : ''}`
+        const en = vp.en ?? (this._foreignCase ? line : null)
+        this.VICTIM_LINE = { ko: line, en }
+      }
     }
 
     // 인물 — **표시 속성(색·이니셜·역할·좌표)은 건드리지 않는다**
@@ -1803,6 +1827,19 @@ export default class App extends React.Component {
   // 피해자는 `PEOPLE` 에 없다(용의자 배열이다). 여기서만 이름을 붙인다 —
   // 조사 기록·결과 카드·우측 패널이 전부 이 함수를 지나므로 한 자리면 된다.
   // 빠뜨리면 화면에 `chaewon` 이 그대로 찍힌다 (2026-07-27에 실제로 그랬다)
+  /**
+   * 피해자 표시줄. 사건이 주면 그것, 없으면 앱의 산장 값.
+   *
+   * 세 자리가 같은 문자열을 쓴다 — 개요 · 브리핑 · 보고서 머리. 하나만 고치면
+   * 나머지 둘에 옛 이름이 남는다(07-27 확보 단어 영문이 정확히 그렇게 남았다).
+   */
+  victimLine(ln) {
+    const v = this.VICTIM_LINE
+    if (!v) return this.T().ovVictimV
+    if (ln === 'ko') return v.ko
+    // 영문이 없으면 앱 값을 지킨다 — 산장이 그 경우다 (위 `applyCase` §피해자 표시줄)
+    return v.en || this.T().ovVictimV
+  }
   pname(id) { const p = this.PEOPLE.find(x => x.id === id); if (p) return p.name; const v = this.VICTIM_TARGET; if (v && v.id === id) return v.name; const pl = this.PLACES.find(x => x.id === id); if (pl) return this.state.lang === 'ko' ? pl.ko : pl.en; const fx = (this.FIXTURES || []).find(x => x.id === id); if (fx) return this.state.lang === 'ko' ? fx.ko : fx.en; return id; }
   selectAction(id) { this.setState({ invSel: { action: id, targets: [] } }); }
   onGraphNode(id) { const p = this.PEOPLE.find(x => x.id === id); if (!p) return; let sel = (this.state.graphSel || []).slice(); const i = sel.indexOf(id); if (i >= 0) sel.splice(i, 1); else { sel.push(id); if (sel.length > 2) sel.shift(); } this.setState({ graphSel: sel }); }
@@ -2868,7 +2905,7 @@ export default class App extends React.Component {
     const segCls = (on) => 'seg' + (on ? ' active' : '');
     const ovNarrowed = this.deathNarrowed();
     const overview = [
-      { k: t.ovVictimK, v: t.ovVictimV }, { k: t.ovWhenK, v: ovNarrowed ? (ln === 'ko' ? '새벽 3시 ~ 5시' : '03:00 – 05:00') : t.ovWhenV, prev: ovNarrowed ? t.ovWhenV : '', badge: ovNarrowed ? (ln === 'ko' ? '1항 완성으로 갱신' : 'Updated · sec 1') : '' },
+      { k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: ovNarrowed ? (ln === 'ko' ? '새벽 3시 ~ 5시' : '03:00 – 05:00') : t.ovWhenV, prev: ovNarrowed ? t.ovWhenV : '', badge: ovNarrowed ? (ln === 'ko' ? '1항 완성으로 갱신' : 'Updated · sec 1') : '' },
       { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV },
     ].map((o, i, a) => ({ k: o.k, v: o.v, prev: o.prev || '', hasPrev: !!o.prev, badge: o.badge || '', hasBadge: !!o.badge, onQuote: () => this.quoteBriefToMemo(o.v), onCopy: () => { try { navigator.clipboard.writeText(o.v); } catch (e) {} }, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } }));;
 
@@ -2886,7 +2923,7 @@ export default class App extends React.Component {
       confirmAbandon: s.confirmAbandon, onAbandon: () => this.abandon(), onCancelAbandon: () => this.setState({ confirmAbandon: false }), onGoHome: () => this.goHome(), onAbandonReq: () => this.setState({ confirmAbandon: true }),
       dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 },
       roomBtnStyle: { flex: '0 0 auto', opacity: 0.4, pointerEvents: 'none' },
-      briefRows: [{ k: t.ovVictimK, v: t.ovVictimV }, { k: t.ovWhenK, v: t.ovWhenV }, { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV }].map((o, i, a) => ({ k: o.k, v: o.v, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
+      briefRows: [{ k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: t.ovWhenV }, { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV }].map((o, i, a) => ({ k: o.k, v: o.v, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
       readCard: this.buildReadCard(), briefBtnStyle: { width: '100%', justifyContent: 'center' }, onStartRead: () => this.startRead(),
       isWide: !s.isNarrow, isNarrow: s.isNarrow,
       isNarrative: isNarr, isStatements: isStmt, isReference: isRef,
@@ -2925,7 +2962,7 @@ export default class App extends React.Component {
         statusChipStyle: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: solvedCount === this.SECTIONS.length ? 'var(--g-lock-bg)' : 'var(--bg-elevated-2)', color: solvedCount === this.SECTIONS.length ? 'var(--g-lock-mark)' : 'var(--fg-3)' },
         fields: [
           { k: ln === 'ko' ? '사건번호' : 'Case no.', v: 'CASE-001' },
-          { k: ln === 'ko' ? '대상' : 'Subject', v: ln === 'ko' ? '윤다인 (30) · 소설가' : 'Kim Chae-won (30) · Novelist' },
+          { k: ln === 'ko' ? '대상' : 'Subject', v: this.VICTIM_LINE ? (ln === 'ko' ? this.VICTIM_LINE.ko : this.VICTIM_LINE.en) : (ln === 'ko' ? '윤다인 (30) · 소설가' : 'Kim Chae-won (30) · Novelist') },
           { k: ln === 'ko' ? '작성' : 'Prepared by', v: ln === 'ko' ? '담당 수사관' : 'Lead investigator' },
         ],
       },

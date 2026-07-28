@@ -4,6 +4,20 @@ import { run } from '@engine/orchestrate.ts';
 import { verify } from '@engine/verifier.ts';
 import briefRaw from '../../engine/templates/PALETTE-BRIEF.md?raw';
 import proseRaw from '../../engine/templates/PROSE-BRIEF.md?raw';
+/**
+ * ★ 내장 세계 ★ (2026-07-29 신설)
+ *
+ * **저장소에 커밋돼 있는 팔레트를 앱이 그대로 읽는다.** 전에는 이 파일들이
+ * 있는데도 유저에게 매번 챗봇 왕복을 시켰다 — 서식 복사 → 챗봇 → JSON 붙여넣기.
+ * 팔레트는 **세계**라서 재사용 대상인데(`NEXT-ACTION` §기계를 옮기면 무엇이
+ * 남나: *"세계는 남고 사건은 사라진다"*), 앱만 그걸 몰랐다.
+ *
+ * `?raw` 로 읽는 것은 서식 둘과 **같은 경로**다. 파싱은 붙여넣기와 한 코드로
+ * 지나가게 해서 「내장이라 다르게 동작한다」가 안 생기게 한다.
+ */
+import paletteResidency from '../../engine/templates/palette-residency.json?raw';
+import paletteMuseum from '../../engine/templates/palette-museum.json?raw';
+import paletteExample from '../../engine/templates/palette-example.json?raw';
 
 /**
  * 캠페인 생성기.
@@ -89,7 +103,14 @@ function proseRequest(c) {
   const seeds = c.seedTerms || [];
   const forbidden = (c.terms || []).map((t) => t.word).filter((w) => !seeds.includes(w));
 
-  const fill = ['people:']
+  /**
+   * 채워 올 자리. **프롤로그가 2026-07-29에 늘었다.**
+   *
+   * 전에는 진술만 받았다 — 서식(`PROSE-BRIEF.md`)은 `prologue` 도 요구하는데
+   * 생성기가 *"아래 자리만 채우세요"* 로 잘라내고 있었다. 그래서 생성 사건의
+   * 프롤로그는 코드가 만든 뼈대 그대로였다.
+   */
+  const fill = ['prologue:', '  - "..."   # 4줄 안팎', '', 'people:']
     .concat((c.people || []).map((p) => `  - id: ${p.id}          # ${p.name}\n    statement:\n      paragraphs: [ ... ]`))
     .join('\n');
 
@@ -140,6 +161,27 @@ const DIFFS = [
   { id: 'hard', ko: '어려움', hint: '여유 0 — 한 번의 헛발질도 허용되지 않는다' },
 ];
 
+/**
+ * 고를 수 있는 세계. `raw` 가 없는 둘은 특수 항목이다 —
+ * `default` 는 팔레트 없이(엔진 기본 어휘), `custom` 은 챗봇에게 받아온 것.
+ */
+const WORLDS = [
+  { id: 'residency', ko: '레지던시', hint: '입주 작가 · 창작촌', raw: paletteResidency },
+  { id: 'museum', ko: '박물관', hint: '야간 순찰 · 반출 신청서', raw: paletteMuseum },
+  { id: 'example', ko: '방송국', hint: '엔진에 딸린 예시', raw: paletteExample },
+  { id: 'default', ko: '기본 어휘', hint: '산장풍 — 화면부터 보고 싶을 때', raw: null },
+  { id: 'custom', ko: '직접 만든다', hint: '챗봇에게 받아온다', raw: null },
+];
+
+/** 유저가 붙여넣은 팔레트는 남는다 — 세계는 재사용 대상이다 */
+const PALETTE_KEY = 'nobody-lies:palette';
+function loadPalettePref() {
+  try { return JSON.parse(localStorage.getItem(PALETTE_KEY) || 'null') || {}; } catch { return {}; }
+}
+function savePalettePref(v) {
+  try { localStorage.setItem(PALETTE_KEY, JSON.stringify(v)); } catch { /* 용량 초과 — 막지 않는다 */ }
+}
+
 const box = {
   background: 'var(--bg-surface, #14161a)',
   border: '1px solid var(--border, #2a2e35)',
@@ -166,8 +208,14 @@ const stepNo = {
 export default function Generator() {
   const [difficulty, setDifficulty] = React.useState('normal');
   const [chapters, setChapters] = React.useState(5);
-  const [count, setCount] = React.useState(3);
-  const [paletteText, setPaletteText] = React.useState('');
+  /**
+   * 고른 세계와 붙여넣은 팔레트는 **저장한다.** 안 하면 사건 하나 만들 때마다
+   * 챗봇 왕복을 다시 해야 한다 — 라우트가 바뀌면 `key` 로 재마운트되므로
+   * `useState('')` 는 매번 빈칸이었다(2026-07-28 §`key` 가 없으면 참조).
+   */
+  const [pref] = React.useState(loadPalettePref);
+  const [world, setWorld] = React.useState(() => pref.world || 'residency');
+  const [paletteText, setPaletteText] = React.useState(() => pref.text || '');
   const [busy, setBusy] = React.useState(false);
   const [errs, setErrs] = React.useState([]);
   const [made, setMade] = React.useState(() => Object.values(loadStore()));
@@ -248,25 +296,44 @@ export default function Generator() {
     </div>
   ) : null);
 
+  /** 고른 세계의 팔레트 원문. `custom` 은 붙여넣은 것, `default` 는 없음 */
+  const worldRaw = () => {
+    if (world === 'custom') return paletteText;
+    return WORLDS.find((w) => w.id === world)?.raw || '';
+  };
+
   const generate = () => {
     setErrs([]);
     let palette;
-    if (paletteText.trim()) {
+    const raw = worldRaw();
+    if (raw.trim()) {
       try {
-        palette = JSON.parse(paletteText);
+        palette = JSON.parse(raw);
       } catch (e) {
         setErrs([`팔레트가 JSON 이 아니다 — ${e.message}`,
           '챗봇이 설명을 같이 줬다면 코드블록 안의 { … } 만 붙여넣어라.']);
         return;
       }
     }
+    savePalettePref({ world, text: paletteText });
     setBusy(true);
     // 오라클 탐색이 무거워 UI 를 막는다. 「생성 중」이 먼저 그려지도록 한 틱 미룬다
     setTimeout(() => {
       try {
+        /**
+         * **사건 하나씩 만든다** (2026-07-29 사용자 결정).
+         *
+         * 전에는 「한 번에 시도할 사건」 슬라이더가 1~8 이었다. 근거는 *검증에서
+         * 떨어질 수 있으니 여러 개 던진다* 였는데 **통과율이 구조적으로 100%** 라
+         * 그 전제가 죽었다. 남는 건 「여덟 개 만들고 하나 고르고 일곱 개 지우기」인데
+         * seed 가 무작위라 버린 것은 되찾을 수 없다. 마음에 안 들면 다시 누르면 된다.
+         *
+         * ⚠ 라벨을 트릭 개수로 읽는 오독이 **두 번** 났다(2026-07-29). 두 번째에
+         * 손잡이를 없앴다 — **설명을 두 문단 붙여야 하는 손잡이는 손잡이가 틀린 것이다.**
+         */
+        // seed 는 아래 저장 키(`<사건 id>-<seed>`)에도 쓰인다 — 이름을 남긴다
         const seedBase = Math.floor(Math.random() * 100000);
-        const seeds = Array.from({ length: count }, (_, i) => seedBase + i);
-        const batch = run(seeds, { palette, chapters, want: [difficulty] });
+        const batch = run([seedBase], { palette, chapters, want: [difficulty] });
         if (!batch.passed.length) {
           setErrs(['검증을 통과한 사건이 없다. 아래를 챗봇에 그대로 붙여 넣고 팔레트를 고쳐 달라고 해라.',
             ...[...batch.rejections].map(([why, n]) => `${n}회 — ${why}`)]);
@@ -275,7 +342,12 @@ export default function Generator() {
         }
         const store = loadStore();
         for (const p of batch.passed) {
-          const key = `${p.case.id}-${seedBase}`;
+          /**
+           * `p.case.id` 가 이미 `gen-<seed>` 다. 전에는 여기에 seed 를 **또** 붙여서
+           * 사건 하나만 만들면 `gen-48897-48897` 이 됐다 — 여럿 만들던 시절
+           * (seed = seedBase + i)에도 두 번째 조각은 아무것도 안 갈랐다.
+           */
+          const key = p.case.id;
           store[key] = { ...p.case, id: key, _difficulty: p.result.difficulty, _oracle: p.result.minActions };
         }
         saveStore(store);
@@ -351,6 +423,18 @@ export default function Generator() {
       t.statement = Object.assign({}, t.statement, { paragraphs: para });
       넣음.push(`${t.name} ${para.length}문단`);
     }
+    /**
+     * 프롤로그도 받는다 (2026-07-29). 서식이 원래 요구하던 자리인데 병합이 없었다.
+     * **안 주면 안 건드린다** — 코드가 만든 뼈대가 그대로 남는 것이 옛 것이
+     * 남는 것보다 낫다. 검증기 §9-7(b)가 조사 단어 누설을 오류로 잡으므로
+     * 여기서 따로 안 본다.
+     */
+    const inPro = frag?.prologue;
+    if (Array.isArray(inPro) && inPro.length) {
+      next.prologue = inPro.map((x) => (typeof x === 'string' ? { ko: x } : x));
+      넣음.push(`프롤로그 ${inPro.length}줄`);
+    }
+
     if (!넣음.length) {
       setProseMsg({
         ok: false,
@@ -414,74 +498,80 @@ export default function Generator() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap' }}>
-          <label style={{ fontSize: '13px' }}>
-            <span style={{ color: 'var(--fg-3, #8b93a1)' }}>보고서 장 수 </span>
-            <b>{chapters}</b>
-            <input type="range" min="3" max="8" value={chapters} style={{ display: 'block', width: '190px', marginTop: '5px' }}
-              onChange={(e) => setChapters(Number(e.target.value))} />
-          </label>
-          <label style={{ fontSize: '13px' }}>
-            {/* 「만들」이 아니라 「시도할」이다 — 검증을 통과한 것만 남는다.
-                라벨만 보고 트릭 개수로 읽는 일이 실제로 있었다 (2026-07-29) */}
-            <span style={{ color: 'var(--fg-3, #8b93a1)' }}>한 번에 시도할 사건 </span>
-            <b>{count}</b>
-            <input type="range" min="1" max="8" value={count} style={{ display: 'block', width: '190px', marginTop: '5px' }}
-              onChange={(e) => setCount(Number(e.target.value))} />
-          </label>
-        </div>
+        <label style={{ fontSize: '13px', display: 'block' }}>
+          <span style={{ color: 'var(--fg-3, #8b93a1)' }}>보고서 장 수 </span>
+          <b>{chapters}</b>
+          <input type="range" min="3" max="8" value={chapters} style={{ display: 'block', width: '190px', marginTop: '5px' }}
+            onChange={(e) => setChapters(Number(e.target.value))} />
+        </label>
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '12px 0 0', lineHeight: 1.6 }}>
-          용의자는 언제나 5명이다. 장이 많을수록 조사할 것이 늘고 오래 걸린다 —
-          3장이면 최소 4회, 8장이면 최소 9회 조사해야 풀린다.
-        </p>
-        <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '8px 0 0', lineHeight: 1.6 }}>
-          <b>사건 개수</b>는 트릭 개수가 아니다. 3으로 두면 <b>서로 다른 사건 3개</b>가 만들어져
-          목록에 따로 쌓인다 — 골라 쓰고 나머지는 지우면 된다. 트릭은 사건마다 하나씩
-          붙는다. 검증을 통과한 것만 남으므로 <b>더 적게 나올 수 있다.</b>
+          용의자는 언제나 5명이고, <b>사건은 한 번에 하나</b>씩 만들어진다. 장이 많을수록
+          조사할 것이 늘고 오래 걸린다 — 3장이면 최소 4회, 8장이면 최소 9회 조사해야 풀린다.
+          마음에 안 들면 다시 누르면 된다.
         </p>
       </section>
 
-      {/* 2 — 서식 복사 */}
+      {/* 2 — 세계 고르기 */}
       <section style={{ ...box, marginBottom: '14px' }}>
         <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center' }}>
-          <span style={stepNo}>2</span>서식을 복사해 챗봇에게 준다
+          <span style={stepNo}>2</span>세계를 고른다
         </h2>
+        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+          <b>세계는 어휘다</b> — 장소·직업·물건·시간대 이름. 논리는 앱이 만든다.
+          아래 넷은 <b>이미 들어 있어서 바로 만들 수 있다.</b> 새 세계를 원할 때만
+          챗봇에게 받아온다.
+        </p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {WORLDS.map((w) => (
+            <button key={w.id} onClick={() => setWorld(w.id)}
+              style={{ ...btn(world === w.id), textAlign: 'left', flex: '1 1 150px' }}>
+              <div>{w.ko}</div>
+              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.75, marginTop: '3px' }}>{w.hint}</div>
+            </button>
+          ))}
+        </div>
+        {world !== 'custom' ? null : (
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border, #2a2e35)' }}>
         <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
           ChatGPT · Claude · Gemini · Grok — <b>아무 데나</b> 붙여 넣으면 된다.
           이 앱은 챗봇을 부르지 않는다. 받은 답을 아래 3번에 붙여 넣어라.
+          <b> 한 번 붙여 넣으면 남는다</b> — 다음에 또 안 해도 된다.
         </p>
         <button onClick={() => copy(briefBody(), 'brief')} style={btn(true)}>
           {copied === 'brief' ? '복사됐다 ✓' : '서식 복사'}
         </button>
         {manualBox('brief')}
-      </section>
-
-      {/* 3 — 붙여넣기 */}
-      <section style={{ ...box, marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center' }}>
-          <span style={stepNo}>3</span>받은 답을 붙여 넣는다
-        </h2>
         <textarea
           value={paletteText}
           onChange={(e) => setPaletteText(e.target.value)}
-          placeholder={'챗봇이 준 JSON 을 그대로 붙여넣어라.\n비워두면 기본 어휘(산장풍)로 만든다 — 어떤 화면인지 먼저 보고 싶을 때 쓴다.'}
+          placeholder={'챗봇이 준 JSON 을 그대로 붙여넣어라.\n비워두면 기본 어휘(산장풍)로 만든다.'}
           spellCheck={false}
           style={{
-            width: '100%', minHeight: '150px', boxSizing: 'border-box',
+            width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '14px',
             background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
             border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
             padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
           }}
         />
-        <div style={{ marginTop: '12px', display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={generate} disabled={busy} style={{ ...btn(true), opacity: busy ? 0.5 : 1 }}>
-            {busy ? '만드는 중…' : '캠페인 생성'}
-          </button>
-          {paletteText.trim() ? null : (
-            <span style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)' }}>비워둔 채로 눌러도 된다</span>
-          )}
         </div>
+        )}
+      </section>
+
+      {/* 3 — 만든다 */}
+      <section style={{ ...box, marginBottom: '14px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center' }}>
+          <span style={stepNo}>3</span>사건을 만든다
+        </h2>
+        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+          <b>{WORLDS.find((w) => w.id === world)?.ko}</b> ·{' '}
+          {chapters}장 · {DIFFS.find((d) => d.id === difficulty)?.ko}
+          {world === 'custom' && !paletteText.trim()
+            ? ' — 붙여넣은 것이 없어 기본 어휘로 만든다' : ''}
+        </p>
+        <button onClick={generate} disabled={busy} style={{ ...btn(true), opacity: busy ? 0.5 : 1 }}>
+          {busy ? '만드는 중…' : '사건 만들기'}
+        </button>
       </section>
 
       {/* 오류 — 그대로 챗봇에 되붙일 수 있게 */}
@@ -529,7 +619,7 @@ export default function Generator() {
                     <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
                     <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
                       {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
-                      {hasProse(c) ? ' · 진술 있음' : ' · 진술 자리표시'}
+                      {hasProse(c) ? ' · 산문 입힘' : ' · 조립 진술'}
                     </span>
                   </a>
                   <button
@@ -554,8 +644,10 @@ export default function Generator() {
           </>
         )}
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '14px 0 0', lineHeight: 1.6 }}>
-          갓 만든 사건의 <b>진술은 자리표시다</b>(「…그곳에 없었습니다」). 논리·어휘·평면도는
-          진짜지만 읽을 문장이 없다 — 행의 <b>「산문」</b>을 눌러 5번에서 채운다.
+          갓 만든 사건도 <b>진술이 읽힌다</b> — 사람마다 말버릇이 다르고, 각자
+          <b> 사건과 무관한 비밀 하나</b>를 감춘다(제목이 곧 그 규칙이다). 세계의
+          어휘로 조립한 것이라 <b>말맛은 챗봇 산문만 못하다</b> — 더 좋게 쓰고 싶으면
+          행의 <b>「산문」</b>을 눌러 5번에서 덮어쓴다.
         </p>
       </section>
 
