@@ -8,10 +8,11 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run tmpl-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "verify": "npm run verify -w engine",
     "gen-check": "npm run verify -w engine -- --generate 40 --min-pass 100",
+    "tmpl-check": "npm run verify -w engine -- --case templates/case-template.yaml",
     "case": "npm run export-case -w nobody-lies-engine",
     "dev": "npm run dev -w nobody-lies-app",
     "port-check": "node scripts/port-check.mjs",

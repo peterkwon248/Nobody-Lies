@@ -155,6 +155,31 @@ export function report(b: Batch): string {
     lines.push(`  최단 경로  ${Math.min(...oracles)}~${Math.max(...oracles)}회`)
   }
 
+  /**
+   * ★ 통과분에 상주하는 경고를 반드시 찍는다 ★
+   *
+   * 이 줄이 없던 동안 `조사/예산 1.86배 — 3배 이상 권장` 이 **통과 전건에**
+   * 붙어 있었는데 아무도 못 봤다. 리포트가 기각 사유만 보여줬기 때문이다.
+   * **통과는 「문제가 없다」가 아니라 「오류가 없다」일 뿐이다.**
+   *
+   * 2026-07-29에 같은 형태의 사각지대를 하루에 셋 밟았다 —
+   * 게이트에 없던 생성기 · 리포트에 없던 아키타입 분포 · 그리고 이것.
+   */
+  if (b.passed.length) {
+    const warns = new Map<string, number>()
+    for (const p of b.passed)
+      for (const w of p.result.warnings) {
+        const k = w.replace(/'[^']*'/g, "'…'").replace(/\d+(\.\d+)?/g, 'N')
+        warns.set(k, (warns.get(k) ?? 0) + 1)
+      }
+    if (warns.size) {
+      lines.push('')
+      lines.push('  ⚠ 통과분에 상주하는 경고')
+      for (const [k, n] of [...warns].sort((a, x) => x[1] - a[1]).slice(0, 8))
+        lines.push(`    ${String(n).padStart(4)}/${b.passed.length}건  ${k.slice(0, 70)}`)
+    }
+  }
+
   if (b.rejections.size) {
     lines.push('')
     lines.push('  기각 사유 (많은 순)')
