@@ -432,8 +432,28 @@ export default class App extends React.Component {
     if (!c) return
     const ko = (t) => (t && typeof t === 'object' ? t.ko : t) || ''
 
+    /**
+     * ★ 저장 키에 사건 id 를 넣는다 ★ (2026-07-29)
+     *
+     * `nobody-lies:mountain-lodge` 하드코딩이었다. 사건이 하나뿐일 때는 맞았지만
+     * **사건을 갈아끼우면 다른 사건의 진행을 덮어쓴다** — 생성 사건을 한 번
+     * 플레이하면 산장 사건에서 채운 공란과 상황판이 전부 사라진다.
+     *
+     * 산장 사건은 `c.id` 가 `mountain-lodge` 라 키가 그대로다 — 저장된 진행이
+     * 그대로 열린다.
+     */
+    if (c.id) this.SAVE_KEY = `nobody-lies:${c.id}`
+
     if (typeof c.budget === 'number') this.BUDGET = c.budget
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
+
+    /**
+     * 씨앗 단어 — 진술 정독만으로 확보되는 것. 조사가 필요 없다.
+     *
+     * 앱 하드코딩(`테이프`·`연탄`)이 남아 있어서 **생성 사건이 산장 사건의 씨앗을
+     * 들고 시작했다.** 1장이 조사 없이 확정되려면 이 단어들이 맞아야 한다.
+     */
+    if (c.seedTerms?.length) this.SEED_TERMS = c.seedTerms
 
     /**
      * ─────────────────────────────────────────────────────────────
