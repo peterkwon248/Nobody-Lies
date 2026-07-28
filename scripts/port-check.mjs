@@ -88,6 +88,11 @@ const APP_ONLY = new Set([
   // 메서드**를 부르므로 공개 게이트가 그대로 따라온다
   'pb.boards', 'b.backdropMark', 'b.showDel',
   'pb.backdrop.show', 'pb.backdrop.needsTimes', 'pb.backdrop.isPlan', 'pb.backdrop.isGrid', 'pb.backdrop.isGraph',
+
+  // 홈 목록에서 만든 사건을 지운다 (2026-07-29) — 캠페인 생성기가 생기기 전에는
+  // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
+  // `confirmDel` 은 그 행이 「지울까?」를 묻는 동안의 갈래다
+  'c.canDel', 'c.confirmDel',
 ])
 
 const P = fromPrototype(readFileSync(PROTO, 'utf8'))

@@ -109,9 +109,28 @@ function loadDesignSystem() {
  */
 const CASE_DEFAULT = 'mountain-lodge';
 
+/**
+ * 라우팅 값은 **쿼리와 해시 둘 다**에서 읽는다 — `?case=gen-7` · `#case=gen-7`.
+ *
+ * 해시가 필요한 이유 (2026-07-29 실측):
+ * 테스터용 단일 HTML 은 `file://` 로도 열리지만, **안드로이드에서 다운로드하면
+ * `content://…/external_files/…` 로 열린다.** 그 공급자는 쿼리가 붙은 URL 을
+ * 해석하지 못해서 「파일에 액세스할 수 없음」이 뜬다 — 경로를 새로 만드는 순간
+ * 죽는다. **해시는 URL 해석에 들어가지 않으므로** 세 경우 다 산다.
+ *
+ * 읽기는 둘 다 받고 **쓰기는 해시로만** 한다. 문서와 기존 링크(`/?case=…`)가
+ * 그대로 살아 있어야 해서 쿼리를 못 버린다.
+ */
+function routeParams() {
+  const q = new URLSearchParams(window.location.search);
+  const h = new URLSearchParams(String(window.location.hash || '').replace(/^#/, ''));
+  for (const [k, v] of h) if (!q.has(k)) q.set(k, v);
+  return q;
+}
+
 function caseName() {
   try {
-    const raw = new URLSearchParams(window.location.search).get('case');
+    const raw = routeParams().get('case');
     if (!raw) return CASE_DEFAULT;
     // `local:` 접두는 localStorage 에서 읽는다(생성기 산출물). 나머지는 파일명 조각.
     // 어느 쪽이든 경로 구분자와 점은 막는다 — 상위 디렉터리로 새지 않게
@@ -197,22 +216,57 @@ class Boundary extends React.Component {
 
 const root = createRoot(document.getElementById('root'));
 
+/** 번들은 한 번만 넣는다 — 화면을 오갈 때마다 다시 붙이면 두 벌이 된다 */
+let dsOnce = null;
+const designSystem = () => (dsOnce ||= loadDesignSystem());
+
 /**
- * `/?generate` → 캠페인 생성기.
+ * `#generate` (또는 `?generate`) → 캠페인 생성기.
  *
  * 게임과 별도 화면이라 `App.jsx` 를 건드리지 않는다 — 그 파일은 프로토타입과
  * `port-check` 로 대조되고 있어서, 화면을 더하면 대조 대상이 늘어난다.
  * 생성기는 프로토타입에 없는 **신설 화면**이므로 밖에 둔다.
+ *
+ * ── 왜 해시 변화에 반응하나 (2026-07-29) ─────────────────────────
+ *
+ * 예전엔 `location.href` 를 새 경로로 밀어 **문서를 다시 받았다.** 그 방식이
+ * 두 번 죽었다: `file://` 에서 `/` 는 파일시스템 루트였고, 안드로이드가 다운로드
+ * 파일을 여는 `content://…/external_files/…` 에서는 쿼리를 붙이는 순간 공급자가
+ * 파일을 못 찾았다(「파일에 액세스할 수 없음」).
+ *
+ * **문서를 다시 받지 않으면 셋 다 산다.** 해시만 바꾸고 여기서 다시 그린다 —
+ * `location.reload()` 조차 쓰지 않는다(그것도 열린 방식에 따라 막힌다).
  */
-if (new URLSearchParams(window.location.search).has('generate')) {
-  import('./Generator.jsx').then(({ default: Generator }) => {
-    root.render(<Boundary><Generator /></Boundary>);
-  });
-} else {
-  Promise.all([loadDesignSystem(), loadCase()])
+let drawn = null;
+
+function renderRoute() {
+  const p = routeParams();
+  const key = p.has('generate') ? 'generate' : 'case:' + caseName();
+  if (key === drawn) return;
+  drawn = key;
+
+  /**
+   * ★ `key` 가 라우트다 — **없으면 사건이 안 바뀐다.** ★
+   *
+   * `App` 은 **생성자에서** `applyCase(props.caseData)` 로 표를 만든다. `key` 가
+   * 같으면 React 는 같은 자리의 같은 컴포넌트로 보고 **갱신만 하므로 생성자가 다시
+   * 안 돈다** — 사건을 바꿔도 옛 사건이 그대로 남는다(2026-07-29에 실제로 그랬다:
+   * 생성 사건을 열었는데 산장의 20공란·예산 6 이 나왔다). 문서를 다시 받던 시절엔
+   * 리로드가 이걸 공짜로 해줬다.
+   */
+  if (p.has('generate')) {
+    import('./Generator.jsx').then(({ default: Generator }) => {
+      root.render(<Boundary key={key}><Generator /></Boundary>);
+    });
+    return;
+  }
+  Promise.all([designSystem(), loadCase()])
     .then(([, caseData]) => root.render(
-      <Boundary>
+      <Boundary key={key}>
         <App caseData={caseData} />
       </Boundary>,
     ));
 }
+
+renderRoute();
+window.addEventListener('hashchange', renderRoute);

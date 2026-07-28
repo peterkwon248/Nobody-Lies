@@ -50,6 +50,8 @@ export default class App extends React.Component {
     stage: 'brief', readIdx: 0, readDone: false, readMemos: {}, readHi: {},
     invSel: { action: null, targets: [] }, invLog: [], pendingInv: null, invResult: null,
     route: 'home', started: false, confirmAbandon: false, confirmFinish: false, selectedCase: 1, resultFold: false, openTerm: null,
+    // 홈 목록에서 지우려는 만든 사건의 id. 되돌릴 수 없어서 한 번 묻는다 (2026-07-29)
+    confirmDelCase: null,
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
@@ -453,6 +455,34 @@ export default class App extends React.Component {
 
     if (typeof c.budget === 'number') this.BUDGET = c.budget
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
+
+    /**
+     * 사건 제목. **한 번 이으면 이후 모든 사건이 자기 제목으로 뜬다** — 사건마다
+     * 손댈 자리가 아니다. `DICT` 의 「산장 살인사건」은 이제 **사건 파일이 없을
+     * 때의 폴백**이다(앱이 다른 값에 쓰는 방식 그대로).
+     *
+     * 안 이어져 있어서 2026-07-29에 드러났다: 레지던시 팔레트로 만든 사건을
+     * 열었더니 장소·조사는 전부 그 세계인데 **사이드바 머리만 「산장 살인사건」**
+     * 이었다. 박물관 팔레트 때는 생성 제목이 「산장 사건 45035」라 안 보였다 —
+     * **세계가 진짜로 바뀌니까 드러났다.**
+     *
+     * `DICT` 는 클래스 필드라 인스턴스마다 새 객체다. 여기서 고쳐도 다른 사건에
+     * 안 새어 나간다.
+     */
+    if (c.title) {
+      const t = typeof c.title === 'object' ? c.title : { ko: c.title }
+      this.DICT.ko.caseTitle = t.ko || this.DICT.ko.caseTitle
+      /**
+       * 영문은 **사건이 줄 때만** 덮어쓴다. 안 그러면 산장의 영문 제목
+       * (`The Mountain Lodge Case`)이 한국어로 뭉개진다 — 사건 파일에 `en` 이
+       * 없어서다. 앱 표는 엔진의 상위집합이고 **영문은 엔진에 없다.**
+       *
+       * 다만 **다른 사건**인데 영문이 없으면 한국어를 쓴다. 산장의 영문 제목이
+       * 남아 엉뚱한 세계를 가리키는 것보다 낫다.
+       */
+      if (t.en) this.DICT.en.caseTitle = t.en
+      else if (this._foreignCase && t.ko) this.DICT.en.caseTitle = t.ko
+    }
 
     /**
      * 씨앗 단어 — 진술 정독만으로 확보되는 것. 조사가 필요 없다.
@@ -1948,13 +1978,38 @@ export default class App extends React.Component {
     // 만든 사건들. 브라우저에 저장돼 있어서 이 기계에서만 보인다
     let mine = {};
     try { mine = JSON.parse(localStorage.getItem('nobody-lies:generated') || '{}'); } catch (e) { mine = {}; }
+    /**
+     * **지울 수 있는 것은 만든 사건뿐이다.** 앱 제공 사건(산장)은 아래 두 값을
+     * 아예 안 달고 나가므로 행에 지울 자리가 생기지 않는다 — 막는 코드가 따로 없다.
+     *
+     * 되돌릴 수 없어서 **한 번 묻는다.** 생성기(`Generator.jsx`)는 맨 `×` 하나로
+     * 지우는데 여기서 다르게 가는 근거는 둘이다: 홈의 행은 **누르면 사건이 열리는
+     * 자리**라 오조작이 곧 소실이고, 만든 사건은 seed 가 무작위라 **같은 것을 다시
+     * 만들 수 없다.** 물음은 행 안에 남는다 — 떴다 사라지는 문구가 아니다.
+     */
+    const ask = this.state.confirmDelCase;
     Object.values(mine).forEach((g, i) => {
+      const asking = ask === g.id;
+      const stop = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
       cases.push({
         num: 'G' + (i + 1), title: g.title, diff: g._difficulty || '', est: (g.chapters ? g.chapters.length : 0) + (ln === 'ko' ? '장' : ' ch'),
         chipLabel: ln === 'ko' ? '내가 만듦' : 'Generated',
         chipStyle: { background: 'var(--accent-soft)', color: 'var(--accent)' },
         diffStyle: dim,
-        onClick: () => { window.location.href = '/?case=local:' + encodeURIComponent(g.id); },
+        canDel: !asking, confirmDel: asking,
+        delTitle: ln === 'ko' ? '이 사건 지우기' : 'Delete this case',
+        askLabel: ln === 'ko' ? '지울까? 진행도 같이 사라진다' : 'Delete? progress goes too',
+        yesLabel: ln === 'ko' ? '지운다' : 'Delete', noLabel: ln === 'ko' ? '취소' : 'Cancel',
+        onDel: (e) => { stop(e); this.setState({ confirmDelCase: g.id }); },
+        onDelYes: (e) => { stop(e); this.deleteGenerated(g.id); },
+        onDelNo: (e) => { stop(e); this.setState({ confirmDelCase: null }); },
+        delStyle: { fontSize: '11px', color: 'var(--fg-4)', cursor: 'pointer', flex: 'none', padding: '0 2px' },
+        askStyle: { fontSize: '11px', color: 'var(--fg-3)', flex: 'none' },
+        yesStyle: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: 'var(--r-sm)', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', color: 'var(--label-red)', cursor: 'pointer', font: '600 11px var(--font-sans)', flex: 'none' },
+        noStyle: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: 'var(--r-sm)', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', color: 'var(--fg-3)', cursor: 'pointer', font: '600 11px var(--font-sans)', flex: 'none' },
+        // 묻는 중에는 행을 눌러도 사건이 열리지 않는다 — 물음을 무르는 자리가 된다
+        onClick: asking ? (() => this.setState({ confirmDelCase: null }))
+          : (() => this.goRoute('case=local:' + encodeURIComponent(g.id))),
         cardStyle: card,
       });
     });
@@ -1965,12 +2020,46 @@ export default class App extends React.Component {
       chipLabel: ln === 'ko' ? '새로 만들기' : 'New',
       chipStyle: { background: 'var(--accent)', color: '#fff' },
       diffStyle: dim,
-      onClick: () => { window.location.href = '/?generate'; },
+      onClick: () => this.goRoute('generate'),
       cardStyle: Object.assign({}, card, { borderStyle: 'dashed', borderColor: 'var(--accent)' }),
     });
 
-    return { resumeShow: status === 'inProgress', resumeTitle: ln === 'ko' ? '산장 살인사건' : 'The Mountain Lodge', resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
+    // 「이어하기」는 **지금 열려 있는 사건**의 진행이다 — 제목도 그 사건 것이어야 한다
+    return { resumeShow: status === 'inProgress', resumeTitle: this.T().caseTitle, resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
   }
+  /**
+   * 화면 이동. **경로를 새로 만들지 않고 해시만 바꾼다.**
+   *
+   * `/?generate` 로 가던 것을 두 번 고쳤다. `/` 는 `file://` 에서 파일시스템
+   * 루트라 죽었고, `location.pathname + '?generate'` 는 안드로이드가 다운로드
+   * 파일을 여는 `content://…/external_files/…` 에서 죽었다 — 그 공급자는 쿼리가
+   * 붙은 URL 을 못 찾아 **「파일에 액세스할 수 없음」**이 뜬다(2026-07-29 실측).
+   *
+   * 해시는 URL 해석에 안 들어가므로 `http`·`file`·`content` 셋 다 산다.
+   * `main.jsx` 가 `hashchange` 를 듣고 다시 그린다 — **문서를 다시 받지 않는다.**
+   */
+  goRoute(q) {
+    window.location.hash = q;
+  }
+
+  /**
+   * 만든 사건 하나를 지운다 — **진행 저장도 같이.** 저장 키가 `nobody-lies:<사건 id>`
+   * 라서 안 지우면 같은 id 로 다시 만들었을 때 옛 진행이 되살아난다
+   * (`Generator.jsx` 의 `forget` 과 같은 이유·같은 키다).
+   *
+   * 여기 오는 id 는 `nobody-lies:generated` 에 있는 것뿐이다. 앱 제공 사건은
+   * 애초에 지울 자리가 렌더되지 않으므로 이 함수에 닿지 않는다.
+   */
+  deleteGenerated(id) {
+    try {
+      const all = JSON.parse(localStorage.getItem('nobody-lies:generated') || '{}');
+      delete all[id];
+      localStorage.setItem('nobody-lies:generated', JSON.stringify(all));
+      localStorage.removeItem(`nobody-lies:${id}`);
+    } catch (e) { /* 저장소를 못 쓰는 브라우저 — 화면만 되돌린다 */ }
+    this.setState({ confirmDelCase: null });
+  }
+
   buildDetail() {
     const t = this.T(), ln = this.state.lang, c = this.CASES[(this.state.selectedCase || 1) - 1] || this.CASES[0];
     const real = !!c.real, status = real ? this.caseStatus() : 'soon', chip = this.statusChip(status === 'soon' ? 'unplayed' : status);
@@ -4014,6 +4103,8 @@ export default class App extends React.Component {
                     <span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{c.est}</span>
                     <span className="pr-badge" style={c.diffStyle}>{c.diff}</span>
                     <span style={c.chipStyle}>{c.chipLabel}</span>
+                    {(c.canDel)?(<><span onClick={c.onDel} title={c.delTitle} style={c.delStyle}>✕</span></>):null}
+                    {(c.confirmDel)?(<><span style={c.askStyle}>{c.askLabel}</span><span onClick={c.onDelYes} style={c.yesStyle}>{c.yesLabel}</span><span onClick={c.onDelNo} style={c.noStyle}>{c.noLabel}</span></>):null}
                   </div></React.Fragment>))}
                 </div>
                 <div className="v-caption" style={S("color:var(--fg-2);margin:26px 0 12px;display:block")}>{V.ui.daily}</div>

@@ -1,57 +1,50 @@
 ---
-session_date: "2026-07-29"
+session_date: "2026-07-28"
 project: "노바디 라이즈 (Nobody Lies)"
-working_directory: "C:/Users/kwonkyunghun/Desktop/Nobody Lies"
-machine: "DESKTOP-JCJTAH8"
+working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
+machine: "KWONKYUNGHUN (OneDrive 아래)"
 ---
 
 ## Completed Work
 
-**작업 트리 깨끗 · 빌드 게이트 7단 초록(exit 0) · 20커밋 전부 main 에 푸시됨.**
+**작업 트리 깨끗 · 빌드 게이트 7단 초록(exit 0) · 콘솔 에러 0.**
 
-### 이번 세션이 닫은 것 — 생성 사건이 앱에서 열린다
-
-```
-✅ ① 산문을 스키마로   (2026-07-27)
-🔨 ② 산문가            서식 있음 · 결과문 하나만 받아봤다  ← 다음은 여기
-⬜ ③ 검열관            §9-7 4종 + §9-8 2종
-✅ ④ 작가              트릭 5종 · 팔레트 · 장 3~8 · 난이도 3갈래 · 평면도 · YAML 방출
-```
+### 이번 세션이 닫은 것 — 앱이 기계 밖으로 나갔다
 
 ```
-팔레트(LLM 1회) → generateCase(seed, palette) → verify → --emit → /?case=gen-1
-                                                       → --emit --yaml → 저작
+✅ ① 산문을 스키마로
+🔨 ② 산문가            서식 있음 · 브리프 준비됨 · 아직 안 받았다  ← 다음은 여기
+⬜ ③ 검열관
+✅ ④ 작가
 ```
 
 ### 항목별
 
-1. **④작가가 섰다** — 트릭 아키타입 5종(계약을 코드가 채운다) · `Palette` 이음매 ·
-   장 수 3~8 가변(가닥 구조) · 난이도 3갈래(`--want`) · 평면도 생성 · YAML 방출
-2. **앱이 사건 파일에서 구조를 읽는다** — 인물·진술·지문·시간축·장소·**보고서
-   (장·공란·정답·서술문)**·**평면도(GEO)**·확보 단어 은행·씨앗 단어·**저장 키**
-3. **용의자 5명 고정** — `SYSTEM-DECISIONS §3` 「용의자 수 가변」을 뒤집었다(사용자 결정)
-4. **게이트 5단 → 7단** — `gen-check`(생성기 `--min-pass 100`) · `tmpl-check`(저작 서식)
-5. **서식 셋** — `CASE-BRIEF.md`(④ 통째 의뢰) · `PALETTE-BRIEF.md`(주력) ·
-   `palette-museum.json`(사용자가 받아온 첫 실사용 팔레트)
-6. **캠페인 생성기가 앱 안에 들어왔다** — 홈 「＋ 캠페인 생성」 또는 `/?generate`.
-   난이도·장 수·개수 → 서식 복사 → 챗봇에서 받아 붙여넣기 → 생성 → 플레이.
-   **유저가 알고 한다**(앱이 몰래 안 만든다) · 검증 실패 시 오류 복사 버튼 ·
-   엔진은 이식 아니라 참조(`vite.config.ts` `engineResolver` 가 이미 있었다)
-7. **사용자가 써보고 결함 둘을 잡았다** — ⓐ 생성 사건을 눌러도 안 열렸다
-   (데이터는 갈리는데 `route` 가 `home`. 홈·상세가 산장 전용 하드코딩이라
-   들어갈 문이 없었다) → **기본 사건이 아니면 부팅 때 바로 시작**
-   ⓑ 지울 자리가 없었다 → 생성기에 사건별 `×`(진행 저장도 함께 삭제)
+1. **🎯 홈에서 생성 사건 삭제** (닫음) — `✕` → 「지울까? 진행도 같이 사라진다」 →
+   지운다/취소. 생성기의 맨 `×` 와 다르게 **한 번 묻는다**: 홈의 행은 누르면 사건이
+   열리는 자리라 오조작이 곧 소실이고, seed 가 무작위라 **같은 것을 다시 못 만든다**.
+   앱 제공 사건은 `canDel` 을 아예 안 달고 나가 지울 자리가 렌더되지 않는다
+2. **테스터용 단일 HTML** (`npm run tester` → `out/nobody-lies-tester.html` 1.32 MB) —
+   더블클릭하면 도는 게임. 서버·인터넷 없음
+3. **라우팅을 쿼리에서 해시로** — 아래 §안드로이드 참조. 두 번 죽고 세 번째에 섰다
+4. **사건 제목 배선** — `applyCase` 가 제목만 안 읽어오고 있었다. 한 번 이어서 끝
+5. **복사 폴백 3단** — 클립보드 API → `execCommand` → **화면에 펼쳐 직접 복사**
+6. **`before-work`/`after-work` 를 저장소에 넣었다** — `.claude/commands/`. 사용자
+   레벨에만 있어서 이 기계에 안 따라왔던 것이다. 이제 커밋돼서 네 기계가 다 받는다
+7. **레지던시 팔레트** (`engine/templates/palette-residency.json`) — 사용자가
+   받아온 두 번째 세계. 3/3 통과 · 트릭 3종
 
 ### 검증한 것
 
 | | |
 |---|---|
-| 산장 사건 회귀 | 공란 20의 답 · kind · `SEC_BLANKS` · `ORDER` · `GEO`(방4·구역2·문5·창3·보행선2) · `WALK` · 고정물 4 — **전부 옛값** |
-| 생성 | 200/200 통과 · 아키타입 5종 균등 · 상주 경고 0 |
-| 장 수 | 3장 오라클 4 · 5장 오라클 6 · 8장 오라클 9 |
-| 난이도 | easy·normal·hard 각 10건 100% |
-| YAML 방출 | **왕복 대조** — 쓴 파일을 다시 읽어 원본과 같음 |
-| 박물관 팔레트 | 앱에서 열림 · 장소 11곳 박물관 어휘 · 조사 34 · 콘솔 에러 0 |
+| 삭제 | 행 10개 전수 — 앱 제공 6 + ＋ 에는 지울 자리 없음 · 생성 사건에만 있음 |
+| 삭제 실행 | 사건 + **진행 저장 키** 같이 삭제 · 산장 진행은 무사 · URL 안 바뀜 |
+| 단일 HTML | `file://` 에서 프롤로그→브리핑 진행 · **진행 저장됨**(768 B) · DS 적재 · 폰트·토큰 dev 서버와 동일 |
+| 해시 라우팅 | `#generate` · `#case=local:…` · ←홈 — **문서 재요청 없이** 전환 |
+| 제목 | 산장 ko/en · 레지던시 ko/en **네 조합 실측** |
+| 복사 폴백 | 클립보드 제거 + `execCommand` 실패 조건에서 **서식 1989자 펼쳐짐** |
+| 레지던시 | 장소 11곳 전부 그 세계 · **산장 기본 어휘 0** · 빈손 조사까지 |
 
 ## In Progress
 
@@ -59,67 +52,50 @@ machine: "DESKTOP-JCJTAH8"
 
 ## Remaining Tasks
 
-- [ ] **🎯 진술 원문을 산문가에게 받는다 (사용자 손 필요)** — `PROSE-BRIEF.md`,
-      **한 인물씩** · 짝을 같이. 대상은 박물관 사건(seed 1)
-- [ ] **팔레트에 인물 층**(성격·비밀의 결·말투) — 조립 진술 개선.
-      **1번 결과를 봐야 어디까지 흉내낼 수 있는지 안다**
-- [ ] **🎯 생성기에 「산문 단계」를 붙인다 — 1번 뒤에.** 지금 `Generator.jsx` 는
-      `PALETTE-BRIEF` 만 import 한다. ②산문가는 화면에 **아예 없다** — 유저가 만든
-      사건은 영영 자리표시 진술로 남는다. 끊긴 곳: ⓐ 논리를 브리프용으로 꺼내기
-      (사건이 localStorage JSON 인데 서식은 YAML 파일 전제 · 짝 골라내기도 없다)
-      ⓑ 받은 YAML 조각 되붙이기. **ⓒ 재검증은 이미 된다**(검증기가 브라우저에서 돈다).
-      ⚠ `PROSE-BRIEF` 자체도 손봐야 한다 — 「인물당 10~14문단」인데 산장 실제는 2~3,
-      생성 사건은 4다. **어느 쪽과도 안 맞는다**
-- [ ] **🎯 홈 목록에서 생성 사건을 지울 수 있게** (사용자 요구) — 삭제는 지금
-      **생성기 화면(`/?generate`)에만** 있다. 유저가 지우려는 곳은 홈이다.
-      ⭐ **앱 제공 사건(산장 01~06)은 지울 수 없어야 한다.** 지울 때 진행 저장도 함께.
-      ⚠ 홈 행 렌더는 `port-check` 대조 대상이라 버튼을 행 안에 넣으면 `APP_ONLY` 선언이 필요
-- [ ] **생성 사건을 기계 사이로 옮기는 길** — 지금은 `localStorage` 라 그 브라우저에만
-      있다. 팔레트를 다시 돌리거나 `--emit --yaml` 로 뽑아 `engine/cases/` 에 커밋한다
+- [ ] **🎯 진술 원문을 받는다 (사용자 손 필요)** — 세계를 **레지던시로 갈아탄다**
+      (사용자가 직접 가져온 것 · `--generate 1` 이 seed 1 결정론). 브리프를 그쪽으로
+      다시 써야 한다. 박물관용 초안이 `out/PROSE-REQUEST-gen-1.md` 에 있다
+- [ ] **레지던시 팔레트에 `records` 8개** (사용자 손 필요) — 챗봇이 빼먹었다.
+      지금 확보 단어 셋이 기본값(`출입 기록·통화 내역·남겨진 쪽지`)이라 **세계의 맛이 없다**
+- [ ] **🎯 생성기에 「산문 단계」** — 1번 뒤에. ⓐ 논리를 브리프용으로 꺼내기
+      ⓑ YAML 되붙이기 (ⓒ 재검증은 이미 된다)
+- [ ] **`?generate` 대신 `#generate` 를 문서에 반영** — `NEXT-ACTION` 이 아직 `/?generate` 로 안내한다(쿼리 읽기는 살아 있어서 동작은 한다)
 - [ ] `e_safes` · `a_ph_yuri` 의 `clues` · 색·대비·질감 · 배치 스냅 · 표기 안내 문안
 
 ## Blockers / Issues
 
-- ⚠️ **「없는 것이 표시가 된다」 — 하루에 두 번.** 진술 문단 수 · 소지품 검사.
-  절대 규칙이 금지한 것은 「강조」인데 **부재도 강조다**
-- ⚠️ **「초록불의 뜻」 — 하루에 네 번.** 게이트에 없던 생성기·저작 서식,
-  리포트에 없던 아키타입 분포·상주 경고. **통과는 「오류가 없다」일 뿐이다**
-- ⚠️ **엔진에 이미 있는데 배선만 없던 것이 다섯.** 생성기·저작 서식·확보 단어·
-  보고서·평면도. **새로 만들기 전에 엔진을 본다**
-- ⚠️ **대입(`this.X =`)만 찾으면 이관 여부를 못 판단한다** — `applyCase` 에
-  제자리 변경이 있다. 그래서 「보고서는 앱 하드코딩」이라고 한 번 틀리게 말했다
-- ⚠️ **어휘가 논리를 흔들면 결함이다.** 팔레트 배열 길이가 rng 를 밀어 트릭이
-  5→3종이 됐다. 초기 상태를 흩고 트릭을 독립 줄기로 옮겨 해소
-- ⚠️ **스크린샷이 네 기계째 막힌다.** React fiber 를 훑어 런타임 상태를 직접 읽는
-  방식으로 대체했다 — 이번 세션 실측이 거의 다 그 방식이다
+- ⚠️ **「열리는 방식」마다 다른 것이 막힌다.** `http` 에서 되던 것이 `file://` 에서
+  죽고, 거기서 되던 것이 안드로이드 `content://` 에서 또 죽었다. **경로를 새로 만드는
+  행위**가 공통 원인이었다 — 지금은 만들지 않는다(해시). 클립보드는 **보안 컨텍스트**가
+  없어서 막혔다. 테스터에게 보내는 것은 **폰에서 한 번 열어보기 전에는 모른다**
+- ⚠️ **고치다 회귀를 두 번 냈고 둘 다 되짚어서 잡았다.** ① 리로드를 없앴더니 사건이
+  안 바뀌었다(React 가 갱신만 해서 생성자가 안 돔 → `key` 로 재마운트) ② 제목 `en` 을
+  무조건 덮어써서 산장 영문 제목이 뭉개졌다. **②는 07-27에 문서가 적어둔 결함의 거울상이다**
+- ⚠️ **미리보기 창이 로컬 파일을 새로 안 읽는다.** 옛 스냅샷을 계속 줘서 고친 것을
+  확인하려다 헛다리를 짚었다. **디스크 파일을 직접 세서** 알았다. `file://` 확인은
+  dev 서버로 대신했다(라우팅 코드는 같은 소스)
+- ⚠️ **문서 날짜가 하루 앞서 적혀 있었다.** 직전 세션이 「2026-07-29」로 적었는데
+  **git 커밋은 전부 07-28 17시대**다. 시계 차이가 아니라 오기다. MEMORY 의
+  「(2026-07-29)」 절 제목들도 같은 날이다
 
 ## Notes for Next Session
 
-- **기계를 옮기면 세계는 남고 사건은 사라진다.**
-  남는 것: `engine/cases/mountain-lodge.yaml` · `case-template.yaml` ·
-  `palette-museum.json` · `palette-example.json`.
-  사라지는 것: `app/public/cases/*.json`(gitignore) · localStorage 의 생성 사건.
-  → 새 기계에서 **홈 → ＋ 캠페인 생성 → 팔레트 붙여넣기**로 같은 세계를 다시 만든다.
-  단 **seed 가 무작위**라 사건 자체는 다르다
-- **직전 머신은 `DESKTOP-JCJTAH8`.** 07-28은 `KWONKYUNGHUN`(OneDrive 아래)이었다.
-  ⚠ 머신 이름 `KWONKYUNGHUN` 과 이 기계의 **사용자명** `kwonkyunghun` 이 겹친다 —
-  `$env:COMPUTERNAME` 과 경로를 같이 봐야 오진하지 않는다
-- **기계를 옮기면 `git pull` 다음 `npm install`**
-- `app/public/cases/` 와 `out/` 은 추적 안 된다 — `--emit` 산출물이고 언제든 다시 만든다
+- **`before-work`/`after-work` 가 이제 슬래시 명령이다** (`.claude/commands/`).
+  새 세션에서 잡힌다 — 안 잡히면 세션을 새로 연다
+- **`npm run tester`** 가 테스터용 단일 HTML 을 굽는다. 항상 `out/nobody-lies-tester.html`
+- **게이트는 7단이다** — `npm run build` 하나로 다 돈다
+- **팔레트가 세계다.** 남는 것은 `engine/templates/palette-*.json` 이고 생성 사건은
+  안 남는다. 레지던시는 `--generate N --palette templates/palette-residency.json`
 - 이 저장소는 **직접 main 푸시** (feature 브랜치·PR 없음)
-- **`docs/CONTEXT.md`·`docs/TODO.md` 는 의도적으로 없다** — MEMORY.md 단일 체제
 
 ## Files Modified
 
-- `engine/src/generate.ts` — 트릭 5종 · `Palette` · 장 수 가변 · 가닥 · 평면도 ·
-  진술 도출 · 장소 11 · 키 배정기 · rng 탈상관
-- `engine/src/orchestrate.ts` — `fit()` 재작성(19회 → 2회) · 상주 경고 표시 · `RunOptions`
-- `engine/src/cli.ts` — `--palette` · `--want` · `--chapters` · `--emit` · `--yaml` · `--min-pass`
-- `engine/src/to-yaml.ts` — **신설**. `parseCase` 의 역함수
-- `engine/templates/` — `CASE-BRIEF.md` · `PALETTE-BRIEF.md` · `palette-example.json` ·
-  `palette-museum.json` **신설** · `case-template.yaml` 5인 복구 · `README.md`
-- `app/src/App.jsx` — `applyCase` 구조 이관(인물·진술·시간·장소·보고서·평면도·
-  확보 단어·씨앗·저장 키)
-- `app/src/main.jsx` — `?case=` 선택 · **에러 경계**
-- `package.json` — `gen-check` · `tmpl-check`
-- `docs/` — `MEMORY.md` · `NEXT-ACTION.md` · `SESSION-LOG.md` · `SYSTEM-DECISIONS.md`
+- `app/src/App.jsx` — 홈 삭제(확인 2단) · `goRoute` 해시 · **사건 제목 배선** · 이어하기 제목
+- `app/src/main.jsx` — `routeParams()`(쿼리+해시) · `hashchange` 재렌더 · **`key` 로 재마운트**
+- `app/src/Generator.jsx` — 복사 폴백 3단 + 직접 복사 칸 · 「시도할 사건」 문구 · ←홈 해시
+- `app/vite.single.config.ts` · `scripts/bundle-single.mjs` — **신설**. 단일 HTML 빌드
+- `scripts/port-check.mjs` — `c.canDel` · `c.confirmDel` 을 `APP_ONLY` 에
+- `package.json` · `app/package.json` — `tester` · `build:single`
+- `.claude/commands/before-work.md` · `after-work.md` — **신설**
+- `engine/templates/palette-residency.json` — **신설**
+- `.gitignore` — `app/dist-single/`

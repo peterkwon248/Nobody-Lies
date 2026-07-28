@@ -74,13 +74,77 @@ export default function Generator() {
   const [errs, setErrs] = React.useState([]);
   const [made, setMade] = React.useState(() => Object.values(loadStore()));
   const [copied, setCopied] = React.useState('');
+  // 클립보드가 막혔을 때 직접 복사할 자리. `{ what, text }`
+  const [manual, setManual] = React.useState(null);
 
+  /**
+   * 복사. **세 단계로 내려간다.**
+   *
+   * `navigator.clipboard` 는 **보안 컨텍스트에서만** 산다 — `https` 나 `localhost`.
+   * 테스터에게 보내는 단일 HTML 은 `file://` 로 열리고, **안드로이드에서 받으면
+   * `content://…/external_files/…`** 로 열린다. 둘 다 보안 컨텍스트가 아니라
+   * 브라우저가 복사를 막는다(2026-07-29 안드로이드 실측).
+   *
+   *   1. clipboard API
+   *   2. `execCommand('copy')`   — 옛 방식이지만 비보안 컨텍스트에서 종종 된다
+   *   3. **화면에 펼쳐서 직접 복사**
+   *
+   * 3번이 이 고침의 핵심이다. 전에는 「직접 선택해 복사해라」라고 **말만 하고
+   * 정작 선택할 것을 안 보여줬다.** 게다가 그 안내를 생성 오류 자리(`errs`)에
+   * 띄워서 제목이 「만들지 못했다」로 나왔다 — 만든 적이 없는데.
+   */
   const copy = (text, what) => {
-    navigator.clipboard?.writeText(text).then(
-      () => { setCopied(what); setTimeout(() => setCopied(''), 1600); },
-      () => setErrs(['클립보드를 쓸 수 없다 — 직접 선택해 복사해라']),
-    );
+    const done = () => {
+      setManual(null);
+      setCopied(what);
+      setTimeout(() => setCopied(''), 1600);
+    };
+    const legacy = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) return done();
+      } catch { /* 아래로 내려간다 */ }
+      setManual({ what, text });
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done, legacy);
+      return;
+    }
+    legacy();
   };
+
+  /**
+   * 클립보드가 막혔을 때 **누른 버튼 바로 밑에** 펼친다. 위쪽에 한 자리만 두면
+   * 아래쪽 「오류 복사」를 눌렀을 때 안 보이는 곳에서 열린다.
+   */
+  const manualBox = (what) => (manual && manual.what === what ? (
+    <div style={{
+      marginTop: '12px', padding: '14px',
+      border: '1px solid var(--accent, #4C8DFF)', borderRadius: 'var(--r-sm, 7px)',
+    }}>
+      <b style={{ fontSize: '13px' }}>클립보드를 못 쓴다 — 아래를 직접 복사해라</b>
+      <p style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '6px 0 10px', lineHeight: 1.6 }}>
+        다운로드한 파일로 열면 브라우저가 복사를 막는다. 칸을 눌러 <b>전체 선택 → 복사</b>.
+      </p>
+      <textarea readOnly value={manual.text}
+        onFocus={(e) => e.target.select()} onClick={(e) => e.target.select()}
+        style={{
+          width: '100%', height: '200px', boxSizing: 'border-box', padding: '10px',
+          background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
+          border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
+          fontSize: '12px', lineHeight: 1.6,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        }} />
+    </div>
+  ) : null);
 
   const generate = () => {
     setErrs([]);
@@ -144,7 +208,10 @@ export default function Generator() {
 
   return (
     <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 20px 80px', color: 'var(--fg, #e6e9ef)' }}>
-      <a href="/" style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', textDecoration: 'none' }}>← 홈</a>
+      {/* 경로를 새로 만들지 않는다 — 해시만 비운다. `App.jsx` 의 `goRoute` 와 같은 이유:
+          `content://` (안드로이드 다운로드)에서는 경로를 만드는 순간 파일을 못 찾는다 */}
+      <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; }}
+        style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', textDecoration: 'none' }}>← 홈</a>
 
       <h1 style={{ fontSize: '26px', fontWeight: 700, margin: '14px 0 6px' }}>캠페인 생성기</h1>
       <p style={{ fontSize: '14px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 24px', lineHeight: 1.7 }}>
@@ -179,7 +246,9 @@ export default function Generator() {
               onChange={(e) => setChapters(Number(e.target.value))} />
           </label>
           <label style={{ fontSize: '13px' }}>
-            <span style={{ color: 'var(--fg-3, #8b93a1)' }}>한 번에 만들 사건 </span>
+            {/* 「만들」이 아니라 「시도할」이다 — 검증을 통과한 것만 남는다.
+                라벨만 보고 트릭 개수로 읽는 일이 실제로 있었다 (2026-07-29) */}
+            <span style={{ color: 'var(--fg-3, #8b93a1)' }}>한 번에 시도할 사건 </span>
             <b>{count}</b>
             <input type="range" min="1" max="8" value={count} style={{ display: 'block', width: '190px', marginTop: '5px' }}
               onChange={(e) => setCount(Number(e.target.value))} />
@@ -188,6 +257,11 @@ export default function Generator() {
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '12px 0 0', lineHeight: 1.6 }}>
           용의자는 언제나 5명이다. 장이 많을수록 조사할 것이 늘고 오래 걸린다 —
           3장이면 최소 4회, 8장이면 최소 9회 조사해야 풀린다.
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '8px 0 0', lineHeight: 1.6 }}>
+          <b>사건 개수</b>는 트릭 개수가 아니다. 3으로 두면 <b>서로 다른 사건 3개</b>가 만들어져
+          목록에 따로 쌓인다 — 골라 쓰고 나머지는 지우면 된다. 트릭은 사건마다 하나씩
+          붙는다. 검증을 통과한 것만 남으므로 <b>더 적게 나올 수 있다.</b>
         </p>
       </section>
 
@@ -203,6 +277,7 @@ export default function Generator() {
         <button onClick={() => copy(briefBody(), 'brief')} style={btn(true)}>
           {copied === 'brief' ? '복사됐다 ✓' : '서식 복사'}
         </button>
+        {manualBox('brief')}
       </section>
 
       {/* 3 — 붙여넣기 */}
@@ -247,6 +322,7 @@ export default function Generator() {
           <button onClick={() => copy(errs.join('\n'), 'err')} style={btn(false)}>
             {copied === 'err' ? '복사됐다 ✓' : '오류 복사 — 챗봇에 그대로 붙여넣기'}
           </button>
+          {manualBox('err')}
         </section>
       )}
 

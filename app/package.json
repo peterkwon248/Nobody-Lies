@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "npm run case && vite",
     "build": "npm run case && vite build",
+    "build:single": "npm run case && vite build -c vite.single.config.ts",
     "case": "npm run export-case -w nobody-lies-engine",
     "preview": "vite preview"
   },

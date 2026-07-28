@@ -14,6 +14,7 @@
     "gen-check": "npm run verify -w engine -- --generate 40 --min-pass 100",
     "tmpl-check": "npm run verify -w engine -- --case templates/case-template.yaml",
     "case": "npm run export-case -w nobody-lies-engine",
+    "tester": "npm run build:single -w nobody-lies-app && node scripts/bundle-single.mjs",
     "dev": "npm run dev -w nobody-lies-app",
     "port-check": "node scripts/port-check.mjs",
     "yaml-check": "node scripts/yaml-comma-check.mjs"
