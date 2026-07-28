@@ -283,8 +283,10 @@ export function generateCase(seed: number, palette?: Palette): Case {
   const places = { ...DEFAULT_PALETTE.places, ...palette?.places }
   const times = { ...DEFAULT_PALETTE.times, ...palette?.times }
   const nonEmpty = <T,>(xs: T[] | undefined, fb: T[]) => (xs?.length ? xs : fb)
-  // 5명 + 기록에 남은 이름 하나
-  const names = shuffled(nonEmpty(P.names, DEFAULT_PALETTE.names)).slice(0, SUSPECTS + 1)
+  // 용의자 5 + 기록에 남은 이름(가명) + 피해자 = 최소 7개가 필요하다.
+  // ★ 피해자 이름을 따로 뽑는다 ★ 안 뽑으면 앱이 하드코딩 피해자 이름으로
+  // 폴백하고, 그 이름이 용의자로도 뽑히면 **피해자와 용의자가 같은 사람**이 된다
+  const names = shuffled(nonEmpty(P.names, DEFAULT_PALETTE.names)).slice(0, SUSPECTS + 2)
   const jobs = nonEmpty(P.jobs, DEFAULT_PALETTE.jobs)
 
   /**
@@ -456,6 +458,7 @@ export function generateCase(seed: number, palette?: Palette): Case {
     ],
     people: ids.map(person),
     victim: 'victim',
+    victimProfile: { name: names[SUSPECTS + 1], age: 28 + Math.floor(r() * 14), job: pick(jobs) },
     culprit,
 
     // ★ 아키타입 계약을 코드가 채운다 ★ exit·인상 종류는 트릭이 결정한다

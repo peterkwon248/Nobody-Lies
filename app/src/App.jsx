@@ -779,31 +779,94 @@ export default class App extends React.Component {
       return c.people?.find((p) => p.id === id)?.name
         ?? (c.victim === id ? c.victimProfile?.name : null) ?? id
     }
-    this.SECTIONS.forEach((sec, i) => {
-      const ch = c.chapters?.[i]
-      const bids = this.SEC_BLANKS[sec.id] ?? []
-      if (!ch || ch.blanks?.length !== bids.length) {
-        // 개수가 어긋나면 **아무것도 하지 않는다.** 어긋난 채 반쯤 덮어쓰면
-        // 사건이 조용히 달라지고 아무도 못 잡는다
-        console.warn(`[nobody-lies] ${sec.id} 공란 수가 엔진과 다르다 — 이 장은 앱 값을 쓴다`)
-        return
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  보고서를 엔진 `chapters` 에서 **다시 만든다** (2026-07-29)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 전에는 「공란 수가 같은 장만 덮어쓰고 다르면 경고」였다. 산장 사건에서는
+     * 늘 같아서 문제가 없었지만, **장 수가 다른 사건은 반쪽이 됐다** — 2장짜리
+     * 생성 사건을 물리니 1장만 새 사건이고 2~5장은 산장 사건이 남았다.
+     *
+     * ★ 장 수가 데이터가 된다 ★ 5장 고정이 풀린다. 규모 표의 「심화 6장」도,
+     * 더 긴 사건도 이제 사건 파일이 정한다.
+     *
+     * ── 어긋남을 다루는 방식 ────────────────────────────────
+     * **id 는 앱 자리에서 물려받는다.** 앱 정적 데이터가 장 id 를 참조하기
+     * 때문이다(`LOCATIONS[].gated: 's1'`). 자리보다 장이 많으면 `s6`·`s7` 로
+     * 새로 만들고, 적으면 남는 자리는 버린다. 공란 id 도 같은 규칙이라
+     * **산장 사건은 id 가 하나도 안 바뀐다** — 저장된 진행이 그대로 열린다.
+     */
+    if (c.chapters?.length) {
+      // 앱 `catL`(채점 화면)의 역방향이다. 14개 고정 어휘가 1:1 로 대응한다
+      const KIND_OF = {
+        인물: 'vPerson', 장소: 'vPlace', 시각: 'vTime', 도구: 'vTool', 동기: 'vMotive',
+        정체: 'vIdentity', 은폐수단: 'vConceal', 위장물: 'vStaging', 마지막목격자: 'vLastSeen',
+        접촉수단: 'vContact', 은닉처: 'vHideout', 사인: 'vCause', 물품: 'vItem', 협박대상: 'vTarget',
       }
-      bids.forEach((bid, n) => {
-        const b = ch.blanks[n]
-        this.BLANKS[bid].ans = nameOf(b.label, b.answer)
-        this.BLANKS[bid].par = b.particle ?? null
+      // 후보를 어디서 고르나. `discovered` 는 확보 단어, `closed` 는 라벨이 정한다
+      const srcOf = (label, candidates) =>
+        candidates === 'discovered' ? 'collected'
+          : label === '장소' ? 'place'
+            : label === '시각' ? 'time'
+              : 'person'
+
+      const oldSecs = this.SECTIONS
+      const oldBlanks = this.BLANKS
+      let mintedSec = oldSecs.length
+      let mintedBlank = Object.keys(oldBlanks).length
+
+      const sections = []
+      const secBlanks = {}
+      const blanks = {}
+
+      c.chapters.forEach((ch, i) => {
+        const slot = oldSecs[i]
+        const sid = slot?.id ?? `s${++mintedSec}`
+        const slotBids = (slot && this.SEC_BLANKS[slot.id]) || []
+
+        const bids = (ch.blanks ?? []).map((b, n) => {
+          const bid = slotBids[n] ?? `b${++mintedBlank}`
+          const old = oldBlanks[bid] ?? {}
+          blanks[bid] = {
+            ...old,
+            kind: KIND_OF[b.label] ?? old.kind ?? 'vPerson',
+            src: srcOf(b.label, b.candidates),
+            ans: nameOf(b.label, b.answer),
+            par: b.particle ?? null,
+            // 지목 공란은 사건 전체에 하나다 — 검증기가 강제한다
+            ...(b.isAccusation ? { nominate: true } : {}),
+          }
+          if (!b.isAccusation) delete blanks[bid].nominate
+          return bid
+        })
+
+        secBlanks[sid] = bids
+        sections.push({
+          ...(slot ?? {}),
+          id: sid,
+          num: i + 1,
+          tKo: ch.title ?? slot?.tKo ?? `${i + 1}장`,
+          tEn: slot?.tEn ?? '',
+          // 서술문이 없으면 공란만 늘어놓는다 — 앱 값을 쓰면 없는 공란을 가리킨다
+          parts: ch.report?.length
+            ? ch.report.map((p) => (p.text != null ? { text: p.text } : { b: bids[p.blank] }))
+            : bids.map((b) => ({ b })),
+          // 결말 재배열 순서. 없으면 장 순서를 쓴다
+          epOrder: ch.epilogueOrder ?? i + 1,
+        })
+        // ⚠ `ch.opening`(장 도입 한 줄)은 **일부러 안 가져온다.** 프로토타입의
+        // SECTIONS 에 그 자리가 없다 — 넣어도 아무도 렌더하지 않는 죽은 데이터가
+        // 되고, 렌더할 자리를 새로 만들면 그건 이식이 아니라 발명이다.
       })
 
-      // 장 제목과 서사 문장틀 — 사건 산문이므로 엔진이 정본이다
-      if (ch.title) sec.tKo = ch.title
-      if (ch.report?.length) {
-        sec.parts = ch.report.map((p) =>
-          (p.text != null ? { text: p.text } : { b: bids[p.blank] }))
+      if (oldSecs.length !== sections.length && typeof console !== 'undefined') {
+        console.info(`[case] 보고서 ${oldSecs.length}장 → ${sections.length}장`)
       }
-      // ⚠ `ch.opening`(장 도입 한 줄)은 **일부러 안 가져온다.** 프로토타입의
-      // SECTIONS 에 그 자리가 없다 — 넣어도 아무도 렌더하지 않는 죽은 데이터가
-      // 되고, 렌더할 자리를 새로 만들면 그건 이식이 아니라 발명이다.
-    })
+      this.SECTIONS = sections
+      this.SEC_BLANKS = secBlanks
+      this.BLANKS = blanks
+    }
 
     /**
      * 관계 도식. 라벨·공개 게이트·위험 표시는 사건의 의미이므로 엔진이 정본이다.
@@ -1869,7 +1932,16 @@ export default class App extends React.Component {
     const nomId = Object.keys(this.BLANKS).find(id => this.BLANKS[id].nominate);
     const nomOk = nomId && this.state.blanks[nomId] === this.BLANKS[nomId].ans;
     const pColor = {}; this.PEOPLE.forEach(p => { pColor[p.name] = p.c1; });
-    const ORDER = ['s1', 's3', 's2', 's4', 's5'];
+    /**
+     * 결말 조각의 재배열 순서. 사건 시간순은 장 순서와 다르다.
+     *
+     * **`['s1','s3','s2','s4','s5']` 하드코딩이었다** — 5장 고정 시절의 값이다.
+     * 장 수가 사건 파일에서 오게 되면서(2026-07-29) 6장부터는 뒤가 잘렸다.
+     * `epilogue_order` 로 계산한다. 산장 사건은 결과가 옛 하드코딩과 같다(실측).
+     */
+    const ORDER = this.SECTIONS.slice()
+      .sort((a, b) => (a.epOrder ?? a.num) - (b.epOrder ?? b.num))
+      .map(s => s.id);
     const catL = { vTool: '도구', vConceal: '은폐수단', vStaging: '위장물', vItem: '물품', vHideout: '은닉처', vCause: '사인', vContact: '접촉수단', vPerson: '인물', vPlace: '장소', vTime: '시각', vLastSeen: '마지막목격자', vMotive: '동기', vIdentity: '정체', vTarget: '협박대상' };
     const corrections = [];
     const mkNarr = (mode) => ORDER.map(sid => { const s = this.SECTIONS.find(x => x.id === sid); if (!s) return null;
