@@ -329,17 +329,57 @@ export function generateCase(seed: number, palette?: Palette): Case {
   // `templates/README.md` 의 저작 순서와 같다: 트릭 → 인물 배치 → 물증 → 사실 → 조사
   const t = TRICKS[pick(TRICK_KEYS)](culprit)
 
-  // 무고한 둘은 t2에 홀로 도착한다 — 사망 구간(t1)에 현장에 없다.
+  const slotLabel: Record<string, string> = { t0: times.t0!, t1: times.t1!, t2: times.t2! }
+  const placeLabel: Record<string, string> = { hall: places.hall!, room: places.room!, away: places.away! }
+
+  /**
+   * 진술 원문을 **동선에서 도출한다.**
+   *
+   * `templates/README.md` 가 적어둔 규칙 그대로다 — *"무고한 네 명의 진술은 직접
+   * 쓰지 않는다. `presence` 를 선언하면 엔진이 진술의 주장을 도출한다. 손으로
+   * 쓰면 실수로 거짓이 섞이고, 그 순간 논리가 무너진다."*
+   *
+   * 범인은 `claim`(거짓말), 나머지는 `presence`(진실)를 말한다. 거짓이 데이터에
+   * 있으므로 문장이 저절로 맞는다.
+   *
+   * ★ 다섯 명의 문단 수가 같아야 한다 ★ 있었던 시간대만 말하면 범인이 셋,
+   * 무고한 자가 하나가 되어 **문단 수가 곧 범인 표시**가 된다. 그래서 슬롯
+   * 전체를 훑고 없던 시간대는 「없었다」로 말한다 — 전원 네 문단.
+   *
+   * 이것은 자리표시 산문이다(`prose.source: 'template'`). 말투도 재미도 없다 —
+   * 그건 ②산문가가 `PROSE-BRIEF.md` 로 덮어쓴다.
+   */
+  const statementOf = (cells: { slot: string; location: string }[]) => {
+    const at = new Map(cells.map((x) => [x.slot, x.location]))
+    return [
+      ...['t0', 't1', 't2'].map((s) => {
+        const loc = at.get(s)
+        return {
+          ko: loc
+            ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.`
+            : `${slotLabel[s]}에는 그곳에 없었습니다.`,
+        }
+      }),
+      { ko: '그 밖에는 따로 드릴 말씀이 없습니다.' },
+    ]
+  }
+
+  // 무고한 넷은 t2에 홀로 도착한다 — 사망 구간(t1)에 현장에 없다.
   // 이 배치가 곧 배제이고, 검증기가 이것을 검사한다.
+  const innocentPresence = [{ slot: 't2', location: 'hall' }]
   const person = (id: PersonId, i: number) => ({
     id,
     name: names[i],
     age: 27 + Math.floor(r() * 12),
     job: pick(jobs),
     hiddenRole: id === culprit ? ('ringleader' as const) : ('unaware' as const),
-    presence: id === culprit ? t.presence : [{ slot: 't2', location: 'hall' }],
+    presence: id === culprit ? t.presence : innocentPresence,
     // 거짓말은 범인만. 무고한 사람은 claim 을 적지 않는다(= presence 와 같다)
     ...(id === culprit ? { claim: t.claim } : {}),
+    statement: {
+      // 진술에서 말하는 것은 주장이다 — 범인은 claim, 나머지는 presence
+      paragraphs: statementOf(id === culprit ? t.claim : innocentPresence),
+    },
   })
 
   const baseEvidence: Ev[] = [

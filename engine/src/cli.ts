@@ -7,6 +7,8 @@ import type { RunOptions } from './orchestrate.js'
 // tsx src/cli.ts --generate <N>                N건 생성 → 검증 → 요약
 //                [--palette <p.json>]          LLM이 채운 세계 팔레트
 //                [--want normal,hard]          목표 난이도 (선호 순서)
+//                [--emit <디렉터리>]            통과분을 <id>.json 으로 방출
+//                [--min-pass <퍼센트>]          통과율 미달이면 exit 1 (게이트용)
 const genFlag = process.argv.indexOf('--generate')
 if (genFlag >= 0) {
   const { run, report } = await import('./orchestrate.js')
@@ -40,6 +42,23 @@ if (genFlag >= 0) {
   const batch = run(seeds, { palette, want })
   console.log(report(batch))
   console.log('')
+
+  /**
+   * 통과분 방출. **검증을 통과하지 못한 사건은 방출하지 않는다** —
+   * `run()` 이 통과분만 돌려주므로 `export-case.ts` 와 같은 규약이다.
+   *
+   * 앱이 `/cases/<id>.json` 을 읽으므로 파일명이 곧 `?case=` 값이다.
+   */
+  const emitDir = arg('--emit')
+  if (emitDir) {
+    const { writeFileSync, mkdirSync } = await import('node:fs')
+    mkdirSync(emitDir, { recursive: true })
+    for (const p of batch.passed) {
+      writeFileSync(`${emitDir}/${p.case.id}.json`, JSON.stringify(p.case, null, 2), 'utf8')
+    }
+    console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.json`)
+    console.log(`  앱에서 열기: /?case=${batch.passed[0]?.case.id ?? '<id>'}\n`)
+  }
 
   /**
    * `--min-pass` 가 없으면 항상 0으로 끝난다(탐색용).

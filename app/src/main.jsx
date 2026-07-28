@@ -90,22 +90,95 @@ function loadDesignSystem() {
 }
 
 /**
- * 사건 파일. `engine/cases/mountain-lodge.yaml` 을 `npm run case` 가 뽑아 놓은 것이다.
+ * 사건 파일. `engine/cases/*.yaml` 을 `npm run case` 가 뽑아 놓은 것이다.
  *
  * **렌더 전에 받는다.** 앱이 클래스 필드로 표를 만들 때 이미 있어야 「엔진 값 →
  * 앱 표」 덮어쓰기가 첫 렌더에 반영된다. 못 받으면 앱에 하드코딩된 값으로 돈다 —
  * 사건 파일이 없다고 게임이 안 열리는 것보다 낫다.
+ *
+ * ── 어느 사건을 읽나 (2026-07-29) ────────────────────────────────
+ *
+ *   /              → mountain-lodge (기본)
+ *   /?case=gen-7   → /cases/gen-7.json
+ *
+ * **경로 하나만 읽던 것을 열었다.** 생성 사건을 앱에 물려봐야 무엇이 깨지는지
+ * 화면이 알려준다 — 소스를 읽어 추측하면 틀린다(2026-07-29에 두 번 틀렸다).
+ *
+ * ⚠ 이름은 파일명 조각으로만 쓴다. 경로 구분자와 점을 막아 상위 디렉터리로
+ * 새는 것을 차단한다.
  */
+const CASE_DEFAULT = 'mountain-lodge';
+
+function caseName() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get('case');
+    if (!raw) return CASE_DEFAULT;
+    return /^[A-Za-z0-9_-]+$/.test(raw) ? raw : CASE_DEFAULT;
+  } catch {
+    return CASE_DEFAULT;
+  }
+}
+
 function loadCase() {
-  return fetch('/cases/mountain-lodge.json')
+  const name = caseName();
+  return fetch('/cases/' + name + '.json')
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then((c) => {
+      if (name !== CASE_DEFAULT) console.info('[nobody-lies] 사건 파일:', name);
+      return c;
+    })
     .catch((e) => {
-      console.warn('[nobody-lies] 사건 파일을 못 읽었다 — 내장 값으로 돈다:', e.message);
+      console.warn(`[nobody-lies] 사건 '${name}' 을 못 읽었다 — 내장 값으로 돈다:`, e.message);
       return null;
     });
+}
+
+/**
+ * 에러 경계 — **흰 화면을 문장으로 바꾼다.**
+ *
+ * 이 저장소가 두 번 데인 자리다. `relChip()` 이 CSS 문자열을 돌려줘서 진술
+ * 화면이 통째로 언마운트됐을 때, 그리고 2026-07-29 에 생성 사건을 처음 물렸을
+ * 때 — 둘 다 **단서가 「빈 화면」뿐이었다.** 콘솔에는 React 의 「에러 경계를
+ * 고려하라」는 안내만 남고 정작 무엇이 터졌는지는 안 보인다.
+ *
+ * 사건 파일이 바뀌면 렌더가 깨질 수 있다는 것이 이 앱의 상수다(사건마다 인물·
+ * 장·장소 수가 다르다). 그러면 **깨진 이유가 화면에 있어야 한다.**
+ */
+class Boundary extends React.Component {
+  constructor(p) {
+    super(p);
+    this.state = { err: null };
+  }
+  static getDerivedStateFromError(err) {
+    return { err };
+  }
+  componentDidCatch(err, info) {
+    console.error('[nobody-lies] 렌더 실패:', err, info?.componentStack);
+  }
+  render() {
+    if (!this.state.err) return this.props.children;
+    return (
+      <pre
+        style={{
+          margin: 0,
+          padding: '24px',
+          font: '13px/1.6 ui-monospace, monospace',
+          color: '#EB5757',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+      >
+        {'렌더 실패\n\n' + (this.state.err?.stack || String(this.state.err))}
+      </pre>
+    );
+  }
 }
 
 const root = createRoot(document.getElementById('root'));
 
 Promise.all([loadDesignSystem(), loadCase()])
-  .then(([, caseData]) => root.render(<App caseData={caseData} />));
+  .then(([, caseData]) => root.render(
+    <Boundary>
+      <App caseData={caseData} />
+    </Boundary>,
+  ));
