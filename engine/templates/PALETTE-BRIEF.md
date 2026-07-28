@@ -23,9 +23,29 @@
 # 3. 돌린다
 npm run verify -w engine -- --generate 40 --palette templates/my-palette.json
 
-#    난이도를 고르려면 (선호 순서)
-npm run verify -w engine -- --generate 40 --palette templates/my-palette.json --want normal,hard
+#    장 수와 난이도를 고르려면 (난이도는 선호 순서)
+npm run verify -w engine -- --generate 40 --palette templates/my-palette.json --chapters 5 --want normal,hard
 ```
+
+### 마음에 드는 사건이 나오면
+
+```bash
+# 앱에서 바로 열어보기 — /?case=gen-7
+npm run verify -w engine -- --generate 10 --palette templates/my-palette.json --emit ../app/public/cases
+
+# 저작 가능한 YAML 로 뽑기 (왕복 대조가 붙는다)
+npm run verify -w engine -- --generate 1 --palette templates/my-palette.json --emit ../out --yaml
+```
+
+**YAML 로 뽑는 이유**: 산문을 입히는 순간 그것은 생성물이 아니라 **저작물**이다.
+사람이 고치고 git 이 추적하는 형태로 남아야 한다.
+
+```
+팔레트 → 생성 → YAML 방출 → PROSE-BRIEF 로 산문 → engine/cases/ 에 커밋
+```
+
+같은 팔레트 + 같은 seed 는 **항상 같은 사건**이다(결정론적). 그래서 seed 만
+적어두면 언제든 다시 만들어진다.
 
 예시: [`palette-example.json`](palette-example.json) (심야 라디오 방송국)
 
@@ -56,7 +76,7 @@ npm run verify -w engine -- --generate 40 --palette templates/my-palette.json --
   "jobs":    ["6개 안팎 — 그 무대에 있을 법한 직업"],
   "items":   ["6개 안팎 — 그 무대의 일상 물건"],
   "motives": ["4개 안팎 — 짧은 명사구"],
-  "spots":   ["14개 — 뒤져볼 만한 자리. 대부분 빈손으로 끝납니다"],
+  "rooms":   ["8개 — 부지 안의 다른 방들"],
   "places":  { "hall": "사람들이 모이는 곳", "room": "사건 현장", "away": "부지 밖" },
   "times":   { "t0": "사건 전", "t1": "사망 추정 구간", "t2": "발견" }
 }
@@ -70,7 +90,7 @@ npm run verify -w engine -- --generate 40 --palette templates/my-palette.json --
 | | |
 |---|---|
 | `names` | 8개 이상. 그중 **다섯이 용의자**, 하나가 **기록에 남은 이름**으로 쓰입니다. 성별·연령대가 섞이게 |
-| `spots` | **14개.** 「주방」·「다락」·「우편함」처럼 뒤져볼 만한 자리. 대부분 아무것도 안 나옵니다 — **빈손도 배제 정보**이고, 조사 대상이 예산의 3배 이상이어야 선택이 소거가 아니라 판단이 됩니다. 모자라면 프로그램이 기본값으로 채웁니다 |
+| `rooms` | **8개.** 「부엌」·「서재」·「지하실」처럼 부지 안의 다른 방. 대부분 뒤져도 아무것도 안 나오지만 **빈손도 배제 정보**이고, 조사 대상이 예산의 3배 이상이어야 선택이 소거가 아니라 판단이 됩니다. `places` 의 셋과 겹치지 않게. 모자라면 프로그램이 채웁니다 |
 | `jobs` | 무대와 관계가 있어야 합니다. 「그 사람이 왜 거기 있었나」가 설명돼야 하니까요 |
 | `items` | **판정어 금지.** 「흉기」·「독극물」 같은 이름을 쓰지 마세요. 「보온병」·「큐카드」처럼 **그냥 물건**이어야 합니다 |
 | `motives` | 「채무 관계」·「자리 다툼」 정도의 짧은 명사구. 문장으로 쓰지 마세요 |
@@ -99,8 +119,9 @@ npm run verify -w engine -- --generate 40 --palette templates/my-palette.json --
 
 ## 팔레트가 못 바꾸는 것
 
-구조는 `daily` 고정이다 — **용의자 5 · 장소 3 · 시간대 3 · 2장 7공란 · 조사 25.**
-팔레트는 그 자리에 들어갈 **이름표**만 바꾼다.
+구조는 **용의자 5 · 장소 11(방 10 + 부지 밖) · 시간대 3 · 조사 34** 로 고정이다.
+장 수는 `--chapters` 로 3~8까지 고른다(기본 5). 팔레트는 그 자리에 들어갈
+**이름표**만 바꾼다.
 
 > **용의자 5는 규모가 아니라 규칙이다.** 다른 칸이 나중에 가변이 되어도 이것은
 > 안 바뀐다 — `SYSTEM-DECISIONS.md` §3.

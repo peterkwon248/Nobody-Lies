@@ -8,6 +8,7 @@ import type { RunOptions } from './orchestrate.js'
 //                [--palette <p.json>]          LLM이 채운 세계 팔레트
 //                [--want normal,hard]          목표 난이도 (선호 순서)
 //                [--emit <디렉터리>]            통과분을 <id>.json 으로 방출
+//                [--emit <디렉터리> --yaml]     저작 가능한 <id>.yaml 로 방출 (왕복 대조)
 //                [--min-pass <퍼센트>]          통과율 미달이면 exit 1 (게이트용)
 const genFlag = process.argv.indexOf('--generate')
 if (genFlag >= 0) {
@@ -56,11 +57,64 @@ if (genFlag >= 0) {
   if (emitDir) {
     const { writeFileSync, mkdirSync } = await import('node:fs')
     mkdirSync(emitDir, { recursive: true })
-    for (const p of batch.passed) {
-      writeFileSync(`${emitDir}/${p.case.id}.json`, JSON.stringify(p.case, null, 2), 'utf8')
+    const asYaml = process.argv.includes('--yaml')
+
+    if (!asYaml) {
+      for (const p of batch.passed) {
+        writeFileSync(`${emitDir}/${p.case.id}.json`, JSON.stringify(p.case, null, 2), 'utf8')
+      }
+      console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.json`)
+      console.log(`  앱에서 열기: /?case=${batch.passed[0]?.case.id ?? '<id>'}\n`)
+    } else {
+      /**
+       * 저작 가능한 YAML 로 방출한다. **산문을 입히는 순간 생성물이 아니라
+       * 저작물**이라 사람이 고치고 git 이 추적하는 형태여야 한다.
+       *
+       * ★ 왕복으로 검증한다 ★ 쓴 파일을 다시 읽어 원본 `Case` 와 대조한다.
+       * 키 순서는 다를 수 있으므로 재귀로 정렬해 비교한다. 한 건이라도
+       * 어긋나면 방출을 실패로 본다 — **조용히 다른 사건이 되는 것**이 이
+       * 저장소에서 가장 비싼 결함이었다(2026-07-24 엔진↔프로토타입 14곳).
+       */
+      const { dump, load } = await import('js-yaml')
+      const { caseToRaw } = await import('./to-yaml.js')
+      const { parseCase } = await import('./schema.js')
+
+      const stable = (v: unknown): unknown => {
+        if (Array.isArray(v)) return v.map(stable)
+        if (v && typeof v === 'object') {
+          return Object.fromEntries(
+            Object.entries(v as Record<string, unknown>)
+              .filter(([, x]) => x !== undefined)
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+              .map(([k, x]) => [k, stable(x)]),
+          )
+        }
+        return v
+      }
+
+      const broken: string[] = []
+      for (const p of batch.passed) {
+        const text = dump(caseToRaw(p.case), { lineWidth: 110, noRefs: true })
+        const path = `${emitDir}/${p.case.id}.yaml`
+        writeFileSync(path, text, 'utf8')
+        try {
+          const back = parseCase(load(text), path)
+          if (JSON.stringify(stable(back)) !== JSON.stringify(stable(p.case))) broken.push(p.case.id)
+        } catch (e) {
+          broken.push(`${p.case.id}\n${(e as Error).message.split('\n').slice(1).join('\n')}`)
+        }
+      }
+
+      console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.yaml`)
+      if (broken.length) {
+        console.error(`\n  ✗ 왕복 대조 실패 ${broken.length}건 — 쓴 것과 읽은 것이 다르다`)
+        broken.forEach((b) => console.error(`   x ${b}`))
+        console.error('')
+        process.exit(1)
+      }
+      console.log('  ✓ 왕복 대조 — 다시 읽은 사건이 원본과 같다')
+      console.log(`  이어서: PROSE-BRIEF.md 로 산문을 받아 채운 뒤 engine/cases/ 로 옮긴다\n`)
     }
-    console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.json`)
-    console.log(`  앱에서 열기: /?case=${batch.passed[0]?.case.id ?? '<id>'}\n`)
   }
 
   /**
