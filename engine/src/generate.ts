@@ -1,4 +1,4 @@
-import type { Case, PersonId, TrickType, IllusionKind } from './types.js'
+import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './types.js'
 
 /**
  * 작가 — 논리 골격 생성기.
@@ -76,6 +76,14 @@ export type Palette = {
    * 대신 전수조사를 한다 — 검증기가 경고로 잡는다.
    */
   spots?: string[]
+  /**
+   * 중간 장에서 캐낼 **기록·흔적의 이름**. 장 하나에 하나씩 쓰인다.
+   *
+   * 장을 늘리려면 캐낼 것이 그만큼 있어야 한다 — 검증기가 「각 장은 그 시점
+   * 가용 정보로 확정 가능」을 강제하므로, 정보 없이 장만 늘릴 수는 없다.
+   * 모자라면 코드가 기본값으로 채운다.
+   */
+  records?: string[]
 }
 
 const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } = {
@@ -90,12 +98,26 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   spots: [
     '주방', '마당', '다락', '차량', '지하', '창고', '쓰레기통',
     '뒷문', '계단', '화장실', '옷장', '우편함', '정원', '보일러실',
+    '세탁실', '서랍장', '신발장', '냉장고', '화단', '지붕', '책장', '작업대',
+    // 8장까지 조사/예산 3배를 유지하려면 서른 자리가 필요하다 (2026-07-29 실측)
+    '수납장', '난간 아래', '현관', '복도 벽', '천장 점검구', '배전반', '물탱크', '뒤뜰',
+  ],
+  /**
+   * ⚠ **레드 헤링·트릭 물증의 문안과 겹치는 낱말을 쓰지 마라.**
+   * 검증기 §9-7 이 「조사 결과문이 그 조사가 주지 않는 단어를 말한다」를 잡는다 —
+   * `영수증`·`오래된 사진` 을 넣었더니 소지품 검사 결과문에 그 낱말이 있어서
+   * 전건에 경고가 붙었다(2026-07-29). 확보 단어는 **어디서도 안 겹쳐야** 한다.
+   */
+  records: [
+    '출입 기록', '통화 내역', '남겨진 쪽지', '장부의 여백', '빌린 열쇠',
+    '미납 청구서', '접힌 지도', '낡은 명함', '배송 전표', '깨진 액자',
   ],
 }
 
 type Cell = Case['people'][number]['presence'][number]
 type Ev = Case['evidence'][number]
 type Act = Case['actions'][number]
+type Blank = Case['chapters'][number]['blanks'][number]
 
 /**
  * 아키타입이 만들어내는 부품 한 벌.
@@ -267,8 +289,21 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
 
 const TRICK_KEYS = Object.keys(TRICKS)
 
-export function generateCase(seed: number, palette?: Palette): Case {
+export type GenerateOptions = {
+  /**
+   * 보고서 장 수. **첫 장(조사 없이 확정) + 중간 가닥들 + 마지막 장(지목)** 이다.
+   * 그래서 최소 2이고, 중간 가닥이 `chapters - 2` 개 생긴다.
+   *
+   * 기본값 5는 규모 표의 캠페인 규모다. 2026-07-29 이전에는 2 고정이었는데
+   * 플레이테스터가 **「짧고 얄팍하다」** 고 했다 — 부피는 장·공란으로 늘린다.
+   */
+  chapters?: number
+}
+
+export function generateCase(seed: number, palette?: Palette, opts?: GenerateOptions): Case {
   const r = rng(seed)
+  const chapters = Math.max(2, Math.min(8, Math.round(opts?.chapters ?? 5)))
+  const midChapters = chapters - 2
   const pick = <T,>(xs: T[]) => xs[Math.floor(r() * xs.length)]
   const shuffled = <T,>(xs: T[]) => {
     const a = [...xs]
@@ -298,9 +333,10 @@ export function generateCase(seed: number, palette?: Palette): Case {
    */
   const spots = [...(P.spots ?? [])]
   for (const s of DEFAULT_PALETTE.spots) {
-    if (spots.length >= EMPTY_SPOTS) break
+    if (spots.length >= EMPTY_SPOTS + chapters * 2) break
     if (!spots.includes(s)) spots.push(s)
   }
+
 
   const ids: PersonId[] = ['p1', 'p2', 'p3', 'p4', 'p5']
   const culprit = pick(ids)
@@ -330,6 +366,54 @@ export function generateCase(seed: number, palette?: Palette): Case {
   // ★ 트릭을 먼저 고른다 ★ 트릭이 격자·물증·조사를 결정하기 때문이다.
   // `templates/README.md` 의 저작 순서와 같다: 트릭 → 인물 배치 → 물증 → 사실 → 조사
   const t = TRICKS[pick(TRICK_KEYS)](culprit)
+
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  가닥 — 중간 장 하나가 캐내는 것 한 벌 (2026-07-29)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 장을 늘리려면 **캐낼 것이 그만큼 있어야 한다.** 검증기가 「각 장은 그 시점
+   * 가용 정보로 확정 가능」을 강제하므로, 정보 없이 장만 늘리면 교착으로 막히거나
+   * 답이 이미 아는 것이 되어 클릭 노동이 된다.
+   *
+   * 그래서 중간 장마다 **물증 1 · 조사 1 · 사실 1 · 확보 단어 1** 을 한 벌로 붙인다.
+   * 그 장은 그 사실을 요구하므로 **그 조사를 해야만 열린다** — 장이 늘면 조사도
+   * 늘고 예산도 는다. 실험자(`fit`)가 예산을 다시 찾는다.
+   *
+   * 사실의 `kind` 는 `context` 다. 유죄 계산(motive ∧ opportunity ∧ means)에
+   * 끼지 않아야 **정답의 유일성이 장 수에 흔들리지 않는다.**
+   */
+  const records = [...(P.records ?? [])]
+  for (const w of DEFAULT_PALETTE.records) {
+    if (records.length >= midChapters) break
+    if (!records.includes(w)) records.push(w)
+  }
+  // 확보 단어가 붙을 라벨. 전부 물증 부문이라 부문 분포가 한쪽으로 쏠리지 않는다
+  const REC_LABELS: BlankLabel[] = ['물품', '접촉수단', '은닉처', '위장물', '은폐수단', '도구']
+
+  const strands = Array.from({ length: midChapters }, (_, i) => {
+    const word = records[i % records.length]
+    const n = i + 1
+    return {
+      word,
+      label: REC_LABELS[i % REC_LABELS.length],
+      evidence: {
+        id: `e_rec${n}`, description: word, record: '기록에 그대로 남아 있었다.',
+        yieldsTerms: [word],
+      } as Ev,
+      action: {
+        id: `a_rec${n}`, label: `${word} 확인`, cost: 1, gives: [`e_rec${n}`],
+        salience: 0.32, yield: 'solution' as const,
+        verb: 'search' as const, target: { kind: 'location' as const, id: 'hall' },
+        result: res(word, '기록에 그대로 남아 있었다.'),
+      } as Act,
+      fact: {
+        id: `f_rec${n}`, kind: 'context' as const, subject: culprit,
+        content: `${word}에 남은 정황`, revealedBy: [`e_rec${n}`],
+      },
+      term: { word, source: { ko: `${word} 확인` }, note: { ko: '기록에 그대로 남아 있었다.' } },
+    }
+  })
 
   const slotLabel: Record<string, string> = { t0: times.t0!, t1: times.t1!, t2: times.t2! }
   const placeLabel: Record<string, string> = { hall: places.hall!, room: places.room!, away: places.away! }
@@ -471,7 +555,7 @@ export function generateCase(seed: number, palette?: Palette): Case {
       flaw: { text: t.flaw, plantedIn: [culprit] },
     },
 
-    evidence: [...baseEvidence, ...t.evidence],
+    evidence: [...baseEvidence, ...t.evidence, ...strands.map((s) => s.evidence)],
 
     facts: [
       { id: 'f_opp', kind: 'opportunity', subject: culprit, content: t.opportunity.content, revealedBy: t.opportunity.revealedBy },
@@ -493,10 +577,21 @@ export function generateCase(seed: number, palette?: Palette): Case {
         id: `f_h${i + 1}`, kind: 'context' as const, subject: id,
         content: '감추는 것이 있다', revealedBy: [`e_herring${i + 1}`],
       })),
+      // 가닥 사실 — 중간 장의 문을 연다. context 라 유죄 계산에는 끼지 않는다
+      ...strands.map((s) => s.fact),
     ],
 
-    actions: [...baseActions, ...t.actions],
+    actions: [...baseActions, ...t.actions, ...strands.map((s) => s.action)],
 
+    /**
+     * 첫 장은 **조사 없이 확정**되어야 한다(검증기가 강제한다 — 없으면 시작하자마자
+     * 막힌다). 마지막 장이 **지목**이고 사건 전체에 하나뿐이다.
+     * 그 사이가 가닥 장이고, 장 수는 여기서 정해진다.
+     *
+     * 생성 사건의 서술문은 템플릿이다. 사람이 쓴 사건만큼 좋을 수 없지만
+     * **문장이긴 해야 한다** — 목록으로 두면 보고서가 두 물건이 된다.
+     * 받침에 따라 갈리는 어미(였다/이었다)는 쓰지 않는다. 답이 매번 다르다
+     */
     chapters: [
       {
         order: 1, title: '아침의 발견',
@@ -508,9 +603,6 @@ export function generateCase(seed: number, palette?: Palette): Case {
           { label: '시각', candidates: 'closed', answer: 't2' },
           { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
         ],
-        // 생성 사건의 서술문은 템플릿이다. 사람이 쓴 사건만큼 좋을 수 없지만
-        // **문장이긴 해야 한다** — 목록으로 두면 보고서가 두 물건이 된다.
-        // 받침에 따라 갈리는 어미(였다/이었다)는 쓰지 않는다. 답이 매번 다르다
         report: [
           { text: '그날 아침 ' }, { blank: 0 }, { text: ' 가장 먼저 도착했다. ' },
           { blank: 2 }, { text: ', ' }, { blank: 1 }, { text: '에서 ' },
@@ -518,8 +610,27 @@ export function generateCase(seed: number, palette?: Palette): Case {
         ],
         epilogueOrder: 1,
       },
+
+      // 가닥 장 — 조합 수는 인물 5 × 4 × 4 = 80 으로 하한 30 을 넘는다
+      ...strands.map((s, i) => ({
+        order: 2 + i,
+        title: `${s.word}`,
+        opening: '다음으로 기록에 남은 것을 적는다.',
+        requiresFacts: [s.fact.id],
+        blanks: [
+          { label: '인물', candidates: 'closed', answer: innocents[i % innocents.length], particle: '이/가' },
+          { label: s.label, candidates: 'discovered', answer: s.word },
+          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? 't1' : 'hall' },
+        ] as Blank[],
+        report: [
+          { text: '기록을 확인한 것은 ' }, { blank: 0 }, { text: ' 있던 자리였다. ' },
+          { blank: 1 }, { text: '이 남아 있었고, ' }, { blank: 2 }, { text: '을 가리켰다.' },
+        ],
+        epilogueOrder: 2 + i,
+      })),
+
       {
-        order: 2, title: '이름과 이유',
+        order: chapters, title: '이름과 이유',
         opening: '남은 것은 이름과 이유다.',
         requiresFacts: ['f_motive', 'f_opp', 'f_means'],
         blanks: [
@@ -532,8 +643,19 @@ export function generateCase(seed: number, palette?: Palette): Case {
           { text: '. 기록에 남은 이름은 ' }, { blank: 1 },
           { text: ', 그리고 그를 움직인 것은 ' }, { blank: 2 }, { text: '.' },
         ],
-        epilogueOrder: 2,
+        epilogueOrder: chapters,
       },
+    ],
+
+    /**
+     * 확보 단어 사전. **앱의 은행이 이것으로 채워진다** —
+     * 없으면 `discovered` 공란의 후보가 이전 사건의 단어로 남는다(2026-07-29 확인).
+     */
+    terms: [
+      { word: tool, source: { ko: `${places.room} 수색 · 시신 검사` }, note: { ko: '바닥에 떨어져 있었다.' } },
+      { word: alias, source: { ko: '서류 조사 · 장부 조사' }, note: { ko: '여러 기록에 반복 등장했다.' } },
+      { word: motive, source: { ko: '서류 조사' }, note: { ko: '금전 기록에 남아 있었다.' } },
+      ...strands.map((s) => s.term),
     ],
 
     reveals: [

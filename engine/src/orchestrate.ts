@@ -41,6 +41,8 @@ const WANTED: Difficulty[] = ['normal', 'hard']
 export type RunOptions = {
   /** LLM이 채운 세계 팔레트. 없으면 생성기 기본 어휘 */
   palette?: Palette
+  /** 보고서 장 수 (2~8). 기본 5 */
+  chapters?: number
   /**
    * 목표 난이도. **순서가 곧 선호도다** — 앞쪽을 먼저 고른다.
    *
@@ -61,23 +63,41 @@ export type RunOptions = {
  * 일이 이 루프로 대체된다.
  */
 function fit(base: Case, want: Difficulty[]): { case: Case; result: VerifyResult } | { fail: VerifyResult } {
-  let last = verify(base)
-  if (!last.ok) return { fail: last }
+  /**
+   * ⚠ **예산을 2..N 으로 훑고 있었다. 두 번 틀린 자리다.**
+   *
+   * 하나. 작가가 적어둔 예산으로 먼저 검증하고 실패하면 포기했다 — 예산을
+   * 찾는 것이 이 함수의 일인데 예산 때문에 포기했다. 장 수를 늘리자 기본
+   * 예산으로는 필수 조사를 못 담아 통과율이 0%가 됐다.
+   *
+   * 둘. 훑는 것 자체가 **낭비였다.** `budget` 은 검증기에서 **비교에만** 쓰이고
+   * `simulate`·오라클 탐색 안에 안 들어간다 — 즉 **기대 회차는 예산과 무관하다.**
+   * 그런데 예산마다 그 무거운 탐색을 다시 돌리고 있었다. 8장 사건에서는
+   * 20건 생성이 5분을 넘겨 죽었다.
+   *
+   * 이제 **한 번 재고 산수로 예산을 정한다.** 난이도 정의가 곧 공식이다:
+   *
+   *     slack = budget − 기대       hard=0 · normal=1 · easy=2
+   *     → budget = 기대 + slack
+   *
+   * 그 예산으로 한 번 더 검증해 예산에 걸린 나머지 조건(필수 조사 ≤ 예산 ·
+   * 최단 ≤ 예산 · 조사 배수)을 확인한다. **19회 → 2회.**
+   */
+  const SLACK_OF: Record<Difficulty, number> = { hard: 0, normal: 1, easy: 2, impossible: -1 }
 
-  const viable: { case: Case; result: VerifyResult }[] = []
-  for (let budget = 2; budget <= 8; budget++) {
+  const probe = verify(base)
+  if (probe.errors.some((e) => !/예산|배수/.test(e))) return { fail: probe }
+
+  let last: VerifyResult = probe
+  for (const d of want) {
+    const slack = SLACK_OF[d]
+    if (slack === undefined || slack < 0) continue
+    const budget = probe.typicalActions + slack
+    if (budget < 1) continue
     const c = { ...base, budget }
     const r = verify(c)
-    if (!r.ok) { last = r; continue }
-    viable.push({ case: c, result: r })
     last = r
-  }
-
-  // 선호 순서대로 찾는다. 같은 난이도가 여럿이면 예산이 작은 것 — 여유가 적을수록
-  // 실험자가 잰 난이도에 가깝다
-  for (const d of want) {
-    const hit = viable.find((v) => v.result.difficulty === d)
-    if (hit) return hit
+    if (r.ok && r.difficulty === d) return { case: c, result: r }
   }
   return { fail: last }
 }
@@ -91,7 +111,7 @@ export function run(seeds: number[], opts: RunOptions = {}): Batch {
   for (const seed of seeds) {
     let base: Case
     try {
-      base = generateCase(seed, opts.palette)
+      base = generateCase(seed, opts.palette, { chapters: opts.chapters })
     } catch (e) {
       note(`생성 실패: ${(e as Error).message.slice(0, 40)}`)
       continue

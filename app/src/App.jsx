@@ -590,10 +590,21 @@ export default class App extends React.Component {
     const pool = []
     const dropped = []
     for (const t of c.terms ?? []) {
-      const cur = this.TERM_INFO[t.word]
+      /**
+       * **앱에 없는 단어는 만들어 넣는다** (2026-07-29 뒤집음).
+       *
+       * 전에는 표시 정보(`TERM_INFO`)가 없으면 버렸다. 산장 사건에서는 `영수증`·
+       * `물자국` 둘뿐이라 괜찮았지만, **생성 사건은 단어가 전부 새것이라 풀이
+       * 통째로 안 채워졌다** — 확보 단어 은행이 산장 단어로 남고 `discovered`
+       * 공란의 후보가 틀렸다.
+       *
+       * 출처·설명은 엔진이 준다. 앱에만 있는 것은 아이콘인데
+       * `termIconPath()` 에 폴백이 있어서 없어도 렌더된다.
+       */
+      let cur = this.TERM_INFO[t.word]
       if (!cur) {
-        dropped.push(t.word)
-        continue
+        cur = this.TERM_INFO[t.word] = { fk: '', dk: '', fe: '', de: '' }
+        if (!this.ICONS[t.word]) dropped.push(t.word)
       }
       if (t.source) {
         cur.fk = ko(t.source)
@@ -607,7 +618,7 @@ export default class App extends React.Component {
     }
     if (pool.length) this.COLLECTED_POOL = pool
     if (dropped.length && typeof console !== 'undefined') {
-      console.warn('[case] 엔진 확보 단어가 앱에 없어 풀에서 빠졌다:', dropped.join(' · '))
+      console.info('[case] 확보 단어 아이콘이 없어 기본 도형으로 그린다:', dropped.join(' · '))
     }
 
     /**

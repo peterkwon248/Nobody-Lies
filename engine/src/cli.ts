@@ -35,11 +35,14 @@ if (genFlag >= 0) {
     .map((s) => s.trim())
     .filter(Boolean) as RunOptions['want']
 
+  const chaptersArg = Number(arg('--chapters') ?? NaN)
+  const chapters = Number.isNaN(chaptersArg) ? undefined : chaptersArg
+
   const n = Number(process.argv[genFlag + 1] ?? 50)
   const seeds = Array.from({ length: n }, (_, i) => i + 1)
   console.log('')
   if (palettePath) console.log(`  팔레트  ${palettePath}\n`)
-  const batch = run(seeds, { palette, want })
+  const batch = run(seeds, { palette, want, chapters })
   console.log(report(batch))
   console.log('')
 
