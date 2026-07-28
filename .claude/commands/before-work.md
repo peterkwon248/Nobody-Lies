@@ -32,6 +32,14 @@ git config --local user.name && git config --local user.email
 npm install
 ```
 
+> ⚠ **`npm install` 이 `package-lock.json` 에 `"peer": true` 표시만 지우는 차분을
+> 남긴다.** npm 버전 차이지 의존성 변화가 아니다 — **생긴 자리에서 바로 되돌린다.**
+> ```
+> git checkout -- package-lock.json
+> ```
+> 세 기계·새 클론에서 재현했다(2026-07-28). 안 되돌리면 세션 내내 트리가 더러워
+> 보이고, 무엇이 내 변경인지 흐려진다.
+
 07-24 이후 `js-yaml` 이 늘어서 `npm install` 을 건너뛰면 `npm run verify` 가
 `ERR_MODULE_NOT_FOUND` 로 죽는다.
 
