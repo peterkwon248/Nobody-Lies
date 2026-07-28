@@ -1905,6 +1905,45 @@ export default class App extends React.Component {
         diffStyle: { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' },
         onClick: () => this.openDetail(c.n),
         cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  캠페인 생성기 입구 · 만들어진 사건 (2026-07-29)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * **행 렌더를 그대로 재사용한다.** 새 분기(`sc-if`/`sc-for`)를 만들지 않으므로
+     * `port-check` 의 대조 대상이 늘지 않는다 — 프로토타입에 없는 화면을 여기에
+     * 그리는 대신 **목록에 줄을 더하는 것**으로 끝낸다.
+     *
+     * 생성기 자체는 `Generator.jsx` 로 이 파일 밖에 있다.
+     */
+    const card = { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' };
+    const dim = { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' };
+
+    // 만든 사건들. 브라우저에 저장돼 있어서 이 기계에서만 보인다
+    let mine = {};
+    try { mine = JSON.parse(localStorage.getItem('nobody-lies:generated') || '{}'); } catch (e) { mine = {}; }
+    Object.values(mine).forEach((g, i) => {
+      cases.push({
+        num: 'G' + (i + 1), title: g.title, diff: g._difficulty || '', est: (g.chapters ? g.chapters.length : 0) + (ln === 'ko' ? '장' : ' ch'),
+        chipLabel: ln === 'ko' ? '내가 만듦' : 'Generated',
+        chipStyle: { background: 'var(--accent-soft)', color: 'var(--accent)' },
+        diffStyle: dim,
+        onClick: () => { window.location.href = '/?case=local:' + encodeURIComponent(g.id); },
+        cardStyle: card,
+      });
+    });
+
+    cases.push({
+      num: '＋', title: ln === 'ko' ? '캠페인 생성' : 'Generate a campaign',
+      diff: '', est: ln === 'ko' ? '챗봇에게 세계를 받아온다' : 'bring a world from your chatbot',
+      chipLabel: ln === 'ko' ? '새로 만들기' : 'New',
+      chipStyle: { background: 'var(--accent)', color: '#fff' },
+      diffStyle: dim,
+      onClick: () => { window.location.href = '/?generate'; },
+      cardStyle: Object.assign({}, card, { borderStyle: 'dashed', borderColor: 'var(--accent)' }),
+    });
+
     return { resumeShow: status === 'inProgress', resumeTitle: ln === 'ko' ? '산장 살인사건' : 'The Mountain Lodge', resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
   }
   buildDetail() {
