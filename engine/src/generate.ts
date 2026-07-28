@@ -143,16 +143,33 @@ export function generateCase(seed: number): Case {
       { id: 'f_h2', kind: 'context', subject: innocents[1], content: '감추는 것이 있다', revealedBy: ['e_herring2'] },
     ],
 
+    // ★ gives 가 있는 조사는 result 가 필수다 ★ (검증기 §9-8e)
+    // 없으면 플레이어가 예산을 쓰고 공통 「아무것도 없음」을 본다. 2026-07-28에
+    // 그 검사가 생기면서 이 생성기가 통과율 0% 로 죽어 있었다 — `--generate` 가
+    // 빌드 게이트에 없어서 조용했다. 검사를 더하면 여기도 함께 본다.
+    //
+    // ★ 결과문은 전부 같은 온도로 쓴다 ★ solution 과 redherring 의 길이·어조가
+    // 다르면 그것이 곧 유용도 표시다(절대 규칙 3). 그래서 한 문장으로 고정하고
+    // 확보 단어를 문장에 담지 않는다 — 담으면 §9-7 이 무는 자리가 늘기만 한다.
     actions: [
-      { id: 'a_room', label: '방 수색', cost: 1, gives: ['e_tool'], salience: 0.5, yield: 'solution' },
-      { id: 'a_hall', label: '복도 조사', cost: 1, gives: ['e_trace'], salience: 0.4, yield: 'solution' },
-      { id: 'a_body', label: '시신 검사', cost: 1, gives: ['e_toolmark'], salience: 0.6, yield: 'solution' },
-      { id: 'a_door', label: '출입 기록 조회', cost: 1, gives: ['e_log'], salience: 0.35, yield: 'solution' },
-      { id: 'a_papers', label: '서류 조사', cost: 1, gives: ['e_alias', 'e_motive'], salience: 0.3, yield: 'solution' },
-      { id: 'a_ledger', label: '장부 조사', cost: 1, gives: ['e_alias2'], salience: 0.3, yield: 'solution' },
-      { id: 'a_h1', label: `소지품 검사 · ${names[ids.indexOf(innocents[0])]}`, cost: 1, gives: ['e_herring1'], salience: 0.85, yield: 'redherring' },
-      { id: 'a_h2', label: `소지품 검사 · ${names[ids.indexOf(innocents[1])]}`, cost: 1, gives: ['e_herring2'], salience: 0.8, yield: 'redherring' },
-      { id: 'a_alibi', label: '알리바이 대조', cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion' },
+      { id: 'a_room', label: '방 수색', cost: 1, gives: ['e_tool'], salience: 0.5, yield: 'solution',
+        result: { title: { ko: '바닥에 떨어진 것' }, body: { ko: '방 안 바닥에 물건 하나가 떨어져 있었다.' } } },
+      { id: 'a_hall', label: '복도 조사', cost: 1, gives: ['e_trace'], salience: 0.4, yield: 'solution',
+        result: { title: { ko: '복도 끝의 자국' }, body: { ko: '복도 끝에 젖은 자국이 남아 있었다.' } } },
+      { id: 'a_body', label: '시신 검사', cost: 1, gives: ['e_toolmark'], salience: 0.6, yield: 'solution',
+        result: { title: { ko: '같은 폭의 자국' }, body: { ko: '같은 폭으로 눌린 자국이 남아 있었다.' } } },
+      { id: 'a_door', label: '출입 기록 조회', cost: 1, gives: ['e_log'], salience: 0.35, yield: 'solution',
+        result: { title: { ko: '새벽의 여닫힘' }, body: { ko: '문이 새벽에 한 번 여닫힌 기록이 있었다.' } } },
+      { id: 'a_papers', label: '서류 조사', cost: 1, gives: ['e_alias', 'e_motive'], salience: 0.3, yield: 'solution',
+        result: { title: { ko: '반복되는 이름' }, body: { ko: '여러 장에 같은 이름과 금전 기록이 적혀 있었다.' } } },
+      { id: 'a_ledger', label: '장부 조사', cost: 1, gives: ['e_alias2'], salience: 0.3, yield: 'solution',
+        result: { title: { ko: '두 번째 기록' }, body: { ko: '장부에 같은 이름이 한 번 더 적혀 있었다.' } } },
+      { id: 'a_h1', label: `소지품 검사 · ${names[ids.indexOf(innocents[0])]}`, cost: 1, gives: ['e_herring1'], salience: 0.85, yield: 'redherring',
+        result: { title: { ko: '개인적인 편지' }, body: { ko: '소지품에서 개인적인 편지 한 통이 나왔다.' } } },
+      { id: 'a_h2', label: `소지품 검사 · ${names[ids.indexOf(innocents[1])]}`, cost: 1, gives: ['e_herring2'], salience: 0.8, yield: 'redherring',
+        result: { title: { ko: '오래된 사진' }, body: { ko: '소지품에서 오래된 사진 한 장이 나왔다.' } } },
+      { id: 'a_alibi', label: '알리바이 대조', cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
+        result: { title: { ko: '맞물리는 시각' }, body: { ko: '두 사람이 말한 도착 시각이 서로 맞물렸다.' } } },
       { id: 'a_kitchen', label: '주방 수색', cost: 1, gives: [], salience: 0.2, yield: 'empty' },
       { id: 'a_yard', label: '마당 수색', cost: 1, gives: [], salience: 0.15, yield: 'empty' },
     ],
