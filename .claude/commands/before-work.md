@@ -51,8 +51,12 @@ npm install
 npm run build
 ```
 
-5단(engine 타입체크 → yaml-check → verify → port-check → app 빌드). **실패면 그것이
-이번 세션의 첫 일이다.** 내가 아무것도 안 했는데 빨간 것은 직전 세션이 남긴 것이다.
+**7단** — `typecheck · yaml-check · verify · gen-check · tmpl-check · port-check · build`.
+**초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 저작 서식 통과 + 이식 회귀 없음.
+
+**실패면 그것이 이번 세션의 첫 일이다.** 내가 아무것도 안 했는데 빨간 것은 직전
+세션이 남긴 것이다. 단수가 늘어날 수 있으니 **`package.json` 의 `build` 를 믿는다** —
+이 문장이 아니라.
 
 ## 5. 보고한다
 

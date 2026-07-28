@@ -64,7 +64,8 @@ if (genFlag >= 0) {
         writeFileSync(`${emitDir}/${p.case.id}.json`, JSON.stringify(p.case, null, 2), 'utf8')
       }
       console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.json`)
-      console.log(`  앱에서 열기: /?case=${batch.passed[0]?.case.id ?? '<id>'}\n`)
+      // 해시가 정본이다 — 쿼리도 아직 읽지만, 파일로 연 앱에서는 해시만 산다
+      console.log(`  앱에서 열기: /#case=${batch.passed[0]?.case.id ?? '<id>'}\n`)
     } else {
       /**
        * 저작 가능한 YAML 로 방출한다. **산문을 입히는 순간 생성물이 아니라

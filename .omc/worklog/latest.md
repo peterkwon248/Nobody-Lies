@@ -70,7 +70,7 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
       지금 확보 단어 셋이 기본값(`출입 기록·통화 내역·남겨진 쪽지`)이라 **세계의 맛이 없다**
 - [ ] **`PROSE-BRIEF.md` 의 「인물당 10~14문단」을 고친다** — 산장 실제는 2~3,
       생성 사건은 4다. **어느 쪽과도 안 맞는다.** 1차를 받아본 뒤에 고친다(먼저 고치면 추측)
-- [ ] **`?generate` 대신 `#generate` 를 문서에 반영** — `NEXT-ACTION` 이 아직 `/?generate` 로 안내한다(쿼리 읽기는 살아 있어서 동작은 한다)
+- [ ] **`e_safes` · `a_ph_yuri` 의 `clues`** — 사용자 결정 대기 (07-27부터 상주)
 - [ ] `e_safes` · `a_ph_yuri` 의 `clues` · 색·대비·질감 · 배치 스냅 · 표기 안내 문안
 
 ## Blockers / Issues
@@ -94,7 +94,12 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
 - **`before-work`/`after-work` 가 이제 슬래시 명령이다** (`.claude/commands/`).
   새 세션에서 잡힌다 — 안 잡히면 세션을 새로 연다
 - **`npm run tester`** 가 테스터용 단일 HTML 을 굽는다. 항상 `out/nobody-lies-tester.html`
-- **게이트는 7단이다** — `npm run build` 하나로 다 돈다
+- **게이트는 7단이다** — `npm run build` 하나로 다 돈다. 단수는 늘 수 있으니
+  **`package.json` 의 `build` 를 믿는다** (문서의 숫자가 아니라)
+- **라우팅은 해시다** — `#generate` · `#case=<id>` · `#case=local:<id>`.
+  쿼리도 아직 **읽지만** 쓰지는 않는다. **파일로 연 앱에서는 해시만 산다**
+- **막힌 것은 이제 배선이 아니라 산문 자체다.** 생성기 5번 절이 서식을 채워 주고
+  받은 YAML 을 되붙인다 — 받아온 진술이 0건일 뿐이다
 - **팔레트가 세계다.** 남는 것은 `engine/templates/palette-*.json` 이고 생성 사건은
   안 남는다. 레지던시는 `--generate N --palette templates/palette-residency.json`
 - 이 저장소는 **직접 main 푸시** (feature 브랜치·PR 없음)
