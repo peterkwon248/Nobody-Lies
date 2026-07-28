@@ -444,6 +444,13 @@ export default class App extends React.Component {
      */
     if (c.id) this.SAVE_KEY = `nobody-lies:${c.id}`
 
+    /**
+     * 기본 캠페인(산장) 말고 다른 사건인가. `componentDidMount` 가 이걸 보고
+     * **바로 시작**한다 — 홈 목록과 사건 상세는 산장 전용 하드코딩이라
+     * 다른 사건은 들어갈 문이 없다.
+     */
+    this._foreignCase = Boolean(c.id) && c.id !== 'mountain-lodge'
+
     if (typeof c.budget === 'number') this.BUDGET = c.budget
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
@@ -1295,6 +1302,24 @@ export default class App extends React.Component {
     const saved = this.loadSave();
     if (saved) this.setState(saved, () => this.applyTheme());
     this.applyTheme();
+
+    /**
+     * ★ 기본 사건이 아니면 바로 시작한다 ★ (2026-07-29)
+     *
+     * 홈의 캠페인 목록(`CASES` 01~06)과 사건 상세는 **산장 사건 전용으로 하드코딩**돼
+     * 있다. 그래서 `?case=` 로 다른 사건을 열면 데이터는 갈리는데 **화면은 홈에
+     * 머물러 아무 일도 안 일어난 것처럼 보인다** — 생성 사건을 눌렀을 때 실제로
+     * 그랬다.
+     *
+     * 목록에 자리를 만드는 대신 **누른 순간 그 사건으로 들어간다.** 이미 고른
+     * 사건이므로 상세 화면을 한 번 더 거칠 이유가 없다.
+     *
+     * 진행이 저장돼 있으면 이어하고(`resumeCase`), 없으면 처음부터(`startCase`).
+     */
+    if (this._foreignCase) {
+      if (saved && saved.started) this.resumeCase();
+      else this.startCase();
+    }
     this._onResize = () => { const el = this._root && this._root.closest ? this._root.closest('.app') : null; const w = (el && el.clientWidth) || document.documentElement.clientWidth || window.innerWidth; const n = w < 820; if (n !== this.state.isNarrow) this.setState({ isNarrow: n }); };
     this._root = document.querySelector('.app');
     this._onResize(); window.addEventListener('resize', this._onResize);

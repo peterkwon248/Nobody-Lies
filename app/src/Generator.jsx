@@ -122,7 +122,25 @@ export default function Generator() {
     }, 30);
   };
 
-  const clearAll = () => { saveStore({}); setMade([]); };
+  /**
+   * 사건을 지울 때 **진행 저장도 같이 지운다.** 저장 키가 `nobody-lies:<사건 id>`
+   * 라서, 안 지우면 같은 id 로 다시 만들었을 때 옛 진행이 되살아난다.
+   */
+  const forget = (id) => { try { localStorage.removeItem(`nobody-lies:${id}`); } catch { /* 무시 */ } };
+
+  const removeOne = (id) => {
+    const store = loadStore();
+    delete store[id];
+    saveStore(store);
+    forget(id);
+    setMade(Object.values(store));
+  };
+
+  const clearAll = () => {
+    Object.keys(loadStore()).forEach(forget);
+    saveStore({});
+    setMade([]);
+  };
 
   return (
     <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 20px 80px', color: 'var(--fg, #e6e9ef)' }}>
@@ -243,18 +261,33 @@ export default function Generator() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {made.map((c) => (
-                <a key={c.id} href={`/?case=local:${encodeURIComponent(c.id)}`}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
-                    padding: '12px 14px', textDecoration: 'none',
-                    background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
-                    border: '1px solid var(--border, #2a2e35)', color: 'var(--fg, #e6e9ef)',
-                  }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
-                    {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
-                  </span>
-                </a>
+                <div key={c.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '10px 10px 10px 14px',
+                  background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
+                  border: '1px solid var(--border, #2a2e35)',
+                }}>
+                  <a href={`/?case=local:${encodeURIComponent(c.id)}`}
+                    style={{
+                      flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between',
+                      alignItems: 'center', gap: '12px', textDecoration: 'none',
+                      color: 'var(--fg, #e6e9ef)',
+                    }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
+                      {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
+                    </span>
+                  </a>
+                  {/* 사건 하나만 지운다. 진행 저장도 같이 지운다 — 안 지우면
+                      같은 이름으로 다시 만들었을 때 옛 진행이 되살아난다 */}
+                  <button onClick={() => removeOne(c.id)} title="이 사건 지우기"
+                    style={{
+                      flex: 'none', width: '30px', height: '30px', lineHeight: 1,
+                      borderRadius: 'var(--r-sm, 7px)', cursor: 'pointer',
+                      border: '1px solid var(--border-strong, #3a4049)',
+                      background: 'transparent', color: 'var(--fg-3, #8b93a1)', fontSize: '15px',
+                    }}>×</button>
+                </div>
               ))}
             </div>
             <button onClick={clearAll} style={{ ...btn(false), marginTop: '14px' }}>전부 지우기</button>
