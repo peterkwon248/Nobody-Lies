@@ -17,10 +17,26 @@ import type { Case, PersonId, TrickType, IllusionKind } from './types.js'
  * **팔레트 하나로 사건 여러 개가 나온다.** LLM 호출은 사건 수가 아니라
  * 세계 수에 비례한다 — 이것이 「적은 비용으로 많이」의 실제 근거다.
  *
- * 규모는 daily 고정이다 — 3인·2장·7공란.
- * campaign 규모를 조합으로 만들면 검증 실패율이 급등하고 서사가 무너진다
- * (`SYSTEM-DECISIONS.md` §생성). campaign 은 사람이 쓴다.
+ * 장 수는 daily 고정이다 — 2장·7공란. campaign 규모(5장·19공란)를 조합으로
+ * 만들면 검증 실패율이 급등하고 서사가 무너진다(`SYSTEM-DECISIONS.md` §생성).
+ *
+ * ★ 용의자는 언제나 5명이다 ★ 규모가 바뀌어도 이것만은 안 바뀐다.
+ * 2026-07-29 사용자 결정 — 오프라인 플레이 경험에서 나온 것이고, 이 프로젝트가
+ * 「재미는 플레이테스트만 답한다」고 못박아 둔 바로 그 층위의 근거다.
+ * `SYSTEM-DECISIONS.md` §3 참조 — 규모 표의 다른 칸은 전부 가변이고 이 칸만 고정이다.
  */
+
+/** 용의자 수. ★ 고정이다 ★ 손잡이가 아니다 — `SYSTEM-DECISIONS.md` §3 */
+const SUSPECTS = 5
+
+/**
+ * 빈손 조사 개수.
+ *
+ * 조사 대상이 **예산의 3배 이상**이어야 선택이 소거가 아니라 판단이 된다.
+ * 나머지 조사가 11개(해답 4 + 레드 헤링 4 + 배제 1 + 트릭 전용 2)이고
+ * 예산이 7~8로 나오므로 24개가 필요하다 → 14개.
+ */
+const EMPTY_SPOTS = 14
 
 /** 결정론적 PRNG. 같은 seed 는 같은 사건 */
 function rng(seed: number) {
@@ -52,6 +68,14 @@ export type Palette = {
   places?: { hall?: string; room?: string; away?: string }
   /** 시간대 이름표. 가운데가 사망 추정 구간이다 */
   times?: { t0?: string; t1?: string; t2?: string }
+  /**
+   * 빈손 조사가 될 자리들. **8개 이상 필요하다.**
+   *
+   * 빈손도 배제 정보이고, **조사 대상이 예산의 3배 이상이어야 선택이 소거가
+   * 아니라 판단이 된다.** 이것이 부족하면 후보가 뻔해져서 플레이어가 추론
+   * 대신 전수조사를 한다 — 검증기가 경고로 잡는다.
+   */
+  spots?: string[]
 }
 
 const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } = {
@@ -62,6 +86,11 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   motives: ['채무 관계', '자리 다툼', '오래된 약속', '지분 다툼'],
   places: { hall: '홀', room: '방', away: '자택' },
   times: { t0: '전날 밤', t1: '새벽', t2: '아침' },
+  // 트릭 전용 조사(복도·창가·책상·문틀·잠금장치·설비·부품)와 겹치지 않는 이름만 쓴다
+  spots: [
+    '주방', '마당', '다락', '차량', '지하', '창고', '쓰레기통',
+    '뒷문', '계단', '화장실', '옷장', '우편함', '정원', '보일러실',
+  ],
 }
 
 type Cell = Case['people'][number]['presence'][number]
@@ -254,16 +283,47 @@ export function generateCase(seed: number, palette?: Palette): Case {
   const places = { ...DEFAULT_PALETTE.places, ...palette?.places }
   const times = { ...DEFAULT_PALETTE.times, ...palette?.times }
   const nonEmpty = <T,>(xs: T[] | undefined, fb: T[]) => (xs?.length ? xs : fb)
-  const names = shuffled(nonEmpty(P.names, DEFAULT_PALETTE.names)).slice(0, 4)
+  // 5명 + 기록에 남은 이름 하나
+  const names = shuffled(nonEmpty(P.names, DEFAULT_PALETTE.names)).slice(0, SUSPECTS + 1)
   const jobs = nonEmpty(P.jobs, DEFAULT_PALETTE.jobs)
 
-  const ids: PersonId[] = ['p1', 'p2', 'p3']
+  /**
+   * 빈손 조사 자리. **모자라면 기본값으로 채운다.**
+   *
+   * 조사/예산 비율이 3배 아래로 내려가면 검증기가 경고하는데, 팔레트가 자리를
+   * 적게 주는 것만으로 그 경고가 도로 살아난다. 팔레트는 어휘이고 **비율은
+   * 논리라서 코드가 지켜야 한다** — 팔레트가 게임 균형을 깨뜨리게 두지 않는다.
+   */
+  const spots = [...(P.spots ?? [])]
+  for (const s of DEFAULT_PALETTE.spots) {
+    if (spots.length >= EMPTY_SPOTS) break
+    if (!spots.includes(s)) spots.push(s)
+  }
+
+  const ids: PersonId[] = ['p1', 'p2', 'p3', 'p4', 'p5']
   const culprit = pick(ids)
   const innocents = ids.filter((x) => x !== culprit)
 
   const tool = pick(nonEmpty(P.items, DEFAULT_PALETTE.items))
   const motive = pick(nonEmpty(P.motives, DEFAULT_PALETTE.motives))
-  const alias = names[3]
+  const alias = names[SUSPECTS]
+
+  /**
+   * 레드 헤링 — 무고한 넷 **전원**이 감출 것을 갖는다.
+   *
+   * 하나라도 빠지면 그 사람만 깨끗해 보여서 후보가 넷에서 셋으로 줄어든다.
+   * 「전부 갖거나 전무」는 이 게임에서 지문·서사에 이미 걸려 있는 규칙이고,
+   * 의심 재료에도 같은 이유로 적용된다.
+   *
+   * salience 는 전부 0.6 이상 — 검증기가 「매력적인 함정 3개 미만」을 경고한다.
+   * 그리고 **범인 쪽 조사보다 높다.** 눈에 띄는 것부터 찍는 플레이어가 져야 한다.
+   */
+  const HERRING = [
+    { ev: '개인적인 편지', rec: '사건과 무관한 사연이 적혀 있었다.', res: '소지품에서 개인적인 편지 한 통이 나왔다.', s: 0.85 },
+    { ev: '오래된 사진', rec: '오래전에 찍힌 사진이었다.', res: '소지품에서 오래된 사진 한 장이 나왔다.', s: 0.8 },
+    { ev: '접힌 영수증', rec: '여러 번 접힌 자국이 있었다.', res: '소지품에서 접힌 영수증 한 장이 나왔다.', s: 0.75 },
+    { ev: '지워진 기록', rec: '일부가 지워진 채 남아 있었다.', res: '소지품에서 일부가 지워진 기록이 나왔다.', s: 0.7 },
+  ]
 
   // ★ 트릭을 먼저 고른다 ★ 트릭이 격자·물증·조사를 결정하기 때문이다.
   // `templates/README.md` 의 저작 순서와 같다: 트릭 → 인물 배치 → 물증 → 사실 → 조사
@@ -289,9 +349,8 @@ export function generateCase(seed: number, palette?: Palette): Case {
     { id: 'e_alias', description: `'${alias}' 라는 이름의 기록`, yieldsTerms: [alias] },
     { id: 'e_alias2', description: `'${alias}' 가 적힌 두 번째 기록`, yieldsTerms: [alias] },
     { id: 'e_motive', description: '금전 기록', yieldsTerms: [motive] },
-    { id: 'e_mutual', description: '두 사람의 상호 보증', record: '두 사람이 말한 도착 시각이 서로 맞물렸다.' },
-    { id: 'e_herring1', description: '개인적인 편지', record: '사건과 무관한 사연이 적혀 있었다.' },
-    { id: 'e_herring2', description: '오래된 사진', record: '오래전에 찍힌 사진이었다.' },
+    { id: 'e_mutual', description: '넷의 상호 보증', record: '네 사람이 말한 도착 시각이 서로 맞물렸다.' },
+    ...HERRING.map((h, i) => ({ id: `e_herring${i + 1}`, description: h.ev, record: h.rec })),
   ]
 
   const baseActions: Act[] = [
@@ -307,21 +366,31 @@ export function generateCase(seed: number, palette?: Palette): Case {
     { id: 'a_ledger', label: '장부 조사', cost: 1, gives: ['e_alias2'], salience: 0.3, yield: 'solution',
       verb: 'search', target: { kind: 'location', id: 'hall' },
       result: res('두 번째 기록', '장부에 같은 이름이 한 번 더 적혀 있었다.') },
-    // 레드 헤링 — salience 를 해답보다 높게. 눈에 띄는 것부터 찍는 플레이어가 진다
-    { id: 'a_h1', label: `소지품 검사 · ${names[ids.indexOf(innocents[0])]}`, cost: 1, gives: ['e_herring1'], salience: 0.85, yield: 'redherring',
-      verb: 'belongings', target: { kind: 'person', id: innocents[0] },
-      result: res('개인적인 편지', '소지품에서 개인적인 편지 한 통이 나왔다.') },
-    { id: 'a_h2', label: `소지품 검사 · ${names[ids.indexOf(innocents[1])]}`, cost: 1, gives: ['e_herring2'], salience: 0.8, yield: 'redherring',
-      verb: 'belongings', target: { kind: 'person', id: innocents[1] },
-      result: res('오래된 사진', '소지품에서 오래된 사진 한 장이 나왔다.') },
+    // 레드 헤링 — 무고한 넷 전원. salience 를 해답보다 높게
+    ...innocents.map((id, i) => ({
+      id: `a_h${i + 1}`, label: `소지품 검사 · ${names[ids.indexOf(id)]}`, cost: 1,
+      gives: [`e_herring${i + 1}`], salience: HERRING[i].s, yield: 'redherring' as const,
+      verb: 'belongings' as const, target: { kind: 'person' as const, id },
+      result: res(HERRING[i].ev, HERRING[i].res),
+    })),
     { id: 'a_alibi', label: '알리바이 대조', cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
       verb: 'alibi', pair: [innocents[0], innocents[1]],
-      result: res('맞물리는 시각', '두 사람이 말한 도착 시각이 서로 맞물렸다.') },
-    // 빈손도 배제 정보다. 조사 대상은 예산의 3배 이상이어야 선택이 소거가 아니라 판단이 된다
-    { id: 'a_kitchen', label: '주방 수색', cost: 1, gives: [], salience: 0.2, yield: 'empty',
-      verb: 'search', target: { kind: 'location', id: 'hall' } },
-    { id: 'a_yard', label: '마당 수색', cost: 1, gives: [], salience: 0.15, yield: 'empty',
-      verb: 'search', target: { kind: 'location', id: 'hall' } },
+      result: res('맞물리는 시각', '네 사람이 말한 도착 시각이 서로 맞물렸다.') },
+    /**
+     * 빈손도 배제 정보다. **조사 대상이 예산의 3배 이상**이어야 선택이 소거가
+     * 아니라 판단이 된다 — 검증기가 그 비율을 잰다.
+     *
+     * 2026-07-29 이전에는 둘뿐이라 비율이 1.86배였고 **60/60 전건에 경고가
+     * 상주했다.** 배치 리포트가 경고를 안 찍어서 몰랐다(`orchestrate.ts` 에서
+     * 그 줄도 함께 고쳤다). `case-template.yaml` 은 처음부터 열 개를 실었다.
+     *
+     * salience 를 낮게 둔다 — 눈에 띄어서 고르는 것이 아니라 소거하려고 고르는 것이다.
+     */
+    ...spots.map((spot, i) => ({
+      id: `a_e${i + 1}`, label: `${spot} 수색`, cost: 1, gives: [] as string[],
+      salience: Math.max(0.04, 0.22 - i * 0.012), yield: 'empty' as const,
+      verb: 'search' as const, target: { kind: 'location' as const, id: 'hall' },
+    })),
   ]
 
   return {
@@ -377,8 +446,10 @@ export function generateCase(seed: number, palette?: Palette): Case {
       { id: 'f_means', kind: 'means', subject: culprit, content: '도구를 다룰 수 있었다', revealedBy: ['e_tool', 'e_toolmark'] },
       { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, revealedBy: ['e_motive'], requires: ['f_identity'] },
       // 레드 헤링 — 무고한 사람의 비밀. 수상해 보이지만 사건과 무관하다
-      { id: 'f_h1', kind: 'context', subject: innocents[0], content: '감추는 것이 있다', revealedBy: ['e_herring1'] },
-      { id: 'f_h2', kind: 'context', subject: innocents[1], content: '감추는 것이 있다', revealedBy: ['e_herring2'] },
+      ...innocents.map((id, i) => ({
+        id: `f_h${i + 1}`, kind: 'context' as const, subject: id,
+        content: '감추는 것이 있다', revealedBy: [`e_herring${i + 1}`],
+      })),
     ],
 
     actions: [...baseActions, ...t.actions],
