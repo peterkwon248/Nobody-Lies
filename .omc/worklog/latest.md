@@ -1,48 +1,49 @@
 ---
-session_date: "2026-07-28"
+session_date: "2026-07-29"
 project: "노바디 라이즈 (Nobody Lies)"
-working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
-machine: "KWONKYUNGHUN (새 기계 · OneDrive 아래)"
+working_directory: "C:/Users/kwonkyunghun/Desktop/Nobody Lies"
+machine: "DESKTOP-JCJTAH8"
 ---
 
 ## Completed Work
 
-**작업 트리 깨끗 · 빌드 게이트 5단 초록(exit 0) · 콘솔 에러 0 · 난이도 불변.**
+**작업 트리 깨끗 · 빌드 게이트 7단 초록(exit 0) · 20커밋 전부 main 에 푸시됨.**
 
-### 이번 세션이 닫은 것 — §9-8 검사 둘 + 산문가 서식 첫 실사용
+### 이번 세션이 닫은 것 — 생성 사건이 앱에서 열린다
 
 ```
-✅ ① 산문을 스키마로   (2026-07-27 완주)
-🔨 ② 산문가            서식 첫 실사용 완료 — 구멍 셋을 잡아 서식에 반영  ← 지금 여기
-⬜ ③ 검열관            §9-7 4종 + §9-8 2종. 반대 방향까지 덮었다
-⬜ ④ campaign 작가
+✅ ① 산문을 스키마로   (2026-07-27)
+🔨 ② 산문가            서식 있음 · 결과문 하나만 받아봤다  ← 다음은 여기
+⬜ ③ 검열관            §9-7 4종 + §9-8 2종
+✅ ④ 작가              트릭 5종 · 팔레트 · 장 3~8 · 난이도 3갈래 · 평면도 · YAML 방출
+```
+
+```
+팔레트(LLM 1회) → generateCase(seed, palette) → verify → --emit → /?case=gen-1
+                                                       → --emit --yaml → 저작
 ```
 
 ### 항목별
 
-1. **새 기계 세팅** — `.claude/` 가 있어 `git clone` 이 거부돼 `init`+`fetch` 로 제자리에
-   받았다. `npm install` 후 게이트 5단이 **한 번에 초록**. `npm install` 이
-   `package-lock.json` 에 `"peer": true` 표시만 지우는 무의미한 차분을 남겨 되돌렸다
-2. **§9-8 신설** — 9-7 의 거울상. **(e) 물증을 주는데 `result` 없음 → 오류**
-   (6.55 의 정반대이고 피해가 같아 등급도 같다) · **(f) 아무도 안 쓰는 물증 → 경고**
-3. **(f)의 「쓰인다」는 넷** — 논리·트릭·어휘·**읽을거리(`record`·`extra`)**.
-   마지막 것이 없으면 읽히기만 하는 물증이 전부 걸려 **경보가 소음이 된다**
-4. **경고가 셋 나왔다** — 문서는 `e_yuri_call` 하나만 알고 있었다.
-   `e_wy_call_log` 는 기록을 붙여 닫고, **`e_safes` 는 일부러 열어뒀다**(아래)
-5. **`a_ph_yuri` 결과문 + `e_yuri_call` 기록** — `PROSE-BRIEF.md` 서식으로 받았다.
-   짝인 `a_ph_wy` 를 브리프에 넣어 **문장 수·길이를 맞췄다**
-6. **서식 구멍 셋 반영** — `evidence[].record` 누락 · 합격 기준이 검증기보다 낡음 ·
-   **「같은 온도」의 맞출 대상을 안 줌**
+1. **④작가가 섰다** — 트릭 아키타입 5종(계약을 코드가 채운다) · `Palette` 이음매 ·
+   장 수 3~8 가변(가닥 구조) · 난이도 3갈래(`--want`) · 평면도 생성 · YAML 방출
+2. **앱이 사건 파일에서 구조를 읽는다** — 인물·진술·지문·시간축·장소·**보고서
+   (장·공란·정답·서술문)**·**평면도(GEO)**·확보 단어 은행·씨앗 단어·**저장 키**
+3. **용의자 5명 고정** — `SYSTEM-DECISIONS §3` 「용의자 수 가변」을 뒤집었다(사용자 결정)
+4. **게이트 5단 → 7단** — `gen-check`(생성기 `--min-pass 100`) · `tmpl-check`(저작 서식)
+5. **서식 셋** — `CASE-BRIEF.md`(④ 통째 의뢰) · `PALETTE-BRIEF.md`(주력) ·
+   `palette-museum.json`(사용자가 받아온 첫 실사용 팔레트)
 
 ### 검증한 것
 
 | | |
 |---|---|
-| 배포 JSON 적재 | `schema.ts` 화이트리스트 통과 — 두 필드 다 온전히 실렸다 |
-| 쉼표 절단 | 없음 (문장 끝까지 살아 있다) |
-| 앱이 집는가 | 키 `phone:yuri` 가 하드코딩 `M` 에 **없어서 엔진 폴백이 실제로 발동** |
-| 난이도 | **불변** — 오라클 4 · 기대 6(밴드 4~7) · `hard` |
-| 콘솔 | 에러 0 · 의도한 신호 둘(`영수증·물자국`)만 |
+| 산장 사건 회귀 | 공란 20의 답 · kind · `SEC_BLANKS` · `ORDER` · `GEO`(방4·구역2·문5·창3·보행선2) · `WALK` · 고정물 4 — **전부 옛값** |
+| 생성 | 200/200 통과 · 아키타입 5종 균등 · 상주 경고 0 |
+| 장 수 | 3장 오라클 4 · 5장 오라클 6 · 8장 오라클 9 |
+| 난이도 | easy·normal·hard 각 10건 100% |
+| YAML 방출 | **왕복 대조** — 쓴 파일을 다시 읽어 원본과 같음 |
+| 박물관 팔레트 | 앱에서 열림 · 장소 11곳 박물관 어휘 · 조사 34 · 콘솔 에러 0 |
 
 ## In Progress
 
@@ -50,49 +51,49 @@ machine: "KWONKYUNGHUN (새 기계 · OneDrive 아래)"
 
 ## Remaining Tasks
 
-- [ ] **🎯 산문가를 나머지 산문으로 넓힌다** — 다음 후보는 **진술 원문 5명**(가장 크고
-      규칙이 가장 많다: 지문 전원/전무 · 말투 구분 · 불안 편중 금지)과 **장 서사 5**.
-      **한 번에 받지 말고 한 인물씩** 받아 검증기에 물린다
-- [ ] **`e_safes` 를 무엇으로 만들지** — 9-8f 경고 상주. **의도한 것이다**: 금고가
-      ① 잠긴 금고 ② 유서의 두 번째 경로 ③ 다른 것 중 미결이고, **그 전에 기록을 쓰면
-      결정을 문장으로 먼저 내려버린다.** YAML 에 주석으로 박아뒀다
-- [ ] **`a_ph_yuri` 에 `clues` 를 붙일지** — 짝 `a_ph_wy` 는 프로필 한 줄을 남기는데
-      이쪽은 안 남긴다. 대칭으로는 맞지만 **화면 동작 변경**이라 손대지 않았다
-- [ ] **색·대비·질감** — 기하는 다 쟀다. **스크린샷이 세 기계째 막혀 있다**
-- [ ] **바닥 위 배치 스냅 여부** · **표기 안내 문안**(changeset 9) · **장 인터루드 렌더**
+- [ ] **🎯 진술 원문을 산문가에게 받는다 (사용자 손 필요)** — `PROSE-BRIEF.md`,
+      **한 인물씩** · 짝을 같이. 대상은 박물관 사건(seed 1)
+- [ ] **팔레트에 인물 층**(성격·비밀의 결·말투) — 조립 진술 개선.
+      **1번 결과를 봐야 어디까지 흉내낼 수 있는지 안다**
+- [ ] **캠페인 생성기 UI** — 난이도·장 수 선택 포함. **엔진을 앱 번들에 넣는 일이 선행**
+- [ ] `e_safes` · `a_ph_yuri` 의 `clues` · 색·대비·질감 · 배치 스냅 · 표기 안내 문안
 
 ## Blockers / Issues
 
-- ⚠️ **검사를 만들면 아는 것보다 많이 나온다** — (f)가 문서가 아는 1건이 아니라 3건을
-  물었다. 07-25 우측 패널 3건이 45건이었던 것과 같은 형태다. **세기 전에는 모른다**
-- ⚠️ **서식이 검증기보다 낡는다** — 첫 실사용에서 바로 드러났다. `verifier.ts` 에 검사를
-  더하면 `PROSE-BRIEF.md` 합격 기준도 **같이** 고친다
-- ⚠️ **「같은 온도로 쓰라」는 맞출 대상이 브리프에 있어야 지켜진다** — 없으면 산문가가
-  온도를 혼자 정하고, 한쪽이 길어지는 순간 그게 **유용도 표시**다(절대 규칙 위반)
-- ⚠️ **`doInvestigate` 는 저장에 쓴다** — 그래서 브라우저에서 조사를 실행하지 않고
-  서빙되는 JSON 과 키 도출을 읽어 확인했다
+- ⚠️ **「없는 것이 표시가 된다」 — 하루에 두 번.** 진술 문단 수 · 소지품 검사.
+  절대 규칙이 금지한 것은 「강조」인데 **부재도 강조다**
+- ⚠️ **「초록불의 뜻」 — 하루에 네 번.** 게이트에 없던 생성기·저작 서식,
+  리포트에 없던 아키타입 분포·상주 경고. **통과는 「오류가 없다」일 뿐이다**
+- ⚠️ **엔진에 이미 있는데 배선만 없던 것이 다섯.** 생성기·저작 서식·확보 단어·
+  보고서·평면도. **새로 만들기 전에 엔진을 본다**
+- ⚠️ **대입(`this.X =`)만 찾으면 이관 여부를 못 판단한다** — `applyCase` 에
+  제자리 변경이 있다. 그래서 「보고서는 앱 하드코딩」이라고 한 번 틀리게 말했다
+- ⚠️ **어휘가 논리를 흔들면 결함이다.** 팔레트 배열 길이가 rng 를 밀어 트릭이
+  5→3종이 됐다. 초기 상태를 흩고 트릭을 독립 줄기로 옮겨 해소
+- ⚠️ **스크린샷이 네 기계째 막힌다.** React fiber 를 훑어 런타임 상태를 직접 읽는
+  방식으로 대체했다 — 이번 세션 실측이 거의 다 그 방식이다
 
 ## Notes for Next Session
 
-- **작업 기계가 넷이 됐다.** 이 기계(`KWONKYUNGHUN`)는 **OneDrive 아래**에 있다
-- **기계를 옮기면 `git pull` 다음 `npm install`** (07-24 이후 `js-yaml` 이 늘었다)
-- **새 기계는 `git config --local user.name/user.email` 부터 한다.** 없으면 첫 커밋이
-  `Author identity unknown` 으로 튕긴다. 기존 커밋은 전부
-  `peterkwon248 <vmfhxhtmwkd7@gmail.com>` 이다 — **`--local` 로 저장소에만 건다**
-- **살아 있는 목록은 `NEXT-ACTION.md` §다음 즉시 액션 하나뿐이다.** `PORT-AUDIT.md`
-  의 「남은 것」 표는 07-25 스냅샷이고 다섯 줄 중 넷이 이미 닫혀 있었다 —
-  2026-07-28에 ⏭ 배너를 달았다. **`NEXT-ACTION` 이 그 파일을 가리키고 있어서
-  다음 기계가 속을 자리였다**
-- **`app/public/cases/mountain-lodge.json` 은 추적 안 된다** — `npm run case` 산출물이고
-  `dev`·`build` 둘 다 앞에서 굽는다
+- **직전 머신은 `DESKTOP-JCJTAH8`.** 07-28은 `KWONKYUNGHUN`(OneDrive 아래)이었다.
+  ⚠ 머신 이름 `KWONKYUNGHUN` 과 이 기계의 **사용자명** `kwonkyunghun` 이 겹친다 —
+  `$env:COMPUTERNAME` 과 경로를 같이 봐야 오진하지 않는다
+- **기계를 옮기면 `git pull` 다음 `npm install`**
+- `app/public/cases/` 와 `out/` 은 추적 안 된다 — `--emit` 산출물이고 언제든 다시 만든다
 - 이 저장소는 **직접 main 푸시** (feature 브랜치·PR 없음)
+- **`docs/CONTEXT.md`·`docs/TODO.md` 는 의도적으로 없다** — MEMORY.md 단일 체제
 
 ## Files Modified
 
-- `engine/src/verifier.ts` — **§9-8 신설** (e 오류 · f 경고)
-- `engine/cases/mountain-lodge.yaml` — `a_ph_yuri.result` · `e_yuri_call.record` ·
-  `e_wy_call_log.record` · `e_safes` 에 「일부러 비워둔다」 주석
-- `engine/templates/PROSE-BRIEF.md` — 짝 포함 규칙 · `evidence[].record` · 9-8 합격 기준
-- `docs/MEMORY.md` — §반대 방향 신설 · 🔴 미해결 절을 ✅ 로 · 현재 단계 갱신
-- `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md`
-- `docs/PORT-AUDIT.md` — 「남은 것」 표에 ⏭ 스냅샷 배너 (넷은 이미 닫혔다)
+- `engine/src/generate.ts` — 트릭 5종 · `Palette` · 장 수 가변 · 가닥 · 평면도 ·
+  진술 도출 · 장소 11 · 키 배정기 · rng 탈상관
+- `engine/src/orchestrate.ts` — `fit()` 재작성(19회 → 2회) · 상주 경고 표시 · `RunOptions`
+- `engine/src/cli.ts` — `--palette` · `--want` · `--chapters` · `--emit` · `--yaml` · `--min-pass`
+- `engine/src/to-yaml.ts` — **신설**. `parseCase` 의 역함수
+- `engine/templates/` — `CASE-BRIEF.md` · `PALETTE-BRIEF.md` · `palette-example.json` ·
+  `palette-museum.json` **신설** · `case-template.yaml` 5인 복구 · `README.md`
+- `app/src/App.jsx` — `applyCase` 구조 이관(인물·진술·시간·장소·보고서·평면도·
+  확보 단어·씨앗·저장 키)
+- `app/src/main.jsx` — `?case=` 선택 · **에러 경계**
+- `package.json` — `gen-check` · `tmpl-check`
+- `docs/` — `MEMORY.md` · `NEXT-ACTION.md` · `SESSION-LOG.md` · `SYSTEM-DECISIONS.md`
