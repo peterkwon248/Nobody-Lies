@@ -33,6 +33,14 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
    레벨에만 있어서 이 기계에 안 따라왔던 것이다. 이제 커밋돼서 네 기계가 다 받는다
 7. **레지던시 팔레트** (`engine/templates/palette-residency.json`) — 사용자가
    받아온 두 번째 세계. 3/3 통과 · 트릭 3종
+8. **🎯 생성기에 산문 단계** (닫음) — 5번 절. 사건 행의 「산문」 → 그 사건으로 채워진
+   의뢰서 복사 → 챗봇 → 받은 YAML 붙여넣기 → **병합·재검증.** 검증기를 통과해야만
+   저장한다. **순서를 뒤집었다** — 문서는 「산문을 받아본 뒤에」였지만 ⓐ·ⓑ는 배선이지
+   문안이 아니고, 만들고 나니 1차 받기가 앱 안에서 일어난다. 서식의 문단 수 규격은
+   **안 건드렸다**(그건 여전히 받아봐야 정해진다)
+9. **§9-9 신설 — 진술 길이 쏠림.** 서식은 「한쪽이 길어지면 유용도 표시다」라고
+   말해왔는데 **재는 사람이 없었다.** 9-1(지문 전원/전무)의 같은 부류라 등급도 오류.
+   기준 **2배 초과 AND 차이 2문단 이상**. `PROSE-BRIEF.md` 합격 기준에도 같이 넣었다
 
 ### 검증한 것
 
@@ -45,6 +53,9 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
 | 제목 | 산장 ko/en · 레지던시 ko/en **네 조합 실측** |
 | 복사 폴백 | 클립보드 제거 + `execCommand` 실패 조건에서 **서식 1989자 펼쳐짐** |
 | 레지던시 | 장소 11곳 전부 그 세계 · **산장 기본 어휘 0** · 빈손 조사까지 |
+| 산문 단계 | 브리프 5337자 · 구멍 0 · 머리말 안 샘 · 인물 5명 · `claim` 포함 · 금지 단어 5 |
+| 되붙이기 | YAML 파싱 → 5명 병합 → 검증 통과 → 저장 · 표시가 「진술 있음」 · **다른 사건은 자리표시 그대로** |
+| §9-9 | 산장 원본(3·3·2·2·2) 통과 · **9대1·5대2 걸림** · 2대1(차이 1문단) 통과 |
 
 ## In Progress
 
@@ -52,13 +63,13 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
 
 ## Remaining Tasks
 
-- [ ] **🎯 진술 원문을 받는다 (사용자 손 필요)** — 세계를 **레지던시로 갈아탄다**
-      (사용자가 직접 가져온 것 · `--generate 1` 이 seed 1 결정론). 브리프를 그쪽으로
-      다시 써야 한다. 박물관용 초안이 `out/PROSE-REQUEST-gen-1.md` 에 있다
+- [ ] **🎯 진술 원문을 받는다 (사용자 손 필요)** — **이제 앱 안에서 된다**:
+      생성기 5번 절 → 「산문 서식 복사」. 세계는 **레지던시**. 터미널로 하려면
+      `out/PROSE-REQUEST-residency.md`
 - [ ] **레지던시 팔레트에 `records` 8개** (사용자 손 필요) — 챗봇이 빼먹었다.
       지금 확보 단어 셋이 기본값(`출입 기록·통화 내역·남겨진 쪽지`)이라 **세계의 맛이 없다**
-- [ ] **🎯 생성기에 「산문 단계」** — 1번 뒤에. ⓐ 논리를 브리프용으로 꺼내기
-      ⓑ YAML 되붙이기 (ⓒ 재검증은 이미 된다)
+- [ ] **`PROSE-BRIEF.md` 의 「인물당 10~14문단」을 고친다** — 산장 실제는 2~3,
+      생성 사건은 4다. **어느 쪽과도 안 맞는다.** 1차를 받아본 뒤에 고친다(먼저 고치면 추측)
 - [ ] **`?generate` 대신 `#generate` 를 문서에 반영** — `NEXT-ACTION` 이 아직 `/?generate` 로 안내한다(쿼리 읽기는 살아 있어서 동작은 한다)
 - [ ] `e_safes` · `a_ph_yuri` 의 `clues` · 색·대비·질감 · 배치 스냅 · 표기 안내 문안
 
@@ -92,7 +103,10 @@ machine: "KWONKYUNGHUN (OneDrive 아래)"
 
 - `app/src/App.jsx` — 홈 삭제(확인 2단) · `goRoute` 해시 · **사건 제목 배선** · 이어하기 제목
 - `app/src/main.jsx` — `routeParams()`(쿼리+해시) · `hashchange` 재렌더 · **`key` 로 재마운트**
-- `app/src/Generator.jsx` — 복사 폴백 3단 + 직접 복사 칸 · 「시도할 사건」 문구 · ←홈 해시
+- `app/src/Generator.jsx` — 복사 폴백 3단 + 직접 복사 칸 · 「시도할 사건」 문구 · ←홈 해시 ·
+  **5번 절(산문 단계)** · `proseRequest`·`applyProse`·`copyBlock` 정확화
+- `engine/src/verifier.ts` — **§9-9 신설** (진술 길이 쏠림 → 오류)
+- `engine/templates/PROSE-BRIEF.md` — 합격 기준에 9-9
 - `app/vite.single.config.ts` · `scripts/bundle-single.mjs` — **신설**. 단일 HTML 빌드
 - `scripts/port-check.mjs` — `c.canDel` · `c.confirmDel` 을 `APP_ONLY` 에
 - `package.json` · `app/package.json` — `tester` · `build:single`

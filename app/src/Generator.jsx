@@ -1,6 +1,9 @@
 import React from 'react';
+import { dump, load } from 'js-yaml';
 import { run } from '@engine/orchestrate.ts';
+import { verify } from '@engine/verifier.ts';
 import briefRaw from '../../engine/templates/PALETTE-BRIEF.md?raw';
+import proseRaw from '../../engine/templates/PROSE-BRIEF.md?raw';
 
 /**
  * 캠페인 생성기.
@@ -21,12 +24,107 @@ import briefRaw from '../../engine/templates/PALETTE-BRIEF.md?raw';
 
 const STORE = 'nobody-lies:generated';
 
-/** 서식에서 「복사할 부분」만 잘라낸다. 파일이 바뀌면 화면도 따라 바뀐다 */
-function briefBody() {
-  const a = briefRaw.indexOf('⬇ 여기서부터 복사');
-  const b = briefRaw.indexOf('⬆ 여기까지 복사');
-  if (a < 0 || b < 0) return briefRaw;
-  return briefRaw.slice(a + '⬇ 여기서부터 복사'.length, b).trim();
+/**
+ * 서식에서 「복사할 부분」만 잘라낸다. 파일이 바뀌면 화면도 따라 바뀐다.
+ *
+ * ★ 표시가 **줄 전체**일 때만 잡는다 ★ `indexOf` 로 찾으면 서식 머리말이
+ * 「아래 `⬇ 여기서부터 복사` 이후를 복사하라」고 **설명하는 문장**을 먼저 물어서
+ * 머리말이 통째로 브리프에 딸려 들어간다. `PROSE-BRIEF.md` 가 실제로 그렇다
+ * (2026-07-28 실측 — `{{ }}` 가 둘이어야 하는데 셋으로 세어졌다).
+ * 서식에서 그 문장을 지우는 게 아니라 **읽는 쪽을 정확하게** 한다.
+ */
+function copyBlock(raw) {
+  const s = raw.match(/^⬇ 여기서부터 복사[^\n]*\n/m);
+  const e = raw.match(/^⬆ 여기까지 복사[^\n]*$/m);
+  if (!s || !e) return raw;
+  return raw.slice(s.index + s[0].length, e.index).trim();
+}
+function briefBody() { return copyBlock(briefRaw); }
+
+/**
+ * 산문이 입혀졌나. **표시를 남겨서 판단한다** — 자리표시 문장을 문자열로
+ * 알아보려 하면 산문가가 비슷하게 쓰는 순간 틀린다. `_difficulty`·`_oracle` 과
+ * 같은 부류의 메타다.
+ */
+function hasProse(c) { return Boolean(c && c._prose); }
+
+/** `undefined` 인 키를 턴다 — YAML 에 `key: null` 이 찍히면 읽는 사람이 헷갈린다 */
+function tidy(o) {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null));
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  ② 산문가 — 진술 의뢰서를 이 사건으로 채운다 (2026-07-28)
+ * ─────────────────────────────────────────────────────────────
+ *
+ * **서식은 한 벌이다.** 문안을 여기서 새로 쓰지 않고 `PROSE-BRIEF.md` 의 복사
+ * 블록을 그대로 쓰되, 서식이 비워둔 `{{ }}` 두 자리에 이 사건의 값을 끼운다.
+ * 같은 규칙이 두 벌 있으면 반드시 갈라진다 — 이 저장소가 07-24에 엔진↔프로토타입
+ * 14곳으로 배운 것이다.
+ *
+ * ⚠ **서식이 바뀌어 `{{ }}` 가 둘이 아니면 조용히 넘어가지 않는다.** 화면에
+ * 그 사실을 띄운다. 브리프가 반쯤 빈 채로 챗봇에 가는 것이 제일 비싸다.
+ *
+ * 「한 인물씩」이 아니라 **다섯 명을 한 번에** 받는다. 서식의 그 지침은 인물당
+ * 10~14문단인 손글씨 사건을 전제한 것이고, 생성 사건은 인물당 4문단이라 다섯을
+ * 합쳐도 스무 문단이다. 오히려 **말투 구분·불안 편중 금지·지문 전원/전무**가
+ * 인물 사이의 규칙이라 한 번에 보는 편이 지키기 쉽다.
+ */
+function proseRequest(c) {
+  const logic = dump(tidy({
+    title: c.title,
+    incident: tidy({ description: c.incident?.description, scene: c.incident?.scene }),
+    victim_profile: c.victimProfile,
+    slots: c.slots,
+    locations: (c.locations || []).map((l) => tidy({ id: l.id, label: l.label })),
+    culprit: c.culprit,
+    people: (c.people || []).map((p) => tidy({
+      id: p.id, name: p.name, age: p.age, job: p.job,
+      presence: p.presence, claim: p.claim,
+    })),
+  }), { lineWidth: 100, noRefs: true });
+
+  // 조사로만 얻는 단어. 진술이 먼저 말하면 조사할 이유가 사라진다
+  const seeds = c.seedTerms || [];
+  const forbidden = (c.terms || []).map((t) => t.word).filter((w) => !seeds.includes(w));
+
+  const fill = ['people:']
+    .concat((c.people || []).map((p) => `  - id: ${p.id}          # ${p.name}\n    statement:\n      paragraphs: [ ... ]`))
+    .join('\n');
+
+  const slots = c.slots || [];
+  const 보충 = [
+    '## 이 사건에 대한 보충',
+    '',
+    `- **문단 수는 인물당 ${Math.max(3, slots.length)}~${slots.length + 3}문단.** 시간대가 ${slots.length}개이고,`,
+    '  각 시간대에 어디 있었는지가 드러나기만 하면 문단을 묶어도 됩니다.',
+    '  **다섯 사람의 길이가 서로 비슷해야 합니다** — 한쪽이 길면 그게 유용도 표시입니다.',
+    '- **지문(`gesture`)은 넣지 마세요.** 이번엔 진술 원문만 받습니다.',
+    '- **`claim` 이 `presence` 와 다른 사람이 범인**입니다. 거짓말은 `claim` 이 말하는',
+    '  그대로만 하세요 — 더 꾸미면 새 사실이 됩니다.',
+    '',
+    '### ⛔ 진술에 나오면 안 되는 단어',
+    '',
+    '플레이어가 **조사로 얻어야 하는 것**입니다. 진술이 먼저 말하면 조사할 이유가 사라집니다.',
+    '',
+    '```',
+    forbidden.length ? forbidden.join(' · ') : '(없음)',
+    '```',
+    '',
+    seeds.length ? `\`${seeds.join('` · `')}\` 는 씨앗 단어라 나와도 됩니다 — 단 「무엇이었나」까지만.` : '',
+  ].filter((x) => x !== '').join('\n');
+
+  const body = copyBlock(proseRaw);
+  const holes = body.match(/\{\{[\s\S]*?\}\}/g) || [];
+  if (holes.length !== 2) return { text: null, holes: holes.length };
+
+  let i = 0;
+  const filled = body.replace(/\{\{[\s\S]*?\}\}/g, () => (i++ === 0
+    ? logic
+    : `**아래 자리만 채우세요.** 나머지 항목은 이번 요청 대상이 아닙니다.\n\n\`\`\`yaml\n${fill}\n\`\`\``));
+
+  return { text: `${filled}\n\n${보충}\n`, holes: 2 };
 }
 
 function loadStore() {
@@ -76,6 +174,10 @@ export default function Generator() {
   const [copied, setCopied] = React.useState('');
   // 클립보드가 막혔을 때 직접 복사할 자리. `{ what, text }`
   const [manual, setManual] = React.useState(null);
+  // ② 산문 단계 — 산문을 입힐 사건 id · 챗봇이 준 YAML · 결과
+  const [proseFor, setProseFor] = React.useState(null);
+  const [proseText, setProseText] = React.useState('');
+  const [proseMsg, setProseMsg] = React.useState(null);
 
   /**
    * 복사. **세 단계로 내려간다.**
@@ -204,6 +306,80 @@ export default function Generator() {
     Object.keys(loadStore()).forEach(forget);
     saveStore({});
     setMade([]);
+    setProseFor(null);
+  };
+
+  /**
+   * 받은 YAML 을 사건에 넣고 **다시 검증한다.**
+   *
+   * 검증기가 브라우저에서 도는 것이 이 단계의 전제다 — 통과해야만 저장한다.
+   * 반려되면 오류를 그대로 보여준다. **그걸 챗봇에 되붙이는 것이 고치는 방법**이라
+   * 복사 가능한 자리에 둔다(팔레트 실패 때와 같은 규약).
+   */
+  const applyProse = () => {
+    setProseMsg(null);
+    let frag;
+    try {
+      frag = load(proseText);
+    } catch (e) {
+      setProseMsg({ ok: false, lines: ['YAML 을 읽지 못했다 — ' + e.message] });
+      return;
+    }
+    const incoming = frag?.people;
+    if (!Array.isArray(incoming) || !incoming.length) {
+      setProseMsg({ ok: false, lines: ['`people:` 목록을 못 찾았다. 받은 답을 코드블록째 붙여넣었는지 본다'] });
+      return;
+    }
+
+    const store = loadStore();
+    const target = store[proseFor];
+    if (!target) {
+      setProseMsg({ ok: false, lines: ['사건이 없다 — 지워졌을 수 있다'] });
+      return;
+    }
+
+    // 통과할 때만 저장한다. 사본에 얹어서 검증하고, 원본은 그때까지 안 건드린다
+    const next = JSON.parse(JSON.stringify(target));
+    const byId = Object.fromEntries((next.people || []).map((p) => [p.id, p]));
+    const 넣음 = [];
+    const 모름 = [];
+    for (const p of incoming) {
+      const t = byId[p?.id];
+      if (!t) { 모름.push(String(p?.id ?? '(id 없음)')); continue; }
+      const para = p?.statement?.paragraphs;
+      if (!Array.isArray(para) || !para.length) continue;
+      t.statement = Object.assign({}, t.statement, { paragraphs: para });
+      넣음.push(`${t.name} ${para.length}문단`);
+    }
+    if (!넣음.length) {
+      setProseMsg({
+        ok: false,
+        lines: ['넣을 진술이 없었다' + (모름.length ? ` · 모르는 id: ${모름.join(', ')}` : '')],
+      });
+      return;
+    }
+
+    const r = verify(next);
+    if (!r.ok) {
+      setProseMsg({
+        ok: false,
+        lines: ['검증기가 반려했다 — 아래를 그대로 챗봇에 되붙이고 그 부분만 고쳐 달라고 해라',
+          ...r.errors.map((e) => `오류: ${e}`)],
+      });
+      return;
+    }
+
+    next._prose = true;
+    store[proseFor] = next;
+    saveStore(store);
+    setMade(Object.values(store));
+    setProseText('');
+    setProseMsg({
+      ok: true,
+      lines: [`넣었다 — ${넣음.join(' · ')}`,
+        ...(r.warnings || []).map((w) => `경고: ${w}`),
+        ...(모름.length ? [`모르는 id 는 건너뛰었다: ${모름.join(', ')}`] : [])],
+    });
   };
 
   return (
@@ -343,7 +519,8 @@ export default function Generator() {
                   background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
                   border: '1px solid var(--border, #2a2e35)',
                 }}>
-                  <a href={`/?case=local:${encodeURIComponent(c.id)}`}
+                  {/* 경로를 새로 만들지 않는다 — `content://`(안드로이드 다운로드)에서 죽는다 */}
+                  <a href={`#case=local:${encodeURIComponent(c.id)}`}
                     style={{
                       flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between',
                       alignItems: 'center', gap: '12px', textDecoration: 'none',
@@ -352,8 +529,15 @@ export default function Generator() {
                     <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
                     <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
                       {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
+                      {hasProse(c) ? ' · 진술 있음' : ' · 진술 자리표시'}
                     </span>
                   </a>
+                  <button
+                    onClick={() => { setProseFor(proseFor === c.id ? null : c.id); setProseMsg(null); setProseText(''); }}
+                    title="이 사건에 진술을 입힌다"
+                    style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
+                    {proseFor === c.id ? '닫기' : '산문'}
+                  </button>
                   {/* 사건 하나만 지운다. 진행 저장도 같이 지운다 — 안 지우면
                       같은 이름으로 다시 만들었을 때 옛 진행이 되살아난다 */}
                   <button onClick={() => removeOne(c.id)} title="이 사건 지우기"
@@ -370,10 +554,85 @@ export default function Generator() {
           </>
         )}
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '14px 0 0', lineHeight: 1.6 }}>
-          <b>진술은 아직 자리표시다</b>(「폐관 준비에는 그곳에 없었습니다」). 논리·어휘·평면도는
-          진짜지만 읽을 문장이 아직 없다 — 산문가가 채울 자리다.
+          갓 만든 사건의 <b>진술은 자리표시다</b>(「…그곳에 없었습니다」). 논리·어휘·평면도는
+          진짜지만 읽을 문장이 없다 — 행의 <b>「산문」</b>을 눌러 5번에서 채운다.
         </p>
       </section>
+
+      {/* 5 — 산문 입히기. 4에서 사건을 고르면 열린다 */}
+      {proseFor && (() => {
+        const c = made.find((x) => x.id === proseFor);
+        if (!c) return null;
+        const req = proseRequest(c);
+        return (
+          <section style={{ ...box, marginTop: '14px' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', display: 'flex', alignItems: 'center' }}>
+              <span style={stepNo}>5</span>진술을 입힌다
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
+              <b>{c.title}</b> — 2번과 같은 방식이다. 서식을 복사해 챗봇에게 주고, 받은 답을
+              아래에 붙여 넣는다. <b>이 앱은 챗봇을 부르지 않는다.</b>
+            </p>
+
+            {req.text === null ? (
+              <p style={{ fontSize: '13px', color: 'var(--g-contradict, #EB5757)', margin: 0, lineHeight: 1.7 }}>
+                <b>서식을 채울 수 없다.</b> <code>PROSE-BRIEF.md</code> 의 <code>{'{{ }}'}</code> 자리가
+                둘이어야 하는데 {req.holes}개다. 서식이 바뀌었다 — 고치기 전에는 브리프가
+                반쯤 빈 채로 나간다.
+              </p>
+            ) : (
+              <>
+                <button onClick={() => copy(req.text, 'prose')} style={btn(true)}>
+                  {copied === 'prose' ? '복사됐다 ✓' : '산문 서식 복사'}
+                </button>
+                {manualBox('prose')}
+
+                <div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '18px 0 7px' }}>
+                  받은 YAML 을 그대로 붙여넣어라
+                </div>
+                <textarea value={proseText} onChange={(e) => setProseText(e.target.value)}
+                  placeholder={'people:\n  - id: p1\n    statement:\n      paragraphs:\n        - …'}
+                  style={{
+                    width: '100%', height: '150px', boxSizing: 'border-box',
+                    background: 'var(--bg-app, #0e1013)', color: 'var(--fg, #e6e9ef)',
+                    border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
+                    padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
+                  }} />
+                <div style={{ marginTop: '12px', display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button onClick={applyProse} disabled={!proseText.trim()}
+                    style={{ ...btn(true), opacity: proseText.trim() ? 1 : 0.5 }}>사건에 넣기</button>
+                  <span style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)' }}>
+                    검증기를 통과해야만 저장된다
+                  </span>
+                </div>
+              </>
+            )}
+
+            {proseMsg && (
+              <div style={{
+                marginTop: '14px', padding: '12px 14px', borderRadius: 'var(--r-sm, 7px)',
+                border: '1px solid ' + (proseMsg.ok ? 'var(--accent, #4C8DFF)' : 'var(--g-contradict, #EB5757)'),
+              }}>
+                <pre style={{
+                  margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  fontSize: '12px', lineHeight: 1.7, color: 'var(--fg-2, #c8ccd4)',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                }}>{proseMsg.lines.join('\n')}</pre>
+                {proseMsg.ok ? null : (
+                  <>
+                    <button onClick={() => copy(proseMsg.lines.join('\n'), 'proseErr')}
+                      style={{ ...btn(false), marginTop: '11px' }}>
+                      {copied === 'proseErr' ? '복사됐다 ✓' : '오류 복사 — 챗봇에 그대로 붙여넣기'}
+                    </button>
+                    {manualBox('proseErr')}
+                  </>
+                )}
+              </div>
+            )}
+          </section>
+        );
+      })()}
     </div>
   );
 }
