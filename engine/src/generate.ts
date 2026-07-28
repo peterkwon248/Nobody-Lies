@@ -38,9 +38,19 @@ const SUSPECTS = 5
  */
 const EMPTY_SPOTS = 14
 
-/** 결정론적 PRNG. 같은 seed 는 같은 사건 */
+/**
+ * 결정론적 PRNG. 같은 seed 는 같은 사건.
+ *
+ * ⚠ **초기 상태를 흩는다.** 연속한 seed(1,2,3…)를 LCG 에 그대로 넣으면 첫 몇
+ * 출력이 강하게 상관돼 같은 값이 쏠린다. 2026-07-29 에 실제로 물렸다 — 팔레트를
+ * 바꾸자 배열 길이가 달라져 `r()` 호출 횟수가 밀렸고, **트릭 아키타입이 5종에서
+ * 3종으로 줄었다.** 팔레트는 어휘일 뿐인데 논리 분포가 흔들린 것이다.
+ */
 function rng(seed: number) {
-  let s = seed >>> 0
+  let s = (seed >>> 0) ^ 0x9e3779b9
+  s = Math.imul(s ^ (s >>> 16), 2246822507) >>> 0
+  s = Math.imul(s ^ (s >>> 13), 3266489909) >>> 0
+  s = (s ^ (s >>> 16)) >>> 0
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0
     return s / 0x100000000
@@ -369,7 +379,14 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
 
   // ★ 트릭을 먼저 고른다 ★ 트릭이 격자·물증·조사를 결정하기 때문이다.
   // `templates/README.md` 의 저작 순서와 같다: 트릭 → 인물 배치 → 물증 → 사실 → 조사
-  const t = TRICKS[pick(TRICK_KEYS)](culprit)
+  /**
+   * ★ 트릭은 **독립된 난수 줄기**에서 뽑는다 ★
+   *
+   * 같은 줄기를 쓰면 앞에서 `r()` 을 몇 번 썼는지에 따라 추첨이 밀린다 —
+   * 그 횟수는 팔레트 배열 길이에 달려 있어서, **어휘를 바꿨을 뿐인데 트릭
+   * 분포가 바뀐다.** 팔레트는 논리에 영향을 주면 안 된다.
+   */
+  const t = TRICKS[TRICK_KEYS[Math.floor(rng(seed ^ 0x5bf03635)() * TRICK_KEYS.length)]](culprit)
 
   /**
    * ─────────────────────────────────────────────────────────────
