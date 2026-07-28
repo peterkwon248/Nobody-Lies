@@ -64,8 +64,16 @@ export type Palette = {
   jobs?: string[]
   items?: string[]
   motives?: string[]
-  /** 장소 이름표. 구조(홀·현장·부지 밖)는 고정이고 이름만 바뀐다 */
+  /** 장소 이름표. 구조(모이는 곳·현장·부지 밖)는 고정이고 이름만 바뀐다 */
   places?: { hall?: string; room?: string; away?: string }
+  /**
+   * 부지 안의 **다른 방들**. 여섯 개 안팎.
+   *
+   * 방이 적으면 조사가 갈 곳이 없다 — 앱은 조사를 **`동사:대상`** 으로 키잉하므로
+   * 장소 셋으로는 서로 다른 조사를 스물몇 개 만들 수가 없다(2026-07-29 실측:
+   * 조사 30개가 키 9개로 뭉갰다). 방이 늘면 도면도 덜 단조로워진다.
+   */
+  rooms?: string[]
   /** 시간대 이름표. 가운데가 사망 추정 구간이다 */
   times?: { t0?: string; t1?: string; t2?: string }
   /**
@@ -93,6 +101,7 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   items: ['만년필', '손목시계', '열쇠고리', '스카프', '라이터', '수첩'],
   motives: ['채무 관계', '자리 다툼', '오래된 약속', '지분 다툼'],
   places: { hall: '홀', room: '방', away: '자택' },
+  rooms: ['부엌', '서재', '창고', '복도', '지하실', '작업실', '다락', '뒤뜰'],
   times: { t0: '전날 밤', t1: '새벽', t2: '아침' },
   // 트릭 전용 조사(복도·창가·책상·문틀·잠금장치·설비·부품)와 겹치지 않는 이름만 쓴다
   spots: [
@@ -331,11 +340,6 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 적게 주는 것만으로 그 경고가 도로 살아난다. 팔레트는 어휘이고 **비율은
    * 논리라서 코드가 지켜야 한다** — 팔레트가 게임 균형을 깨뜨리게 두지 않는다.
    */
-  const spots = [...(P.spots ?? [])]
-  for (const s of DEFAULT_PALETTE.spots) {
-    if (spots.length >= EMPTY_SPOTS + chapters * 2) break
-    if (!spots.includes(s)) spots.push(s)
-  }
 
 
   const ids: PersonId[] = ['p1', 'p2', 'p3', 'p4', 'p5']
@@ -414,6 +418,60 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       term: { word, source: { ko: `${word} 확인` }, note: { ko: '기록에 그대로 남아 있었다.' } },
     }
   })
+
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  부지 — 방 여덟과 부지 밖 하나 (2026-07-29)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 장소가 셋일 때 조사 30개가 앱 키 9개로 뭉갰다. 앱은 조사를 `동사:대상` 으로
+   * 키잉하는데(`TERM_MAP`·`CLUE_MAP`·평면도가 그 키를 쓴다) 대상이 모자라면
+   * 서로 다른 조사가 같은 칸을 가리킨다.
+   *
+   * 방 여덟 + 부지 밖 하나 = 아홉. `search`·`fixture` 로 열여덟, 인물 `belongings`·
+   * `phone` 으로 열, 부검·알리바이 둘 — 서른 개가 나온다. 예산 10의 3배다.
+   */
+  const extraRooms = [...(P.rooms ?? [])]
+  for (const n of DEFAULT_PALETTE.rooms) {
+    if (extraRooms.length >= 8) break
+    if (!extraRooms.includes(n)) extraRooms.push(n)
+  }
+  const onSite = [
+    { id: 'hall', label: places.hall! },
+    { id: 'room', label: places.room!, scene: true },
+    ...extraRooms.slice(0, 8).map((n, i) => ({ id: `loc${i + 1}`, label: n })),
+  ]
+  const locIds = [...onSite.map((l) => l.id), 'away']
+
+  // 건물 안을 격자로 나눈다. viewBox 1000×625 · 건물 60,60 620×480
+  const COLS = Math.ceil(onSite.length / 2)
+  const CW = Math.floor(620 / COLS)
+  const cell = (i: number) => ({
+    x: 60 + (i % COLS) * CW, y: 60 + Math.floor(i / COLS) * 240, w: CW, h: 240,
+  })
+
+  /**
+   * 조사 키 배정기. **`동사:대상` 은 사건 안에서 유일해야 한다.**
+   *
+   * 손으로 정하면 트릭·가닥·빈손이 서로 모르는 채 같은 칸을 집는다 — 실제로
+   * 그랬다. 원하는 자리를 먼저 주고, 차 있으면 다음 자리로 밀어낸다.
+   */
+  const usedKeys = new Set<string>()
+  const claimLoc = (verb: string, prefer: string[]): { verb: string; id: string } | null => {
+    for (const id of [...prefer, ...locIds]) {
+      const k = `${verb}:${id}`
+      if (usedKeys.has(k)) continue
+      usedKeys.add(k)
+      return { verb, id }
+    }
+    return null
+  }
+  const claimPerson = (verb: string, id: string) => {
+    const k = `${verb}:${id}`
+    if (usedKeys.has(k)) return false
+    usedKeys.add(k)
+    return true
+  }
 
   const slotLabel: Record<string, string> = { t0: times.t0!, t1: times.t1!, t2: times.t2! }
   const placeLabel: Record<string, string> = { hall: places.hall!, room: places.room!, away: places.away! }
@@ -502,22 +560,60 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     { id: 'a_alibi', label: '알리바이 대조', cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
       verb: 'alibi', pair: [innocents[0], innocents[1]],
       result: res('맞물리는 시각', '네 사람이 말한 도착 시각이 서로 맞물렸다.') },
-    /**
-     * 빈손도 배제 정보다. **조사 대상이 예산의 3배 이상**이어야 선택이 소거가
-     * 아니라 판단이 된다 — 검증기가 그 비율을 잰다.
-     *
-     * 2026-07-29 이전에는 둘뿐이라 비율이 1.86배였고 **60/60 전건에 경고가
-     * 상주했다.** 배치 리포트가 경고를 안 찍어서 몰랐다(`orchestrate.ts` 에서
-     * 그 줄도 함께 고쳤다). `case-template.yaml` 은 처음부터 열 개를 실었다.
-     *
-     * salience 를 낮게 둔다 — 눈에 띄어서 고르는 것이 아니라 소거하려고 고르는 것이다.
-     */
-    ...spots.map((spot, i) => ({
-      id: `a_e${i + 1}`, label: `${spot} 수색`, cost: 1, gives: [] as string[],
-      salience: Math.max(0.04, 0.22 - i * 0.012), yield: 'empty' as const,
-      verb: 'search' as const, target: { kind: 'location' as const, id: 'hall' },
-    })),
   ]
+
+  /**
+   * 조사 키를 배정한다. **원하는 자리를 먼저 주고 차 있으면 밀어낸다.**
+   * 순서가 우선순위다 — 해답·트릭·가닥이 의미 있는 자리를 먼저 가져가고,
+   * 빈손은 남은 조합으로만 만든다.
+   */
+  const resolveKeys = (acts: Act[]): Act[] =>
+    acts.map((a) => {
+      if (a.pair) return a
+      const verb = a.verb ?? 'search'
+      if (a.target?.kind === 'person') {
+        claimPerson(verb, a.target.id)
+        return a
+      }
+      const got = claimLoc(verb, a.target?.kind === 'location' ? [a.target.id] : [])
+      return got ? { ...a, verb: got.verb as Act['verb'], target: { kind: 'location' as const, id: got.id } } : a
+    })
+
+  const named = resolveKeys([...baseActions, ...t.actions, ...strands.map((s) => s.action)])
+
+  /**
+   * 빈손 조사는 **남은 조합 전부**로 만든다. 개수를 미리 정하지 않는다 —
+   * 조사 대상이 예산의 3배여야 하는데 예산은 실험자가 나중에 정하므로,
+   * 만들 수 있는 만큼 만들어 두는 쪽이 안전하다. 빈손도 배제 정보다.
+   *
+   * salience 를 낮게 둔다 — 눈에 띄어서 고르는 것이 아니라 소거하려고 고른다.
+   */
+  const label = new Map(onSite.map((l) => [l.id, l.label]))
+  label.set('away', places.away!)
+  const empties: Act[] = []
+  const addEmpty = (verb: Act['verb'], kind: 'location' | 'person', id: string, text: string) => {
+    const k = `${verb}:${id}`
+    if (usedKeys.has(k)) return
+    usedKeys.add(k)
+    empties.push({
+      id: `a_e${empties.length + 1}`, label: text, cost: 1, gives: [],
+      salience: Math.max(0.04, 0.22 - empties.length * 0.008), yield: 'empty',
+      verb, target: { kind, id },
+    })
+  }
+  /**
+   * ★ 소지품 검사는 **전원**에게 있어야 한다 ★
+   *
+   * 레드 헤링이 무고한 넷에게만 붙으므로 그대로 두면 **범인만 소지품 검사가
+   * 없다.** 그 부재가 곧 범인 표시다 — 조사 0회에 답이 새는 절대 규칙 위반이고,
+   * 2026-07-29 에 실제로 그 상태였다. 빈손으로라도 자리를 만든다.
+   */
+  ids.forEach((p, i) => addEmpty('belongings', 'person', p, `소지품 검사 · ${names[i]}`))
+  for (const id of locIds) addEmpty('search', 'location', id, `${label.get(id)} 수색`)
+  for (const id of locIds) addEmpty('fixture', 'location', id, `${label.get(id)} 설비 확인`)
+  ids.forEach((p, i) => addEmpty('phone', 'person', p, `통화내역 조회 · ${names[i]}`))
+
+  const allActions = [...named, ...empties]
 
   return {
     id: `gen-${seed}`,
@@ -543,10 +639,11 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       viewBox: { w: 1000, h: 625 },
       scale: { x: 96, len: 90, y: 585, label: '5m' },
       buildings: [{ id: 'b_main', x: 60, y: 60, w: 620, h: 480 }],
-      rooms: [
-        { id: 'r_hall', building: 'b_main', loc: 'hall', x: 60, y: 60, w: 320, h: 480, label: places.hall!, primary: true },
-        { id: 'r_room', building: 'b_main', loc: 'room', x: 380, y: 60, w: 300, h: 480, label: places.room!, scene: true, primary: true, tint: 'rgba(235,87,87,.10)' },
-      ],
+      rooms: onSite.map((l, i) => ({
+        id: `r_${l.id}`, building: 'b_main', loc: l.id, ...cell(i),
+        label: l.label, primary: true,
+        ...(l.scene ? { scene: true, tint: 'rgba(235,87,87,.10)' } : {}),
+      })),
       zones: [
         { id: 'z_away', loc: 'away', x: 750, y: 90, w: 200, h: 160, label: places.away!, offsite: true, hatch: true },
       ],
@@ -562,8 +659,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       { id: 't2', label: times.t2! },
     ],
     locations: [
-      { id: 'hall', label: places.hall!, atLodge: true },
-      { id: 'room', label: places.room!, atLodge: true },
+      ...onSite.map((l) => ({ id: l.id, label: l.label, atLodge: true })),
       { id: 'away', label: places.away!, atLodge: false },
     ],
     people: ids.map(person),
@@ -607,7 +703,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       ...strands.map((s) => s.fact),
     ],
 
-    actions: [...baseActions, ...t.actions, ...strands.map((s) => s.action)],
+    actions: allActions,
 
     /**
      * 첫 장은 **조사 없이 확정**되어야 한다(검증기가 강제한다 — 없으면 시작하자마자
