@@ -1,6 +1,9 @@
 import { generateCase } from './generate.js'
+import type { Palette } from './generate.js'
 import { verify } from './verifier.js'
 import type { Case, VerifyResult } from './types.js'
+
+type Difficulty = VerifyResult['difficulty']
 
 /**
  * 오케스트레이터 — 작가 · 비평가 · 실험자.
@@ -32,45 +35,69 @@ function reason(msg: string): string {
   return msg.replace(/'[^']*'/g, "'…'").replace(/\d+/g, 'N').slice(0, 60)
 }
 
-/** 목표 난이도. 여기 들지 못하면 통과가 아니다 */
-const WANTED = new Set<VerifyResult['difficulty']>(['normal', 'hard'])
+/** 목표 난이도의 기본값. 여기 들지 못하면 통과가 아니다 */
+const WANTED: Difficulty[] = ['normal', 'hard']
+
+export type RunOptions = {
+  /** LLM이 채운 세계 팔레트. 없으면 생성기 기본 어휘 */
+  palette?: Palette
+  /**
+   * 목표 난이도. **순서가 곧 선호도다** — 앞쪽을 먼저 고른다.
+   *
+   * 이것이 없던 동안 결과가 전부 `hard` 였다. 예산을 낮은 쪽부터 훑으면서
+   * 「목표에 들면 즉시 반환」했기 때문이다 — 낮은 예산일수록 어려우므로
+   * 항상 어려운 쪽이 먼저 걸렸다. **캠페인은 난이도가 올라가야 하므로
+   * 무엇을 원하는지 말할 수 있어야 한다.**
+   */
+  want?: Difficulty[]
+}
 
 /**
  * 예산은 작가가 정하지 않는다. **실험자가 찾는다.**
  *
  * 작가는 논리만 짜고, 몇 회로 풀리는지는 만들어봐야 안다.
- * 그래서 예산을 훑으며 목표 난이도에 드는 값을 고른다 —
- * 사람이 "예산 5가 맞나?" 를 손으로 고민하던 일이 이 루프로 대체된다.
+ * 그래서 예산을 훑어 **성립하는 (예산, 난이도) 쌍을 전부 모은 뒤**
+ * 원하는 난이도를 고른다 — 사람이 "예산 5가 맞나?" 를 손으로 고민하던
+ * 일이 이 루프로 대체된다.
  */
-function fit(base: Case): { case: Case; result: VerifyResult } | { fail: VerifyResult } {
+function fit(base: Case, want: Difficulty[]): { case: Case; result: VerifyResult } | { fail: VerifyResult } {
   let last = verify(base)
   if (!last.ok) return { fail: last }
 
+  const viable: { case: Case; result: VerifyResult }[] = []
   for (let budget = 2; budget <= 8; budget++) {
     const c = { ...base, budget }
     const r = verify(c)
     if (!r.ok) { last = r; continue }
-    if (WANTED.has(r.difficulty)) return { case: c, result: r }
+    viable.push({ case: c, result: r })
     last = r
+  }
+
+  // 선호 순서대로 찾는다. 같은 난이도가 여럿이면 예산이 작은 것 — 여유가 적을수록
+  // 실험자가 잰 난이도에 가깝다
+  for (const d of want) {
+    const hit = viable.find((v) => v.result.difficulty === d)
+    if (hit) return hit
   }
   return { fail: last }
 }
 
-export function run(seeds: number[]): Batch {
+export function run(seeds: number[], opts: RunOptions = {}): Batch {
   const passed: Judged[] = []
   const rejections = new Map<string, number>()
   const note = (k: string) => rejections.set(k, (rejections.get(k) ?? 0) + 1)
+  const want = opts.want?.length ? opts.want : WANTED
 
   for (const seed of seeds) {
     let base: Case
     try {
-      base = generateCase(seed)
+      base = generateCase(seed, opts.palette)
     } catch (e) {
       note(`생성 실패: ${(e as Error).message.slice(0, 40)}`)
       continue
     }
 
-    const out = fit(base)
+    const out = fit(base, want)
     if ('case' in out) {
       passed.push({ seed, case: out.case, result: out.result })
       continue
@@ -92,6 +119,23 @@ export function report(b: Batch): string {
   lines.push(`  생성 ${b.tried}건 · 통과 ${b.passed.length}건 (${rate}%)`)
 
   if (b.passed.length) {
+    /**
+     * ★ 아키타입 분포를 반드시 찍는다 ★
+     *
+     * 2026-07-29 이전에는 이 줄이 없었고, 생성기가 `alibi_fabrication` 하나만
+     * 내놓는 것을 아무도 못 봤다. 통과율 100% 가 「다양하다」로 읽혔기 때문이다.
+     * **통과율은 다양성을 증명하지 않는다.**
+     */
+    const tricks = new Map<string, number>()
+    for (const p of b.passed) {
+      const k = p.case.trick.types.join('+')
+      tricks.set(k, (tricks.get(k) ?? 0) + 1)
+    }
+    lines.push('')
+    lines.push(`  트릭 아키타입  ${tricks.size}종`)
+    for (const [t, n] of [...tricks].sort((a, x) => x[1] - a[1]))
+      lines.push(`    ${t.padEnd(22)}${n}건`)
+
     const diffs = new Map<string, number>()
     for (const p of b.passed) diffs.set(p.result.difficulty, (diffs.get(p.result.difficulty) ?? 0) + 1)
     lines.push('')

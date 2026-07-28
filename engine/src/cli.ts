@@ -1,17 +1,62 @@
 import { loadCaseFile } from './schema.js'
 import { verify } from './verifier.js'
 import { claimGrid, tellsTruth, trueLocationAt } from './deriver.js'
+import type { RunOptions } from './orchestrate.js'
 
-// tsx src/cli.ts [--case <경로>]      사건 하나 검증
-// tsx src/cli.ts --generate <N>      N건 생성 → 검증 → 요약
+// tsx src/cli.ts [--case <경로>]                사건 하나 검증
+// tsx src/cli.ts --generate <N>                N건 생성 → 검증 → 요약
+//                [--palette <p.json>]          LLM이 채운 세계 팔레트
+//                [--want normal,hard]          목표 난이도 (선호 순서)
 const genFlag = process.argv.indexOf('--generate')
 if (genFlag >= 0) {
   const { run, report } = await import('./orchestrate.js')
+  const arg = (name: string) => {
+    const i = process.argv.indexOf(name)
+    return i >= 0 ? process.argv[i + 1] : undefined
+  }
+
+  // 팔레트는 **어휘만** 담는다. 논리는 코드가 만든다 — generate.ts §Palette 참조
+  let palette
+  const palettePath = arg('--palette')
+  if (palettePath) {
+    const { readFileSync } = await import('node:fs')
+    try {
+      palette = JSON.parse(readFileSync(palettePath, 'utf8'))
+    } catch (e) {
+      console.error(`\n  팔레트를 읽을 수 없다: ${palettePath}\n  ${(e as Error).message}\n`)
+      process.exit(1)
+    }
+  }
+
+  const want = arg('--want')
+    ?.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean) as RunOptions['want']
+
   const n = Number(process.argv[genFlag + 1] ?? 50)
   const seeds = Array.from({ length: n }, (_, i) => i + 1)
   console.log('')
-  console.log(report(run(seeds)))
+  if (palettePath) console.log(`  팔레트  ${palettePath}\n`)
+  const batch = run(seeds, { palette, want })
+  console.log(report(batch))
   console.log('')
+
+  /**
+   * `--min-pass` 가 없으면 항상 0으로 끝난다(탐색용).
+   *
+   * ★ 빌드 게이트는 이 플래그로 건다 ★ 2026-07-28 에 §9-8e 가 생기면서
+   * 생성기가 통과율 0% 로 죽었는데 **게이트가 계속 초록이었다** — `--generate`
+   * 가 게이트에 없었고, 있었더라도 종료 코드가 늘 0이라 못 막았다.
+   * 검증기에 검사를 더하면 사건 파일만이 아니라 생성기도 같이 무너진다.
+   */
+  const minPass = Number(arg('--min-pass') ?? NaN)
+  if (!Number.isNaN(minPass)) {
+    const rate = (batch.passed.length / batch.tried) * 100
+    if (rate < minPass) {
+      console.error(`  통과율 ${rate.toFixed(0)}% < 요구 ${minPass}% — 생성기가 깨졌다\n`)
+      process.exit(1)
+    }
+  }
   process.exit(0)
 }
 
