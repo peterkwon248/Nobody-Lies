@@ -529,6 +529,32 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       scene: 'room',
     },
     prose: { source: 'template' },
+
+    /**
+     * 평면도. **조사 화면이 곧 도면이라 좌표가 없으면 갈 수가 없다.**
+     *
+     * 검증기 §9-3 이 「장소가 도면에 없다 — 플레이어가 갈 수 없다」를 오류로
+     * 잡으므로 세 장소를 전부 놓는다. 현장에는 `scene` 표식이 필요하다.
+     *
+     * 손으로 쓴 사건의 도면(건물·문·창·보행선·축척)만큼 풍부하지 않다 —
+     * 방 둘과 부지 밖 하나뿐이다. 규모가 커지면 여기부터 늘린다.
+     */
+    floorPlan: {
+      viewBox: { w: 1000, h: 625 },
+      scale: { x: 96, len: 90, y: 585, label: '5m' },
+      buildings: [{ id: 'b_main', x: 60, y: 60, w: 620, h: 480 }],
+      rooms: [
+        { id: 'r_hall', building: 'b_main', loc: 'hall', x: 60, y: 60, w: 320, h: 480, label: places.hall!, primary: true },
+        { id: 'r_room', building: 'b_main', loc: 'room', x: 380, y: 60, w: 300, h: 480, label: places.room!, scene: true, primary: true, tint: 'rgba(235,87,87,.10)' },
+      ],
+      zones: [
+        { id: 'z_away', loc: 'away', x: 750, y: 90, w: 200, h: 160, label: places.away!, offsite: true, hatch: true },
+      ],
+      doors: [{ id: 'd_room', x1: 380, y1: 240, x2: 380, y2: 320, building: 'b_main' }],
+      windows: [{ x1: 660, y1: 120, x2: 660, y2: 200, building: 'b_main' }],
+      walks: [{ x1: 220, y1: 545, x2: 850, y2: 250, min: 12 }],
+    },
+
     seedTerms: [tool],
     slots: [
       { id: 't0', label: times.t0! },

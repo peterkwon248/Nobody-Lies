@@ -558,16 +558,156 @@ export default class App extends React.Component {
      * 않고 콘솔에 남긴다.
      */
     if (c.locations?.length) {
-      const byId = {}
-      for (const l of c.locations) byId[l.id] = l
-      this.LOCATIONS = this.LOCATIONS.map((l) => {
-        const e = byId[l.id]
-        return e ? { ...l, ko: e.label || l.ko } : l
-      })
-      const known = new Set(this.LOCATIONS.map((l) => l.id))
-      const missing = c.locations.filter((l) => !known.has(l.id)).map((l) => l.label || l.id)
-      if (missing.length && typeof console !== 'undefined') {
-        console.warn('[case] 엔진 장소가 앱 평면도에 없어 갈 수 없다:', missing.join(' · '))
+      const known = new Map(this.LOCATIONS.map((l) => [l.id, l]))
+      const missing = c.locations.filter((l) => !known.has(l.id))
+
+      if (!missing.length) {
+        /**
+         * 앱이 이 사건의 장소를 전부 안다 — 이름표만 받고 좌표는 그대로 둔다.
+         * 손으로 맞춘 도면을 엔진 좌표로 덮으면 눈으로 확인할 수 없는 변화가 된다.
+         *
+         * ⚠ **앱 이름이 엔진 이름으로 시작하면 앱 쪽을 남긴다.**
+         * `자택` ← 엔진(어휘) · `자택 (현장 밖)` ← 앱(UI 설명). 엔진 것으로
+         * 덮으면 평면도 구역은 「자택 (현장 밖)」인데 다른 화면은 「자택」이 되어
+         * **한 사건이 두 이름을 갖는다.** 층 구분대로 어휘는 엔진, 덧붙인 설명은 앱이다.
+         */
+        this.LOCATIONS = c.locations.map((e) => {
+          const prev = known.get(e.id)
+          const keep = e.label && prev.ko && prev.ko.startsWith(e.label) ? prev.ko : (e.label || prev.ko)
+          return { ...prev, ko: keep }
+        })
+      } else {
+        /**
+         * 모르는 장소가 있다 — **도면을 통째로 엔진 좌표로 다시 만든다.**
+         *
+         * ★ 좌표계를 섞지 않는다 ★ 아는 것은 앱 백분율, 모르는 것은 엔진
+         * viewBox 로 두면 두 자가 한 도면에 섞여 겹치고 어긋난다. 전부 한쪽에서
+         * 온 좌표여야 배치가 성립한다.
+         *
+         * 조사 화면이 곧 도면이라 **좌표가 없으면 그 장소에 갈 수가 없다.**
+         * 생성 사건이 여기 걸려 있었다(2026-07-29).
+         */
+        const fp = c.floorPlan
+        if (!fp?.viewBox?.w) {
+          if (typeof console !== 'undefined') {
+            console.warn(
+              '[case] 엔진 장소가 앱 도면에 없는데 floor_plan 도 없다 — 갈 수 없다:',
+              missing.map((l) => l.label || l.id).join(' · '),
+            )
+          }
+        } else {
+          const boxes = [...(fp.rooms ?? []), ...(fp.zones ?? [])]
+          const pct = (v, total) => Math.round((v / total) * 1000) / 10
+          const built = []
+          for (const e of c.locations) {
+            const b = boxes.find((x) => x.loc === e.id)
+            const prev = known.get(e.id)
+            if (!b) {
+              if (prev) built.push({ ...prev, ko: e.label || prev.ko })
+              else if (typeof console !== 'undefined') {
+                console.warn(`[case] 장소 '${e.label || e.id}' 가 floor_plan 에 없어 갈 수 없다`)
+              }
+              continue
+            }
+            built.push({
+              id: e.id,
+              ko: e.label || b.label || e.id,
+              en: prev?.en ?? '',
+              x: pct(b.x, fp.viewBox.w), y: pct(b.y, fp.viewBox.h),
+              w: pct(b.w, fp.viewBox.w), h: pct(b.h, fp.viewBox.h),
+              ...(b.scene ? { scene: true } : {}),
+              ...(e.atLodge === false ? { offsite: true } : {}),
+            })
+          }
+          if (built.length) this.LOCATIONS = built
+
+          /**
+           * **`GEO` 가 진짜 평면도다.** 조사 화면이 이것을 그린다.
+           *
+           * 엔진 `floor_plan` 과 **모양도 값도 같다** — `vb`·`scale`·`buildings`·
+           * `rooms`·`zones`·`doors`·`windows`·`walks`, 그리고 산장 사건의 좌표가
+           * 글자까지 일치한다. 엔진이 정본으로 쓰라고 만들어둔 자리인데 배선만
+           * 안 돼 있었다. 이름만 다르다(`b`↔`building` · `ko`↔`label`).
+           *
+           * 영문(`en`)은 엔진에 없다 — 같은 id 가 앱에 있으면 물려받는다.
+           */
+          const prevBy = (arr) => new Map((arr ?? []).map((x) => [x.id, x]))
+          const oldRooms = prevBy(this.GEO?.rooms)
+          const oldZones = prevBy(this.GEO?.zones)
+          const oldDoors = prevBy(this.GEO?.doors)
+          const box = (b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })
+
+          this.GEO = {
+            vb: { w: fp.viewBox.w, h: fp.viewBox.h },
+            ...(fp.scale ? { scale: fp.scale } : {}),
+            buildings: (fp.buildings ?? []).map((b) => ({
+              id: b.id, ...box(b),
+              ...(b.poche ? { poche: b.poche } : {}),
+              ...(b.revealedAfter !== undefined ? { revealedAfter: b.revealedAfter } : {}),
+            })),
+            rooms: (fp.rooms ?? []).map((r) => ({
+              ...oldRooms.get(r.id), id: r.id, ...box(r),
+              ...(r.building ? { b: r.building } : {}),
+              ...(r.loc ? { loc: r.loc } : {}),
+              ko: r.label ?? r.id,
+              en: oldRooms.get(r.id)?.en ?? '',
+              ...(r.scene ? { scene: true } : {}),
+              ...(r.tint ? { tint: r.tint } : {}),
+              ...(r.primary ? { primary: true } : {}),
+            })),
+            zones: (fp.zones ?? []).map((z) => ({
+              ...oldZones.get(z.id), id: z.id, ...box(z),
+              ...(z.loc ? { loc: z.loc } : {}),
+              ko: z.label ?? z.id,
+              en: oldZones.get(z.id)?.en ?? '',
+              ...(z.hatch ? { hatch: true } : {}),
+              ...(z.offsite ? { offsite: true } : {}),
+              ...(z.primary ? { primary: true } : {}),
+            })),
+            doors: (fp.doors ?? []).map((d) => ({
+              ...oldDoors.get(d.id), id: d.id,
+              x1: d.x1, y1: d.y1, x2: d.x2, y2: d.y2,
+              ...(d.hinge ? { hinge: d.hinge } : {}),
+              ...(d.swing !== undefined ? { swing: d.swing } : {}),
+              ...(d.open ? { open: true } : {}),
+              ...(d.ext ? { ext: true } : {}),
+              ...(d.building ? { building: d.building } : {}),
+              ...(d.label ? { ko: d.label } : {}),
+              ...(d.lx !== undefined ? { lx: d.lx, ly: d.ly } : {}),
+            })),
+            windows: (fp.windows ?? []).map((w) => ({
+              x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2,
+              ...(w.building ? { building: w.building } : {}),
+              ...(w.label ? { ko: w.label } : {}),
+              ...(w.lx !== undefined ? { lx: w.lx, ly: w.ly } : {}),
+            })),
+            walks: (fp.walks ?? []).map((w) => ({
+              x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2,
+              ...(w.building ? { b: w.building } : {}),
+              ...(w.min !== undefined ? { min: w.min } : {}),
+            })),
+          }
+
+          // 고정물은 이 사건 것만 남긴다 — 안 비우면 이전 사건의 화로·테이프가
+          // 새 도면에 남아 누를 수 있는 지점으로 뜬다
+          this.FIXTURES = Object.entries(fp.fixtures ?? {}).map(([id, f]) => ({
+            id, ko: f.label ?? id, en: '', x: f.x, y: f.y, icon: '',
+          }))
+
+          /**
+           * 도보 시간표도 비운다. 항목이 **장소 쌍**(`{a, b, min}`)이라 도면이
+           * 바뀌면 없는 장소를 가리킨다 — 엔진 `walks` 는 좌표 선분이라 쌍을
+           * 도출할 수 없다. 지어내느니 비우는 쪽이 맞다.
+           */
+          this.WALK = []
+
+          if (typeof console !== 'undefined') {
+            console.info(
+              `[case] 평면도를 엔진 좌표로 다시 만들었다 — 장소 ${built.length}곳 · ` +
+                `방 ${this.GEO.rooms.length} · 구역 ${this.GEO.zones.length} · 고정물 ${this.FIXTURES.length}`,
+            )
+          }
+        }
       }
     }
 
