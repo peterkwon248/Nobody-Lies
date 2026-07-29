@@ -624,26 +624,36 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 두 줄 사이를 **80 만큼 비운다.** 그 빈 띠가 복도로 읽히고, 방마다 그쪽 벽에
    * 문을 하나씩 낼 수 있다. 바깥벽(위·아래)은 창 자리가 된다.
    *
+   * ★ **두 줄이 아니라 두 칸이다** ★ 처음에 5열 × 2행으로 짰다가 화면에서
+   * 갈아엎었다 — 방 열 개를 가로로 늘어놓으니 한 칸이 124(화면 ~62px)라
+   * **방 이름이 한 글자씩 세로로 깨졌고**, 고정물 이름표까지 겹쳐 읽을 수가
+   * 없었다. 「밋밋하다」를 고치려다 「엉망」을 만든 것이다.
+   *
+   * 복도를 **세로로** 두고 좌우에 방을 쌓으면 칸 폭이 두 배가 된다(280).
+   * 실제 건물의 중복도(double-loaded corridor)이기도 하다.
+   *
    * ```
-   * y=60   ┌───────────────────┐  ← 바깥벽 · 창
-   *        │  방 방 방 방 방    │  h=200
-   * y=260  ├───────────────────┤  ← 문
-   *        │      (복도)        │  h=80
-   * y=340  ├───────────────────┤  ← 문
-   *        │  방 방 방 방 방    │  h=200
-   * y=540  └───────────────────┘  ← 바깥벽 · 창
+   *        x=60      340   400        680
+   * y=60   ┌──────────┬────┬──────────┐
+   *        │   방     │    │    방     │  ← 바깥벽에 창 · 복도 쪽에 문
+   *        ├──────────┤ 복 ├──────────┤
+   *        │   방     │ 도 │    방     │
+   *        ├──────────┤    ├──────────┤
+   *        │   방     │    │    방     │
+   * y=540  └──────────┴────┴──────────┘
    * ```
    */
-  const COLS = Math.ceil(onSite.length / 2)
-  const CW = Math.floor(620 / COLS)
-  const ROW_H = 200, HALLWAY = 80
+  const ROWS = Math.ceil(onSite.length / 2)
+  const HALLWAY = 60
+  const CW = Math.floor((620 - HALLWAY) / 2)          // 280
+  const RH = Math.floor(480 / ROWS)
+  /** 짝수 인덱스는 왼쪽 칸, 홀수는 오른쪽 칸 — 위에서 아래로 채운다 */
+  const leftCol = (i: number) => i % 2 === 0
   const cell = (i: number) => ({
-    x: 60 + (i % COLS) * CW,
-    y: 60 + Math.floor(i / COLS) * (ROW_H + HALLWAY),
-    w: CW, h: ROW_H,
+    x: leftCol(i) ? 60 : 60 + CW + HALLWAY,
+    y: 60 + Math.floor(i / 2) * RH,
+    w: CW, h: RH,
   })
-  /** 그 방이 윗줄인가 — 문은 복도 쪽, 창은 바깥벽 쪽으로 간다 */
-  const topRow = (i: number) => Math.floor(i / COLS) === 0
   /*
    * ⛔ 여기 `namedFixtures = onSite.every(l => !!l.fixture)` 가 있었다 —
    * 「전원이 고유 이름을 갖거나 전원이 총칭이거나」로 못박았던 것인데 **과했다.**
@@ -1220,9 +1230,9 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
        * 같은 규칙이다.
        */
       doors: onSite.map((l, i) => {
-        const c = cell(i), cx = c.x + Math.floor(c.w / 2)
-        const y = topRow(i) ? c.y + c.h : c.y          // 복도에 면한 변
-        return { id: `d_${l.id}`, building: 'b_main', x1: cx - 20, y1: y, x2: cx + 20, y2: y }
+        const c = cell(i), cy = c.y + Math.floor(c.h / 2)
+        const x = leftCol(i) ? c.x + c.w : c.x         // 복도에 면한 변
+        return { id: `d_${l.id}`, building: 'b_main', x1: x, y1: cy - 18, x2: x, y2: cy + 18 }
       }),
       /**
        * 창 — **바깥벽에만.** 팔레트가 `noWindow` 라 한 방(암실·지하)은 건너뛴다.
@@ -1233,9 +1243,9 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       windows: onSite.flatMap((l, i) => {
         const need = l.scene && t.space?.sceneWindow
         if (l.noWindow && !need) return []
-        const c = cell(i), cx = c.x + Math.floor(c.w / 2)
-        const y = topRow(i) ? c.y : c.y + c.h          // 바깥벽
-        return [{ x1: cx - 30, y1: y, x2: cx + 30, y2: y, building: 'b_main' }]
+        const c = cell(i), cy = c.y + Math.floor(c.h / 2)
+        const x = leftCol(i) ? c.x : c.x + c.w         // 바깥벽
+        return [{ x1: x, y1: cy - 26, x2: x, y2: cy + 26, building: 'b_main' }]
       }),
       /**
        * 고정물 — **장소마다 하나.** 키가 곧 「고정물 조사」의 대상 id 다
@@ -1246,8 +1256,15 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         ...onSite.map((l, i) => {
           const c = cell(i)
           return [l.id, {
+            /**
+             * ⚠ **방 이름(좌상단)과 「미조사」 칩(우상단) 아래, 그러나 방 안에.**
+             *
+             * 처음엔 가운데(0.34/0.66)에 놓아 이름과 뒤엉켰고, 다음엔 0.74 로
+             * 내렸더니 **이름표가 방 경계에 걸쳤다**(이름표는 점보다 9px 더 아래에
+             * 그려진다). 0.56 이 셋 다 피한다.
+             */
             x: c.x + Math.floor(c.w / 2),
-            y: c.y + Math.floor(c.h * (topRow(i) ? 0.34 : 0.66)),
+            y: c.y + Math.floor(c.h * 0.56),
             // 팔레트가 이름을 줬으면 그것을, 아니면 총칭. 섞여도 된다 — 위 §설비 이름 참조
             label: l.fixture ?? `${l.label}의 설비`,
             loc: l.id,          // 없으면 앱이 못 그린다 — types.ts §fixtures 참조
@@ -1256,7 +1273,12 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         // 부지 밖은 팔레트 방이 아니라 늘 총칭이다
         ['away', { x: 850, y: 170, loc: 'away', label: `${places.away}의 설비` }],
       ]),
-      walks: [{ x1: 220, y1: 545, x2: 850, y2: 250, min: 12 }],
+      /**
+       * 부지 밖까지의 보행선. **건물 오른쪽 벽에서 나간다** — 전에는 건물 왼쪽
+       * 아래에서 시작해 **도면을 대각선으로 가로질렀고**, 「12분」 라벨이 엉뚱한
+       * 방 위에 떠 있었다(도서 열람실). 건물 밖에서만 지나가게 한다.
+       */
+      walks: [{ x1: 680, y1: 300, x2: 760, y2: 215, min: 12 }],
     },
 
     seedTerms: [tool],
