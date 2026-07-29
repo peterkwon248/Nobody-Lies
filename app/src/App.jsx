@@ -758,12 +758,34 @@ export default class App extends React.Component {
               ...(w.building ? { b: w.building } : {}),
               ...(w.min !== undefined ? { min: w.min } : {}),
             })),
+            /**
+             * ⚠ **설비 좌표 map 을 같이 만든다** (2026-07-29).
+             *
+             * 도면 렌더가 `GEO.fixtures[f.id]` 로 좌표를 찾는데, 다시 만든 `GEO`
+             * 에는 이 칸이 없었다. 전에는 생성 사건의 `FIXTURES` 가 **비어 있어서**
+             * 그 반복문이 한 번도 안 돌아 드러나지 않았다 — 엔진이 고정물을 내기
+             * 시작하자 첫 렌더에서 죽었다. 「없는 것이 다른 없는 것을 가리고 있었다」
+             */
+            fixtures: Object.fromEntries(
+              Object.entries(fp.fixtures ?? {}).map(([id, f]) => [id, { x: f.x, y: f.y }]),
+            ),
           }
 
           // 고정물은 이 사건 것만 남긴다 — 안 비우면 이전 사건의 화로·테이프가
           // 새 도면에 남아 누를 수 있는 지점으로 뜬다
+          /**
+           * ⚠ **`loc` 을 빠뜨리면 좌표가 있어도 안 그려진다** (2026-07-29).
+           *
+           * 도면이 고정물을 `revealedLocs[f.loc]` 로 거른다 — 그 장소가 공개됐을
+           * 때만 점을 찍는다. 여기서 `loc` 을 안 담아서 `undefined` 가 되고,
+           * 생성 사건의 고정물이 **전부 사라졌다.** 앱 표(산장)에는 `loc` 이
+           * 박혀 있어서 이 구멍이 안 보였다.
+           *
+           * 엔진이 `loc` 을 주면 그것을, 안 주면 **키를 장소 id 로 본다** —
+           * 생성기가 `fixture:<장소>` 로 키잉하므로 그게 곧 장소다.
+           */
           this.FIXTURES = Object.entries(fp.fixtures ?? {}).map(([id, f]) => ({
-            id, ko: f.label ?? id, en: '', x: f.x, y: f.y, icon: '',
+            id, ko: f.label ?? id, en: '', x: f.x, y: f.y, icon: '', loc: f.loc ?? id,
           }))
 
           /**
@@ -1260,8 +1282,16 @@ export default class App extends React.Component {
         if (e.min != null) r.min = e.min
       }
 
-      // 설비 좌표·이름표는 표가 아니라 map 이다. 키 집합이 같을 때만 받는다
-      if (fp.fixtures) {
+      /**
+       * 설비 좌표·이름표는 표가 아니라 map 이다. 키 집합이 같을 때만 받는다.
+       *
+       * ⚠ **`G.fixtures` 가 없을 수 있다** (2026-07-29). 도면을 엔진 좌표로 통째
+       * 다시 만든 경우(생성 사건) `GEO` 에 `fixtures` 가 없다. 전에는 생성 사건이
+       * `fp.fixtures` 를 **아예 안 줘서** 이 분기가 돌지 않았고, 엔진이 고정물을
+       * 내기 시작한 순간 `Object.keys(undefined)` 로 **앱이 통째로 죽었다.**
+       * 위쪽 경로가 이미 `FIXTURES` 를 엔진에서 다시 만들었으므로 여기서는 건너뛴다.
+       */
+      if (fp.fixtures && G.fixtures) {
         const ak = Object.keys(G.fixtures).sort().join(','), ek = Object.keys(fp.fixtures).sort().join(',')
         if (ak !== ek) console.warn('[nobody-lies] 평면도 설비: 엔진과 키가 다르다 — 앱 값을 쓴다')
         else for (const k of Object.keys(G.fixtures)) {

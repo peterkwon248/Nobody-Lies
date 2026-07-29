@@ -679,6 +679,58 @@ export function verify(c: Case): VerifyResult {
       const sceneRoom = c.floorPlan.rooms.find((r) => r.loc === c.incident.scene)
       if (sceneRoom && !sceneRoom.scene)
         warnings.push(`평면도의 현장(${sceneRoom.label})에 scene 표식이 없다`)
+
+      /**
+       * ★ 9-3b. **트릭이 말한 공간이 도면에 있는가** ★ (2026-07-29 신설)
+       *
+       * `ARCHETYPES` 가 *"트릭은 이름표가 아니라 계약이다"* 라고 못박았는데
+       * **공간만 계약 밖이었다.** `staged_suicide` 는 이탈 방법이 「창을 넘어
+       * 나갔다」인데, 생성 사건은 창이 상수 좌표(늘 엉뚱한 방)라 **현장에 창이
+       * 있었던 적이 한 번도 없다.** 넘어갈 창이 없는데 창으로 나갔다고 말한다.
+       *
+       * 여기서는 **도면 기하로** 검사한다 — 창의 선분이 현장 방의 변에 닿는가.
+       * 좌표를 안 보면 「창이 어딘가 있다」로 통과해버린다(그게 지금까지였다).
+       */
+      if (sceneRoom) {
+        const onEdge = (x1: number, y1: number, x2: number, y2: number) => {
+          const r = sceneRoom, L = r.x, R = r.x + r.w, T = r.y, B = r.y + r.h
+          const within = (a: number, lo: number, hi: number) => a >= lo - 1 && a <= hi + 1
+          const horiz = y1 === y2 && (Math.abs(y1 - T) <= 1 || Math.abs(y1 - B) <= 1)
+            && within(x1, L, R) && within(x2, L, R)
+          const vert = x1 === x2 && (Math.abs(x1 - L) <= 1 || Math.abs(x1 - R) <= 1)
+            && within(y1, T, B) && within(y2, T, B)
+          return horiz || vert
+        }
+        const needWindow = (c.trick.exit?.method ?? '').includes('창')
+        if (needWindow && !(c.floorPlan.windows ?? []).some((w) => onEdge(w.x1, w.y1, w.x2, w.y2)))
+          errors.push(
+            `트릭이 창으로 빠져나갔다고 하는데(${c.trick.exit!.method}) ` +
+              `현장(${sceneRoom.label})에 창이 없다 — 도면이 트릭을 뒷받침하지 않는다`,
+          )
+        if (!(c.floorPlan.doors ?? []).some((d) => onEdge(d.x1, d.y1, d.x2, d.y2)))
+          errors.push(`현장(${sceneRoom.label})에 문이 없다 — 아무도 드나들 수 없는 방이다`)
+      }
+    }
+
+    /**
+     * 9-3c. **고정물이 도면 위에 실재하는가** (2026-07-29 신설)
+     *
+     * §9-4 는 `target.kind` 로 갈라 검사하는데, 생성기의 고정물 조사는
+     * **verb 가 `fixture` 인데 kind 는 `location`** 이라 장소 풀로 검사돼
+     * 전부 통과했다. 그런데 앱은 `verb:target.id` 로 키잉하고 고정물 목록을
+     * `floorPlan.fixtures` **키**에서 만든다 — 거기 없으면 **고를 수가 없다.**
+     *
+     * 실제로 생성 사건 45개 조사 중 **11개(고정물 조사 전부)가 도달 불가**였고
+     * 어떤 검사에도 안 걸렸다. §9-8 의 거울상이다 — 사건 파일이 주는데 앱이 못 준다.
+     */
+    const fixKeys = new Set(Object.keys(c.floorPlan.fixtures ?? {}))
+    for (const a of c.actions) {
+      if (a.verb !== 'fixture' || !a.target) continue
+      if (!fixKeys.has(a.target.id))
+        errors.push(
+          `'${a.label}' 이 도면에 없는 고정물을 겨눈다: '${a.target.id}' — ` +
+            `앱이 고정물 목록을 floorPlan.fixtures 에서 만들므로 고를 수가 없다`,
+        )
     }
   }
 

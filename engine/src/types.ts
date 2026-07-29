@@ -240,7 +240,13 @@ export type FloorPlan = {
    * 아이콘은 **앱이 정한다.** 어느 글리프를 쓰는지는 표시 속성이고, 인물의
    * 색·이니셜과 같은 부류다. 없으면 공통 표식으로 떨어진다.
    */
-  fixtures?: Record<string, { x: number; y: number; label?: string }>
+  /**
+   * `loc` — **어느 장소에 속한 고정물인가.** 앱이 「그 장소가 공개됐는가」로
+   * 도면 위 표시를 거르므로(`revealedLocs[f.loc]`), 없으면 좌표가 있어도
+   * **영영 안 그려진다.** 2026-07-29에 생성 사건에서 그렇게 죽어 있었다 —
+   * 손으로 쓴 사건은 앱 표에 `loc` 이 박혀 있어서 드러나지 않았다.
+   */
+  fixtures?: Record<string, { x: number; y: number; label?: string; loc?: LocationId }>
 }
 
 export type Fact = {

@@ -81,6 +81,24 @@ function rng(seed: number) {
  * 무엇이 트릭인지는 코드가 정한다 — LLM에게 논리를 시키면 검증 실패율이
  * 올라가고, 그 실패가 곧 비용이다.
  */
+/**
+ * 방 하나. **이름만 주면 그만이고, 성질을 붙이면 도면이 그만큼 그럴듯해진다.**
+ *
+ * ★ 좌표는 받지 않는다 ★ 배치는 코드가 한다 — LLM 에게 좌표를 시키면 겹치는 방과
+ * 허공의 문이 나온다. 여기서 받는 것은 **코드가 알 수 없는 세계 지식**뿐이다:
+ * 암실에 창이 있으면 안 되고, 가마실에는 가마가 있다.
+ */
+export type RoomSpec = {
+  name: string
+  /** 창이 날 수 없는 방. 암실·지하·수장고처럼 빛을 막는 곳 */
+  noWindow?: boolean
+  /**
+   * 그 방에서 **눌러볼 만한 설비** 이름. 도면 위의 점이 되고 「고정물 조사」의
+   * 대상이 된다(가마 · 인화기 · 보일러). 없으면 코드가 총칭으로 채운다.
+   */
+  fixture?: string
+}
+
 export type Palette = {
   /** 무대 이름. 제목에 쓰인다 */
   setting?: string
@@ -97,7 +115,7 @@ export type Palette = {
    * 장소 셋으로는 서로 다른 조사를 스물몇 개 만들 수가 없다(2026-07-29 실측:
    * 조사 30개가 키 9개로 뭉갰다). 방이 늘면 도면도 덜 단조로워진다.
    */
-  rooms?: string[]
+  rooms?: (string | RoomSpec)[]
   /** 시간대 이름표. 가운데가 사망 추정 구간이다 */
   times?: { t0?: string; t1?: string; t2?: string }
   /**
@@ -247,6 +265,23 @@ type TrickBuild = {
   types: TrickType[]
   illusion: { id: string; kind: IllusionKind; impression: string; madeBy: string[]; brokenBy: string[] }
   exit?: { slot: string; method: string; enabledBy?: string[]; brokenBy: string[] }
+  /**
+   * ★ 공간 계약 ★ (2026-07-29 신설)
+   *
+   * **트릭은 이름표가 아니라 계약이다** — 이 파일이 물증·조사·격자에 대해서는
+   * 그 규칙을 지켜왔는데 **공간만 계약 밖이었다.** 그래서 `staged_suicide` 가
+   * *"창을 넘어 나갔다"* 고 말하는 사건 **전부**에서 현장에 창이 없었다(창이
+   * 상수 좌표라 늘 엉뚱한 방에 있었다). 트릭이 말한 것이 도면에 없으면 그것은
+   * 이름표일 뿐이다.
+   *
+   * 여기 적힌 것을 아래 §도면이 반드시 만족시키고, 검증기 §9-3 이 대조한다.
+   */
+  space?: {
+    /** 현장에 창이 있어야 한다 — 창으로 빠져나갔다고 말하는 트릭 */
+    sceneWindow?: boolean
+    /** 현장 문이 잠기는 문이어야 한다 — 밀실을 주장하는 트릭 */
+    sceneLocked?: boolean
+  }
   props: string[]
   staging: string[]
   flaw: string
@@ -287,7 +322,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
         verb: 'search', target: { kind: 'location', id: 'hall' },
         result: res('복도 끝의 자국', '복도 끝에 젖은 자국이 남아 있었다.') },
       { id: 'a_door', label: '출입 기록 조회', cost: 1, gives: ['e_log'], salience: 0.35, yield: 'solution',
-        verb: 'fixture', target: { kind: 'location', id: 'room' },
+        verb: 'fixture', target: { kind: 'fixture', id: 'room' },
         result: res('새벽의 여닫힘', '문이 새벽에 한 번 여닫힌 기록이 있었다.') },
     ],
     presence: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'room' }, { slot: 't2', location: 'hall' }],
@@ -303,6 +338,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
       madeBy: ['e_staged'], brokenBy: ['e_toolmark', 'e_sill'],
     },
     exit: { slot: 't1', method: '창을 넘어 나갔다', enabledBy: ['e_staged'], brokenBy: ['e_sill'] },
+    space: { sceneWindow: true },   // 넘어갈 창이 도면에 실재해야 한다
     props: ['e_tool'], staging: ['e_staged'],
     flaw: '스스로 그랬다면 왜 문이 안에서만 잠겨 있지 않았는가',
     evidence: [
@@ -314,7 +350,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
         verb: 'search', target: { kind: 'location', id: 'room' },
         result: res('책상 위의 쪽지', '책상 위에 쪽지 한 장이 놓여 있었다.') },
       { id: 'a_window', label: '창가 조사', cost: 1, gives: ['e_sill'], salience: 0.3, yield: 'solution',
-        verb: 'fixture', target: { kind: 'location', id: 'room' },
+        verb: 'fixture', target: { kind: 'fixture', id: 'room' },
         result: res('창턱의 자국', '창턱 바깥쪽에 눌린 자국이 남아 있었다.') },
     ],
     presence: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'room' }, { slot: 't2', location: 'hall' }],
@@ -330,6 +366,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
       madeBy: ['e_seal'], brokenBy: ['e_gap'],
     },
     exit: { slot: 't1', method: '잠금이 걸리기 전에 빠져나갔다', enabledBy: ['e_seal'], brokenBy: ['e_gap'] },
+    space: { sceneLocked: true },    // 잠기는 문이 도면에 실재해야 한다
     props: ['e_tool'], staging: ['e_seal'],
     flaw: '안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가',
     evidence: [
@@ -338,7 +375,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
     ],
     actions: [
       { id: 'a_lock', label: '잠금장치 조사', cost: 1, gives: ['e_seal'], salience: 0.5, yield: 'solution',
-        verb: 'fixture', target: { kind: 'location', id: 'room' },
+        verb: 'fixture', target: { kind: 'fixture', id: 'room' },
         result: res('안쪽으로 걸린 잠금', '잠금장치가 안쪽으로 걸려 있었다.') },
       { id: 'a_frame', label: '문틀 조사', cost: 1, gives: ['e_gap'], salience: 0.25, yield: 'solution',
         verb: 'search', target: { kind: 'location', id: 'room' },
@@ -393,7 +430,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
     ],
     actions: [
       { id: 'a_device', label: '설비 조사', cost: 1, gives: ['e_device'], salience: 0.35, yield: 'solution',
-        verb: 'fixture', target: { kind: 'location', id: 'room' },
+        verb: 'fixture', target: { kind: 'fixture', id: 'room' },
         result: res('미리 놓인 것', '방 한쪽에 미리 놓인 장치가 있었다.') },
       { id: 'a_parts', label: '부품 확인', cost: 1, gives: ['e_timer'], salience: 0.25, yield: 'solution',
         verb: 'search', target: { kind: 'location', id: 'room' },
@@ -555,24 +592,72 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 방 여덟 + 부지 밖 하나 = 아홉. `search`·`fixture` 로 열여덟, 인물 `belongings`·
    * `phone` 으로 열, 부검·알리바이 둘 — 서른 개가 나온다. 예산 10의 3배다.
    */
-  const extraRooms = [...(P.rooms ?? [])]
-  for (const n of DEFAULT_PALETTE.rooms) {
+  /** 팔레트가 문자열로 줘도, 성질을 붙여 줘도 받는다 */
+  const asRoom = (r: string | RoomSpec): RoomSpec => (typeof r === 'string' ? { name: r } : r)
+  const extraRooms: RoomSpec[] = [...(P.rooms ?? [])].map(asRoom)
+  for (const d of DEFAULT_PALETTE.rooms) {
     if (extraRooms.length >= 8) break
-    if (!extraRooms.includes(n)) extraRooms.push(n)
+    const n = asRoom(d)
+    if (!extraRooms.some((r) => r.name === n.name)) extraRooms.push(n)
   }
-  const onSite = [
+  type Site = { id: string; label: string; scene?: boolean; noWindow?: boolean; fixture?: string }
+  const onSite: Site[] = [
     { id: 'hall', label: places.hall! },
+    // ★ 현장은 팔레트 방이 아니라 `places.room` 이다 ★ 그래서 `noWindow` 가 붙을 수
+    // 없고, 트릭이 창을 요구해도 항상 만족시킬 수 있다(아래 §공간 계약)
     { id: 'room', label: places.room!, scene: true },
-    ...extraRooms.slice(0, 8).map((n, i) => ({ id: `loc${i + 1}`, label: n })),
+    ...extraRooms.slice(0, 8).map((r, i) => ({
+      id: `loc${i + 1}`, label: r.name, noWindow: r.noWindow, fixture: r.fixture,
+    })),
   ]
   const locIds = [...onSite.map((l) => l.id), 'away']
 
-  // 건물 안을 격자로 나눈다. viewBox 1000×625 · 건물 60,60 620×480
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  건물 격자 — **복도를 남긴다** (2026-07-29)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 전에는 방이 건물을 빈틈없이 채웠다(`h: 240` 두 줄). 그래서 **문을 놓을 벽이
+   * 없었고**, 문·창이 3방 시절 상수 좌표(`x380`·`x660`)에 박힌 채 방 한가운데
+   * 떠 있었다 — 방이 3개에서 10개로 늘었는데 좌표는 안 따라왔다.
+   *
+   * 두 줄 사이를 **80 만큼 비운다.** 그 빈 띠가 복도로 읽히고, 방마다 그쪽 벽에
+   * 문을 하나씩 낼 수 있다. 바깥벽(위·아래)은 창 자리가 된다.
+   *
+   * ```
+   * y=60   ┌───────────────────┐  ← 바깥벽 · 창
+   *        │  방 방 방 방 방    │  h=200
+   * y=260  ├───────────────────┤  ← 문
+   *        │      (복도)        │  h=80
+   * y=340  ├───────────────────┤  ← 문
+   *        │  방 방 방 방 방    │  h=200
+   * y=540  └───────────────────┘  ← 바깥벽 · 창
+   * ```
+   */
   const COLS = Math.ceil(onSite.length / 2)
   const CW = Math.floor(620 / COLS)
+  const ROW_H = 200, HALLWAY = 80
   const cell = (i: number) => ({
-    x: 60 + (i % COLS) * CW, y: 60 + Math.floor(i / COLS) * 240, w: CW, h: 240,
+    x: 60 + (i % COLS) * CW,
+    y: 60 + Math.floor(i / COLS) * (ROW_H + HALLWAY),
+    w: CW, h: ROW_H,
   })
+  /** 그 방이 윗줄인가 — 문은 복도 쪽, 창은 바깥벽 쪽으로 간다 */
+  const topRow = (i: number) => Math.floor(i / COLS) === 0
+  /*
+   * ⛔ 여기 `namedFixtures = onSite.every(l => !!l.fixture)` 가 있었다 —
+   * 「전원이 고유 이름을 갖거나 전원이 총칭이거나」로 못박았던 것인데 **과했다.**
+   *
+   * `hall`·`room` 은 팔레트 방이 아니라(`places` 에서 온다) 설비 이름을 가질
+   * 길이 없어서, 규칙이 **언제나** 전부를 총칭으로 되돌렸다. 팔레트가 아무리
+   * 잘 써 와도 화면에 안 나타난다.
+   *
+   * ★ 그리고 지문·서사와 달리 여기는 균일할 필요가 없다 ★ **팔레트는 사건을
+   * 모른다** — 어느 방이 현장이 될지, 트릭이 무엇일지 모르는 채로 세계를 짓는다.
+   * 그래서 설비 이름은 트릭·범인과 **상관될 수가 없다.** 가마실에 가마가 있는 것은
+   * 정보가 아니라 질감이다. 균일성이 필요한 것은 **사건을 아는 층**(인물의 지문·
+   * 장 서사)이고, 세계 어휘는 그 층이 아니다.
+   */
 
   /**
    * 조사 키 배정기. **`동사:대상` 은 사건 안에서 유일해야 한다.**
@@ -839,8 +924,20 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         claimPerson(verb, a.target.id)
         return a
       }
-      const got = claimLoc(verb, a.target?.kind === 'location' ? [a.target.id] : [])
-      return got ? { ...a, verb: got.verb as Act['verb'], target: { kind: 'location' as const, id: got.id } } : a
+      /**
+       * ⚠ **`kind` 를 보고 선호를 정하지 않는다** (2026-07-29).
+       *
+       * 전에는 `kind === 'location'` 일 때만 원래 대상을 선호 목록에 넣었다.
+       * 고정물 조사의 kind 를 `fixture` 로 바로잡자 **선호가 빈 배열이 되어**
+       * 현장(`room`)을 지키지 못하고 남은 첫 자리(`hall`)를 집었다 — 트릭이
+       * 현장의 설비를 조사하는 것이었는데 엉뚱한 방으로 밀려났다(40건 중 29건).
+       *
+       * 그리고 **원래 `kind` 를 유지한다.** 여기서 `location` 으로 되쓰면
+       * 고정물 조사가 다시 장소 조사로 둔갑해 §9-4 의 짝 검사가 빗나간다.
+       */
+      const kind = a.target?.kind === 'fixture' ? 'fixture' as const : 'location' as const
+      const got = claimLoc(verb, a.target ? [a.target.id] : [])
+      return got ? { ...a, verb: got.verb as Act['verb'], target: { kind, id: got.id } } : a
     })
 
   const named = resolveKeys([...baseActions, ...t.actions, ...strands.map((s) => s.action)])
@@ -855,7 +952,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   const label = new Map(onSite.map((l) => [l.id, l.label]))
   label.set('away', places.away!)
   const empties: Act[] = []
-  const addEmpty = (verb: Act['verb'], kind: 'location' | 'person', id: string, text: string) => {
+  const addEmpty = (verb: Act['verb'], kind: 'location' | 'person' | 'fixture', id: string, text: string) => {
     const k = `${verb}:${id}`
     if (usedKeys.has(k)) return
     usedKeys.add(k)
@@ -874,7 +971,13 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    */
   ids.forEach((p, i) => addEmpty('belongings', 'person', p, `소지품 검사 · ${names[i]}`))
   for (const id of locIds) addEmpty('search', 'location', id, `${label.get(id)} 수색`)
-  for (const id of locIds) addEmpty('fixture', 'location', id, `${label.get(id)} 설비 확인`)
+  /**
+   * ⚠ **`kind` 는 `fixture` 다** (2026-07-29). 전에는 `location` 이었다 — verb 는
+   * 고정물인데 kind 는 장소라, §9-4 의 양방향 검사가 **둘 다 빗나갔다**:
+   * 정방향은 장소 풀로 검사돼 통과하고, 역방향(`fixture:<id>` 로 겨눈 조사가
+   * 있는가)은 짝을 못 찾았다. 그 사이로 「도달 불가 조사 11개」가 지나갔다.
+   */
+  for (const id of locIds) addEmpty('fixture', 'fixture', id, `${label.get(id)} 설비 확인`)
   ids.forEach((p, i) => addEmpty('phone', 'person', p, `통화내역 조회 · ${names[i]}`))
 
   /**
@@ -1023,7 +1126,17 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
 
   return {
     id: `gen-${seed}`,
-    title: `${P.setting ?? DEFAULT_PALETTE.setting} 사건 ${seed}`,
+    /**
+     * ⚠ **제목에 seed 를 박지 않는다** (2026-07-29).
+     *
+     * 여기는 `사건 ${seed}` 였다 — 「레지던시 사건 **17050**」이 홈과 사이드바에
+     * 그대로 떴다. seed 는 재현용 내부 값이지 **플레이어가 볼 것이 아니다.**
+     *
+     * 구분은 이미 되고 있었다 — 홈 목록이 만든 순서대로 `G1`·`G2` 를 붙인다
+     * (`buildHome`). 같은 세계로 여럿 만들어도 행이 갈린다. 즉 **숫자는 중복이었다.**
+     * 재현이 필요하면 `id`(`gen-<seed>`)에 그대로 남아 있다.
+     */
+    title: `${P.setting ?? DEFAULT_PALETTE.setting} 사건`,
     scale: 'daily',
     budget: 3,
     incident: {
@@ -1058,13 +1171,29 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     ],
 
     /**
-     * 평면도. **조사 화면이 곧 도면이라 좌표가 없으면 갈 수가 없다.**
+     * ─────────────────────────────────────────────────────────────
+     *  평면도 — **격자에서 도출한다** (2026-07-29 재작성)
+     * ─────────────────────────────────────────────────────────────
      *
-     * 검증기 §9-3 이 「장소가 도면에 없다 — 플레이어가 갈 수 없다」를 오류로
-     * 잡으므로 세 장소를 전부 놓는다. 현장에는 `scene` 표식이 필요하다.
+     * **조사 화면이 곧 도면이라 좌표가 없으면 갈 수가 없다.**
      *
-     * 손으로 쓴 사건의 도면(건물·문·창·보행선·축척)만큼 풍부하지 않다 —
-     * 방 둘과 부지 밖 하나뿐이다. 규모가 커지면 여기부터 늘린다.
+     * 여기 있던 것은 문 하나·창 하나·고정물 0 의 **상수 덩어리**였다. 인물·물증·
+     * 조사·공란·예산은 전부 사건에서 계산되는데 도면만 리터럴이었고, 그래서
+     * 결함 넷이 한 뿌리에서 나왔다:
+     *
+     * ```
+     * ① 문·창이 3방 시절 좌표      방이 10개가 돼도 안 따라와 방 한가운데 떴다
+     * ② 방이 균일 격자             복도도 인접성도 없어 배치에 뜻이 없었다
+     * ③ 트릭이 말한 공간이 없다     staged_suicide 가 「창을 넘었다」는데 현장에 창이 없었다
+     * ④ 고정물 0                  「고정물 조사」 11개가 도면에 점이 없어 **도달 불가**였다
+     * ```
+     *
+     * ④가 가장 비쌌다 — 앱은 `fp.fixtures` 로 `FIXTURES` 를 만드는데(`App.jsx`)
+     * 비어 있으면 그 동사 전체를 고를 수 없다. **사건 파일이 주는데 앱이 못 준다.**
+     *
+     * 이제 전부 위 격자에서 나온다. 방마다 복도 쪽 문 하나, 바깥벽에 창(팔레트가
+     * `noWindow` 라 한 방은 제외), 방마다 고정물 한 점. 트릭의 공간 계약은 아래
+     * `space` 가 강제하고 검증기 §9-3 이 대조한다.
      */
     floorPlan: {
       viewBox: { w: 1000, h: 625 },
@@ -1078,8 +1207,55 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       zones: [
         { id: 'z_away', loc: 'away', x: 750, y: 90, w: 200, h: 160, label: places.away!, offsite: true, hatch: true },
       ],
-      doors: [{ id: 'd_room', x1: 380, y1: 240, x2: 380, y2: 320, building: 'b_main' }],
-      windows: [{ x1: 660, y1: 120, x2: 660, y2: 200, building: 'b_main' }],
+      /**
+       * 문 — 방마다 하나, **복도 쪽 벽 위**에.
+       *
+       * ⛔ **이름표를 붙이지 않는다.** 처음에 현장 문에만 「잠긴 문」/「방문」을
+       * 달았다가 걷어냈다 — 문 열 개 중 하나만 이름이 붙으면 **도면이 트릭을
+       * 가리킨다.** §절대 규칙의 *"평면도는 판정하지 않는다"* 위반이고, 「잠겼다」는
+       * 조사로 얻어야 할 사실이라 공짜로 주면 안 된다.
+       *
+       * **기하는 갈리되 이름표는 균일하다** — 밀실이면 잠글 문이 실재하는 것으로
+       * 족하고, 그것이 잠겨 있었는지는 플레이어가 캔다. 지문·서사의 전원/전무와
+       * 같은 규칙이다.
+       */
+      doors: onSite.map((l, i) => {
+        const c = cell(i), cx = c.x + Math.floor(c.w / 2)
+        const y = topRow(i) ? c.y + c.h : c.y          // 복도에 면한 변
+        return { id: `d_${l.id}`, building: 'b_main', x1: cx - 20, y1: y, x2: cx + 20, y2: y }
+      }),
+      /**
+       * 창 — **바깥벽에만.** 팔레트가 `noWindow` 라 한 방(암실·지하)은 건너뛴다.
+       * 현장은 트릭이 요구하면 `noWindow` 여부와 무관하게 반드시 낸다.
+       *
+       * ⛔ 여기도 이름표 없음 — 위 §문과 같은 이유다.
+       */
+      windows: onSite.flatMap((l, i) => {
+        const need = l.scene && t.space?.sceneWindow
+        if (l.noWindow && !need) return []
+        const c = cell(i), cx = c.x + Math.floor(c.w / 2)
+        const y = topRow(i) ? c.y : c.y + c.h          // 바깥벽
+        return [{ x1: cx - 30, y1: y, x2: cx + 30, y2: y, building: 'b_main' }]
+      }),
+      /**
+       * 고정물 — **장소마다 하나.** 키가 곧 「고정물 조사」의 대상 id 다
+       * (`fixture:<장소>`). 이게 비면 그 조사를 **고를 수가 없다.**
+       * 이름은 팔레트가 주면 그것을, 없으면 총칭으로 채운다.
+       */
+      fixtures: Object.fromEntries([
+        ...onSite.map((l, i) => {
+          const c = cell(i)
+          return [l.id, {
+            x: c.x + Math.floor(c.w / 2),
+            y: c.y + Math.floor(c.h * (topRow(i) ? 0.34 : 0.66)),
+            // 팔레트가 이름을 줬으면 그것을, 아니면 총칭. 섞여도 된다 — 위 §설비 이름 참조
+            label: l.fixture ?? `${l.label}의 설비`,
+            loc: l.id,          // 없으면 앱이 못 그린다 — types.ts §fixtures 참조
+          }]
+        }),
+        // 부지 밖은 팔레트 방이 아니라 늘 총칭이다
+        ['away', { x: 850, y: 170, loc: 'away', label: `${places.away}의 설비` }],
+      ]),
       walks: [{ x1: 220, y1: 545, x2: 850, y2: 250, min: 12 }],
     },
 
