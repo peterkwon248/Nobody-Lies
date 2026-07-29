@@ -1148,6 +1148,49 @@ end of the stream or a document separator is expected (6:1)
 > **콘솔 에러의 정체**: DS 번들이 스스로 마운트하는 것이고 `main.jsx:77` 이 이미
 > 방어하는 그 자리다. **산장에서도 똑같이 뜬다** — 생성 사건과 무관하다.
 
+### ★ `applyCase` 가 **한 번도 안 건드리는 표**를 전수로 셌다 (2026-07-29 밤 · 감사)
+
+오늘 같은 부류를 넷 밟았으므로(관계도·빈 알약·빈 주장·꼬리 점) **손으로 찾지 말고
+셌다.** `applyCase` 의 행 범위(433~1404)를 잡고 앱의 표마다 그 안에서 참조되는지 봤다.
+
+```
+✓ 덮는다     PEOPLE · STMT · CLAIM_LOC · GRAPH_NODES · GRAPH_EVIDENCE · CLUE_MAP
+             TERM_MAP · REVEALS · SEED_TERMS · COLLECTED_POOL · TIMES · LOCATIONS
+             SECTIONS · BLANKS
+✗ 안 덮는다   CLAIMS · PB_CARDS · FLOOR_CLUES · AUTO
+```
+
+**안 덮는 넷을 하나씩 봤다:**
+
+| | 무엇 | 판정 |
+|---|---|---|
+| `FLOOR_CLUES` | 평면도의 확보 단서 표식 | 🔴 **새는 것이 하나 있다** (아래) |
+| `CLAIMS` | 진술 격자(도식 탭)의 칸 | 🟡 **화면이 통째로 빈다** — 산장 인물 id 로 키잉돼 `this.CLAIMS['p1']` 이 `undefined` 다. 누설은 아니고 **죽은 화면**이다 |
+| `PB_CARDS` | 상황판 카드 | ✅ 안전 — `get PB_cards()` 가 `buildBoardSeed()` 를 **먼저** 본다 |
+| `AUTO` | `{'sakura-t2': true}` | ⛔ **참조 0 — 죽은 상수다** |
+
+#### 🔴 부검하면 평면도에 「일산화탄소」가 뜬다 (도출 · 아직 안 눌러봄)
+
+```js
+FLOOR_CLUES = [
+  { logKey: 'search:annex',      loc: 'annex', ko: '대포폰' },     // 생성 사건엔 안 맞는다
+  { logKey: 'belongings:sakura', loc: 'annex', ko: '위장 유서' },  // 안 맞는다
+  { logKey: 'autopsy:body',      loc: 'room',  ko: '일산화탄소' }, // ★ 둘 다 맞는다 ★
+]
+```
+
+**`autopsy:body` 와 `loc: 'room'` 은 생성 사건에도 그대로 있는 키다** — 생성기가
+`verb: 'autopsy', target: { kind: 'fixture', id: 'body' }` 를 내고(`a_body`), 현장은
+언제나 `room` 이다. 그래서 **부검을 실행하면 온천 여관 현장에 「일산화탄소」 표식이
+붙는다.** 화로도 연탄도 없는데.
+
+> **07-29 저녁 §죽은 배선 셋의 ②와 정확히 같은 부류다** — 그때는 부검의 **결과문**이
+> 산장 것으로 떴고, 이번은 같은 조사의 **도면 표식**이다. `resultFor` 는 `_foreignCase`
+> 로 갈랐는데 **`FLOOR_CLUES` 는 그때 같이 안 봤다.**
+>
+> ⚠ **도출로 찾았고 눌러서 확인하지 않았다.** 다음 세션 첫 일이 그것이다 —
+> 이 저장소의 규칙대로 **눌러서 재현한 뒤** 고친다.
+
 ### 배포 — 문서가 적어둔 두 갈래 중 하나가 거짓이었다
 
 `NEXT-ACTION` 은 *"`dependencies` 로 옮기거나 `installCommand` 를 `--include=dev` 로"*

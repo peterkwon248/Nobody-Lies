@@ -71,6 +71,24 @@ machine: "KWONKYUNGHUN (OneDrive 아래) · 밤 세션"
 > 텍스트 노드에서 구분자를 빼는 것은 갈래를 안 늘린다(308/320 그대로).
 > `APP_ONLY` 가 필요할 거라 예상했는데 **대조기가 무엇을 보는지 읽고서야** 알았다.
 
+### ★ 그리고 손으로 찾는 것을 그만두고 셌다 ★
+
+같은 부류를 넷 밟은 뒤, `applyCase`(행 433~1404) 안에서 **참조되지 않는 표**를
+전수로 뽑았다.
+
+```
+✓ 덮는다     PEOPLE · STMT · CLAIM_LOC · GRAPH_NODES · GRAPH_EVIDENCE · CLUE_MAP
+             TERM_MAP · REVEALS · SEED_TERMS · COLLECTED_POOL · TIMES · LOCATIONS
+             SECTIONS · BLANKS
+✗ 안 덮는다   FLOOR_CLUES 🔴 · CLAIMS 🟡 · AUTO ⛔ · PB_CARDS ✅(게터가 방어)
+```
+
+**하나가 실제로 흘린다** — `FLOOR_CLUES` 의 `autopsy:body`/`loc:'room'` 이 생성
+사건에도 있는 키다. 위 §Remaining 🎯 로 넘겼다.
+
+> **오늘 사용자가 눌러서 찾은 여섯이 전부 같은 부류였고, 세는 것으로 나머지를
+> 예측할 수 있었다.** 다음에 같은 부류가 의심되면 **먼저 센다.**
+
 **①의 뿌리가 둘이었다** — 생성기가 `relationGraph` 를 안 만들고, `applyCase` 의
 `join()` 은 **꾸미는** 도구뿐이라 개수·짝이 어긋나면 **산장 표를 통째로 남긴다**
 (인물 id 가 `p1..p5` ↔ `yena…` 라 언제나 어긋난다). `_foreignCase` 로 갈라
@@ -103,7 +121,16 @@ machine: "KWONKYUNGHUN (OneDrive 아래) · 밤 세션"
 
 ## Remaining Tasks
 
-- [ ] **🎯 진술 두께 — 산문 왕복** (사용자 손). 왕복은 돌았으나 **두께를 아직 안 쟀다** —
+- [ ] **🎯 `FLOOR_CLUES` 를 눌러서 재현하고 고친다 (다음 하나 · 코드 · 작음)**
+      **부검하면 생성 사건 현장에 「일산화탄소」가 붙는다.** `{ logKey: 'autopsy:body',
+      loc: 'room', ko: '일산화탄소' }` 인데 **그 두 키가 생성 사건에도 있다**
+      (생성기가 `a_body`=`autopsy`+`fixture body` 를 내고 현장은 늘 `room`).
+      07-29 저녁에 `resultFor` 를 `_foreignCase` 로 가른 **바로 그 조사**인데
+      `FLOOR_CLUES` 는 그때 같이 안 봤다.
+      ⚠ **도출로 찾았고 눌러서 확인하지 않았다** — 재현이 첫 걸음이다.
+      곁에 둘: `CLAIMS`(진술 격자가 통째로 빈다 · 누설 아님 · 엔진에서 도출 가능) ·
+      `AUTO`(`{'sakura-t2':true}` · **참조 0 인 죽은 상수** · 지운다)
+- [ ] **진술 두께 — 산문 왕복** (사용자 손). 왕복은 돌았으나 **두께를 아직 안 쟀다** —
       산장 279자 대 조립 107자였던 그 숫자. 사용자가 만든 사건이 브라우저에 있다
 - [ ] **시간대 구조** — 손잡이는 「슬롯 수」가 아니라 **「사망 구간 칸 수」**(1~3, 기본 1).
       분석은 `NEXT-ACTION` §🟡 에 있다. 비용: 엔진 26군데(그중 TRICKS 10) · 앱 11 · 검증기 2
