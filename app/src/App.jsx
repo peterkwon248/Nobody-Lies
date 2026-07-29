@@ -553,6 +553,21 @@ export default class App extends React.Component {
           claimKo: ko(p.claimSummary) || (same ? slot.claimKo : ''),
           relKo: same ? slot.relKo : '',
           relEn: same ? slot.relEn : '',
+          /**
+           * ⚠ **역할 라벨은 물려주지 않는다** (2026-07-29).
+           *
+           * `role` 은 `...slot` 으로 딸려오는데 그 값이 **산장 사건의 사실**이다 —
+           * `roleKeeper`(산장지기) · `roleIdol`(아이돌) · `roleSinger`(가수) ·
+           * `roleFirst`(최초 발견자). 엔진은 `role` 을 아예 주지 않는다.
+           *
+           * 그래서 레지던시 사건의 진술 정독에 **「명지수 · 산장지기」·「배도현 ·
+           * 아이돌」**이 떴다(첫 산문 왕복에서 잡았다). 제목·프롤로그·피해자·브리핑과
+           * **같은 부류** — 앱 표가 엔진의 상위집합이라 안 지우면 옛 세계가 남는다.
+           *
+           * `relKo`·`jobEn` 과 같은 규칙으로 **새 인물이면 버린다.** 대신
+           * `buildReadCard` 가 비었을 때 직업으로 떨어진다.
+           */
+          role: same ? slot.role : '',
         }
       }
 
@@ -1874,7 +1889,7 @@ export default class App extends React.Component {
       gesturePre: ln === 'ko' ? (g.pre || '') : '', gesturePost: ln === 'ko' ? (g.post || '') : '', hasPre: !!(ln === 'ko' && g.pre), hasPost: !!(ln === 'ko' && g.post),
       gestureStyle: { fontSize: '14px', lineHeight: '1.7', color: 'var(--fg-4)', fontStyle: 'italic', margin: '0 0 12px', textWrap: 'pretty' },
       gesturePostStyle: { fontSize: '14px', lineHeight: '1.7', color: 'var(--fg-4)', fontStyle: 'italic', margin: '12px 0 0', textWrap: 'pretty' },
-      meta: (ln === 'ko' ? (p.age + '\uc138') : ('' + p.age)) + (t[p.role] ? ' \u00b7 ' + t[p.role] : ''),
+      meta: (ln === 'ko' ? (p.age + '\uc138') : ('' + p.age)) + (this.roleOrJob(p) ? ' \u00b7 ' + this.roleOrJob(p) : ''),
       paras, memo: this.state.readMemos[p.id] || '', onMemo: (e) => this.setMemo(p.id, e.target.value),
       isLast: last, notLast: !last, onNext: () => this.readNext(), onPrev: () => this.readPrev(), onSkip: () => this.skipRead(),
       prevStyle: { opacity: this.state.readIdx > 0 ? 1 : 0.35, pointerEvents: this.state.readIdx > 0 ? 'auto' : 'none' },
@@ -2276,6 +2291,18 @@ export default class App extends React.Component {
   markCell(key) { this.setState({ openCell: this.state.openCell === key ? null : key, openPicker: null, openAids: false }); }
   setMark(key, v) { const c = Object.assign({}, this.state.cellMarks || {}); if (v) c[key] = v; else delete c[key]; this.setState({ cellMarks: c, openCell: null }); }
 
+  /**
+   * 인물 카드의 두 번째 칸. **역할이 있으면 역할, 없으면 직업.**
+   *
+   * 산장 사건은 `role`(산장지기·아이돌·최초 발견자…)이 사건의 사실이라 그대로 쓴다.
+   * 생성 사건은 엔진이 `role` 을 안 주고 `applyCase` 가 물려주지도 않으므로
+   * 비는데, 그때 칸이 통째로 사라지면 나이만 남아 허전하다 — 엔진이 주는
+   * **직업**으로 떨어진다. 세 화면(정독·격자·용의자)이 같은 칸을 쓰므로 한곳에 둔다.
+   */
+  roleOrJob(p) {
+    const ln = this.state.lang, t = this.T();
+    return t[p.role] || (ln === 'ko' ? (p.jobKo || '') : (p.jobEn || ''));
+  }
   avStyle(p, size, verdict) {
     size = size || 24;
     const base = { width: size + 'px', height: size + 'px', borderRadius: '6px', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: '600 ' + Math.round(size * 0.42) + 'px var(--font-sans)', color: '#0A0A0B', background: 'linear-gradient(135deg,' + p.c1 + ',' + p.c2 + ')' };
@@ -2742,7 +2769,7 @@ export default class App extends React.Component {
           ],
         };
       });
-      return { p: { name: p.name, ini: p.ini, color: p.color, meta: (ln === 'ko' ? (p.age + '세') : (p.age)) + (t[p.role] ? ' · ' + t[p.role] : ''), avStyle: this.avStyle(p, 24) }, cells };
+      return { p: { name: p.name, ini: p.ini, color: p.color, meta: (ln === 'ko' ? (p.age + '세') : (p.age)) + (this.roleOrJob(p) ? ' · ' + this.roleOrJob(p) : ''), avStyle: this.avStyle(p, 24) }, cells };
     });
     return { times, rows };
   }
@@ -2821,7 +2848,7 @@ export default class App extends React.Component {
         sexAge: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age,
         job: ln === 'ko' ? p.jobKo : p.jobEn,
         relation: ln === 'ko' ? p.relKo : p.relEn,
-        meta: (ln === 'ko' ? (p.age + '세') : ('' + p.age)) + (t[p.role] ? ' · ' + t[p.role] : ''),
+        meta: (ln === 'ko' ? (p.age + '세') : ('' + p.age)) + (this.roleOrJob(p) ? ' · ' + this.roleOrJob(p) : ''),
         expanded, collapsed: !expanded, onToggle: () => this.toggleExpand(p.id), chevronRot: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
         railNameColor: expanded ? p.color : 'var(--fg)',
         railRowStyle: { display: 'flex', gap: '10px', alignItems: 'center', padding: '10px 10px', borderRadius: 'var(--r-sm)', cursor: 'pointer', background: expanded ? 'var(--bg-active)' : 'transparent' },
