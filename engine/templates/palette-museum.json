@@ -83,9 +83,10 @@
     }
   ],
   "places": {
-    "hall": "중앙 로비",
-    "room": "특별 전시실",
-    "away": "박물관 주차장"
+    "hall": { "name": "중앙 로비", "fixture": "안내 데스크" },
+    "room": { "name": "특별 전시실", "fixture": "중앙 좌대" },
+    "approach": { "name": "야외 조각 정원", "fixture": "야외 안내판" },
+    "away": { "name": "박물관 주차장", "fixture": "주차 정산기" }
   },
   "times": {
     "t0": "폐관 준비",

@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { load } from 'js-yaml'
 import { DOMAIN_OF } from './types.js'
 import type {
   Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person, RelationGraph,
@@ -17,6 +15,13 @@ import type {
  * 검증은 두 층이다.
  *   이 파일   구조·어휘·참조 무결성. "e_foo 라는 물증이 없다" 류
  *   verifier  논리. "유죄가 유일한가" 류
+ *
+ * ★ 이 파일은 **브라우저에서도 돈다** — Node 를 물리지 마라 ★ (2026-07-29)
+ *
+ * 앱의 YAML 내보내기가 `parseCase` 로 **왕복 대조**를 한다(`Generator.jsx`).
+ * 한때 `loadCaseFile` 이 여기 살아서 `node:fs` 가 딸려왔고, 그 한 줄 때문에
+ * 파싱기 전체가 앱에서 못 쓰였다. 디스크를 읽는 일은 `load-case.ts` 에 있다.
+ * **여기에 `node:*` 를 import 하면 앱의 내보내기가 대조 없이 나간다.**
  */
 
 type Raw = Record<string, any>
@@ -530,14 +535,4 @@ export function parseCase(raw: unknown, source: string): Case {
     evidence, facts, actions, chapters, reveals,
     reopenPerChapter: c.reopen_per_chapter ?? 1,
   }
-}
-
-export function loadCaseFile(path: string): Case {
-  let text: string
-  try {
-    text = readFileSync(path, 'utf8')
-  } catch {
-    throw new Error(`사건 파일을 열 수 없다: ${path}`)
-  }
-  return parseCase(load(text), path)
 }

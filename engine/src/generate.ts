@@ -99,6 +99,20 @@ export type RoomSpec = {
   fixture?: string
 }
 
+/**
+ * 장소 하나. **`RoomSpec` 과 같은 규약이다** — 이름만 주면 그만이고, 설비 이름을
+ * 붙이면 도면 위에 점이 하나 더 뜬다.
+ */
+export type PlaceSpec = {
+  name: string
+  /**
+   * 그 장소에서 **눌러볼 만한 설비** 이름. 산장은 거실(`main`)에 **금고**가 있고
+   * 그것이 유서의 경로다 — 모이는 곳에 이름 있는 설비가 있으면 조사가 뜻을 갖는다.
+   * 없으면 코드가 총칭(「…의 설비」)으로 채운다.
+   */
+  fixture?: string
+}
+
 export type Palette = {
   /** 무대 이름. 제목에 쓰인다 */
   setting?: string
@@ -111,8 +125,16 @@ export type Palette = {
    *
    * `approach` 는 **부지 안의 실외**다(산장의 진입로). 건물과 부지 밖 사이에
    * 있어야 보행 시간이 뜻을 갖는다 — 「걸어서 2분」이 알리바이의 재료가 된다.
+   *
+   * ★ `rooms` 와 **같은 규약**이다 ★ 맨 문자열이면 이름만, `{ name, fixture }` 면
+   * 설비 이름까지. 전에는 문자열만 받아서 **이 넷만 설비 이름을 가질 길이 구조적으로
+   * 없었고**, 그래서 팔레트 방이 아무리 잘 써 와도 `hall`·`room`·`approach`·`away`
+   * 는 언제나 「…의 설비」로 남았다 (2026-07-29 밤에 뚫었다).
    */
-  places?: { hall?: string; room?: string; away?: string; approach?: string }
+  places?: {
+    hall?: string | PlaceSpec; room?: string | PlaceSpec
+    away?: string | PlaceSpec; approach?: string | PlaceSpec
+  }
   /**
    * 부지 안의 **다른 방들**. 여섯 개 안팎.
    *
@@ -193,8 +215,31 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   jobs: ['사진가', '번역가', '조리사', '학예사', '정비사', '약사'],
   items: ['만년필', '손목시계', '열쇠고리', '스카프', '라이터', '수첩'],
   motives: ['채무 관계', '자리 다툼', '오래된 약속', '지분 다툼'],
-  places: { hall: '홀', room: '방', away: '자택', approach: '진입로' },
-  rooms: ['부엌', '서재', '창고', '복도', '지하실', '작업실', '다락', '뒤뜰'],
+  /**
+   * ⚠ **설비 이름이 여기에도 있어야 한다** (2026-07-29 밤).
+   *
+   * 전에는 기본 팔레트가 설비 이름을 하나도 안 줘서, 「기본 어휘」로 만든 사건은
+   * **트릭이 만든 고정물 조사만 물건 이름**(`잠금장치 조사`)이고 나머지는 전부
+   * `○○ 설비 확인` 이었다. **모양이 갈리는 쪽이 정확히 쓸모 있는 쪽**이라
+   * 절대 규칙(유용도 비노출)을 어겼다 — 8건 중 8건. 세 내장 팔레트만 채우면
+   * 이 세계에서만 남는다.
+   */
+  places: {
+    hall: { name: '홀', fixture: '벽난로' },
+    room: { name: '방', fixture: '화로' },
+    away: { name: '자택', fixture: '현관 등' },
+    approach: { name: '진입로', fixture: '장작더미' },
+  },
+  rooms: [
+    { name: '부엌', fixture: '아궁이' },
+    { name: '서재', fixture: '문서함' },
+    { name: '창고', fixture: '공구함' },
+    { name: '복도', fixture: '괘종시계' },
+    { name: '지하실', noWindow: true, fixture: '보일러' },
+    { name: '작업실', fixture: '작업 선반' },
+    { name: '다락', fixture: '낡은 트렁크' },
+    { name: '뒤뜰', fixture: '장독대' },
+  ],
   times: { t0: '전날 밤', t1: '새벽', t2: '아침' },
   // 트릭 전용 조사(복도·창가·책상·문틀·잠금장치·설비·부품)와 겹치지 않는 이름만 쓴다
   spots: [
@@ -479,7 +524,25 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   }
 
   const P = { ...DEFAULT_PALETTE, ...palette }
-  const places = { ...DEFAULT_PALETTE.places, ...palette?.places }
+  /**
+   * 장소를 **이름과 설비 이름 두 갈래로 갈라 담는다.**
+   *
+   * `rooms` 와 같은 규약(맨 문자열 | `{ name, fixture }`)으로 받되, 여기서 한 번만
+   * 풀어서 `places` 는 **전과 똑같이 이름의 표**로 남긴다 — 아래 열몇 군데가 그대로
+   * 읽는다. 읽는 쪽을 다 고치면 `places.hall` 하나가 두 뜻을 갖게 되고, 그건
+   * *"같은 사건이 두 표현으로 존재"* 하는 자리를 새로 만드는 것이다.
+   */
+  const PLACE_KEYS = ['hall', 'room', 'away', 'approach'] as const
+  const rawPlaces = { ...DEFAULT_PALETTE.places, ...palette?.places }
+  const nameOf = (v: string | PlaceSpec | undefined) => (typeof v === 'string' ? v : v?.name)
+  const fixOf = (v: string | PlaceSpec | undefined) => (typeof v === 'string' ? undefined : v?.fixture)
+  const places = Object.fromEntries(
+    PLACE_KEYS.map((k) => [k, nameOf(rawPlaces[k]) ?? nameOf(DEFAULT_PALETTE.places![k])!]),
+  ) as Record<(typeof PLACE_KEYS)[number], string>
+  /** 팔레트가 준 설비 이름. 없으면 `undefined` 라 아래가 총칭으로 채운다 */
+  const placeFixture = Object.fromEntries(
+    PLACE_KEYS.map((k) => [k, fixOf(rawPlaces[k])]),
+  ) as Record<(typeof PLACE_KEYS)[number], string | undefined>
   const times = { ...DEFAULT_PALETTE.times, ...palette?.times }
   const nonEmpty = <T,>(xs: T[] | undefined, fb: T[]) => (xs?.length ? xs : fb)
   // 용의자 5 + 기록에 남은 이름(가명) + 피해자 = 최소 7개가 필요하다.
@@ -670,10 +733,10 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 인물 순서를 바꿨다가 색이 뒤바뀐 전례**가 있다. 안 건드린다.
    */
   const SITES: Site[] = [
-    { id: 'hall', label: places.hall!, building: 'b_main', rect: { x: xr, y: 60, w: 272, h: 170 } },
+    { id: 'hall', label: places.hall!, fixture: placeFixture.hall, building: 'b_main', rect: { x: xr, y: 60, w: 272, h: 170 } },
     // ★ 현장은 팔레트 방이 아니라 `places.room` 이다 ★ 그래서 `noWindow` 가 붙을 수
     // 없고, 트릭이 창을 요구해도 항상 만족시킬 수 있다(아래 §공간 계약)
-    { id: 'room', label: places.room!, scene: true, building: 'b_main', rect: { x: x1, y: 60, w: 260, h: 485 } },
+    { id: 'room', label: places.room!, fixture: placeFixture.room, scene: true, building: 'b_main', rect: { x: x1, y: 60, w: 260, h: 485 } },
     ...extraRooms.slice(0, 3).map((r, i) => ({
       id: `loc${i + 1}`, label: r.name, noWindow: r.noWindow, fixture: r.fixture,
       // 셋째 방은 **별채**다 — 1장을 완성해야 도면에 나타나고, 걸어서 10분이다
@@ -686,7 +749,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       ][i]!,
     })),
     // 실외 구역 둘. 진입로는 부지 안이고(`atLodge`) 자택은 밖이다
-    { id: 'approach', label: places.approach!, hatch: true, walkMin: 2, rect: { x: xa, y: 430, w: 228, h: 140 } },
+    { id: 'approach', label: places.approach!, fixture: placeFixture.approach, hatch: true, walkMin: 2, rect: { x: xa, y: 430, w: 228, h: 140 } },
   ]
   /**
    * ─────────────────────────────────────────────────────────────
@@ -751,6 +814,10 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * `hall`·`room` 은 팔레트 방이 아니라(`places` 에서 온다) 설비 이름을 가질
    * 길이 없어서, 규칙이 **언제나** 전부를 총칭으로 되돌렸다. 팔레트가 아무리
    * 잘 써 와도 화면에 안 나타난다.
+   *
+   * > **길은 2026-07-29 밤에 뚫렸다** — `places` 가 `{ name, fixture }` 를 받는다.
+   * > 그래도 **전원/전무를 되살리지 않는다**: 아래 ★ 문단의 근거(팔레트는 사건을
+   * > 모른다)는 길이 생긴 것과 무관하게 그대로다. 섞여도 된다.
    *
    * ★ 그리고 지문·서사와 달리 여기는 균일할 필요가 없다 ★ **팔레트는 사건을
    * 모른다** — 어느 방이 현장이 될지, 트릭이 무엇일지 모르는 채로 세계를 짓는다.
@@ -829,6 +896,35 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 여전히 LLM 산문보다는 못하다(`prose.source: 'template'`). 5번 절이 그대로
    * 남아 있으므로 더 좋게 쓰고 싶으면 `PROSE-BRIEF.md` 로 덮어쓴다.
    */
+  /**
+   * 감출 것을 **문장에 얹을 꼴로 맞춘다.** (2026-07-29 밤)
+   *
+   * ★ 조사가 글자로 박혀 있었다 ★ 틀이 `${secret}은` 이었다. 내장 팔레트의
+   * `secrets` 는 전부 **「…다는 것」**으로 끝나서 「…것은」이 되니 멀쩡했는데,
+   * 서식은 이 칸을 *"각자 감추는, 사건과 무관한 창피한 사실"* 이라고만 적어둔다 —
+   * **「사실」이라고 하면 챗봇은 문장으로 써 온다.** 사용자 팔레트가 실제로 그랬고
+   * 다섯 명 전원의 마지막 문단이 이렇게 나갔다:
+   *
+   * ```
+   * 몰래 도박에 손을 대고 있다은 이 일과 상관없는 일이라, …
+   * 이력서의 경력을 부풀렸다은 …
+   * ```
+   *
+   * **07-29 오전의 「남겨진 쪽지이」·「1층 공동 라운지을」과 같은 부류다** —
+   * 그때는 서술문이었고 이번은 진술이다. 내장 팔레트로만 재면 안 드러난다.
+   *
+   * 세 꼴을 받는다: 「…것」(명사구) · 「…다」(문장) · 그 밖의 명사구.
+   */
+  const secretPhrase = (raw: string) => {
+    const s = raw.trim().replace(/[.·]+$/, '')
+    if (/것$/.test(s)) return `${s}은`         // 「…했다는 것」 → 「…것은」
+    if (/다$/.test(s)) return `${s}는 것은`     // 「…대고 있다」 → 「…있다는 것은」
+    // 그 밖의 명사구는 받침으로 가른다 — `subjectParticle` 과 같은 셈법
+    const ch = s.charCodeAt(s.length - 1) - 0xac00
+    if (ch < 0 || ch > 11171) return `${s}은`
+    return `${s}${ch % 28 === 0 ? '는' : '은'}`
+  }
+
   const statementOf = (
     cells: { slot: string; location: string }[],
     opener: string,
@@ -864,7 +960,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       line('t2', false),
       // 감추지만 **거짓말은 아니다** — 있다는 것은 인정하고 내용을 안 밝힌다.
       // 이 문장이 곧 제목의 규칙이다
-      { ko: `${secret}은 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.` },
+      { ko: `${secretPhrase(secret)} 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.` },
     ]
   }
 
@@ -1079,6 +1175,22 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    */
   const label = new Map(onSite.map((l) => [l.id, l.label]))
   label.set('away', places.away!)
+  /**
+   * 고정물 이름표. **고정물 조사의 이름을 여기서 짓는다.**
+   *
+   * ★ 골든 케이스가 그렇게 한다 ★ `화로 조사`→`hearth` · `원고 조사`→`safe` —
+   * **방이 아니라 물건**의 이름으로 짓는다. 생성기는 `${장소} 설비 확인` 으로
+   * 지어왔는데, 팔레트가 설비 이름을 줄 수 있게 된 지금 그러면 **이름이 도면에만
+   * 남고 조사 목록에서는 사라진다.**
+   *
+   * ⚠ **그리고 이건 절대 규칙 문제였다** (2026-07-29 밤 실측 · 36건 전부).
+   * 트릭이 만든 고정물 조사는 `잠금장치 조사` 처럼 **물건 이름**인데 빈손은 전부
+   * `○○ 설비 확인` 이었다 — **모양이 갈리는 쪽이 정확히 쓸모 있는 쪽**이라
+   * *"결정적 단서와 레드 헤링이 완전히 동일하게 생겨야 함"* 을 어겼다.
+   * 이름을 물건으로 통일하면 그 갈림이 사라진다.
+   */
+  const fixLabel = new Map(onSite.map((l) => [l.id, l.fixture]))
+  fixLabel.set('away', placeFixture.away)
   const empties: Act[] = []
   const addEmpty = (verb: Act['verb'], kind: 'location' | 'person' | 'fixture', id: string, text: string) => {
     const k = `${verb}:${id}`
@@ -1105,7 +1217,11 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 정방향은 장소 풀로 검사돼 통과하고, 역방향(`fixture:<id>` 로 겨눈 조사가
    * 있는가)은 짝을 못 찾았다. 그 사이로 「도달 불가 조사 11개」가 지나갔다.
    */
-  for (const id of locIds) addEmpty('fixture', 'fixture', id, `${label.get(id)} 설비 확인`)
+  // 이름이 있으면 물건으로 짓는다 — 위 §고정물 이름표 참조. 없을 때만 총칭으로 내려간다
+  for (const id of locIds) {
+    const fx = fixLabel.get(id)
+    addEmpty('fixture', 'fixture', id, fx ? `${fx} 조사` : `${label.get(id)} 설비 확인`)
+  }
   ids.forEach((p, i) => addEmpty('phone', 'person', p, `통화내역 조회 · ${names[i]}`))
 
   /**
@@ -1449,8 +1565,8 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
           label: l.fixture ?? `${l.label}의 설비`,
           loc: l.id,          // 없으면 앱이 못 그린다 — types.ts §fixtures 참조
         }]),
-        // 부지 밖은 팔레트 방이 아니라 늘 총칭이다
-        ['away', { x: 826, y: 317, loc: 'away', label: `${places.away}의 설비` }],
+        // 부지 밖도 팔레트가 이름을 주면 그것을 쓴다 (2026-07-29 밤 — 전엔 늘 총칭이었다)
+        ['away', { x: 826, y: 317, loc: 'away', label: placeFixture.away ?? `${places.away}의 설비` }],
         /**
          * ★ 시신 ★ — 산장의 `body` 와 **같은 id**다. 우연이 아니라 계약이다:
          * 앱 `targetKey(action, targets)` 가 `mode:'none'`(부검)에 대해 **언제나
@@ -1482,6 +1598,35 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         from: 'hall', to: site.id, min: site.walkMin,
         x1: 602, y1: y, x2: xa, y2: y,
       })),
+    },
+
+    /**
+     * 관계 도식 — **노드만 만든다.** (2026-07-29 밤)
+     *
+     * ★ 없으면 앱이 산장 표를 그대로 그린다 ★ `App.jsx` 의 `GRAPH_NODES` 첫 줄이
+     * `{ id: 'victim', ko: '윤다인' }` 이고, `applyCase` 는 사건이 관계 도식을 줄
+     * 때만 덮어썼다. 생성 사건은 안 주므로 **관계도에 산장의 피해자 이름이 떴다**
+     * (첫 실플레이에서 사용자가 찾았다). 07-29 저녁의 「죽은 배선 셋」과 같은 부류다.
+     *
+     * ⚠ **선(`edges`)은 비운다 — 저작이다.** 산장은 「마약망 김선생」 노드가 4장에
+     * 나타나고 범인과 이어진다. 그런데 **어느 장에서 무엇을 드러낼지가 곧 난이도**라,
+     * 기계가 정하면 누설 설계를 기계가 하는 것이 된다. 노드만으로도 알리바이 대조
+     * (두 인물 선택)는 그대로 돈다 — 그게 이 화면의 조작이다.
+     *
+     * 좌표는 산장 배치를 그대로 쓴다(`GRAPH_NODES`). 인물 노드는 `label` 을 안
+     * 준다 — `kind: 'person'` 이면 앱이 `people` 에서 이름·색을 읽는다.
+     */
+    relationGraph: {
+      nodes: [
+        { id: 'victim', kind: 'victim' as const, label: { ko: victimName }, x: 50, y: 50 },
+        ...ids.map((id, i) => ({
+          id,
+          kind: 'person' as const,
+          ...[{ x: 22, y: 22 }, { x: 50, y: 15 }, { x: 80, y: 30 }, { x: 82, y: 72 }, { x: 24, y: 78 }][i]!,
+        })),
+      ],
+      edges: [],
+      discoveries: [],
     },
 
     seedTerms: [tool],

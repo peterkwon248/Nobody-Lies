@@ -71,9 +71,10 @@
     }
   ],
   "places": {
-    "hall": "부조정실",
-    "room": "제1 스튜디오",
-    "away": "자택"
+    "hall": { "name": "부조정실", "fixture": "음향 믹서" },
+    "room": { "name": "제1 스튜디오", "fixture": "조명 그리드" },
+    "approach": { "name": "방송국 앞마당", "fixture": "출입 게이트" },
+    "away": { "name": "자택", "fixture": "현관 우편함" }
   },
   "times": {
     "t0": "방송 전",

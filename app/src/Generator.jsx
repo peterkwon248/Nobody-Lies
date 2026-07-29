@@ -2,6 +2,8 @@ import React from 'react';
 import { dump, load } from 'js-yaml';
 import { run } from '@engine/orchestrate.ts';
 import { verify } from '@engine/verifier.ts';
+import { caseToRaw } from '@engine/to-yaml.ts';
+import { parseCase } from '@engine/schema.ts';
 import briefRaw from '../../engine/templates/PALETTE-BRIEF.md?raw';
 import proseRaw from '../../engine/templates/PROSE-BRIEF.md?raw';
 /**
@@ -206,6 +208,52 @@ function saveStore(v) {
   try { localStorage.setItem(STORE, JSON.stringify(v)); } catch { /* 용량 초과 — 막지 않는다 */ }
 }
 
+/**
+ * 키 순서만 재귀로 정렬해 비교 가능한 꼴로 만든다.
+ * **`cli.ts` 의 것과 같은 함수다** — 왕복 대조가 엔진과 앱에서 서로 다른 자를
+ * 대면 대조하는 뜻이 없다.
+ */
+const stable = (v) => {
+  if (Array.isArray(v)) return v.map(stable);
+  if (v && typeof v === 'object') {
+    return Object.fromEntries(
+      Object.entries(v)
+        .filter(([, x]) => x !== undefined)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([k, x]) => [k, stable(x)]),
+    );
+  }
+  return v;
+};
+
+/**
+ * 생성 사건 → **저작 가능한 YAML.**
+ *
+ * ★ 왜 필요한가 ★ 생성 사건은 `localStorage` 에만 산다 — 만든 브라우저에서만
+ * 보이고 다른 기계에서 홈을 열면 없다. 팔레트+seed 로 **재현**은 되지만,
+ * **산문을 입히는 순간 그것은 생성물이 아니라 저작물**이라 재현으로 못 되찾는다.
+ * 챗봇이 준 문장은 seed 에서 안 나온다. (`NEXT-ACTION` 표 4번 ⓑ · `to-yaml.ts`
+ * 머리말이 같은 말을 한다: *"사람이 고치고 git 이 추적하는 형태로 남아야 한다"*.)
+ *
+ * ★ 엔진과 **같은 코드·같은 옵션**으로 쓴다 ★ `caseToRaw` 도 `dump` 옵션도
+ * `cli.ts --emit --yaml` 그대로다. 여기서 YAML 을 손으로 조립하면
+ * `engine/cases/` 에 커밋될 파일이 엔진이 쓰는 것과 갈라진다.
+ *
+ * ★ 왕복 대조까지 같이 한다 ★ 쓴 것을 `parseCase` 로 다시 읽어 원본과 대조한다.
+ * 엔진이 `exit 1` 로 막는 자리다 — *"조용히 다른 사건이 되는 것이 이 저장소에서
+ * 가장 비싼 결함이었다"*. 이걸 하려고 `schema.ts` 에서 `node:fs` 를 뺐다.
+ */
+function caseYaml(c) {
+  /**
+   * `_difficulty`·`_oracle`·`_prose` 는 앱이 목록 표시용으로 붙인 것이지 사건이
+   * 아니다. `caseToRaw` 가 어차피 안 읽지만 **대조의 반대편**에는 없어야 한다.
+   */
+  const clean = Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith('_')));
+  const text = dump(caseToRaw(clean), { lineWidth: 110, noRefs: true });
+  const back = parseCase(load(text), `${c.id}.yaml`);
+  return { text, same: JSON.stringify(stable(back)) === JSON.stringify(stable(clean)) };
+}
+
 const DIFFS = [
   { id: 'easy', ko: '쉬움', hint: '예산에 여유가 둘. 헛발질해도 된다' },
   { id: 'normal', ko: '보통', hint: '여유 하나. 권장' },
@@ -277,6 +325,8 @@ export default function Generator() {
   const [proseFor, setProseFor] = React.useState(null);
   const [proseText, setProseText] = React.useState('');
   const [proseMsg, setProseMsg] = React.useState(null);
+  // 내보내기 결과. `{ id, ok, line }` — 사건 행 밑에 그 행 것만 뜬다
+  const [saveMsg, setSaveMsg] = React.useState(null);
 
   /**
    * 복사. **세 단계로 내려간다.**
@@ -326,12 +376,12 @@ export default function Generator() {
    * 클립보드가 막혔을 때 **누른 버튼 바로 밑에** 펼친다. 위쪽에 한 자리만 두면
    * 아래쪽 「오류 복사」를 눌렀을 때 안 보이는 곳에서 열린다.
    */
-  const manualBox = (what) => (manual && manual.what === what ? (
+  const manualBox = (what, head) => (manual && manual.what === what ? (
     <div style={{
       marginTop: '12px', padding: '14px',
       border: '1px solid var(--accent, #4C8DFF)', borderRadius: 'var(--r-sm, 7px)',
     }}>
-      <b style={{ fontSize: '13px' }}>클립보드를 못 쓴다 — 아래를 직접 복사해라</b>
+      <b style={{ fontSize: '13px' }}>{head || '클립보드를 못 쓴다 — 아래를 직접 복사해라'}</b>
       <p style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '6px 0 10px', lineHeight: 1.6 }}>
         다운로드한 파일로 열면 브라우저가 복사를 막는다. 칸을 눌러 <b>전체 선택 → 복사</b>.
       </p>
@@ -430,6 +480,53 @@ export default function Generator() {
     saveStore({});
     setMade([]);
     setProseFor(null);
+    setSaveMsg(null);
+  };
+
+  /**
+   * 사건을 **YAML 파일로 내려받는다.** 목적지는 `engine/cases/` 이고 거기서 커밋된다.
+   *
+   * ⚠ **왕복이 어긋나면 안 내려받는다.** 엔진이 `--emit --yaml` 에서 `exit 1` 로
+   * 막는 자리를 앱에서도 막는다 — **반쯤 맞는 사건 파일이 저장소에 커밋되는 것이
+   * 아무것도 안 나가는 것보다 나쁘다.** 조용히 다른 사건이 되는 것을 이 저장소가
+   * 가장 비싸게 물렸다.
+   *
+   * 내려받기가 막힌 origin(`file://` · 안드로이드 `content://`)이면 **화면에 펼친다** —
+   * 클립보드와 같은 규약이다(§복사는 세 단계로 내려간다). 다만 이 버튼의 자리는
+   * 사실상 작업 기계다: 꺼내는 이유가 커밋이라 저장소가 있는 곳에서 누른다.
+   */
+  const exportOne = (c) => {
+    setSaveMsg(null);
+    setManual(null);
+    let out;
+    try {
+      out = caseYaml(c);
+    } catch (e) {
+      setSaveMsg({ id: c.id, ok: false, line: `YAML 로 옮기지 못했다 — ${e.message}` });
+      return;
+    }
+    if (!out.same) {
+      setSaveMsg({
+        id: c.id,
+        ok: false,
+        line: '왕복 대조 실패 — 쓴 것과 다시 읽은 것이 다르다. 내려받지 않았다',
+      });
+      return;
+    }
+    const name = `${c.id}.yaml`;
+    try {
+      const url = URL.createObjectURL(new Blob([out.text], { type: 'text/yaml;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setSaveMsg({ id: c.id, ok: true, line: `${name} — engine/cases/ 에 넣고 커밋한다` });
+    } catch {
+      setManual({ what: `yaml:${c.id}`, text: out.text });
+    }
   };
 
   /**
@@ -441,11 +538,67 @@ export default function Generator() {
    */
   const applyProse = () => {
     setProseMsg(null);
+
+    /**
+     * ★ 붙여넣은 것이 **답이 아니라 요청**인가 ★ (2026-07-29 밤 신설)
+     *
+     * 5번 절은 「산문 서식 복사」 버튼과 「받은 YAML」 칸이 **나란히** 있어서,
+     * 순서를 한 번 헷갈리면 서식이 그대로 답변 칸에 들어간다. 실제로 났다.
+     * 전에는 파서 말만 나왔다 — *"end of the stream or a document separator is
+     * expected (6:1)"*. **무엇을 잘못했는지 알 수가 없는 말이다.**
+     *
+     * ⚠⚠ **그리고 이건 오류로 끝나는 게 다행인 경우였다.** 서식 안에는 우리가
+     * 넣은 `\`\`\`yaml` 뼈대가 들어 있고 그 안에 `people:` 과 `paragraphs: [ ... ]`
+     * 가 있다. 아래 울타리 벗기기를 **먼저** 돌리면 그 뼈대가 정상 답으로 읽혀
+     * **다섯 사람의 진술이 통째로 `"..."` 로 덮인다.** 그래서 이 검사가 앞이다.
+     *
+     * 표시는 **우리 코드가 만드는 문구**로 잡는다 — 서식 본문이 바뀌어도 안 깨진다.
+     */
+    const 서식표시 = ['이 사건에 대한 보충', '아래 자리만 채우세요'];
+    if (서식표시.some((m) => proseText.includes(m))) {
+      setProseMsg({
+        ok: false,
+        lines: [
+          '이건 **서식**이다 — 챗봇에 보낼 요청을 그대로 되붙였다.',
+          '위 「산문 서식 복사」로 복사한 것을 챗봇에 넣고, **챗봇이 준 답**을 여기 붙여넣어라.',
+        ],
+      });
+      return;
+    }
+
+    /**
+     * 챗봇은 거의 언제나 ```` ```yaml ```` 코드블록으로 준다. 서식은 *"코드블록째
+     * 붙여넣었는지 본다"* 고 말해놓고 **정작 울타리를 못 벗기고 있었다.**
+     * 설명 문단이 앞뒤에 붙어 와도 이걸로 지나간다.
+     *
+     * 블록이 여럿이면 **우리가 찾는 키가 있는 것**을 고른다 — 챗봇이 설명용
+     * 조각을 곁들이는 일이 흔하다.
+     */
+    const WANT = /^\s*(people|prologue|reveals)\s*:/m;
+    const blocks = [...proseText.matchAll(/```(?:ya?ml)?[ \t]*\r?\n([\s\S]*?)```/gi)].map((m) => m[1]);
+    const source = blocks.length ? (blocks.find((b) => WANT.test(b)) ?? blocks[0]) : proseText;
+
     let frag;
     try {
-      frag = load(proseText);
+      frag = load(source);
     } catch (e) {
       setProseMsg({ ok: false, lines: ['YAML 을 읽지 못했다 — ' + e.message] });
+      return;
+    }
+    /**
+     * 뼈대를 안 채우고 그대로 보낸 경우. `paragraphs: [ ... ]` 는 YAML 로는
+     * **문자열 `'...'` 한 줄**이라 조용히 통과해서 진술을 덮는다.
+     */
+    const 자리표시 = (v) => {
+      const s = typeof v === 'string' ? v : v?.ko;
+      return typeof s === 'string' && /^[.·…\s]*$/.test(s);
+    };
+    if (Array.isArray(frag?.people)
+      && frag.people.some((p) => (p?.statement?.paragraphs ?? []).some(자리표시))) {
+      setProseMsg({
+        ok: false,
+        lines: ['뼈대의 `...` 가 그대로 남아 있다 — 챗봇이 자리를 안 채웠거나 채운 답이 아니다.'],
+      });
       return;
     }
     /**
@@ -505,7 +658,18 @@ export default function Generator() {
 
       const para = p?.statement?.paragraphs;
       if (!Array.isArray(para) || !para.length) continue;
-      t.statement = Object.assign({}, t.statement, { paragraphs: para });
+      /**
+       * ⚠ **문단도 `{ko}` 로 맞춘다.** 바로 위 지문과 아래 프롤로그는 정규화하는데
+       * **여기만 받은 그대로** 넣고 있었다. 앱이 두 형태를 다 렌더해서 안 드러났지만
+       * **엔진 정본은 `Text`** 다 — 맨 문자열로 두면 `to-yaml.ts` 의 `txt()` 가
+       * `.ko` 를 찾다가 `undefined` 를 내어 **내보낸 YAML 의 문단이 통째로 빈다.**
+       *
+       * 2026-07-29 내보내기를 붙이며 드러났고 **왕복 대조가 잡았다** — 같은 사건이
+       * 두 표현으로 사는 것을 이 저장소가 반복해서 비싸게 물린 그 형태다.
+       */
+      t.statement = Object.assign({}, t.statement, {
+        paragraphs: para.map((x) => (typeof x === 'string' ? { ko: x } : x)),
+      });
       넣음.push(`${t.name} ${para.length}문단`);
     }
     /**
@@ -724,40 +888,55 @@ export default function Generator() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {made.map((c) => (
-                <div key={c.id} style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '10px 10px 10px 14px',
-                  background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
-                  border: '1px solid var(--border, #2a2e35)',
-                }}>
-                  {/* 경로를 새로 만들지 않는다 — `content://`(안드로이드 다운로드)에서 죽는다 */}
-                  <a href={`#case=local:${encodeURIComponent(c.id)}`}
-                    style={{
-                      flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between',
-                      alignItems: 'center', gap: '12px', textDecoration: 'none',
-                      color: 'var(--fg, #e6e9ef)',
-                    }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
-                      {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
-                      {hasProse(c) ? ' · 산문 입힘' : ' · 조립 진술'}
-                    </span>
-                  </a>
-                  <button
-                    onClick={() => { setProseFor(proseFor === c.id ? null : c.id); setProseMsg(null); setProseText(''); }}
-                    title="이 사건에 진술을 입힌다"
-                    style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
-                    {proseFor === c.id ? '닫기' : '산문'}
-                  </button>
-                  {/* 사건 하나만 지운다. 진행 저장도 같이 지운다 — 안 지우면
-                      같은 이름으로 다시 만들었을 때 옛 진행이 되살아난다 */}
-                  <button onClick={() => removeOne(c.id)} title="이 사건 지우기"
-                    style={{
-                      flex: 'none', width: '30px', height: '30px', lineHeight: 1,
-                      borderRadius: 'var(--r-sm, 7px)', cursor: 'pointer',
-                      border: '1px solid var(--border-strong, #3a4049)',
-                      background: 'transparent', color: 'var(--fg-3, #8b93a1)', fontSize: '15px',
-                    }}>×</button>
+                <div key={c.id}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '10px 10px 10px 14px',
+                    background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
+                    border: '1px solid var(--border, #2a2e35)',
+                  }}>
+                    {/* 경로를 새로 만들지 않는다 — `content://`(안드로이드 다운로드)에서 죽는다 */}
+                    <a href={`#case=local:${encodeURIComponent(c.id)}`}
+                      style={{
+                        flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between',
+                        alignItems: 'center', gap: '12px', textDecoration: 'none',
+                        color: 'var(--fg, #e6e9ef)',
+                      }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600 }}>{c.title}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--fg-3, #8b93a1)' }}>
+                        {c.chapters?.length}장 · 예산 {c.budget} · 최소 {c._oracle}회 · {c._difficulty}
+                        {hasProse(c) ? ' · 산문 입힘' : ' · 조립 진술'}
+                      </span>
+                    </a>
+                    <button
+                      onClick={() => { setProseFor(proseFor === c.id ? null : c.id); setProseMsg(null); setProseText(''); }}
+                      title="이 사건에 진술을 입힌다"
+                      style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
+                      {proseFor === c.id ? '닫기' : '산문'}
+                    </button>
+                    {/* 이 사건을 기계 밖으로 꺼내는 유일한 길 — `localStorage` 는 이 브라우저에만 산다 */}
+                    <button onClick={() => exportOne(c)}
+                      title="YAML 로 내려받는다 — engine/cases/ 에 넣고 커밋한다"
+                      style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
+                      YAML
+                    </button>
+                    {/* 사건 하나만 지운다. 진행 저장도 같이 지운다 — 안 지우면
+                        같은 이름으로 다시 만들었을 때 옛 진행이 되살아난다 */}
+                    <button onClick={() => removeOne(c.id)} title="이 사건 지우기"
+                      style={{
+                        flex: 'none', width: '30px', height: '30px', lineHeight: 1,
+                        borderRadius: 'var(--r-sm, 7px)', cursor: 'pointer',
+                        border: '1px solid var(--border-strong, #3a4049)',
+                        background: 'transparent', color: 'var(--fg-3, #8b93a1)', fontSize: '15px',
+                      }}>×</button>
+                  </div>
+                  {saveMsg && saveMsg.id === c.id && (
+                    <p style={{
+                      margin: '7px 0 0', fontSize: '12px', lineHeight: 1.6,
+                      color: saveMsg.ok ? 'var(--fg-3, #8b93a1)' : 'var(--danger, #ef4444)',
+                    }}>{saveMsg.line}</p>
+                  )}
+                  {manualBox(`yaml:${c.id}`, '내려받기가 막혔다 — 아래를 복사해 저장해라')}
                 </div>
               ))}
             </div>
@@ -769,6 +948,11 @@ export default function Generator() {
           <b> 사건과 무관한 비밀 하나</b>를 감춘다(제목이 곧 그 규칙이다). 세계의
           어휘로 조립한 것이라 <b>말맛은 챗봇 산문만 못하다</b> — 더 좋게 쓰고 싶으면
           행의 <b>「산문」</b>을 눌러 5번에서 덮어쓴다.
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '10px 0 0', lineHeight: 1.6 }}>
+          만든 사건은 <b>이 브라우저에만 남는다</b> — 다른 기계에서 홈을 열면 없다.
+          산문을 입혔으면 저작물이라 행의 <b>「YAML」</b>로 꺼내 <code>engine/cases/</code> 에
+          넣고 커밋한다.
         </p>
       </section>
 

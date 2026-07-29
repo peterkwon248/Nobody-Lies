@@ -1240,7 +1240,41 @@ export default class App extends React.Component {
     }
 
     const g = c.relationGraph
-    if (g) {
+    /**
+     * ★ 다른 사건이면 표를 **다시 만든다 — 꾸미지 않는다** ★ (2026-07-29 밤)
+     *
+     * 아래 `join` 은 앱 표를 **꾸미는** 도구다(라벨·게이트만 덮어쓴다). 사건이
+     * 산장 하나일 때는 맞는 말이었는데, **생성 사건은 인물 id 자체가 다르다**
+     * (`p1..p5` ↔ `yena·yujin…`). 개수도 짝도 어긋나므로 `join` 이 `null` 을 내고
+     * — 그 자체는 설계대로다(*"반쯤 덮어쓴 표는 틀린 사건을 조용히 보여준다"*) —
+     * **산장 표가 통째로 살아남는다.** 그래서 관계도에 **「윤다인」**이 떴다.
+     *
+     * 07-29 저녁 §죽은 배선 셋의 ②와 **같은 근거·같은 결말**이다: *"앱에 있는 것은
+     * 앱 것을 쓴다"* 는 **사건이 하나뿐일 때** 옳았고, 생성 사건이 생기며 전제가
+     * 깨졌는데 코드가 안 따라왔다. 거기서 쓴 `_foreignCase` 로 똑같이 가른다.
+     *
+     * **산장은 한 줄도 안 바뀐다** — 아래 `join` 경로를 그대로 탄다.
+     */
+    if (g && this._foreignCase) {
+      this.GRAPH_NODES = g.nodes.map((n) => ({
+        id: n.id, kind: n.kind, x: n.x, y: n.y,
+        // `person` 노드는 라벨이 없다 — `buildGraph` 가 `PEOPLE` 에서 이름·색을 읽는다
+        ko: ko(n.label) || '', en: n.label?.en || ko(n.label) || '',
+        ...(n.revealedAfter != null ? { gate: gateOf(n.revealedAfter) } : {}),
+      }))
+      this.GRAPH_EDGES = (g.edges ?? []).map((e) => ({
+        a: e.from, b: e.to, ko: ko(e.label) || '', en: e.label?.en || ko(e.label) || '',
+        danger: !!e.danger,
+        ...(e.revealedAfter != null ? { gate: gateOf(e.revealedAfter) } : {}),
+      }))
+      /**
+       * 조사로 열리는 간선은 **비운다.** 엔진은 `action` id 로 말하는데 앱은
+       * `logKey`(`동사:대상`)로 말하고, 그 대응이 곧 `INV_ACTIONS` 모델 충돌이라
+       * 아직 결정되지 않았다(위 §위치로 잇지 않는다 주석과 같은 이유).
+       * 산장 것을 남기면 `belongings:yuri` 같은 남의 열쇠가 그대로 산다.
+       */
+      this.GRAPH_EVIDENCE = []
+    } else if (g) {
       const nodes = join('관계 도식 노드', this.GRAPH_NODES, g.nodes, (n) => n.id, (e) => e.id)
       if (nodes) for (const n of this.GRAPH_NODES) {
         const e = nodes.get(n.id)

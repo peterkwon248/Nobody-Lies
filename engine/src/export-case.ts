@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { loadCaseFile } from './schema.js'
+import { loadCaseFile } from './load-case.js'
 import { verify } from './verifier.js'
 
 /**

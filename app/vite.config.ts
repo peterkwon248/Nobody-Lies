@@ -15,8 +15,12 @@ const engineSrc = fileURLToPath(new URL('../engine/src', import.meta.url))
  * 왜 복사(이식)하지 않고 참조하는가 — `HANDOFF-TO-CODE.md` §4 는 "검증기에서 이식"
  * 이라고 적었지만, 같은 판정 로직이 두 벌 있으면 **반드시 갈라진다.** 2026-07-24에
  * 엔진과 프로토타입이 정확히 그렇게 14곳 어긋났다. 런타임에 필요한 셋(`types`·
- * `deriver`·`verifier` 의 `deriveFacts`/`deriveTerms`)은 순수 함수라 브라우저에서 돌고,
- * Node 의존이 있는 `schema.ts` 는 빌드 타임에만 쓰이므로 번들에 들어오지 않는다.
+ * `deriver`·`verifier` 의 `deriveFacts`/`deriveTerms`)은 순수 함수라 브라우저에서 돈다.
+ *
+ * ⚠ **`schema.ts` 는 이제 번들에 들어온다** (2026-07-29 갱신). 여기 「Node 의존이
+ * 있어 빌드 타임에만 쓰인다」고 적혀 있었으나, 그 의존은 `loadCaseFile` 하나였고
+ * `load-case.ts` 로 뺐다. 앱의 YAML 내보내기가 `parseCase` 로 **왕복 대조**를 하려면
+ * 파싱기가 브라우저에 있어야 한다. `node:fs` 를 무는 `load-case.ts` 는 여전히 밖이다.
  */
 function engineResolver(): Plugin {
   return {

@@ -1,4 +1,4 @@
-import { loadCaseFile } from './schema.js'
+import { loadCaseFile } from './load-case.js'
 import { verify } from './verifier.js'
 import { claimGrid, tellsTruth, trueLocationAt } from './deriver.js'
 import type { RunOptions } from './orchestrate.js'
