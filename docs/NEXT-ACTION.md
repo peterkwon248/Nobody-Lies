@@ -28,8 +28,22 @@
   저작 서식 통과 + 이식 회귀 없음.
 - **`before-work` / `after-work` 가 슬래시 명령이다** — `.claude/commands/` 에 있다.
   사용자 레벨에만 두고 쓰다가 새 기계에 안 따라와서, 이 저장소 규칙대로 커밋했다.
-- **`npm run tester`** → `out/nobody-lies-tester.html` (1.32 MB). **더블클릭하면 도는
-  게임** — 서버·인터넷 없음. 테스터에게 이 파일 하나를 보낸다.
+- **`npm run tester`** → `out/nobody-lies-tester.html` (1.41 MB). **데스크톱에서는
+  더블클릭하면 돈다.** `out/` 은 gitignore 라 기계를 넘어가지 않는다 — 필요하면 다시 굽는다.
+  > ⛔ **폰 테스터에게는 이 파일을 보내지 마라 (2026-07-29 실측).** 아이폰은 파일 앱에서
+  > `.html` 을 열면 **Quick Look 미리보기**라 **JavaScript 가 안 돈다**(테스터 실사용 확인).
+  > 갤럭시는 `content://` 부류로 막힌다. 설령 열려도 아이폰은 `file://` 에서
+  > `localStorage` 가 `SecurityError` 라 진행이 저장되지 않는다. **번들 결함이 아니라
+  > 배포 수단의 한계다** — 폰은 URL 로 준다.
+  >
+  > ⚠ 그리고 **「인터넷 필요 없음」은 아직 거짓이다.** DS 번들이 CDN 둘을 물고 있다
+  > (`code.iconify.design` — **앱은 이걸 한 번도 안 쓴다** · `cdn.jsdelivr.net` 의 Pretendard).
+  > 조립기의 누수 검사가 **루트 상대 경로만 보고 `https://` 는 안 봐서** 통과한다. 미해결.
+- **배포: Vercel + git 연동** (`vercel.json`). `main` 에 push 하면 자동으로 나간다.
+  빌드는 **7단 게이트 전체**를 돌고(`npm run build`) 산출물은 `app/dist` 다.
+  > **생성 사건은 자동으로 안 나간다** — `app/public/cases/` 가 gitignore 라 깨끗한
+  > 체크아웃에는 없고, 빌드가 `npm run case` 로 **산장만** 만들어낸다. 로컬 `dist` 에는
+  > `--emit` 찌꺼기가 남을 수 있으니 손으로 올릴 때만 주의한다.
 - **작업 기계가 넷이다.** `KWONKYUNGHUN`(`C:/Users/kkh94/OneDrive/Desktop/Nobody Lies`,
   **OneDrive 아래**) · `DESKTOP-JCJTAH8` · `C:/Users/user/Desktop/Nobdy Lies` 외.
   > ⚠ **기계를 옮기면 `git pull` 다음 `npm install`.** 07-24 이후 `js-yaml` 이 늘어서
