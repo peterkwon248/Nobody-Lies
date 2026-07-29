@@ -476,6 +476,69 @@ export function verify(c: Case): VerifyResult {
         `서사의 유무가 유용도를 노출한다`,
     )
 
+  /**
+   * 6.8 **인터루드는 모든 전환에 있어야 한다** (2026-07-29 신설)
+   *
+   * 위 검사는 *공개가 있는 장*끼리만 비교한다. 그런데 **공개가 아예 없는 장**은
+   * 세는 대상에서 빠져서, 3장짜리 사건이 1장에만 공개를 달아도 통과했다.
+   * 인터루드 화면이 생긴 지금 그 사건은 **1장을 완성할 때만 전체화면 서술이 뜨고
+   * 2장은 아무 일도 안 일어난다** — `MEMORY.md` §장 인터루드가 못박은
+   * *"도착물이 0개인 전환도 서술은 똑같이 나온다"* 가 깨진다.
+   *
+   * **마지막 장은 뺀다.** 그 장을 채우면 사건이 끝나므로 다음 전환이 없다.
+   *
+   * 서사가 하나도 없는 사건은 통과시킨다 — 인터루드를 아예 안 쓰는 것은
+   * 전무이므로 균일하다(§9-1 의 전원/전무와 같은 근거).
+   */
+  if (narrated > 0) {
+    const lastOrder = Math.max(...c.chapters.map((ch) => ch.order))
+    const narratedAt = new Set(
+      chapterReveals.filter((r) => r.narration)
+        .map((r) => (r.trigger as { chapterOrder: number }).chapterOrder),
+    )
+    const 빠진 = c.chapters.filter((ch) => ch.order !== lastOrder && !narratedAt.has(ch.order))
+    if (빠진.length)
+      errors.push(
+        `${빠진.map((ch) => ch.order + '장').join('·')} 완성에는 서사가 없다 — ` +
+          `인터루드가 뜨는 전환과 안 뜨는 전환이 갈리면 그 자체가 유용도 신호다`,
+      )
+  }
+
+  /**
+   * 6.9 **공개가 가리키는 것이 실재하는가** (2026-07-29 신설)
+   *
+   * §7.5(i)가 `presence`·`claim` 의 슬롯·장소를 검사하면서 **`addClaims` 는
+   * 한 번도 안 봤다.** 그런데 이쪽이 더 조용히 죽는다 — 앱은 화자 id 로
+   * 진술을 찾아 붙이므로(`App.jsx` `revealedStatements`), **없는 id 면
+   * 아무 데도 안 뜨고 오류도 없다.** 장을 완성해도 아무 일이 안 일어나는
+   * 그 증상 그대로다.
+   *
+   * `target: 'grid'` 의 `slot` 도 같다 — 격자의 열이 시간대라 슬롯이 없거나
+   * 낯설면 칸을 못 찾는다. 타입은 `slot?` 이라 **없어도 컴파일된다.**
+   */
+  for (const r of c.reveals) {
+    // ⚠ `r.trigger` 를 그대로 쓰면 콜백 안에서 좁혀진 타입이 풀린다 — 먼저 뽑는다
+    const tr = r.trigger
+    const where = tr.on === 'chapterComplete' ? `${tr.chapterOrder}장 완성` : `조사 '${tr.actionId}'`
+    for (const a of r.addClaims ?? []) {
+      if (!c.people.some((p) => p.id === a.speaker))
+        errors.push(`${where} 공개의 화자 '${a.speaker}'가 인물 목록에 없다 — 앱이 붙일 자리를 못 찾아 조용히 사라진다`)
+      if (a.target === 'grid') {
+        if (!a.slot)
+          errors.push(`${where} 공개가 격자 칸을 채우는데 slot 이 없다 — 격자의 열은 시간대다`)
+        else if (!c.slots.some((s) => s.id === a.slot))
+          errors.push(`${where} 공개의 slot '${a.slot}'이 slots 레지스트리에 없다`)
+      }
+    }
+    if (tr.on === 'action' && !c.actions.some((a) => a.id === tr.actionId))
+      errors.push(`공개의 트리거 조사 '${tr.actionId}'가 조사 목록에 없다 — 영영 열리지 않는다`)
+    if (tr.on === 'chapterComplete' && !c.chapters.some((ch) => ch.order === tr.chapterOrder))
+      errors.push(`공개의 트리거 장 ${tr.chapterOrder}이 장 목록에 없다 — 영영 열리지 않는다`)
+    for (const id of r.actions ?? [])
+      if (!c.actions.some((a) => a.id === id))
+        errors.push(`${where} 공개가 여는 조사 '${id}'가 조사 목록에 없다`)
+  }
+
   // 7. 부문 분포
   const domainCount: Record<string, number> = { 물증: 0, 정황: 0, 심증: 0 }
   for (const ch of c.chapters)
@@ -924,15 +987,82 @@ export function verify(c: Case): VerifyResult {
   {
     const words = (c.terms ?? []).map((t) => t.word)
     const seeded = new Set(c.seedTerms ?? [])
+    const 글 = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
     for (const p of c.people) {
-      const text = (p.statement?.paragraphs ?? [])
-        .map((x) => (typeof x === 'string' ? x : x?.ko ?? ''))
-        .join(' ')
-      if (!text) continue
+      /**
+       * ⚠ **지문도 읽는다** (2026-07-29). 이 검사는 `paragraphs` 만 봤는데,
+       * 그때는 지문이 손으로 쓴 사건에만 있었다. 생성 사건이 지문을 갖게 되고
+       * 산문 서식이 *"고쳐도 된다"* 로 열린 순간, **진술 바로 옆에 검사받지 않는
+       * 산문이 한 줄 생긴다** — §9-7 이 프롤로그·결과문·서사를 다 읽으면서
+       * 진술만 빠져 있던 그 형태가 한 칸 옆에서 반복되는 것이다.
+       */
+      const g = p.statement?.gesture
+      const text = [
+        ...(p.statement?.paragraphs ?? []).map(글),
+        글(g?.pre), 글(g?.post),
+      ].join(' ')
+      if (!text.trim()) continue
       const leaked = words.filter((w) => !seeded.has(w) && text.includes(w))
       if (leaked.length)
         warnings.push(
           `${p.name} 의 진술이 조사로 얻어야 할 단어를 말한다: ${leaked.join('·')} — 소문·맥락이면 정당하나, 무료 지급이면 조사할 이유가 사라진다`,
+        )
+    }
+  }
+
+  /**
+   * 9-11. **동선의 모양이 곧 지목이 된다** (2026-07-29 신설)
+   *
+   * 진술을 데이터에서 조립하면 **누가 어디 있었나의 「모양」이 그대로 문장의
+   * 모양**이 된다. 그래서 물증을 하나도 안 캐고 다섯을 나란히 놓기만 해도
+   * 범인이 잡히는 일이 생긴다 — §절대 규칙의 「유용도 시각 구분」이 산문이 아니라
+   * **격자 층에서** 재발하는 형태다.
+   *
+   * 2026-07-29에 생성기에서 셋을 잡았다. 셋 다 뿌리가 **한 배열**이었다:
+   *
+   * ```
+   * ① 무고한 넷이 같은 배열을 공유    → 동선 문장이 글자까지 같았다
+   * ② 범인만 t0·t1·t2 를 다 말했다     → 밤을 온전히 설명하는 사람이 범인 하나
+   * ③ ②를 고치니 범인만 안 움직였다    → 흩어진 넷 중 제자리에 남은 사람이 범인
+   * ```
+   *
+   * ③이 이 검사를 만든 이유다. **②를 고친 손이 같은 결함을 뒤집어서 다시
+   * 만들었다.** 눈으로는 셋 다 「그럴듯한 격자」로 보였고, 200건을 돌려 세어보고서야
+   * 드러났다(`delayed_mechanism` 39건은 t1 만 맞춰서는 안 잡혔다 — t0 까지
+   * 거짓말하는 아키타입이라, **모양은 슬롯 하나가 아니라 동선 전체의 성질**이다).
+   *
+   * ── 왜 `template` 일 때만 보는가 ─────────────────────────
+   *
+   * **손으로 쓴 사건은 걸어도 옳지 않다.** 골든 케이스는 무고한 셋이
+   * `t3:main` 으로 동선이 같은데 **진술은 전부 다른 글**이다 — 사람이 썼기
+   * 때문이다. 거기서 모양이 같은 것은 결함이 아니라 사실이고, 문장이 그것을
+   * 가린다. `prose.source: 'template'` 일 때만 **모양이 곧 문장**이 된다.
+   *
+   * §9-10 이 골든 케이스에 걸렸을 때 등급을 내린 것과 같은 판단이지만, 이쪽은
+   * **걸릴 조건 자체를 좁힐 수 있어서** 생성분에는 오류로 남긴다 — 생성기가
+   * 깨진 것은 언제나 결함이고, 경고로 두면 §「초록불의 뜻」이 또 반복된다.
+   */
+  if (c.prose?.source === 'template' && c.people.length > 1) {
+    const shape = (p: (typeof c.people)[number]) =>
+      c.slots
+        .map((s) => (p.claim ?? p.presence).find((x) => x.slot === s.id)?.location ?? '—')
+        .join('/')
+
+    const innocentShapes = c.people.filter((p) => p.id !== c.culprit).map(shape)
+    const dup = innocentShapes.filter((s, i) => innocentShapes.indexOf(s) !== i)
+    if (dup.length)
+      errors.push(
+        `무고한 사람 여럿의 동선이 같다 (${[...new Set(dup)].join(' · ')}) — ` +
+          `조립 진술에서는 동선이 곧 문장이라 진술 정독이 인원수만큼 읽히지 않는다`,
+      )
+
+    const culpritP2 = c.people.find((p) => p.id === c.culprit)
+    if (culpritP2) {
+      const cs = shape(culpritP2)
+      if (!innocentShapes.includes(cs))
+        errors.push(
+          `범인 '${culpritP2.name}'의 동선이 다섯 중 유일하다 (${cs}) — ` +
+            `물증 없이 진술 모양만으로 지목된다. 무고한 한 사람이 같은 동선이어야 한다`,
         )
     }
   }

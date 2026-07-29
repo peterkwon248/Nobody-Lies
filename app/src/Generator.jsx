@@ -97,6 +97,15 @@ function proseRequest(c) {
       id: p.id, name: p.name, age: p.age, job: p.job,
       presence: p.presence, claim: p.claim,
     })),
+    // 장과 그 장을 완성했을 때 도착하는 것. 없으면 산문가가 박자를 못 본다
+    chapters: (c.chapters || []).map((ch) => tidy({ order: ch.order, title: ch.title })),
+    reveals: (c.reveals || [])
+      .filter((r) => r.trigger?.on === 'chapterComplete')
+      .map((r) => tidy({
+        chapter: r.trigger.chapterOrder,
+        narration: r.narration,
+        addClaims: (r.addClaims || []).map((a) => tidy({ speaker: a.speaker, content: a.content })),
+      })),
   }), { lineWidth: 100, noRefs: true });
 
   // 조사로만 얻는 단어. 진술이 먼저 말하면 조사할 이유가 사라진다
@@ -110,8 +119,24 @@ function proseRequest(c) {
    * 생성기가 *"아래 자리만 채우세요"* 로 잘라내고 있었다. 그래서 생성 사건의
    * 프롤로그는 코드가 만든 뼈대 그대로였다.
    */
+  const 이름 = Object.fromEntries((c.people || []).map((p) => [p.id, p.name]));
+  const chRevs = (c.reveals || []).filter((r) => r.trigger?.on === 'chapterComplete');
   const fill = ['prologue:', '  - "..."   # 4줄 안팎', '', 'people:']
-    .concat((c.people || []).map((p) => `  - id: ${p.id}          # ${p.name}\n    statement:\n      paragraphs: [ ... ]`))
+    .concat((c.people || []).map((p) => {
+      // 지문은 이미 전원에게 들어가 있다. 자리를 보여줘야 「고쳐도 되는 것」으로 읽힌다
+      const g = p.statement?.gesture;
+      return `  - id: ${p.id}          # ${p.name}\n    statement:\n      paragraphs: [ ... ]`
+        + (g ? '\n      gesture:\n        pre:  "..."\n        post: "..."' : '');
+    }))
+    .concat(chRevs.length ? ['', 'reveals:'] : [])
+    .concat(chRevs.map((r) => {
+      const ch = (c.chapters || []).find((x) => x.order === r.trigger.chapterOrder);
+      const head = `  - trigger: { on: chapterComplete, chapterOrder: ${r.trigger.chapterOrder} }   # ${ch?.title ?? ''}\n    narration: "..."`;
+      const cl = (r.addClaims || []).map(
+        (a) => `    addClaims:\n      - speaker: ${a.speaker}      # ${이름[a.speaker] ?? ''}\n        content: "..."`,
+      );
+      return [head, ...cl].join('\n');
+    }))
     .join('\n');
 
   const slots = c.slots || [];
@@ -121,9 +146,28 @@ function proseRequest(c) {
     `- **문단 수는 인물당 ${Math.max(3, slots.length)}~${slots.length + 3}문단.** 시간대가 ${slots.length}개이고,`,
     '  각 시간대에 어디 있었는지가 드러나기만 하면 문단을 묶어도 됩니다.',
     '  **다섯 사람의 길이가 서로 비슷해야 합니다** — 한쪽이 길면 그게 유용도 표시입니다.',
-    '- **지문(`gesture`)은 넣지 마세요.** 이번엔 진술 원문만 받습니다.',
+    '- **지문(`gesture`)은 다섯 명 전원에게 주거나 아무에게도 주지 마세요.**',
+    '  넷은 담담한데 하나만 떨면 그게 곧 범인 표시입니다. **반대도 같습니다** —',
+    '  넷이 안절부절인데 하나만 침착해도 그 하나가 튑니다. 누가 범인인지 모르는 채로',
+    '  읽어도 **고르게 불편해야** 합니다. 이미 전원에게 하나씩 들어가 있으니,',
+    '  고칠 때도 다섯을 같이 고치세요. 지문에 이름은 쓰지 마세요 — 카드에 이미 있습니다.',
     '- **`claim` 이 `presence` 와 다른 사람이 범인**입니다. 거짓말은 `claim` 이 말하는',
     '  그대로만 하세요 — 더 꾸미면 새 사실이 됩니다.',
+    ...(chRevs.length ? [
+      '',
+      '### 장 완성 서사 (`reveals`)',
+      '',
+      '장을 완성하면 도착하는 것입니다. **`trigger` 와 `speaker` 는 그대로 두고**',
+      '`narration` 과 `content` 만 고쳐 주세요 — 누가 언제 말하는가는 논리입니다.',
+      '',
+      '- **`narration` 은 전부 채우거나 전부 비우거나** 둘 중 하나입니다. 일부만 있으면',
+      '  서사의 유무가 곧 「이 장이 중요하다」는 표시가 되어 검증기가 반려합니다.',
+      '- ⛔ **서로를 봤다는 말을 쓰지 마세요.** 「그때 ○○씨가 거기 있었다」·「저 혼자',
+      '  있었다」는 둘 다 사건을 망칩니다 — 하나는 범인의 거짓말을 공짜로 벗기고,',
+      '  다른 하나는 그 말 자체가 거짓이 됩니다. **자기 자신에 대한 말만** 쓰세요.',
+      '- ⛔ **「이제 ○○를 조사해 보자」류 금지.** 조사 추천은 이 게임에서 금지입니다.',
+      '- 장 제목은 캐낸 기록의 이름입니다. **서사에서 그 이름을 되뇌지 마세요.**',
+    ] : []),
     '',
     '### ⛔ 진술에 나오면 안 되는 단어',
     '',
@@ -397,9 +441,19 @@ export default function Generator() {
       setProseMsg({ ok: false, lines: ['YAML 을 읽지 못했다 — ' + e.message] });
       return;
     }
-    const incoming = frag?.people;
-    if (!Array.isArray(incoming) || !incoming.length) {
-      setProseMsg({ ok: false, lines: ['`people:` 목록을 못 찾았다. 받은 답을 코드블록째 붙여넣었는지 본다'] });
+    /**
+     * ⚠ **`people:` 만 보고 반려하지 않는다.** 서식이 *"필요한 것만 남기고 나머지는
+     * 지우세요"* 라고 말하므로 **프롤로그만 · 장 서사만** 받아오는 것이 정상 경로인데,
+     * 전에는 그 둘을 「`people:` 목록을 못 찾았다」로 되돌려보냈다 — 서식이 시킨
+     * 대로 한 사람이 틀렸다는 말을 듣는다. 셋 다 없을 때만 반려한다.
+     */
+    const incoming = Array.isArray(frag?.people) ? frag.people : [];
+    const 받은것 = incoming.length || Array.isArray(frag?.prologue) || Array.isArray(frag?.reveals);
+    if (!받은것) {
+      setProseMsg({
+        ok: false,
+        lines: ['`people:` · `prologue:` · `reveals:` 중 아무것도 없다. 받은 답을 코드블록째 붙여넣었는지 본다'],
+      });
       return;
     }
 
@@ -418,6 +472,30 @@ export default function Generator() {
     for (const p of incoming) {
       const t = byId[p?.id];
       if (!t) { 모름.push(String(p?.id ?? '(id 없음)')); continue; }
+      /**
+       * 지문도 받는다 (2026-07-29). **진술과 따로 본다** — 전에는 `paragraphs`
+       * 가 없으면 `continue` 라 **지문만 고쳐 온 답이 통째로 버려졌다.**
+       *
+       * ⚠ **빈 값으로 덮지 않는다.** 지문은 §9-1 이 전원/전무를 오류로 강제하는데,
+       * 산문가가 `pre` 만 주고 `post` 를 비워 보내면 그대로 쓸 경우 한 사람만
+       * 반쪽이 된다. 준 쪽만 갈아끼우고 안 준 쪽은 코드가 넣은 것을 남긴다.
+       */
+      const g = p?.statement?.gesture;
+      if (g && typeof g === 'object') {
+        const 글 = (v) => (typeof v === 'string' ? v : v?.ko);
+        const cur = t.statement?.gesture || {};
+        const pre = 글(g.pre), post = 글(g.post);
+        if ((pre && pre.trim()) || (post && post.trim())) {
+          t.statement = Object.assign({}, t.statement, {
+            gesture: {
+              pre: pre && pre.trim() ? { ko: pre } : cur.pre,
+              post: post && post.trim() ? { ko: post } : cur.post,
+            },
+          });
+          넣음.push(`${t.name} 지문`);
+        }
+      }
+
       const para = p?.statement?.paragraphs;
       if (!Array.isArray(para) || !para.length) continue;
       t.statement = Object.assign({}, t.statement, { paragraphs: para });
@@ -433,6 +511,42 @@ export default function Generator() {
     if (Array.isArray(inPro) && inPro.length) {
       next.prologue = inPro.map((x) => (typeof x === 'string' ? { ko: x } : x));
       넣음.push(`프롤로그 ${inPro.length}줄`);
+    }
+
+    /**
+     * 장 완성 서사도 받는다 (2026-07-29).
+     *
+     * **서식은 처음부터 `reveals[].narration` 과 `addClaims[].content` 를 요구했는데
+     * 병합이 없었다** — 2026-07-29 의 프롤로그와 **똑같은 자리의 똑같은 결함**이다
+     * (서식이 요구하는 것을 생성기가 잘라내고 있었다). 한 번 더 나왔으므로
+     * 다음에 서식에 자리를 늘릴 때는 **여기부터 본다.**
+     *
+     * ⚠ **자리는 인덱스가 아니라 장 번호와 화자 id 로 맞춘다.** 순서로 맞추면
+     * 산문가가 하나를 빠뜨리는 순간 전부 밀린다 — 07-29 에 인물 자리를 인덱스로
+     * 맞췄다가 색과 영문이 통째로 뒤바뀐 그 부류다.
+     *
+     * ⚠ **문안만 덮어쓴다.** `trigger`·`speaker`·`yield`·`actions` 는 논리라
+     * 받은 값을 쓰지 않는다 — 화자가 바뀌면 다른 사람의 진술이 되고, 트리거가
+     * 바뀌면 영영 안 열리는 공개가 생긴다.
+     */
+    const inRev = frag?.reveals;
+    if (Array.isArray(inRev) && inRev.length) {
+      const byCh = new Map();
+      for (const r of next.reveals || [])
+        if (r.trigger?.on === 'chapterComplete') byCh.set(r.trigger.chapterOrder, r);
+      let 서사 = 0, 주장 = 0;
+      for (const r of inRev) {
+        const order = r?.trigger?.chapterOrder ?? r?.chapterOrder;
+        const t = byCh.get(order);
+        if (!t) continue;
+        if (typeof r.narration === 'string' && r.narration.trim()) { t.narration = r.narration; 서사++; }
+        for (const a of r.addClaims || []) {
+          const ta = (t.addClaims || []).find((x) => x.speaker === a?.speaker);
+          if (ta && typeof a.content === 'string' && a.content.trim()) { ta.content = a.content; 주장++; }
+        }
+      }
+      if (서사) 넣음.push(`장 서사 ${서사}건`);
+      if (주장) 넣음.push(`장 주장 ${주장}건`);
     }
 
     if (!넣음.length) {

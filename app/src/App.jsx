@@ -47,7 +47,7 @@ export default class App extends React.Component {
     blanks: {}, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, reopenActive: {}, reopenUsed: {}, secExpand: {},
     openPicker: null, openCell: null, openAids: false,
     evidence: {}, cellMarks: {},
-    stage: 'brief', readIdx: 0, readDone: false, readMemos: {}, readHi: {},
+    stage: 'brief', readIdx: 0, readDone: false, readMemos: {}, readHi: {}, interludeQ: [],
     invSel: { action: null, targets: [] }, invLog: [], pendingInv: null, invResult: null,
     route: 'home', started: false, confirmAbandon: false, confirmFinish: false, selectedCase: 1, resultFold: false, openTerm: null,
     // 홈 목록에서 지우려는 만든 사건의 id. 되돌릴 수 없어서 한 번 묻는다 (2026-07-29)
@@ -930,10 +930,27 @@ export default class App extends React.Component {
         if (r.surface === 'overview') entry.narrow = true
         if (targets.length) entry.targets = targets
         if (statements.length) entry.statements = statements
+        // 장 인터루드의 원천 (2026-07-29). **이 값이 여기서 버려지고 있었다** —
+        // 엔진이 산장 5건·생성 전건에 서사를 써두는데 앱이 담지 않아서,
+        // 「데이터는 다 찼고 남은 것은 화면뿐」이 실제로는 배선도 없는 상태였다
+        if (r.narration) entry.narration = ko(r.narration)
         if (Object.keys(entry).length) revs[sid] = entry
       }
-      if (Object.keys(revs).length) this.REVEALS = revs
-      if (Object.keys(claimRevs).length) this.CLAIM_REVEALS = claimRevs
+      /**
+       * ⚠ **사건이 공개를 선언하면 둘 다 통째로 간다 — 빈 것도 간다.**
+       *
+       * 전에는 각각 `if (Object.keys(x).length)` 였다. 그래서 **격자 칸 공개가
+       * 없는 사건**(생성 사건이 전부 그렇다)은 산장의 `CLAIM_REVEALS` 를
+       * 그대로 물려받았다 — 레지던시 사건에서 2장을 완성하면 격자에
+       * 오나경(`yuri`)의 「통화 중 (본인 주장)」이 붙을 자리가 남아 있었다(실측).
+       * 지금은 인물 id 가 안 맞아 아무 데도 안 뜨지만, **조용히 사라지는 것에
+       * 기대는 것이 곧 다음 결함**이다. 진술 원문·지문이 「전원분일 때만
+       * 갈아끼운다」로 막아둔 것과 같은 부류다.
+       */
+      if ((c.reveals ?? []).length) {
+        this.REVEALS = revs
+        this.CLAIM_REVEALS = claimRevs
+      }
 
       /**
        * **피해자를 조사 대상으로 세운다** (2026-07-27).
@@ -1278,7 +1295,10 @@ export default class App extends React.Component {
 
   SAVED = {
     progress: ['blanks', 'solved', 'reopenActive', 'reopenUsed', 'evidence', 'invLog',
-      'readDone', 'readIdx', 'started', 'stage', 'seenClaims', 'seenClues'],
+      'readDone', 'readIdx', 'started', 'stage', 'seenClaims', 'seenClues',
+      // `stage` 와 **같이** 저장한다 — 인터루드 도중에 새로고침하면 stage 만 남아
+      // 빈 인터루드에 갇힌다. 둘은 한 벌이다
+      'interludeQ'],
     annotations: ['memos', 'readMemos', 'hls', 'annMarks', 'cellMarks', 'verdicts', 'quotePins'],
     prefs: ['lang', 'theme', 'narrMode', 'stmtMode', 'viewOpts'],
   };
@@ -1800,6 +1820,42 @@ export default class App extends React.Component {
   boardJump(cardId, target){ const pid=(cardId||'').replace(/^(p_|q_|e_)/,''); if(target==='profile'){ this.setState({ view:'profile', openProfile:pid, sel:null }); } else { const e=Object.assign({},this.state.expanded); e[pid]=true; this.setState({ view:'statements', stmtMode:'original', expanded:e, sel:null }); } }
   goToLog(logKey) { this.setState({ view: 'investigate', openProfile: null, hlLog: logKey || null }); if (logKey) { clearTimeout(this._hlT); this._hlT = setTimeout(() => { if (this.state.hlLog === logKey) this.setState({ hlLog: null }); }, 2200); } }
   setMode(m) { this.setState({ stmtMode: m, openCell: null }); }
+  /**
+   * 인터루드를 하나 닫는다. 줄이 비면 게임으로 돌아간다.
+   *
+   * **건너뛰기가 없다** (`MEMORY.md` §건너뛰기는 없앤다). 인터루드는 새 정보가
+   * 도착했다는 것을 나르는 화면이라 건너뛰면 못 보고 지나간다.
+   */
+  interludeNext() {
+    const q = (this.state.interludeQ || []).slice(1);
+    this.setState({ interludeQ: q, stage: q.length ? 'interlude' : 'free' });
+  }
+  /**
+   * 인터루드 화면 데이터. **도착물의 「내용」은 담지 않는다** —
+   * `MEMORY.md` §안전 규칙 1: *"도착한 사건을 말하고, 내용은 말하지 않는다."*
+   * 내용은 각 화면(진술·현장·개요)에 영구히 남아 있고, 여기서는 어디를 보라는
+   * 것만 알린다. 그래서 새 진술 문안·물증 기록을 여기로 가져오지 않는다.
+   */
+  buildInterlude() {
+    const sid = (this.state.interludeQ || [])[0];
+    if (!sid) return { open: false };
+    const s = this.SECTIONS.find(x => x.id === sid);
+    const r = this.REVEALS[sid] || {};
+    const t = this.T(), ln = this.state.lang;
+    const dest = [];
+    if (r.statements) dest.push(t.navStatements);
+    if (r.targets) dest.push(t.navMap);
+    if (r.narrow) dest.push(t.navOverview);
+    return {
+      open: true,
+      chapter: (ln === 'ko' ? (s ? s.num + '장 완성' : '') : (s ? 'Chapter ' + s.num + ' complete' : '')),
+      paras: String(r.narration || '').split('\n').filter(Boolean).map(x => ({ text: x })),
+      // 「무엇이 어디에 도착했는가」만. 내용은 그 화면에 있다
+      hasDest: dest.length > 0,
+      dest: (ln === 'ko' ? '새 정보 · ' : 'New information · ') + dest.join(' · '),
+      onNext: () => this.interludeNext(),
+    };
+  }
   startRead() { this.setState({ stage: 'read', readIdx: 0 }); }
   readNext() { if (this.state.readIdx < this.PEOPLE.length - 1) this.setState({ readIdx: this.state.readIdx + 1 }); else this.finishRead(); }
   readPrev() { if (this.state.readIdx > 0) this.setState({ readIdx: this.state.readIdx - 1 }); }
@@ -2195,6 +2251,21 @@ export default class App extends React.Component {
     const nm = { statements: this.T().navStatements, map: this.T().navMap, narrative: this.T().navNarrative, overview: this.T().navOverview };
     const where = Object.keys(dests).map(k => nm[k]).filter(Boolean).join(' · ');
     const patch = { solved: sv, invLog: (this.state.invLog || []).concat(newLog), newReveal: (this.state.newReveal || []).concat(newLog.map(l => l.key)), unread: unread };
+    /**
+     * 장 인터루드 (2026-07-29). **장을 완성하면 전체화면 서술이 뜬다.**
+     * `MEMORY.md` §장 인터루드 (F) 의 확정 설계이고, `Reveal.narration` 의 첫 소비자다.
+     *
+     * **줄로 쌓는다** — 한 번에 두 장이 완성될 수 있다(마지막 공란 하나가 두 장을
+     * 동시에 닫는 경우는 없지만, 이어하기·되돌리기로 상태가 한꺼번에 움직일 수 있다).
+     * 하나씩 보여주고 비면 게임으로 돌아간다.
+     *
+     * ⚠ **토스트와 겹치지 않게 한다.** 「한 번 보여주고 사라지는 텍스트는 버그다」가
+     * 절대 규칙이라 토스트는 *어디에* 새 것이 생겼는지만 말하고, 내용은 원래 화면에
+     * 영구히 남는다. 인터루드는 그 사이에 끼어 **도착 사실만** 전한다 — 도착물 자체는
+     * 여전히 각 화면에 남아 있다.
+     */
+    const q = newLog.map(l => l.key).filter(k => this.REVEALS[k] && this.REVEALS[k].narration);
+    if (q.length) { patch.interludeQ = (this.state.interludeQ || []).concat(q); patch.stage = 'interlude'; }
     if (where) { patch.toast = (this.state.lang === 'ko' ? '새 정보가 공개되었습니다 · ' : 'New information · ') + where; clearTimeout(this._toastT); this._toastT = setTimeout(() => this.setState({ toast: null }), 4600); }
     if (board && false) patch.narrMode = 'board';
     return patch;
@@ -2915,9 +2986,10 @@ export default class App extends React.Component {
         viewTitle: isNarr ? t.nTitle : isStmt ? t.sTitle : isInv ? t.navInvestigate : isProfile ? t.navProfile : isOverview ? t.navOverview : isMemo ? t.memoTitle : isMap ? t.navMap : isGraph ? t.navGraph : isLog ? t.invLogTitle : (view === 'result') ? result.endTitle : t.rTitle,
         viewSub: isNarr ? t.nSub : isStmt ? t.sSub : isInv ? t.invHint : isMemo ? t.annHint : isMap ? t.mapHint : isGraph ? t.graphHint : isLog ? t.logHint : (isProfile || isOverview || view === 'result') ? '' : t.rSub,
       }),
-      isIntro: route === 'play' && s.stage !== 'free', isFree: route === 'play' && s.stage === 'free', stageProlog: s.stage === 'prologue', stageBrief: s.stage === 'brief', stageRead: s.stage === 'read',
+      isIntro: route === 'play' && s.stage !== 'free', isFree: route === 'play' && s.stage === 'free', stageProlog: s.stage === 'prologue', stageBrief: s.stage === 'brief', stageRead: s.stage === 'read', stageInterlude: s.stage === 'interlude',
       isHome: isHome, isDetail: isDetail, home: this.buildHome(), detail: this.buildDetail(),
       prologParas: this.PROLOG.map((p, pi) => ({ text: p })), onPrologContinue: () => this.setState({ stage: 'brief' }),
+      interlude: this.buildInterlude(),
       ovQuote: { onSelect: (ev) => this.onStmtSelect('__prolog', 0, ev), showTb: !!s.sel && s.sel.pid === '__prolog', tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {} },
       ovProse: this.PROLOG.map((par, pi) => ({ pi, segs: this.segsFor('__prolog', pi, par), onSelect: (ev) => this.onStmtSelect('__prolog', pi, ev), showTb: !!s.sel && s.sel.pid === '__prolog' && s.sel.pi === pi, tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {} })),
       confirmAbandon: s.confirmAbandon, onAbandon: () => this.abandon(), onCancelAbandon: () => this.setState({ confirmAbandon: false }), onGoHome: () => this.goHome(), onAbandonReq: () => this.setState({ confirmAbandon: true }),
@@ -4055,6 +4127,16 @@ export default class App extends React.Component {
                     <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.ui.caseTitle}</div>
                     {arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:17px;line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.onPrologContinue}>{V.ui.prologContinue}</Button></div>
+                  </div>
+                </div>
+              </>):null}
+              {(V.stageInterlude && V.interlude.open)?(<>
+                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:40px 24px")}>
+                  <div style={S("max-width:600px;width:100%")}>
+                    <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.interlude.chapter}</div>
+                    {arr(V.interlude.paras).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:17px;line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
+                    {(V.interlude.hasDest)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:26px;padding-top:16px;border-top:1px solid var(--border)")}>{V.interlude.dest}</div></>):null}
+                    <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.interlude.onNext}>{V.ui.prologContinue}</Button></div>
                   </div>
                 </div>
               </>):null}

@@ -142,6 +142,26 @@ export type Palette = {
    * 5개 이상 필요하다.
    */
   openers?: string[]
+  /**
+   * ★ 인물 층 ★ — **진술 앞뒤의 지문(몸짓).** 진술 화면에 기울임체로 붙는다.
+   *
+   * 산장은 다섯 전원이 갖는데 생성 사건은 **0이었다.** §9-1 이 전원/전무를
+   * 강제하니 0도 합법이라 아무도 안 걸렸고, 그래서 진술 화면이 말풍선만
+   * 이어지는 화면이 됐다.
+   *
+   * ⚠⚠ **다섯이 같은 온도여야 한다 — 이것이 이 배열의 전부다.**
+   * 넷은 담담한데 하나만 떨면 **지문이 곧 범인 표시**다(§9-1 의 문장 그대로).
+   * 그런데 **반대도 같다** — 넷이 안절부절인데 하나만 침착해도 그 하나가 튄다.
+   * 산장이 그래서 다섯 다 무언가를 만지작거린다(빈 잔 · 팔짱 · 탁자 두드리기 ·
+   * 장바구니 · 휴대폰). **누가 범인인지 모르는 채로 읽어도 고르게 불편해야 한다.**
+   *
+   * 배정은 자리 순서다 — 범인이 몇 번을 받을지는 seed 가 정하므로, 배열이
+   * 고르면 범인은 어느 자리에 앉아도 안 튄다.
+   *
+   * ⚠ **낱말이 확보 단어와 겹치면 안 된다**(§9-10 과 같은 근거). 세계의 소품을
+   * 쓰되 조사로 캐낼 물건은 피한다. 5개 이상 필요하다.
+   */
+  gestures?: { pre: string; post: string }[]
 }
 
 const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } = {
@@ -193,6 +213,22 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
     '적어둔 게 있어서 확실합니다.',
     '글쎄요,',
     '그날은 정신이 없어서요.',
+  ],
+  /**
+   * ⚠ **이름을 쓰지 않는다.** 진술 카드에 이름이 이미 붙어 있고, 이름을 넣으면
+   * 은/는 받침 처리가 팔레트마다 따라붙는다. 몸짓만 쓴다.
+   *
+   * 여섯이 **고르게 불편하다** — 만지작거리거나, 뜸을 들이거나, 말끝이 흐려진다.
+   * 「담담하게」가 하나 있지만 그 짝이 「말을 골랐다」라 온도가 같다(산장의 지안이
+   * 그렇게 쓰여 있다). 어느 자리에 범인이 앉아도 지문만으로는 못 고른다.
+   */
+  gestures: [
+    { pre: '빈 잔을 두 손으로 감싸 쥔 채였다.', post: '그러고는 잠깐, 창밖으로 시선을 돌렸다.' },
+    { pre: '팔짱을 낀 채 담담하게 말했다.', post: '그러고는 잠시 말을 골랐다.' },
+    { pre: '손끝으로 탁자를 두어 번 두드리며 입을 열었다.', post: '말끝이 조금 흐려졌다.' },
+    { pre: '앉은 자리에서 소매 끝을 자꾸 만졌다.', post: '되묻는 목소리가 조금 낮아졌다.' },
+    { pre: '한참 뜸을 들이다가 고개를 들었다.', post: '말을 마치고도 한동안 앉아 있었다.' },
+    { pre: '무릎 위에 올린 손을 몇 번 고쳐 잡았다.', post: '짧게 숨을 고르고 입을 다물었다.' },
   ],
 }
 
@@ -412,6 +448,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    */
   const openers = shuffled(nonEmpty(P.openers, DEFAULT_PALETTE.openers))
   const secrets = shuffled(nonEmpty(P.secrets, DEFAULT_PALETTE.secrets))
+  const gestures = shuffled(nonEmpty(P.gestures, DEFAULT_PALETTE.gestures))
 
   /**
    * 빈손 조사 자리. **모자라면 기본값으로 채운다.**
@@ -561,7 +598,17 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   }
 
   const slotLabel: Record<string, string> = { t0: times.t0!, t1: times.t1!, t2: times.t2! }
-  const placeLabel: Record<string, string> = { hall: places.hall!, room: places.room!, away: places.away! }
+  /**
+   * ⚠ **장소 전부를 담는다 — 셋만 담으면 진술에 `undefined` 가 렌더된다.**
+   *
+   * 2026-07-29 까지 `{hall, room, away}` 셋뿐이었다. 그때는 아무도 `loc1..loc8` 에
+   * 서 있지 않아서 드러나지 않았다 — **부지가 11곳으로 늘어난 뒤에도 이 표만 셋에
+   * 머물러 있었던 것**이고, 아래 §무고한 넷의 동선이 방을 쓰기 시작하면 바로 문다.
+   */
+  const placeLabel: Record<string, string> = Object.fromEntries([
+    ...onSite.map((l) => [l.id, l.label]),
+    ['away', places.away!],
+  ])
 
   /**
    * 진술 원문을 **동선에서 도출한다.**
@@ -620,31 +667,123 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     ]
   }
 
-  // 무고한 넷은 t2에 홀로 도착한다 — 사망 구간(t1)에 현장에 없다.
-  // 이 배치가 곧 배제이고, 검증기가 이것을 검사한다.
-  const innocentPresence = [{ slot: 't2', location: 'hall' }]
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  무고한 넷의 동선 — **넷이 서로 달라야 한다** (2026-07-29)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 여기 있던 것은 `[{ slot: 't2', location: 'hall' }]` **한 배열이었고 넷이
+   * 그것을 공유했다.** 검증기가 「무고한 넷은 사망 구간에 현장 금지」를 강제하니
+   * 가장 쉬운 해가 「전원 t2 홀」이었고, 그대로 굳었다.
+   *
+   * **한 줄이 결함 둘을 낳고 있었다.**
+   *
+   * ① **넷의 동선 문장이 글자까지 같았다.** 2026-07-29에 말버릇·비밀을 붙였지만
+   *    알맹이는 하나였다 — 진술 정독이 실질 **2명분**(범인 1 + 무고 1)이고
+   *    격자에서도 넷이 같은 줄이다.
+   *
+   * ② ★ **범인만 밤을 다 설명했다** ★ `TRICKS` 는 전부 `claim` 에 t0·t1·t2 를
+   *    채우는데(257·284·311·338·366행) 무고한 넷은 t2 하나뿐이라 「없었다」가
+   *    둘씩 붙었다. **자기 밤을 온전히 말하는 사람이 범인 하나**였다 —
+   *    §절대 규칙의 「유용도 시각 구분」이 데이터 층에서 재발한 것이고,
+   *    바로 위 `statementOf` 주석이 *"문단 수가 곧 범인 표시가 된다"* 며
+   *    막아둔 것과 **똑같은 부류를 문단 수 대신 「없었다」 개수로** 흘렸다.
+   *
+   * **구조는 「모였다 → 흩어졌다 → 다시 모였다」다.**
+   *
+   * ```
+   * t0  전원 hall     프롤로그가 이미 그렇게 말한다 — "다섯이 자리에 있었다"
+   * t1  넷이 딴 방     ★ 여기서 갈린다. 현장(room)만 아니면 된다
+   * t2  전원 hall     배제의 근거 — f_no_* "아침에 함께 도착했다" · e_mutual
+   * ```
+   *
+   * **t2 를 건드리지 않는 이유**: 배제가 거기 걸려 있다. `f_no_<id>_ok`
+   * (「도착 시각 상호 일치」)가 `e_mutual`(「넷의 상호 보증」)로 공개되므로
+   * **넷은 t2 에 모여 있어야 그 산문이 참이다.** 흩어뜨리면 데이터는 통과하고
+   * 기록만 거짓이 된다 — §9-8 이 잡는 바로 그 형태다.
+   *
+   * **t0 를 흩지 않는 이유 둘**: 프롤로그가 「t0 에 다섯이 hall 에 모였다」고
+   * 말하고(참이 된다 — 전에는 넷이 「그곳에 없었습니다」라고 해서 **프롤로그와
+   * 어긋나 있었다**), 그리고 `TRICKS` 넷이 범인 t0 를 `hall` 로 두므로
+   * **전원 hall 이라야 범인이 t0 에서도 안 튄다.**
+   *
+   * 그래서 **갈리는 자리는 t1 하나**이고, 그 하나가 하필 **사망 구간**이다 —
+   * 넷이 서로 달라야 할 이유가 가장 큰 자리에서 갈린다.
+   */
+  const innocentRooms = (() => {
+    // 현장(room)과 홀을 뺀 방들. `onSite` 가 방 여덟을 보장하므로 넷에 늘 충분하다
+    const pool = onSite.map((l) => l.id).filter((id) => id !== 'hall' && id !== 'room')
+    // 결정론적 셔플 — 같은 세계라도 사건마다 배치가 달라진다.
+    // ⚠ 아키타입 추첨은 **다른 스트림**이라(459행 `rng(seed ^ …)`) 여기서 `r()` 을
+    // 써도 트릭 분포는 안 흔들린다. 흔들리는 것은 뒤따르는 나이·직업뿐이다
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1))
+      ;[pool[i], pool[j]] = [pool[j], pool[i]]
+    }
+    return pool
+  })()
+  /**
+   * ★ 한 사람은 **범인이 주장하는 자리에 실제로 있는다** ★
+   *
+   * 넷을 전부 흩자마자 **셋째 결함이 드러났다** — 흩어진 넷 가운데 범인만
+   * 제자리에 남아서 *"밤새 라운지를 안 뜬 사람은 배도현 하나"* 가 됐다.
+   * ②를 고치는 손이 같은 것을 뒤집어서 다시 만든 셈이다.
+   *
+   * **모양으로 범인을 집어낼 수 있으면 물증이 필요 없어진다** — §절대 규칙의
+   * 「유용도 시각 구분」이다. 그래서 무고한 하나에게 범인의 **주장과 같은 동선**을
+   * 준다. 범인의 알리바이가 「혼자만의 주장」이 아니게 되고, 둘 중 누가 거짓인지는
+   * **물증으로만** 갈린다 — 그게 이 게임이 팔려는 것이다.
+   *
+   * ⚠ **t1 만 맞추면 모자란다 — 주장 전체를 따라간다.** 처음에 t1 하나만
+   * 겹쳤더니 `delayed_mechanism` 이 그대로 새어나갔다(200건 중 39건 실측):
+   * 그 아키타입은 **t0 까지 거짓말**해서(`away/away/hall`) 범인이 t0 에서 혼자
+   * 튀었다. 「모양으로 안 튄다」는 **슬롯 하나가 아니라 동선 전체**의 성질이다.
+   *
+   * ⚠ **`room`(현장)이면 안 쓴다.** 지금 아키타입 다섯은 t1 주장이 `hall` 아니면
+   * `away` 라 걸릴 일이 없지만, 새 아키타입이 현장을 주장하면 이 사람이 사망
+   * 구간에 현장에 서게 되어 **배제가 무너진다**(검증기 §7.5-iii). 막아둔다.
+   */
+  const shadowPresence = t.claim.map((c) =>
+    c.slot === 't1' && c.location === 'room' ? { ...c, location: 'hall' } : { ...c },
+  )
+  const innocentPresence = (id: PersonId) => {
+    const k = innocents.indexOf(id)
+    if (k === 0) return shadowPresence
+    return [
+      { slot: 't0', location: 'hall' },
+      { slot: 't1', location: innocentRooms[(k - 1) % innocentRooms.length]! },
+      { slot: 't2', location: 'hall' },
+    ]
+  }
   /**
    * 말버릇·비밀은 **자리로 나눈다** — `r()` 로 뽑으면 두 사람이 같은 것을 받을 수
    * 있고, 겹치는 순간 그 둘만 닮아 보인다. 팔레트가 모자라면 순환시켜 채운다.
    */
   const openerOf = (i: number) => openers[i % openers.length]
   const secretOf = (i: number) => secrets[i % secrets.length]
+  /**
+   * 지문도 같은 규칙으로 나눈다 (2026-07-29). **전원이 하나씩 받는다** —
+   * §9-1 이 전원/전무를 오류로 강제하고, 그 근거가 *"넷은 담담하고 하나만
+   * 불안하면 지문이 곧 범인 표시"* 다. 여기서 조건이 갈릴 자리를 아예 안 만든다.
+   */
+  const gestureOf = (i: number) => gestures[i % gestures.length]!
   const person = (id: PersonId, i: number) => ({
     id,
     name: names[i],
     age: 27 + Math.floor(r() * 12),
     job: pick(jobs),
     hiddenRole: id === culprit ? ('ringleader' as const) : ('unaware' as const),
-    presence: id === culprit ? t.presence : innocentPresence,
+    presence: id === culprit ? t.presence : innocentPresence(id),
     // 거짓말은 범인만. 무고한 사람은 claim 을 적지 않는다(= presence 와 같다)
     ...(id === culprit ? { claim: t.claim } : {}),
     statement: {
       // 진술에서 말하는 것은 주장이다 — 범인은 claim, 나머지는 presence
       paragraphs: statementOf(
-        id === culprit ? t.claim : innocentPresence,
+        id === culprit ? t.claim : innocentPresence(id),
         openerOf(i),
         secretOf(i),
       ),
+      gesture: { pre: { ko: gestureOf(i).pre }, post: { ko: gestureOf(i).post } },
     },
   })
 
@@ -788,6 +927,100 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
 
   const allActions = [...named, ...empties]
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  장 완성 공개 — **장을 완성하면 무언가 도착한다** (2026-07-29)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 여기 있던 것은 **1장짜리 하나를 하드코딩한 배열**이었다. 5장 사건인데
+   * **2·3·4장 완성이 전부 무음**이었다 — 장 완성은 이 게임의 리듬 장치인데
+   * 생성 사건에는 그 박자가 하나뿐이었다(산장은 6건).
+   *
+   * ★ 앱이 무엇을 실제로 그리는지 먼저 봤다 ★ `App.jsx` 의 `applyCase` 는
+   * `addClaims`(→ 진술 문단 · 격자 칸)와 `actions`(→ 대상 배지)만 읽고
+   * **`narration` 은 아무 데도 안 쓴다** — 장 인터루드 화면이 아직 없다
+   * (`NEXT-ACTION` 다음액션 표 9번). 그래서 **서사만 넣으면 또
+   * 「검증 통과 + 렌더 불가」**가 된다. 실제로 도착하는 것은 `addClaims` 다.
+   *
+   * ⚠ 그래도 **전건에 `narration` 을 단다.** 검증기가 *"장 완성 공개 N건 중
+   * M건만 서사를 가진다 — 서사의 유무가 유용도를 노출한다"* 를 오류로 잡는다
+   * (§9-1·§9-9 와 같은 전부/전무 부류다). 인터루드 화면이 생기면 그날 바로 읽힌다.
+   *
+   * ── 안 넣은 것과 그 이유 ─────────────────────────────────
+   *
+   * **ⓐ 조사 대상을 열지 않는다.** 1장이 `a_ledger` 를 여는 것은 *"장부가 한 권
+   * 더 있다"* 는 **존재의 공개**라 정당하다(산장 1장의 별채와 같다). 그러나
+   * 가닥 조사 `a_rec{n}` 은 이미 다 아는 곳(`hall`)을 가리키므로, 배지를 달면
+   * 그건 공개가 아니라 **「이걸 조사해봐라」** 다 — §절대 규칙의 「조사 추천·힌트
+   * 금지」에 정면으로 걸린다.
+   *
+   * **ⓑ 서로를 목격했다는 말을 안 만든다.** 「그때 ○○씨를 봤다」는 두 갈래로
+   * 다 터진다 — 그림자 한 사람은 사망 구간에 범인이 **주장하는** 자리에 있으므로,
+   * 「나 혼자 있었다」고 하면 **범인의 거짓말이 공짜로 드러나고**, 「같이 있었다」고
+   * 하면 그 말이 **거짓이 된다**(공개는 확정 층이라 거짓일 수 없다).
+   * 그래서 전부 **자기 자신에 대한 말**로만 쓴다.
+   *
+   * **ⓒ 낱말을 말하지 않는다.** 장 제목이 곧 캐낸 기록의 이름이라 그것을
+   * 되뇌면 §9-7 부류의 누설이다. 서사는 「기록」이라고만 부른다.
+   *
+   * > 문안은 조립이라 산문가만 못하다. 5번 절(`PROSE-BRIEF`)이 덮어쓸 자리다 —
+   * > 여기서 하는 일은 **박자가 존재하게** 만드는 것이다.
+   */
+  const revealSpeakers = (() => {
+    const pool = [...ids]
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1))
+      ;[pool[i], pool[j]] = [pool[j], pool[i]]
+    }
+    return pool
+  })()
+  /** 그 사람이 **말한** 자리 — 범인은 주장, 나머지는 실제. 거짓말도 일관되게 유지된다 */
+  const saidAt = (id: PersonId, slot: string) =>
+    (id === culprit ? t.claim : innocentPresence(id)).find((x) => x.slot === slot)?.location
+
+  /**
+   * 이름 뒤의 「이/가」. **받침이 있으면 `이`, 없으면 `가`** — 한글 음절은
+   * `(코드 - 0xAC00) % 28` 이 0이 아니면 받침이 있다.
+   *
+   * 공란은 이것을 `particle: '이/가'` 로 앱에 미루는데(답이 플레이어마다 달라서
+   * 생성 시점에 모른다), **서사의 화자는 여기서 이미 정해져 있다.** 그래서
+   * 그대로 박는다 — 안 하면 「구민아**이** 한마디를 보탰다」가 나온다(실측).
+   */
+  const subjectParticle = (word: string) => {
+    const ch = word.charCodeAt(word.length - 1) - 0xac00
+    if (ch < 0 || ch > 11171) return '이' // 한글이 아니면 보수적으로
+    return ch % 28 === 0 ? '가' : '이'
+  }
+
+  const chapterReveals = [
+    {
+      trigger: { on: 'chapterComplete' as const, chapterOrder: 1 },
+      yield: 'path' as const,
+      actions: ['a_ledger'],
+      surface: 'map' as const,
+      narration: `${slotLabel.t2}의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 뒤늦게 들었다.`,
+    },
+    ...strands.map((_s, i) => {
+      const speaker = revealSpeakers[i % revealSpeakers.length]!
+      const who = names[ids.indexOf(speaker)]
+      const loc = placeLabel[saidAt(speaker, 't1') ?? 'hall']
+      const frame = [
+        `${slotLabel.t1}에 ${loc}에 있었던 것은 제 일 때문입니다. 그 밖에 보탤 것은 없습니다.`,
+        `다시 여쭈시니 말씀드리면, ${slotLabel.t1}에 제가 있던 곳은 ${loc}입니다.`,
+        `${loc}에 있던 시간에 대해서는 앞서 말씀드린 그대로입니다.`,
+      ][i % 3]!
+      return {
+        trigger: { on: 'chapterComplete' as const, chapterOrder: 2 + i },
+        // 새 정보가 0이라 decoy 도 아니다 — decoy 는 「참이지만 무관한 **정보**」이고
+        // 이건 이미 말한 것을 되짚는 결이다. 난이도 손잡이(decoy 비율)를 안 건드린다
+        yield: 'flavor' as const,
+        surface: 'statement' as const,
+        addClaims: [{ speaker, content: frame, target: 'statement' as const }],
+        narration: `기록에 대한 정리가 끝나자, ${who}${subjectParticle(who!)} 한마디를 보탰다.`,
+      }
+    }),
+  ]
+
   return {
     id: `gen-${seed}`,
     title: `${P.setting ?? DEFAULT_PALETTE.setting} 사건 ${seed}`,
@@ -815,7 +1048,11 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
      */
     prologue: [
       { ko: `${P.setting ?? DEFAULT_PALETTE.setting}. ${victimName}은 그곳에서 지내고 있었다.` },
-      { ko: `${slotLabel.t0}, 사람들이 ${places.hall}에 모였다. 다섯이 자리에 있었다.` },
+      // ⚠ **「다섯이 자리에 있었다」로 쓰면 안 된다** — 프롤로그는 게임이 하는 말이라
+      // 곧 사실이고, 그러면 t0 에 홀에 없는 사람이 **그 자리에서 거짓말쟁이로 찍힌다.**
+      // `delayed_mechanism` 은 범인 실제 위치가 t0 에 현장이고, 아래 §무고한 넷의
+      // 동선의 그림자 한 사람도 범인 주장을 따라 부지 밖일 수 있다. 머문 인원만 말한다
+      { ko: `${slotLabel.t0}, ${places.hall}에 불이 켜져 있었다. 그곳에 머물던 사람은 모두 다섯이었다.` },
       { ko: `${slotLabel.t2}, 가장 먼저 일어난 사람이 ${places.room} 문을 열었다.` },
       { ko: `${victimName}은 이미 숨을 쉬지 않았다.` },
     ],
@@ -907,6 +1144,17 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
      * 생성 사건의 서술문은 템플릿이다. 사람이 쓴 사건만큼 좋을 수 없지만
      * **문장이긴 해야 한다** — 목록으로 두면 보고서가 두 물건이 된다.
      * 받침에 따라 갈리는 어미(였다/이었다)는 쓰지 않는다. 답이 매번 다르다
+     *
+     * ⚠ **조사(이/가·을/를)는 서술문에 글자로 박지 말고 `particle` 로 선언한다**
+     * (2026-07-29). 위 한 줄이 *어미*는 피하라고 해놓고 정작 **조사를 박아놨다** —
+     * 가닥 장이 `{blank}` 뒤에 `'이 남아 있었고'`·`'을 가리켰다'` 를 붙여서
+     * 받침 없는 답이 오면 **「남겨진 쪽지이」·「1층 공동 라운지을」** 이 됐다.
+     * 앱에 `particle()` 해결기가 이미 있고 1장·마지막 장은 그걸 쓰고 있었다 —
+     * **가닥 장만 안 쓰고 있었다.**
+     *
+     * 하필 **결말 화면**에서 제일 크게 보인다. 보고서 서술문이 곧 결말 서사이고
+     * (`buildResult` 가 플레이어의 답을 그 문장에 꽂아 다시 읽힌다), 그게 이
+     * 게임의 마지막 장치다. 틀린 조사가 거기서 다섯 줄 중 셋에 박혀 있었다.
      */
     chapters: [
       {
@@ -935,12 +1183,12 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         requiresFacts: [s.fact.id],
         blanks: [
           { label: '인물', candidates: 'closed', answer: innocents[i % innocents.length], particle: '이/가' },
-          { label: s.label, candidates: 'discovered', answer: s.word },
-          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? 't1' : 'hall' },
+          { label: s.label, candidates: 'discovered', answer: s.word, particle: '이/가' },
+          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? 't1' : 'hall', particle: '을/를' },
         ] as Blank[],
         report: [
           { text: '기록을 확인한 것은 ' }, { blank: 0 }, { text: ' 있던 자리였다. ' },
-          { blank: 1 }, { text: '이 남아 있었고, ' }, { blank: 2 }, { text: '을 가리켰다.' },
+          { blank: 1 }, { text: ' 남아 있었고, ' }, { blank: 2 }, { text: ' 가리켰다.' },
         ],
         epilogueOrder: 2 + i,
       })),
@@ -974,15 +1222,9 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       ...strands.map((s) => s.term),
     ],
 
-    reveals: [
-      {
-        trigger: { on: 'chapterComplete', chapterOrder: 1 },
-        yield: 'path',
-        actions: ['a_ledger'],
-        surface: 'map',
-        narration: '아침의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 알게 됐다.',
-      },
-    ],
+    // 위 §장 완성 공개 참조. **마지막 장에는 공개가 없다** — 그 장을 채우면
+    // 사건이 끝나므로 도착할 자리가 없다(산장도 5장 중 1~4장에만 있다)
+    reveals: chapterReveals,
 
     reopenPerChapter: 1,
   }

@@ -93,6 +93,13 @@ const APP_ONLY = new Set([
   // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
   // `confirmDel` 은 그 행이 「지울까?」를 묻는 동안의 갈래다
   'c.canDel', 'c.confirmDel',
+
+  // 장 인터루드 (2026-07-29) — 프로토타입에 **없는 유일한 신축 화면**이다.
+  // `NEXT-ACTION` §④ 가 *"유일하게 신축이다. Reveal.narration 이 엔진에 이미 있고
+  // 5개 다 쓰여 있는데 프로토타입이 한 번도 렌더하지 않는다"* 라고 적어둔 그것이고,
+  // 설계는 `MEMORY.md` §장 인터루드 (F) 에 확정돼 있다. 프롤로그 화면의 조판을
+  // 그대로 쓰므로 새 표현은 안 만들었다 — 갈래만 둘 는다
+  'interlude.paras', 'interlude.hasDest',
 ])
 
 const P = fromPrototype(readFileSync(PROTO, 'utf8'))
