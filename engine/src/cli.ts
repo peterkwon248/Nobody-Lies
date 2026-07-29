@@ -39,11 +39,15 @@ if (genFlag >= 0) {
   const chaptersArg = Number(arg('--chapters') ?? NaN)
   const chapters = Number.isNaN(chaptersArg) ? undefined : chaptersArg
 
+  // 사망 구간 칸 수 (1~3, 기본 1). 1이면 전과 같은 사건이 나온다
+  const cellsArg = Number(arg('--death-cells') ?? NaN)
+  const deathCells = Number.isNaN(cellsArg) ? undefined : cellsArg
+
   const n = Number(process.argv[genFlag + 1] ?? 50)
   const seeds = Array.from({ length: n }, (_, i) => i + 1)
   console.log('')
   if (palettePath) console.log(`  팔레트  ${palettePath}\n`)
-  const batch = run(seeds, { palette, want, chapters })
+  const batch = run(seeds, { palette, want, chapters, deathCells })
   console.log(report(batch))
   console.log('')
 

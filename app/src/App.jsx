@@ -235,7 +235,18 @@ export default class App extends React.Component {
     yuri: { t3: { ko: '본채 · 장보기 후', en: 'Main · after shopping' } },
     wonyoung: { t1: { ko: '자택 · 전화 수신', en: 'Home · call' }, t2: { ko: '자택 · 늦잠', en: 'Home · overslept' }, t3: { ko: '이동 중 · 늦게 출발', en: 'En route · late' } },
   };
-  AUTO = { 'sakura-t2': true };
+  /**
+   * ⛔ `AUTO = { 'sakura-t2': true }` 를 지웠다 (2026-07-30).
+   *
+   * **읽는 곳이 하나도 없었다** — 정의 1회, 사용 0회. 프로토타입에도 같은 꼴로
+   * 죽어 있다(1449행). 폐기된 「모순 자동 감지」 설계의 잔해다(§절대 규칙이
+   * 금지하는 그 기능이라 되살릴 것도 아니다). 격자의 `auto` 는 표기 안내의
+   * `auto: false` 리터럴이 먹이므로 이 상수와 무관하다 — 확인했다.
+   *
+   * 「살아 보이는 것」의 재발이라 지운다 — `COLLECTED_POOL` decoy 셋 ·
+   * `REVEALS[].yield` · `statements[].y` · `WALK` 과 같은 부류. 아이콘과 문안까지
+   * 갖춘 채 죽어 있으면 다음 사람이 **살아 있는 줄 알고 배선을 찾는다.**
+   */
   LOCATIONS = [
     { id: 'main', ko: '본채', en: 'Main house', x: 30, y: 30, w: 44, h: 44 },
     { id: 'room', ko: '다인의 방', en: "Chae-won's room", x: 42, y: 44, w: 26, h: 24, scene: true },
@@ -483,6 +494,78 @@ export default class App extends React.Component {
       if (t.en) this.DICT.en.caseTitle = t.en
       else if (this._foreignCase && t.ko) this.DICT.en.caseTitle = t.ko
     }
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  사건 브리핑 — **넷 중 셋이 산장 값이었다** (2026-07-30)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 「사건 개요」의 브리핑 네 줄 가운데 피해자만 도출되고 나머지 셋은
+     * `DICT` 의 산장 문자열을 그대로 꽂고 있었다(`renderVals` 의 `overview`).
+     * 레지던시 사건에서 눌러서 봤다:
+     *
+     * ```
+     * 사망 추정   새벽 3시 ~ 오전 8시            ← 이 사건 시간대는 「저녁 모임 직후」·「이튿날 조식」
+     * 시신        외상 없음                     ← 엔진이 말한 적 없다
+     * 현장        방문·창가 테이프, 화로에 연탄   ← ★ 산장 트릭 그 자체 ★
+     * ```
+     *
+     * ★ **또 「이미 있는데 배선만 없다」였다** ★ 산장 YAML 이 `body_state`·
+     * `scene_state` 를 **이미 갖고 있고**(26~28행) `schema.ts` 가 파싱하고
+     * `to-yaml.ts` 가 왕복시키고 **검증기 §9-2 가 지키기까지 한다**(현장 서술이
+     * 조사로 얻을 단어를 말하면 오류). 스키마·타입·왕복·검증이 다 있는데
+     * **앱과 생성기 양 끝만** 몰랐다.
+     *
+     * ⚠ **없으면 줄을 지운다 — 산장 것으로 메우지 않는다.** 생성기는 아직
+     * `bodyState`·`sceneState` 를 내지 않는다. 「외상 없음」은 트릭에 따라 거짓일
+     * 수 있고(`staged_suicide` 는 도구 자국이 남는다) 현장 서술은 §9-2 때문에
+     * **씨앗 단어로만** 쓸 수 있어서, 기계가 지어내면 없는 사실을 만드는 것이다.
+     * **두 줄이 비는 브리핑이 거짓인 브리핑보다 낫다.**
+     *
+     * 사망 추정은 다르다 — **창 슬롯이 곧 그 값이다.** 도출한다.
+     */
+    if (this._foreignCase) {
+      const winSlots = (c.slots ?? []).filter((s) => s.isWindow)
+      if (winSlots.length) {
+        const first = winSlots[0].label, last = winSlots[winSlots.length - 1].label
+        const span = winSlots.length > 1 ? `${first} ~ ${last}` : String(first)
+        this.DICT.ko.ovWhenV = span
+        this.DICT.en.ovWhenV = span
+      }
+      // 엔진이 말한 것만 쓴다. 빈 문자열이면 `buildDetail` 이 그 줄을 안 그린다
+      const bs = c.incident?.bodyState, ss = c.incident?.sceneState
+      const pick = (v) => (typeof v === 'object' ? v?.ko : v) || ''
+      this.DICT.ko.ovBodyV = pick(bs)
+      this.DICT.en.ovBodyV = (bs && bs.en) || pick(bs)
+      this.DICT.ko.ovSceneV = pick(ss)
+      this.DICT.en.ovSceneV = (ss && ss.en) || pick(ss)
+    }
+
+    /**
+     * ★ 사망 구간 축소도 산장 것이 새고 있었다 ★ (2026-07-30)
+     *
+     * `deathNarrowed()` 가 **「아무 부검이나 했으면 참」**이었고, 좁혀진 라벨은
+     * `'새벽 3~5시'` 가 **두 자리에 글자로** 박혀 있었다(격자 열 머리 · 브리핑).
+     * 그래서 박물관 사건에서 부검을 실행하면 창 열 이름이 「야간 순찰 시간」에서
+     * **「새벽 3~5시」로 바뀌었다.**
+     *
+     * ⚠ **나는 이걸 화면에서 보고 지나쳤다.** 오늘 아침 `FLOOR_CLUES` 를 고치며
+     * 뽑은 격자 출력에 이미 `"새벽 3~5시"` 가 있었고, **「축소가 작동한다」고
+     * 읽었다.** 같은 부류를 고치는 중에도 같은 부류를 놓쳤다.
+     *
+     * **축소는 사건 파일이 선언한다** — 산장은 `reveals` 에 `narrows_window: [t1, t2]`
+     * 가 있고(YAML 1077행) `schema.ts` 가 `narrowsWindow` 로 파싱한다. 선언이
+     * 없으면 좁혀지지 않는다. 생성기는 아직 안 내므로 생성 사건은 **창 이름이
+     * 그대로 남는다** — 그게 사실이다.
+     *
+     * 🎯 **남은 것**: `deathCells` ≥ 2 면 생성기가 축소를 낼 수 있다(창 셋 → 둘).
+     * 좁혀진 라벨도 **남은 칸의 이름표에서 도출**되므로 저작이 필요 없다.
+     * 이번 세션에서는 안 했다 — 누설을 막는 것과 기능을 더하는 것은 다른 일이다.
+     */
+    this._narrowSlots = (() => {
+      const r = (c.reveals ?? []).find((x) => x?.narrowsWindow?.length)
+      return r ? r.narrowsWindow.slice() : null
+    })()
 
     /**
      * 씨앗 단어 — 진술 정독만으로 확보되는 것. 조사가 필요 없다.
@@ -915,6 +998,15 @@ export default class App extends React.Component {
      * 두 필터를 거치면 결과가 **앱 하드코딩과 정확히 같다** — 이관이지
      * 동작 변경이 아니다. 실측으로 확인했다.
      */
+    /**
+     * 도면 표식은 **엔진이 조사를 안 줘도 산장 것을 남기지 않는다.**
+     *
+     * 아래에서 엔진 것으로 다시 만드는데, 그 블록은 `actions`·`evidence` 가 둘 다
+     * 있어야 돈다. 앱의 `INV_ACTIONS` 여섯은 **사건과 무관하게 하드코딩**이라
+     * 엔진 조사가 없어도 부검은 실행되고, 그러면 `autopsy:body` 가 다시 산장 표에
+     * 맞아버린다. **빈 표가 옳다** — 엔진이 말하지 않은 자리에는 표식이 없다.
+     */
+    if (this._foreignCase) this.FLOOR_CLUES = []
     if (c.actions?.length && c.evidence?.length) {
       const yields = {}
       for (const e of c.evidence) if (e.yieldsTerms?.length) yields[e.id] = e.yieldsTerms
@@ -950,6 +1042,53 @@ export default class App extends React.Component {
         console.warn('[case] 조사가 주는 단어가 풀에 없어 빠졌다:', [...skipped].join(' · '))
       }
       this.CASE_ACTIONS = byKey
+
+      /**
+       * ★ 도면 표식(`FLOOR_CLUES`)을 엔진에서 다시 만든다 ★ (2026-07-30)
+       *
+       * 앱 표는 **산장의 저작 데이터**인데 `logKey` 가 사건과 무관하게 생겨서
+       * 생성 사건이 그대로 물려받고 있었다. `targetKey()` 가 `mode:'none'` 에
+       * `'body'` 를 **글자로 박고**(2056행) 현장은 언제나 `room` 이라
+       * `{ logKey:'autopsy:body', loc:'room', ko:'일산화탄소' }` 가 **언제나 맞는다.**
+       *
+       * **눌러서 재현했다** (2026-07-30, 박물관 사건 `gen-87494`): 부검을 실행하면
+       * 결과문은 박물관 것(「같은 폭의 자국」)인데 도면의 「특별 전시실」에
+       * **「물증 · 일산화탄소」**가 붙었다. 화로도 연탄도 없는 자연사 박물관에.
+       *
+       * 07-29 저녁의 `resultFor` · 같은 날 밤의 `relationGraph` 와 **같은 부류이고
+       * 같은 근거**다: *"앱에 있는 것은 앱 것을 쓴다"* 는 **사건이 하나뿐일 때**
+       * 옳았다. 그 둘을 고칠 때 이 표는 같이 안 봤다 — 부검은 `resultFor` 를
+       * 가르면서 **바로 그 조사**였는데도.
+       *
+       * **새 엔진 필드는 필요 없다.** 위 `map`(조사 → 확보 단어)과 `byKey` 가 이미
+       * 있고 자리는 `target` 에서 나온다. `fixture` 는 도면에서 `loc` 을 찾고
+       * (`body` → `room`), `location` 은 대상이 곧 자리다.
+       *
+       * ★ 사람 대상은 뺀다 ★ 산장의 `belongings:sakura → annex` 는 「사쿠라의 짐이
+       * 별채에 있었다」는 **저작된 사실**이다. 엔진은 누구 짐이 어디 있는지 말하지
+       * 않으므로 자리를 지어내면 **없는 사실을 만드는 것**이다 — `sexKo` 를 이름에서
+       * 도출하지 않기로 한 것과 같은 판단.
+       *
+       * ★ `yield` 로 가르지 않는다 ★ 결정적 단서와 레드 헤링이 완전히 같게 생겨야
+       * 한다(§절대 규칙 「유용도 시각 구분」). `map` 은 이미 `yield` 를 안 보고
+       * 「단어를 주는가」만 보므로 그 규칙이 공짜로 지켜진다.
+       *
+       * **산장은 한 글자도 안 바뀐다** — `_foreignCase` 가 아니면 앱 표 그대로다.
+       */
+      if (this._foreignCase) {
+        const fx = c.floorPlan?.fixtures ?? {}
+        const clues = []
+        for (const k of Object.keys(map)) {
+          const tg = byKey[k]?.target
+          if (!tg || tg.kind === 'person') continue
+          const loc = tg.kind === 'fixture' ? (fx[tg.id]?.loc ?? tg.id) : tg.id
+          const ko = map[k][0]
+          if (!loc || !ko) continue
+          // 영문은 한국어로 떨어진다 — 방 이름·관계도 노드와 같은 처지(로마자 미결)
+          clues.push({ logKey: k, loc, ko, en: ko })
+        }
+        this.FLOOR_CLUES = clues
+      }
 
       /**
        * 프로필 단서 (`CLUE_MAP`). 2026-07-27 이관.
@@ -1399,6 +1538,53 @@ export default class App extends React.Component {
           }
         }
       }
+    }
+
+    /**
+     * ★ 진술 격자(도식 탭)를 `CLAIM_LOC` 에서 만든다 ★ (2026-07-30)
+     *
+     * `CLAIMS` 가 산장 인물 id(`yena`·`sakura`…)로 키잉돼 있어서 생성 사건에서는
+     * `this.CLAIMS['p1']` 이 `undefined` 였다 — **격자가 통째로 비었다.** 누설은
+     * 아니지만(빈 칸은 「언급 없음」으로 읽힌다) 「주장 대조표」라고 적어놓고
+     * 대조할 것이 하나도 없는 **죽은 화면**이다. `applyCase` 전수 감사(07-29 밤)가
+     * `FLOOR_CLUES` 와 함께 뽑아낸 셋 중 둘째다.
+     *
+     * ★ 값을 다시 도출하지 않는다 ★ 같은 것을 두 벌 계산하면 갈라진다
+     * (§같은 계산 두 벌 금지). `CLAIM_LOC` 이 이미 07-29에 `claim`(없으면
+     * `presence`)에서 **정본으로** 도출돼 있으므로 여기서는 **자리 id 에 이름만
+     * 붙인다.** 평면도 마커와 격자가 같은 표를 보므로 어긋날 수가 없다.
+     *
+     * ⚠ **`LOCATIONS` 가 확정된 뒤여야 한다** — 도면을 엔진 좌표로 다시 만드는
+     * 경로가 `this.LOCATIONS` 를 갈아끼운다. 그래서 `applyCase` 의 **맨 끝**이다.
+     *
+     * ★ 산장의 「본채 · 도착·발견」 같은 꼬리말은 안 만든다 ★ 그 descriptor 는
+     * **저작이다**(엔진 `PresenceCell` 은 `{slot, location}` 뿐이다). 지어내면
+     * 없는 사실을 만드는 것이고, 다섯 중 하나만 꼬리말이 붙으면 그 불규칙이
+     * 곧 신호가 된다 — §절대 규칙의 「유용도 시각 구분」이 걸리는 자리다.
+     */
+    if (this._foreignCase) {
+      const nameOf = {}
+      for (const l of this.LOCATIONS) nameOf[l.id] = { ko: l.ko, en: l.en || l.ko }
+      /**
+       * ⚠ **이 사건의 인물만 본다.** `CLAIM_LOC` 은 5명분이 다 도출됐을 때만
+       * 갈아끼워진다(위 §주장 위치). 부분 도출이면 산장 표가 남아 있는데, 장소
+       * id 는 `room`·`approach` 처럼 **우연히 겹치는 것이 있어서** 그대로 돌리면
+       * 「산장 인물 + 이 사건 장소 이름」이라는 없는 값이 만들어진다. 읽는 쪽이
+       * `PEOPLE` 로 찾으므로 죽은 값이지만, **죽은 채 그럴듯한 것**이 이 저장소가
+       * 반복해서 데인 자리다. 안 맞으면 빈 격자로 둔다 — 그것이 사실이다.
+       */
+      const mine = new Set(this.PEOPLE.map((p) => p.id))
+      const claims = {}
+      for (const pid of Object.keys(this.CLAIM_LOC)) {
+        if (!mine.has(pid)) continue
+        const m = {}
+        for (const slot of Object.keys(this.CLAIM_LOC[pid])) {
+          const n = nameOf[this.CLAIM_LOC[pid][slot]]
+          if (n) m[slot] = { ko: n.ko, en: n.en }
+        }
+        if (Object.keys(m).length) claims[pid] = m
+      }
+      this.CLAIMS = claims
     }
   }
 
@@ -2369,7 +2555,32 @@ export default class App extends React.Component {
     this.SECTIONS.forEach(s => { if (this.state.solved[s.id]) { const r = this.REVEALS[s.id]; if (r && r.terms) r.terms.forEach(w => set[w] = 1); } });
     return set;
   }
-  deathNarrowed() { return (this.state.invLog || []).some(e => e.action === 'autopsy'); }
+  /**
+   * 사망 구간이 좁혀졌나. **사건 파일이 축소를 선언했을 때만 참이다** (2026-07-30).
+   *
+   * 전에는 `invLog` 에 부검만 있으면 참이었다 — 산장에서는 그것이 곧 `narrows_window`
+   * 를 가진 조사라 우연히 맞았지만, 생성 사건은 축소를 선언하지 않는데도 참이 되어
+   * **창 이름이 산장의 「새벽 3~5시」로 바뀌었다.** 위 §applyCase 의 `_narrowSlots` 참조.
+   */
+  deathNarrowed() {
+    if (!this._narrowSlots) return false;
+    return (this.state.invLog || []).some(e => e.action === 'autopsy');
+  }
+  /**
+   * 좁혀진 구간의 이름표. **두 자리가 같은 문자열을 글자로 갖고 있었다**
+   * (격자 열 머리 · 브리핑) — 같은 계산 두 벌 금지에 걸리는 자리라 하나로 모았다.
+   *
+   * 산장은 `'새벽 3~5시'` 가 **저작된 문안**이다 — `narrows_window: [t1, t2]` 의 두
+   * 슬롯 이름(「새벽 3시」·「새벽 3–8시」)으로는 이 글자가 안 나온다. 그래서 산장은
+   * 앱 문안을 쓰고, **다른 사건은 남은 칸의 이름표에서 도출**한다.
+   */
+  narrowedLabel(ln) {
+    if (!this._foreignCase) return ln === 'ko' ? '새벽 3~5시' : '03:00–05:00';
+    const ids = this._narrowSlots || [];
+    const lab = (id) => { const t = this.TIMES.find(x => x.id === id); return t ? (ln === 'ko' ? t.ko : t.en) : id; };
+    if (!ids.length) return '';
+    return ids.length > 1 ? `${lab(ids[0])} ~ ${lab(ids[ids.length - 1])}` : lab(ids[0]);
+  }
   revealedClaims() {
     const out = {}, seen = this.state.seenClaims || {};
     this.SECTIONS.forEach(s => { if (this.state.solved[s.id]) { const arr = this.CLAIM_REVEALS[s.id]; if (arr) arr.forEach(c => { out[c.pid] = out[c.pid] || {}; out[c.pid][c.tid] = { ko: c.ko, en: c.en, isNew: !seen[s.id + ':' + c.pid + ':' + c.tid] }; }); } });
@@ -2900,7 +3111,7 @@ export default class App extends React.Component {
     const tsel = this.state.mapTime;
     const revClaims = this.revealedClaims();
     const times = this.TIMES.map(tm => { const active = tm.id === tsel; return ({
-      label: (tm.window && narrowed) ? (ln === 'ko' ? '새벽 3~5시' : '03:00–05:00') : (ln === 'ko' ? tm.ko : tm.en),
+      label: (tm.window && narrowed) ? this.narrowedLabel(ln) : (ln === 'ko' ? tm.ko : tm.en),
       sub: (tm.window && narrowed) ? (ln === 'ko' ? '사망 추정 · 이전 3~8시' : 'death · was 03–08') : (ln === 'ko' ? tm.subKo : tm.subEn),
       narrowed: tm.window && narrowed,
       onClick: () => this.setState({ mapTime: tm.id }),
@@ -3207,9 +3418,15 @@ export default class App extends React.Component {
     const segCls = (on) => 'seg' + (on ? ' active' : '');
     const ovNarrowed = this.deathNarrowed();
     const overview = [
-      { k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: ovNarrowed ? (ln === 'ko' ? '새벽 3시 ~ 5시' : '03:00 – 05:00') : t.ovWhenV, prev: ovNarrowed ? t.ovWhenV : '', badge: ovNarrowed ? (ln === 'ko' ? '1항 완성으로 갱신' : 'Updated · sec 1') : '' },
+      { k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: ovNarrowed ? this.narrowedLabel(ln) : t.ovWhenV, prev: ovNarrowed ? t.ovWhenV : '', badge: ovNarrowed ? (ln === 'ko' ? '1항 완성으로 갱신' : 'Updated · sec 1') : '' },
       { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV },
-    ].map((o, i, a) => ({ k: o.k, v: o.v, prev: o.prev || '', hasPrev: !!o.prev, badge: o.badge || '', hasBadge: !!o.badge, onQuote: () => this.quoteBriefToMemo(o.v), onCopy: () => { try { navigator.clipboard.writeText(o.v); } catch (e) {} }, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } }));;
+    /**
+     * ⚠ **값이 없는 줄은 안 그린다.** 엔진이 `body_state`·`scene_state` 를 안 주면
+     * `applyCase` 가 빈 문자열로 두는데, 그대로 그리면 「시신」 옆이 비어 있는
+     * 줄이 남는다 — 07-29 밤에 사용자가 눌러서 찾은 **빈 알약·빈 「본인 주장」**
+     * 과 정확히 같은 모양이다(*"지우는 것과 안 그리는 것은 다른 일"*).
+     */
+    ].filter((o) => o.v).map((o, i, a) => ({ k: o.k, v: o.v, prev: o.prev || '', hasPrev: !!o.prev, badge: o.badge || '', hasBadge: !!o.badge, onQuote: () => this.quoteBriefToMemo(o.v), onCopy: () => { try { navigator.clipboard.writeText(o.v); } catch (e) {} }, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } }));;
 
     const result = this.buildResult();
     return {

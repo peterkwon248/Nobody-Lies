@@ -143,8 +143,25 @@ export type Palette = {
    * 조사 30개가 키 9개로 뭉갰다). 방이 늘면 도면도 덜 단조로워진다.
    */
   rooms?: (string | RoomSpec)[]
-  /** 시간대 이름표. 가운데가 사망 추정 구간이다 */
-  times?: { t0?: string; t1?: string; t2?: string }
+  /**
+   * 시간대 이름표. 가운데(`t1`)가 사망 추정 구간이다.
+   *
+   * ★ **가장 비싼 어휘 자리다** ★ `times` 는 **진술마다 반복 인용**되므로
+   * (*"…에는 …에 있었습니다"*) 한 낱말을 모르면 **다섯 사람의 진술이 전부
+   * 흐려진다.** 업계 은어를 쓰지 않는다 — 기준은 *"그 직업이 아닌 사람이 사전
+   * 없이 읽어서 뜻이 서는가"*(§업계 은어를 쓰지 마세요).
+   *
+   * `window` — **사망 구간을 두 칸 이상으로 쪼갤 때만** 쓴다(`deathCells` ≥ 2).
+   * 칸마다 이름표가 하나씩 필요한데 `t1` 은 하나뿐이라서다. 안 주면 생성기가
+   * `t1` 에 「(전반)·(중반)·(후반)」을 붙여 만들지만 **그것은 기계가 지은
+   * 어휘**이고 이 자리는 가장 비싼 자리다 — 검증기가 경고한다. 되도록 적는다.
+   *
+   * ```
+   * times: { t0: '폐관 준비', t1: '야간 순찰 시간', t2: '개관 직전',
+   *          window: ['첫 순찰', '두 번째 순찰'] }
+   * ```
+   */
+  times?: { t0?: string; t1?: string; t2?: string; window?: string[] }
   /**
    * 빈손 조사가 될 자리들. **8개 이상 필요하다.**
    *
@@ -507,12 +524,65 @@ export type GenerateOptions = {
    * 플레이테스터가 **「짧고 얄팍하다」** 고 했다 — 부피는 장·공란으로 늘린다.
    */
   chapters?: number
+  /**
+   * ★ 사망 구간을 몇 칸으로 쪼갤까 ★ (1~3, 기본 1) — 2026-07-30 신설
+   *
+   * **손잡이가 「슬롯 수」가 아닌 이유.** 시간 축은 「모였다 → 흩어졌다 → 다시
+   * 모였다」이고 **양 끝은 논리가 붙잡고 있다**: `t0` 는 프롤로그가 *"다섯이 자리에
+   * 있었다"* 고 말하고 `TRICKS` 넷이 범인 t0 를 `hall` 로 두며, 마지막 칸에는 무고한
+   * 넷의 배제(`f_no_*_ok` · `e_mutual` 「도착 시각 상호 일치」)가 걸려 있다.
+   * 양 끝을 늘리면 다섯이 *"거기도 홀에 있었습니다"* 를 한 줄씩 더 말할 뿐이고
+   * **진술만 길어지고 판단할 것은 그대로다.**
+   *
+   * 그래서 늘릴 수 있는 자리는 **갈리는 칸 하나**뿐이고, 그것이 사망 구간이다.
+   *
+   * ```
+   * 1  t0 · [t1] · t2                갈림 1회 — 「구간 안에 있었나」 하나
+   * 2  t0 · [t1 · t2] · t3           갈림 2회 — 각자 두 번 움직인다
+   * 3  t0 · [t1 · t2 · t3] · t4      갈림 3회
+   * ```
+   *
+   * 2 이상이면 *"10~11시엔 주방, 11~12시엔 세탁실"* 이 되어 **알리바이 대조가 실제로
+   * 조합 문제가 된다.** 지금은 「구간 안에 있었나」 하나뿐이다.
+   *
+   * ★ **1이면 지금 나가는 사건과 한 글자도 안 바뀐다** ★ 슬롯 id 가 `t0·t1·t2`
+   * 그대로이고 무고한 넷의 자리 배정도 같은 값으로 떨어진다(회귀 0 · 12건 diff 로 확인).
+   *
+   * ⚠ **산장의 넷째 칸은 이걸로 안 나온다.** 「새벽 3시」는 전화가 걸려온 **시점**이라
+   * 사건이 필요하고, 기계는 사건을 못 만든다. 그 칸이 필요해서 4개인 것이지
+   * 4개라서 좋은 게 아니다.
+   */
+  deathCells?: number
 }
 
 export function generateCase(seed: number, palette?: Palette, opts?: GenerateOptions): Case {
   const r = rng(seed)
   const chapters = Math.max(2, Math.min(8, Math.round(opts?.chapters ?? 5)))
   const midChapters = chapters - 2
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  시간 축 — 슬롯 id 는 **자리로 계산한다** (2026-07-30)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 전에는 `t0`·`t1`·`t2` 가 **글자로** 스물일곱 군데에 박혀 있었다. 사망 구간을
+   * 쪼개려면 마지막 칸 id 가 `t2`→`t3`→`t4` 로 밀리므로, 읽는 쪽이 전부
+   * 「몇 번째 칸인가」로 물어야 한다.
+   *
+   * ```
+   * FIRST      t0                모임. 프롤로그가 참조한다
+   * WIN[i]     t1 … tN           갈리는 칸(=사망 구간). isWindow
+   * LAST       t(N+1)            다시 모임. 배제가 걸려 있다
+   * ```
+   *
+   * `deathCells === 1` 이면 `FIRST/WIN[0]/LAST` = `t0/t1/t2` — **전과 같은 글자**다.
+   */
+  const deathCells = Math.max(1, Math.min(3, Math.round(opts?.deathCells ?? 1)))
+  const FIRST = 't0'
+  const WIN = Array.from({ length: deathCells }, (_, i) => `t${i + 1}`)
+  const LAST = `t${deathCells + 1}`
+  const isWin = (slot: string) => WIN.includes(slot)
+  /** 시간 축 전체, 순서대로. `slots` 방출과 `slotLabel` 이 이것을 쓴다 */
+  const AXIS = [FIRST, ...WIN, LAST]
   const pick = <T,>(xs: T[]) => xs[Math.floor(r() * xs.length)]
   const shuffled = <T,>(xs: T[]) => {
     const a = [...xs]
@@ -602,7 +672,41 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 그 횟수는 팔레트 배열 길이에 달려 있어서, **어휘를 바꿨을 뿐인데 트릭
    * 분포가 바뀐다.** 팔레트는 논리에 영향을 주면 안 된다.
    */
-  const t = TRICKS[TRICK_KEYS[Math.floor(rng(seed ^ 0x5bf03635)() * TRICK_KEYS.length)]](culprit)
+  const tRaw = TRICKS[TRICK_KEYS[Math.floor(rng(seed ^ 0x5bf03635)() * TRICK_KEYS.length)]](culprit)
+  /**
+   * ★ 아키타입의 3칸 선언을 **축 전체로 늘린다** ★ (2026-07-30)
+   *
+   * `TRICKS` 는 모듈 레벨이라 `WIN`·`LAST` 를 못 본다. 그래서 다섯 아키타입은
+   * 계속 `t0`·`t1`·`t2` 로 **자리의 뜻**(모임 · 갈림 · 다시모임)을 선언하고,
+   * 여기서 한 번 늘린다 — **읽는 쪽 여섯 군데는 늘어난 배열만 본다.**
+   *
+   * ⚠ **갈림 칸을 그대로 반복한다.** 「사망 구간 안에서 범인이 어떻게 움직이나」는
+   * 아키타입마다 다시 정의해야 하는 **저작**이고(특히 `delayed_mechanism` 은 t0
+   * 까지 거짓말한다), 기계가 지어내면 트릭의 논리가 무너진다. 반복은 *"구간 내내
+   * 거기 있었다"* 는 뜻이라 다섯 아키타입 전부에서 참이다.
+   *
+   * ★ **모양으로 안 튄다** ★ 범인이 창 내내 제자리인 것은 **그림자도 같다**
+   * (`shadowPresence` 가 범인의 주장을 그대로 따라간다). 갈리는 것은 나머지 셋이고,
+   * 「제자리 둘 · 움직임 셋」은 `deathCells === 1` 에서도 이미 그 모양이었다 —
+   * 둘 중 누가 거짓인지는 **물증으로만** 갈린다.
+   *
+   * `deathCells === 1` 이면 입력과 **같은 배열**이 나온다(회귀 0).
+   */
+  const expandCells = (cells: Cell[]): Cell[] => {
+    const at = new Map(cells.map((c) => [c.slot, c.location]))
+    return [
+      { slot: FIRST, location: at.get('t0')! },
+      ...WIN.map((s) => ({ slot: s, location: at.get('t1')! })),
+      { slot: LAST, location: at.get('t2')! },
+    ]
+  }
+  const t = {
+    ...tRaw,
+    presence: expandCells(tRaw.presence),
+    claim: expandCells(tRaw.claim),
+    // 빠져나간 시점은 **갈림의 마지막 칸**이다 — 그 뒤 `LAST` 에는 홀에 있다
+    ...(tRaw.exit ? { exit: { ...tRaw.exit, slot: WIN[WIN.length - 1]! } } : {}),
+  }
 
   /**
    * ─────────────────────────────────────────────────────────────
@@ -849,7 +953,29 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     return true
   }
 
-  const slotLabel: Record<string, string> = { t0: times.t0!, t1: times.t1!, t2: times.t2! }
+  /**
+   * 사망 구간 칸별 이름표.
+   *
+   * **한 칸이면 `t1` 을 그대로 쓴다** — 접미가 안 붙으므로 전과 같은 글자다.
+   * 두 칸 이상이면 팔레트의 `times.window` 를 먼저 보고, 없으면 「(전반)·(중반)·
+   * (후반)」을 붙여 만든다. 이 접미를 고른 이유는 **어느 명사에 붙여도 뜻이
+   * 서기 때문**이다(「야간 순찰 시간 (전반)」) — 「이른/늦은」은 「새벽」에는
+   * 붙지만 「야간 순찰 시간」에는 안 붙는다.
+   *
+   * ⚠ 기계가 지은 어휘이므로 검증기가 경고한다. 팔레트가 적어주는 것이 낫다.
+   */
+  const HALVES: Record<number, string[]> = { 2: ['전반', '후반'], 3: ['전반', '중반', '후반'] }
+  const winLabels = WIN.map((_, i) => {
+    const authored = times.window?.[i]
+    if (authored) return authored
+    if (deathCells === 1) return times.t1!
+    return `${times.t1!} (${HALVES[deathCells]![i]!})`
+  })
+  const slotLabel: Record<string, string> = {
+    [FIRST]: times.t0!,
+    ...Object.fromEntries(WIN.map((s, i) => [s, winLabels[i]!])),
+    [LAST]: times.t2!,
+  }
   /**
    * ⚠ **장소 전부를 담는다 — 셋만 담으면 진술에 `undefined` 가 렌더된다.**
    *
@@ -955,9 +1081,12 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       return { ko: first ? `${opener} ${body}` : body }
     }
     return [
-      line('t0', true),
-      line('t1', false),
-      line('t2', false),
+      /**
+       * **축의 칸마다 한 문단.** 다섯이 같은 개수를 받는다 — 위 주석의
+       * *"문단 수가 곧 범인 표시가 된다"* 를 칸 수가 늘어도 지킨다
+       * (§9-9 진술 길이 쏠림도 같은 이유로 안 흔들린다).
+       */
+      ...AXIS.map((s, i) => line(s, i === 0)),
       // 감추지만 **거짓말은 아니다** — 있다는 것은 인정하고 내용을 안 밝힌다.
       // 이 문장이 곧 제목의 규칙이다
       { ko: `${secretPhrase(secret)} 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.` },
@@ -1049,15 +1178,36 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 구간에 현장에 서게 되어 **배제가 무너진다**(검증기 §7.5-iii). 막아둔다.
    */
   const shadowPresence = t.claim.map((c) =>
-    c.slot === 't1' && c.location === 'room' ? { ...c, location: 'hall' } : { ...c },
+    isWin(c.slot) && c.location === 'room' ? { ...c, location: 'hall' } : { ...c },
   )
+  /**
+   * ★ 나머지 셋은 **창의 칸마다 자리를 옮긴다** ★ (2026-07-30)
+   *
+   * 회전(rotation)으로 배정한다 — 사람 `k`, 칸 `i` 에 `pool[(k-1+i) % len]`.
+   * 이 한 줄이 두 조건을 **동시에** 만족한다:
+   *
+   * ```
+   * 같은 칸의 셋이 서로 다른가   pool[i], pool[i+1], pool[i+2]  → 풀 ≥ 3 이면 참
+   * 한 사람이 실제로 움직이나    pool[k-1], pool[k], pool[k+1]  → 칸 수 ≤ 풀 크기면 참
+   * ```
+   *
+   * 풀은 방 셋 + 진입로 = **넷**이고 칸은 최대 셋이라 둘 다 언제나 선다.
+   * `deathCells === 1` 이면 `i = 0` 뿐이라 **전과 같은 `pool[k-1]`** 이다(회귀 0).
+   *
+   * ⚠ **한 칸에 두 사람이 같은 방을 받으면** 「넷의 동선이 서로 다르다」가 깨진다 —
+   * 2026-07-29 오전에 방을 여덟에서 셋으로 줄이며 실제로 밟은 지뢰이고, 회전이
+   * 모듈러라 **터지지 않고 조용히** 깨지는 자리다. 그래서 위 두 줄이 부등식이다.
+   */
   const innocentPresence = (id: PersonId) => {
     const k = innocents.indexOf(id)
     if (k === 0) return shadowPresence
     return [
-      { slot: 't0', location: 'hall' },
-      { slot: 't1', location: innocentRooms[(k - 1) % innocentRooms.length]! },
-      { slot: 't2', location: 'hall' },
+      { slot: FIRST, location: 'hall' },
+      ...WIN.map((s, i) => ({
+        slot: s,
+        location: innocentRooms[(k - 1 + i) % innocentRooms.length]!,
+      })),
+      { slot: LAST, location: 'hall' },
     ]
   }
   /**
@@ -1089,8 +1239,19 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 요약하므로 **문장의 모양은 다섯이 같다.** 여기서 갈리면 그게 곧 범인 표시다.
    */
   const claimSummaryOf = (cells: { slot: string; location: string }[]) => {
-    const at = cells.find((x) => x.slot === 't1')?.location
-    return { ko: `${slotLabel.t1}에는 ${placeLabel[at!] ?? at}에 있었다고 진술.` }
+    const at = new Map(cells.map((c) => [c.slot, c.location]))
+    /**
+     * **창의 칸을 전부 말한다.** 한 칸이면 전과 같은 한 문장이고(회귀 0), 두 칸
+     * 이상이면 *"…에는 …에, …에는 …에 있었다고 진술."* 이 된다.
+     *
+     * ⚠ 앞뒤 칸(`FIRST`·`LAST`)은 여전히 뺀다 — 다섯이 전부 같은 곳이라
+     * 넣으면 **다섯 줄이 글자까지 같아진다.**
+     */
+    const parts = WIN.map((s) => {
+      const loc = at.get(s)
+      return `${slotLabel[s]}에는 ${placeLabel[loc!] ?? loc}에`
+    })
+    return { ko: `${parts.join(', ')} 있었다고 진술.` }
   }
 
   const person = (id: PersonId, i: number) => ({
@@ -1360,6 +1521,25 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     if (ch < 0 || ch > 11171) return '이' // 한글이 아니면 보수적으로
     return ch % 28 === 0 ? '가' : '이'
   }
+  /**
+   * 이름 뒤의 「은/는」. 위와 **같은 셈법**이다 — 받침이 있으면 `은`, 없으면 `는`.
+   *
+   * ★ 없어서 프롤로그가 글자로 박고 있었다 ★ (2026-07-30 실측)
+   *
+   * `${victimName}은` 이 두 군데 있었고, 피해자 이름이 모음으로 끝나면
+   * **「문세라은 이미 숨을 쉬지 않았다」**가 나왔다. 40건을 뽑아 세었더니
+   * 이름이 모음으로 끝나는 사건이 **여럿**이었고, 프롤로그는 **모든 사건이
+   * 반드시 보여주는 첫 화면**이라 노출이 100%다.
+   *
+   * 07-29 밤에 닫은 「~다은」과 **같은 부류**다(조사를 갈리지 않는 것으로 착각).
+   * 그때는 조사 오류 문안이었고 이번엔 프롤로그다 — `subjectParticle` 이 이미
+   * 옆에 있었는데 **은/는 짝이 없어서** 안 쓰였다.
+   */
+  const topicParticle = (word: string) => {
+    const ch = word.charCodeAt(word.length - 1) - 0xac00
+    if (ch < 0 || ch > 11171) return '은'
+    return ch % 28 === 0 ? '는' : '은'
+  }
 
   const chapterReveals = [
     {
@@ -1367,15 +1547,16 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       yield: 'path' as const,
       actions: ['a_ledger'],
       surface: 'map' as const,
-      narration: `${slotLabel.t2}의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 뒤늦게 들었다.`,
+      narration: `${slotLabel[LAST]}의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 뒤늦게 들었다.`,
     },
     ...strands.map((_s, i) => {
       const speaker = revealSpeakers[i % revealSpeakers.length]!
       const who = names[ids.indexOf(speaker)]
-      const loc = placeLabel[saidAt(speaker, 't1') ?? 'hall']
+      // 창의 **첫 칸**을 말한다 — 칸이 여럿이어도 이 문장은 한 순간을 가리킨다
+      const loc = placeLabel[saidAt(speaker, WIN[0]!) ?? 'hall']
       const frame = [
-        `${slotLabel.t1}에 ${loc}에 있었던 것은 제 일 때문입니다. 그 밖에 보탤 것은 없습니다.`,
-        `다시 여쭈시니 말씀드리면, ${slotLabel.t1}에 제가 있던 곳은 ${loc}입니다.`,
+        `${slotLabel[WIN[0]!]}에 ${loc}에 있었던 것은 제 일 때문입니다. 그 밖에 보탤 것은 없습니다.`,
+        `다시 여쭈시니 말씀드리면, ${slotLabel[WIN[0]!]}에 제가 있던 곳은 ${loc}입니다.`,
         `${loc}에 있던 시간에 대해서는 앞서 말씀드린 그대로입니다.`,
       ][i % 3]!
       return {
@@ -1426,14 +1607,46 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
      * 말맛은 ②산문가가 덮어쓴다. 이건 「다른 세계의 글이 뜨는 것」을 막는 바닥이다.
      */
     prologue: [
-      { ko: `${P.setting ?? DEFAULT_PALETTE.setting}. ${victimName}은 그곳에서 지내고 있었다.` },
-      // ⚠ **「다섯이 자리에 있었다」로 쓰면 안 된다** — 프롤로그는 게임이 하는 말이라
-      // 곧 사실이고, 그러면 t0 에 홀에 없는 사람이 **그 자리에서 거짓말쟁이로 찍힌다.**
-      // `delayed_mechanism` 은 범인 실제 위치가 t0 에 현장이고, 아래 §무고한 넷의
-      // 동선의 그림자 한 사람도 범인 주장을 따라 부지 밖일 수 있다. 머문 인원만 말한다
-      { ko: `${slotLabel.t0}, ${places.hall}에 불이 켜져 있었다. 그곳에 머물던 사람은 모두 다섯이었다.` },
-      { ko: `${slotLabel.t2}, 가장 먼저 일어난 사람이 ${places.room} 문을 열었다.` },
-      { ko: `${victimName}은 이미 숨을 쉬지 않았다.` },
+      { ko: `${P.setting ?? DEFAULT_PALETTE.setting}. ${victimName}${topicParticle(victimName)} 그곳에서 지내고 있었다.` },
+      /**
+       * ⚠ **「다섯이 자리에 있었다」로 쓰면 안 된다** — 프롤로그는 게임이 하는 말이라
+       * 곧 사실이고, 그러면 t0 에 홀에 없는 사람이 **그 자리에서 거짓말쟁이로 찍힌다.**
+       * `delayed_mechanism` 은 범인 실제 위치가 t0 에 현장이고, 아래 §무고한 넷의
+       * 동선의 그림자 한 사람도 범인 주장을 따라 부지 밖일 수 있다. 머문 인원만 말한다.
+       *
+       * ★ **그 「머문 인원만」이 문장에서는 안 지켜지고 있었다** ★ (2026-07-30)
+       *
+       * 전에는 이랬다 — `«{hall}에 불이 켜져 있었다. 그곳에 머물던 사람은 모두
+       * 다섯이었다.»` **「그곳」의 바로 앞이 `places.hall`** 이라 「로비에 머물던
+       * 다섯」으로 읽힌다. 위 문단이 같은 「그곳」을 **무대**로 쓰고 있어서
+       * (`{victim}은 그곳에서 지내고 있었다`) 한 낱말이 두 뜻으로 갈렸다.
+       *
+       * 실측(2026-07-30): `delayed_mechanism` 이면 범인이 t0 를 `away` 로 주장하고
+       * **그림자는 그것이 참**이라, 로비에 있던 사람은 셋인데 프롤로그가 다섯이라고
+       * 말했다. 기준선 12건 중 **4건**이 그 아키타입이었다.
+       *
+       * **고친 방법은 「인원을 시각에서 떼는 것」이다.** 셋을 동시에 만족해야 했다:
+       *
+       * ```
+       * ① 「그곳」이 무대여야 한다        → 홀보다 먼저 둔다 (위 문단의 그곳에 붙는다)
+       * ② 피해자를 빼야 한다            → 「다섯 사람이 더」 (피해자도 그곳에 산다)
+       * ③ 시각을 붙이면 안 된다         → away 를 주장하는 사람은 t0 에 무대에 없다
+       * ```
+       *
+       * ②를 놓쳐서 한 번 헛디뎠다 — 「그곳」을 무대로 옮기자마자 *"그곳에 머물던
+       * 사람은 모두 다섯"* 이 **피해자를 포함해 여섯**이 되어, 20%에서 틀리던 문장이
+       * **100%에서 틀리게** 됐다. 지시 대상을 고치면 **셈의 기준도 같이 바뀐다.**
+       *
+       * 그래서 인원은 **사건 내내의 사실**로 말하고(시각 없음), 시각은 **사람을 말하지
+       * 않는** 홀의 불로 옮겼다. 논리·그림자·아키타입은 한 줄도 안 건드렸다 —
+       * 셋 다 옳았고 문장만 틀렸다.
+       *
+       * ⚠ **이름에 조사를 새로 붙이지 않았다.** 엔진 산문은 `에`·`에는`·`에서` 처럼
+       * **갈리지 않는 조사만** 쓴다(`과/와`·`이/가` 는 이름의 끝 글자에 따라 갈린다).
+       */
+      { ko: `그곳에는 다섯 사람이 더 머물고 있었다. ${slotLabel[FIRST]}, ${places.hall}에는 불이 켜져 있었다.` },
+      { ko: `${slotLabel[LAST]}, 가장 먼저 일어난 사람이 ${places.room} 문을 열었다.` },
+      { ko: `${victimName}${topicParticle(victimName)} 이미 숨을 쉬지 않았다.` },
     ],
 
     /**
@@ -1653,9 +1866,9 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
 
     seedTerms: [tool],
     slots: [
-      { id: 't0', label: times.t0! },
-      { id: 't1', label: times.t1!, isWindow: true },
-      { id: 't2', label: times.t2! },
+      { id: FIRST, label: slotLabel[FIRST]! },
+      ...WIN.map((s) => ({ id: s, label: slotLabel[s]!, isWindow: true })),
+      { id: LAST, label: slotLabel[LAST]! },
     ],
     locations: [
       ...onSite.map((l) => ({ id: l.id, label: l.label, atLodge: true })),
@@ -1732,7 +1945,8 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         blanks: [
           { label: '인물', candidates: 'closed', answer: innocents[0], particle: '이/가' },
           { label: '장소', candidates: 'closed', answer: 'room' },
-          { label: '시각', candidates: 'closed', answer: 't2' },
+          // 발견 시각 = **다시 모인 칸**. 창을 쪼개면 `t2` 가 창 라벨이 된다
+          { label: '시각', candidates: 'closed', answer: LAST },
           { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
         ],
         report: [
@@ -1752,7 +1966,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
         blanks: [
           { label: '인물', candidates: 'closed', answer: innocents[i % innocents.length], particle: '이/가' },
           { label: s.label, candidates: 'discovered', answer: s.word, particle: '이/가' },
-          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? 't1' : 'hall', particle: '을/를' },
+          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? WIN[0]! : 'hall', particle: '을/를' },
         ] as Blank[],
         report: [
           { text: '기록을 확인한 것은 ' }, { blank: 0 }, { text: ' 있던 자리였다. ' },

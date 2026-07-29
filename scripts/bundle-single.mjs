@@ -58,7 +58,7 @@ const read = (p) => {
 const safe = (s) => s.replace(/<\/script/gi, '<\\/script')
 
 // ── 디자인 시스템 스타일 다섯 장 (index.html 이 `<link>` 로 걸던 그 순서) ──
-const DS_CSS = [
+const DS_CSS_RAW = [
   `${DS}/colors_and_type.css`,
   `${DS}/ui_kits/app/app.css`,
   `${DS}/ui_kits/app/sidebar-hover-actions.css`,
@@ -66,10 +66,71 @@ const DS_CSS = [
   `${DS}/styles.css`,
 ].map((f) => read(join(PUB, f))).join('\n')
 
-const APP_CSS = read(join(DIST, 'app.css'))
+const APP_CSS_RAW = read(join(DIST, 'app.css'))
 const APP_JS = read(join(DIST, 'app.js'))
 const DS_JS = read(join(PUB, `${DS}/_ds_bundle.js`))
 const MARK = read(join(PUB, 'mark.svg'))
+
+/**
+ * ─────────────────────────────────────────────────────────────────
+ *  바깥 호스트 — **「인터넷 필요 없음」을 참으로 만드는 자리** (2026-07-30)
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * 아래 절대경로 검사는 **`/` 로 시작하는 것만** 보고 `https://` 는 안 봤다.
+ * 그래서 DS 스타일의 `@import url("https://cdn.jsdelivr.net/…pretendard…")`
+ * 가 **초록불 아래로 그대로 통과했고**, 이 파일이 두 줄(7행·아래 완료 문구)에서
+ * *"서버·인터넷 필요 없음"* 이라고 말하는 동안 **폰트 하나를 네트워크로 받고
+ * 있었다.** 검사가 못 보는 부류가 있으면 초록불의 뜻이 줄어든다.
+ *
+ * ★ 세어보니 「CDN 둘」이 아니라 **하나**였다 ★ `docs/NEXT-ACTION.md` 가
+ * `code.iconify.design` 도 물고 있다고 적었는데, 실측하면 그것은 DS 번들
+ * **주석 안의 안내문**(`// <script src="…iconify-icon.min.js"></script>`)이다.
+ * `api.vector.app`·`idp.example.com`·`vector.app` 셋도 DS 데모 화면의
+ * placeholder·`<code>` 문자열이다. **넷 다 요청을 만들지 않는다** — `fetch(`·
+ * `import(`·`.src=` 어디에도 안 붙어 있는 것을 확인했다.
+ *
+ * 그래서 **CSS 만 본다.** CSS 의 `url(...)` 은 그 자체로 요청이고, JS 의
+ * `https://` 는 대개 글자다 — JS 까지 훑으면 위 넷이 매번 걸려서 **검사가
+ * 거짓말이 된다**(검증기 §9-3e 를 경고로 내린 것과 같은 판단).
+ */
+const EXT_URL = /url\(\s*["']?(https?:\/\/[^"')\s]+)["']?\s*\)/gi
+const stripped = []
+/**
+ * 바깥 `@import` 를 뺀다. **빼는 이유**: 오프라인에서는 이 요청이 조용히 실패하고
+ * 폰트가 폴백으로 떨어진다 — 즉 **지금도 이미 폴백으로 렌더된다.** 요청만 남아
+ * 있어서 「인터넷 필요 없음」이 거짓이었을 뿐이다. 빼면 그 문장이 참이 되고
+ * 렌더가 **온·오프라인에서 같아진다**(조용히 갈리지 않는다).
+ *
+ * 폴백 스택은 한글까지 덮는다 — `Apple SD Gothic Neo`(iOS·macOS) ·
+ * `Malgun Gothic`(Windows). Pretendard 와 자모 폭이 다르지만 깨지지 않는다.
+ *
+ * ⚠ **Vercel 로 나가는 앱은 안 건드린다** — 이 파일은 단일 HTML 조립기뿐이고,
+ * `app/dist` 와 `app/public` 의 CSS 는 그대로다. 온라인 배포본은 Pretendard 를
+ * 계속 받는다.
+ */
+const stripExternalImports = (css) =>
+  css.replace(/@import\s+url\(\s*["']?(https?:\/\/[^"')\s]+)["']?\s*\)\s*;/gi, (_m, u) => {
+    stripped.push(u)
+    return `/* 단일 HTML: 바깥 @import 를 뺐다 (오프라인) — ${u} */`
+  })
+
+const DS_CSS = stripExternalImports(DS_CSS_RAW)
+const APP_CSS = stripExternalImports(APP_CSS_RAW)
+
+/**
+ * 빼고 나서 **다시 센다.** `@import` 말고도 `src: url(https://…)`(@font-face) ·
+ * `background: url(https://…)` 이 남을 수 있고, 그것들은 위 치환이 안 건드린다.
+ * 남았으면 **조립을 멈춘다** — 지금까지 이 부류가 통과한 이유가 검사의 부재였다.
+ */
+const extLeft = [...new Set(
+  [...DS_CSS.matchAll(EXT_URL), ...APP_CSS.matchAll(EXT_URL)].map((m) => m[1]),
+)]
+if (extLeft.length) {
+  console.error(`\n  ✗ 스타일이 바깥 호스트를 물고 있다 (${extLeft.length}건) — 「인터넷 필요 없음」이 거짓이 된다`)
+  for (const u of extLeft) console.error(`    ${u}`)
+  console.error('    @import 면 자동으로 빠진다. @font-face 의 src 나 background 면 파일을 받아 data: 로 심어야 한다\n')
+  process.exit(1)
+}
 
 const caseTags = CASES.map((id) =>
   `<script type="application/json" data-case="${id}">${safe(read(join(PUB, `cases/${id}.json`)))}</script>`,
@@ -167,4 +228,15 @@ writeFileSync(OUT, html, 'utf8')
 
 const mb = (statSync(OUT).size / 1024 / 1024).toFixed(2)
 console.log(`\n  ✓ ${OUT.replace(ROOT + '\\', '').replace(ROOT + '/', '')}  ${mb} MB  ·  사건 ${CASES.length}건`)
-console.log(`    더블클릭하면 돈다 — 서버·인터넷 필요 없음. 진행은 브라우저에 저장된다\n`)
+console.log(`    더블클릭하면 돈다 — 서버·인터넷 필요 없음. 진행은 브라우저에 저장된다`)
+/**
+ * **뺀 것을 말한다.** 조용히 빼면 「초록불의 뜻이 줄어드는」 그 부류를 내가
+ * 다시 만드는 것이다 — 다음 사람은 테스터 화면의 글꼴이 배포본과 다른 이유를
+ * 모른 채 찾게 된다.
+ */
+if (stripped.length) {
+  console.log(`    글꼴: 바깥 @import ${stripped.length}건을 뺐다 → 시스템 한글 글꼴로 렌더된다`)
+  for (const u of stripped) console.log(`      ${u}`)
+  console.log(`      (Vercel 배포본은 그대로 Pretendard 를 받는다. 테스터 파일만 다르다)`)
+}
+console.log('')

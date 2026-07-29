@@ -308,6 +308,12 @@ export default function Generator() {
   const [difficulty, setDifficulty] = React.useState('normal');
   const [chapters, setChapters] = React.useState(5);
   /**
+   * 사망 구간 칸 수 (1~3). **기본 1이면 전과 같은 사건이 나온다** — 엔진에서
+   * 12건 diff 로 확인했다. 2 이상이면 각자 구간 안에서 두 번 움직이므로
+   * 알리바이 대조가 「구간 안에 있었나」에서 조합 문제로 바뀐다.
+   */
+  const [deathCells, setDeathCells] = React.useState(1);
+  /**
    * 고른 세계와 붙여넣은 팔레트는 **저장한다.** 안 하면 사건 하나 만들 때마다
    * 챗봇 왕복을 다시 해야 한다 — 라우트가 바뀌면 `key` 로 재마운트되므로
    * `useState('')` 는 매번 빈칸이었다(2026-07-28 §`key` 가 없으면 참조).
@@ -434,7 +440,7 @@ export default function Generator() {
          */
         // seed 는 아래 저장 키(`<사건 id>-<seed>`)에도 쓰인다 — 이름을 남긴다
         const seedBase = Math.floor(Math.random() * 100000);
-        const batch = run([seedBase], { palette, chapters, want: [difficulty] });
+        const batch = run([seedBase], { palette, chapters, deathCells, want: [difficulty] });
         if (!batch.passed.length) {
           setErrs(['검증을 통과한 사건이 없다. 아래를 챗봇에 그대로 붙여 넣고 팔레트를 고쳐 달라고 해라.',
             ...[...batch.rejections].map(([why, n]) => `${n}회 — ${why}`)]);
@@ -789,10 +795,24 @@ export default function Generator() {
           <input type="range" min="3" max="8" value={chapters} style={{ display: 'block', width: '190px', marginTop: '5px' }}
             onChange={(e) => setChapters(Number(e.target.value))} />
         </label>
+        <label style={{ fontSize: '13px', display: 'block', marginTop: '12px' }}>
+          <span style={{ color: 'var(--fg-3, #8b93a1)' }}>사망 구간 칸 수 </span>
+          <b>{deathCells}</b>
+          <input type="range" min="1" max="3" value={deathCells} style={{ display: 'block', width: '190px', marginTop: '5px' }}
+            onChange={(e) => setDeathCells(Number(e.target.value))} />
+        </label>
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '12px 0 0', lineHeight: 1.6 }}>
           용의자는 언제나 5명이고, <b>사건은 한 번에 하나</b>씩 만들어진다. 장이 많을수록
           조사할 것이 늘고 오래 걸린다 — 3장이면 최소 4회, 8장이면 최소 9회 조사해야 풀린다.
           마음에 안 들면 다시 누르면 된다.
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '8px 0 0', lineHeight: 1.6 }}>
+          <b>사망 구간 칸 수</b>는 사망 추정 시간을 몇 토막으로 나눌지다. 1이면 「그 구간에
+          어디 있었나」 하나만 묻고, 2 이상이면 <b>각자 구간 안에서 여러 번 움직인다</b> —
+          「앞쪽엔 주방, 뒤쪽엔 세탁실」이 되어 알리바이 대조가 실제로 맞춰볼 것이 생긴다.
+          진술도 그만큼 길어진다. 시간대 이름을 직접 쓰고 싶으면 세계 어휘의{' '}
+          <code>times.window</code> 에 칸마다 하나씩 적는다 — 안 적으면 「(전반)·(후반)」이
+          기계가 붙인 이름으로 들어간다.
         </p>
       </section>
 
@@ -851,6 +871,7 @@ export default function Generator() {
         <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
           <b>{WORLDS.find((w) => w.id === world)?.ko}</b> ·{' '}
           {chapters}장 · {DIFFS.find((d) => d.id === difficulty)?.ko}
+          {deathCells > 1 ? ` · 사망 구간 ${deathCells}칸` : ''}
           {world === 'custom' && !paletteText.trim()
             ? ' — 붙여넣은 것이 없어 기본 어휘로 만든다' : ''}
         </p>

@@ -1,119 +1,85 @@
 ---
-session_date: "2026-07-29"
+session_date: "2026-07-30"
 project: "노바디 라이즈 (Nobody Lies)"
 working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
-machine: "KWONKYUNGHUN (OneDrive 아래) · 밤 세션"
+machine: "KWONKYUNGHUN (OneDrive 아래)"
 ---
 
 ## Completed Work
 
-**작업 트리 깨끗 · 빌드 게이트 7단 초록(exit 0) · 콘솔 에러는 DS 번들 것 하나뿐.**
+**작업 트리 깨끗 · 빌드 게이트 7단 초록(exit 0) · port-check 308/320/12/어긋남 0(불변).**
 
-> ⚠️ **이 워크로그가 두 세션 낡아 있었다.** 07-29 `DESKTOP-JCJTAH8` 세션 둘이
-> `docs/` 만 커밋하고 이 파일을 안 건드렸다(`3551d0f` 실측 — `.omc/` 파일 0개,
-> gitignore 아님). 그래서 **여기 적힌 「다음 하나」가 이미 닫힌 일**을 가리키고
-> 있었다. `after-work.md:27` 이 갱신 대상으로 명시한 파일이다.
-
-### 이번 세션 — 사건이 기계 밖으로 나갔다 · 그리고 첫 실플레이
+### 이번 세션 — 산장 누설을 다섯 갈래에서 걷어냈다
 
 ```
 ✅ ① 산문을 스키마로
-🔨 ② 산문가        ★ 왕복이 처음으로 끝까지 돌았다 (진술5+지문+프롤로그+장서사)
-⬜ ③ 검열관        규칙 쪽 §9-3e 추가. LLM 쪽은 여전히 없다
-✅ ④ 작가          + 내보내기 · 설비 이름 8/8 · 관계도 노드
+🔨 ② 산문가        왕복은 돌았으나 **두께를 아직 안 쟀다** (사용자 손 · 이번에도 못 했다)
+⬜ ③ 검열관        규칙 쪽 §9-3f 추가. LLM 쪽은 여전히 없다
+✅ ④ 작가          + 사망 구간 칸 수 손잡이 · 프롤로그 정합 · 조사 처리기
 ```
 
-### 1 — 순서가 틀려 있었다 (사용자가 잡았다)
-
-「산문 왕복」이 1번이었는데 **그 산출물을 꺼낼 길이 없었다.** `app/src/*.jsx` 에
-`Blob`·`download` 가 0건, 생성 사건은 `localStorage` 에만, 기계는 넷.
-
-**문서가 두 곳에서 이미 경고했는데**(`NEXT-ACTION` §① 주의 · 표 4번 ⓑ)
-**순서에는 반영하지 않았다.** — 「이미 있는데 배선만 없다」의 거울상인
-**「이미 적었는데 순서에 없다」**.
-
-### 2 — 내보내기 (⓪ · 닫힘)
-
-사건 행의 **「YAML」**. 엔진과 **같은 코드·같은 옵션**이고 **왕복 대조에 실패하면
-안 내려받는다**(엔진이 `exit 1` 로 막는 자리).
-
-- 그러려고 **`schema.ts` 에서 `node:fs` 를 뺐다** → `load-case.ts` 신설.
-  `loadCaseFile` 하나 때문에 파싱기 전체가 브라우저에 못 들어갔다
-- `vite.config.ts` 의 *"schema.ts 는 번들에 안 들어온다"* 주석도 같이 고쳤다
-- ★ **왕복 대조가 넣자마자 결함을 물었다** — `applyProse` 가 지문·프롤로그는
-  `{ko}` 로 정규화하면서 **문단만 받은 그대로** 넣고 있었다. `txt()` 가 맨
-  문자열에서 `.ko` 를 찾아 **내보낸 YAML 의 문단이 전부 빌 뻔했다**
-
-### 3 — 설비 이름 (① · 닫힘) · 그리고 절대 규칙 위반 하나
-
-`Palette.places` 가 `rooms` 와 **같은 규약**(`string | {name, fixture}`)을 받는다.
-
-**★ 재다가 절대 규칙 위반을 밟았다 ★** 트릭이 만든 고정물 조사는 언제나 물건
-이름(`잠금장치 조사`)인데 빈손은 전부 `○○ 설비 확인` 이었다 — **모양이 갈리는
-쪽이 정확히 쓸모 있는 쪽.** 44건 중 44건. **골든 케이스가 답을 갖고 있었다**
-(`화로 조사`·`원고 조사` — 방이 아니라 물건). 물건 이름으로 통일했다.
-
-**검증기 §9-3e 신설.** ⚠ 오류로 걸었더니 설비 이름 없는 팔레트가 **통과율 0%**
-가 됐는데 **서식은 그 칸을 「선택」이라 적어뒀다** → 경고로 내렸다.
-
-### 4 — 첫 실플레이에서 다섯이 나왔다 (게이트는 내내 초록)
-
-| | 무엇 | 상태 |
-|---|---|---|
-| ① | **관계도에 산장의 「윤다인」** | ✅ |
-| ② | 진술 행의 **빈 알약**(`relKo` 칩) | ✅ `relStyle` → `display:none` |
-| ③ | 용의자 카드의 **빈 「본인 주장」** + 꼬리 점 | ✅ 생성기가 `claimSummary` · 구분자를 값이 갖는다 |
-| ④ | **앞의 점** 「· 31 · 도예가」 (`sexKo` 도 빔) | ✅ **재다가 나왔다** · `sexAgeOf()` 로 세 자리 통합 |
-| ⑤ | 진술의 **「~다은」** 조사 | ✅ |
-| ⑥ | 서식을 답변 칸에 되붙이면 파서 말만 나옴 | ✅ |
-
-> ✅ **`port-check` 는 손댈 필요가 없었다** — `sc-if`·`sc-for` **이름만** 보므로
-> 텍스트 노드에서 구분자를 빼는 것은 갈래를 안 늘린다(308/320 그대로).
-> `APP_ONLY` 가 필요할 거라 예상했는데 **대조기가 무엇을 보는지 읽고서야** 알았다.
-
-### ★ 그리고 손으로 찾는 것을 그만두고 셌다 ★
-
-같은 부류를 넷 밟은 뒤, `applyCase`(행 433~1404) 안에서 **참조되지 않는 표**를
-전수로 뽑았다.
+닫은 것이 전부 같은 부류다 — **「앱이 산장용으로 그리는데 생성 사건엔 그 데이터가 없다」**.
+게이트 7단은 **내내 초록이었다.**
 
 ```
-✓ 덮는다     PEOPLE · STMT · CLAIM_LOC · GRAPH_NODES · GRAPH_EVIDENCE · CLUE_MAP
-             TERM_MAP · REVEALS · SEED_TERMS · COLLECTED_POOL · TIMES · LOCATIONS
-             SECTIONS · BLANKS
-✗ 안 덮는다   FLOOR_CLUES 🔴 · CLAIMS 🟡 · AUTO ⛔ · PB_CARDS ✅(게터가 방어)
+FLOOR_CLUES     부검하면 자연사 박물관 전시실에 「일산화탄소」   재현 → applyCase 에서 도출
+CLAIMS          도식 탭이 통째로 빔                            CLAIM_LOC 에 이름만 붙인다
+AUTO            {'sakura-t2': true} · 참조 0                  지웠다
+브리핑 셋        「외상 없음」·「화로에 연탄」·사망 추정          사건 파일에서 읽는다
+창 축소 라벨     부검하면 창 이름이 「새벽 3~5시」로 바뀜         narrowsWindow 선언 기반
 ```
 
-**하나가 실제로 흘린다** — `FLOOR_CLUES` 의 `autopsy:body`/`loc:'room'` 이 생성
-사건에도 있는 키다. 위 §Remaining 🎯 로 넘겼다.
+### 1 — `FLOOR_CLUES` (다음 하나였던 것 · 닫힘)
 
-> **오늘 사용자가 눌러서 찾은 여섯이 전부 같은 부류였고, 세는 것으로 나머지를
-> 예측할 수 있었다.** 다음에 같은 부류가 의심되면 **먼저 센다.**
+**재현부터 했다.** 07-29 감사가 도출로만 찍어둔 것을 박물관 사건 `gen-87494` 로 눌러서
+확인했다 — 도면 「특별 전시실」에 `물증 · 일산화탄소`. 뿌리는 `targetKey()` 가
+`mode:'none'` 에 `'body'` 를 **글자로 박는 것** + 현장이 언제나 `room`.
 
-**①의 뿌리가 둘이었다** — 생성기가 `relationGraph` 를 안 만들고, `applyCase` 의
-`join()` 은 **꾸미는** 도구뿐이라 개수·짝이 어긋나면 **산장 표를 통째로 남긴다**
-(인물 id 가 `p1..p5` ↔ `yena…` 라 언제나 어긋난다). `_foreignCase` 로 갈라
-**다시 만든다.** 산장은 한 글자도 안 바뀐다(실측).
+**새 엔진 필드는 필요 없었다** — `TERM_MAP` 을 만드는 `map`·`byKey` 가 이미 있고 자리는
+`target` 에서 나온다. 사람 대상은 **뺐다**(엔진이 누구 짐이 어디 있는지 말하지 않는다).
+`yield` 로 **안 가른다**(§절대 규칙의 유용도 시각 구분이 공짜로 지켜진다).
 
-**④⑤ 둘 다 사용자 팔레트/사용자 조작에서 나왔다** — 내장 팔레트만으로 재면
-기본값이 우연히 옳아서 안 보인다.
+### 2 — 사망 구간 칸 수 (`deathCells` 1~3, 기본 1)
 
-### 5 — 배포(⑤) · 업계 은어(⑥)
+슬롯 id 를 **글자에서 자리 계산으로** — `FIRST`·`WIN[]`·`LAST`·`AXIS`.
+`TRICKS` 는 3칸 선언 그대로 두고 `expandCells()` 가 축으로 늘린다.
 
-- **「`dependencies` 로 옮기거나」는 거짓이었다** — `buildCommand` 가 7단 게이트
-  전체라 `tsx`·`typescript`·`vite` 까지 필요한데 넷 다 devDeps. `js-yaml` 만
-  옮기면 **다음 줄에서 `tsx` 로 죽는다.** → `installCommand: npm install --include=dev`
-- 「저녁 **합평**」 → 「저녁 모임」 · 서식에 **「어디에 두라」** 규칙(은어 금지가 아니라)
+**★ 회귀 0 을 diff 로 증명했다 ★** 코드 건드리기 **전에** 기준선 12건을 뜨고
+변경 후 같은 명령으로 다시 떠서 `diff -r` → **차분 0**.
+
+**문서의 비용 추정이 틀렸다** — 「엔진 26 · 앱 11 · 검증기 2」인데 실제 **앱 0 · 검증기 0**.
+산장이 애초에 4칸이라 앱은 처음부터 일반적으로 짜여 있었다.
+
+### 3 — 프롤로그 · 조사(助詞)
+
+`delayed_mechanism` 이면 로비에 셋인데 프롤로그가 「다섯」이라 말했다(40건 중 **8건**).
+**논리가 아니라 「그곳」의 지시 대상**이었다. 고치다 한 번 **더 나쁘게** 만들었다(피해자가
+셈에 포함돼 20% → 100% 거짓). 답은 **인원을 시각에서 떼는 것**이었다.
+
+`topicParticle` 신설 — `${victimName}은` 이 글자로 박혀 「문세라은」이 나왔다.
+`subjectParticle`(이/가)이 **이미 옆에 있었는데 은/는 짝이 없어서** 안 쓰였다.
+
+### 4 — 브리핑 · CDN
+
+**「이미 있는데 배선만 없다」가 또 셋** — 산장 YAML 이 `body_state`·`scene_state`·
+`narrows_window` 를 이미 갖고 있고 스키마·왕복·검증기(§9-2)가 다 있는데 **앱·생성기 양 끝만**
+몰랐다. 생성기가 `bodyState`·`sceneState` 를 내게는 **안 했다**(§9-2 때문에 씨앗 단어로만
+쓸 수 있고, 「외상 없음」은 트릭에 따라 거짓이다) → **값 없는 줄은 안 그린다.**
+
+CDN: 바깥 `@import` 를 빼고 **뺐다고 말한다.** 검사를 CSS 로 넓혔다(JS 는 **일부러 안 본다**).
+**「CDN 둘」이 하나였다** — 나머지 넷은 주석·placeholder 문자열.
 
 ### 검증한 것
 
 | | |
 |---|---|
-| 내보내기 | 조립본·산문본 둘 다 성공 · **고치기 전 모양 재현 → 왕복 실패 → 안 내려받음** |
-| 붙여넣기 | 서식 되붙임 → 막힘 · `` ```yaml `` 울타리 → 들어감 · 뼈대 `...` → 막힘 |
-| 설비 이름 | 네 세계 × 12건 = **48건 · 384개 · 총칭 0 · 겹침 0 · 모양갈림 0**(전 44/44) |
-| 조사 오류 | 사용자 비밀 5개로 재돌림 — **「다은」 0** |
-| 관계도 | 생성: 이름 6/6 정상 · 「윤다인」 0 · 산장: 노드 7 · 간선 3 · **불변** |
-| 엔진 | `--emit --yaml` 왕복 통과 (schema 분리 후에도) |
+| 게이트 | 7단 exit 0 · port-check **308/320/12/어긋남 0** (불변) |
+| 생성 | 1·2·3칸 각 20건 **100% 통과** · 기본값 12건 **diff 0** |
+| 네 세계 | 박물관·레지던시·방송국·기본어휘 · 표식 5건씩 · **산장 낱말 0** · 없는 `loc` 0 |
+| 산장 | **불변** — `FLOOR_CLUES` 3건 영문(`Burner`·`CO`) · 브리핑 4줄 · 축소 `[t1,t2]` → 「새벽 3~5시」·갱신 배지·이전 값 |
+| 조사 | 세 세계 45건 · 모음 끝 이름 12건 · **오결합 0** |
+| 검증기 §9-3f | 기계 이름표 **4/4 발화** · `times.window` 준 팔레트 **0** · 1칸이면 아예 안 뜸 |
+| 테스터 | 띄워서 **요청 0건**(`performance.getEntriesByType`) · 검사 심으면 **exit 1** |
 
 ## In Progress
 
@@ -121,64 +87,67 @@ machine: "KWONKYUNGHUN (OneDrive 아래) · 밤 세션"
 
 ## Remaining Tasks
 
-- [ ] **🎯 `FLOOR_CLUES` 를 눌러서 재현하고 고친다 (다음 하나 · 코드 · 작음)**
-      **부검하면 생성 사건 현장에 「일산화탄소」가 붙는다.** `{ logKey: 'autopsy:body',
-      loc: 'room', ko: '일산화탄소' }` 인데 **그 두 키가 생성 사건에도 있다**
-      (생성기가 `a_body`=`autopsy`+`fixture body` 를 내고 현장은 늘 `room`).
-      07-29 저녁에 `resultFor` 를 `_foreignCase` 로 가른 **바로 그 조사**인데
-      `FLOOR_CLUES` 는 그때 같이 안 봤다.
-      ⚠ **도출로 찾았고 눌러서 확인하지 않았다** — 재현이 첫 걸음이다.
-      곁에 둘: `CLAIMS`(진술 격자가 통째로 빈다 · 누설 아님 · 엔진에서 도출 가능) ·
-      `AUTO`(`{'sakura-t2':true}` · **참조 0 인 죽은 상수** · 지운다)
+- [ ] **🎯 `deathCells` ≥ 2 면 생성기가 「구간 축소」를 낸다 (다음 하나 · 코드 · 작음)**
+      **내가 일부러 뺀 자리를 되살리는 일이다.** 앱의 축소가 산장 라벨을 흘려서
+      `narrowsWindow` **선언 기반**으로 바꿨고, 생성기는 안 내므로 **생성 사건은 지금
+      축소가 없다.** 저작이 필요 없다 — 창을 「셋 → 둘」로 좁히면 되고 **좁혀진 라벨도
+      남은 칸의 이름표에서 도출**된다(앱의 `narrowedLabel()` 이 이미 그렇게 한다).
+      ⚠ `deathCells === 1` 이면 내지 않는다(좁힐 데가 없고 기본값이라 회귀 0 유지).
 - [ ] **진술 두께 — 산문 왕복** (사용자 손). 왕복은 돌았으나 **두께를 아직 안 쟀다** —
-      산장 279자 대 조립 107자였던 그 숫자. 사용자가 만든 사건이 브라우저에 있다
-- [ ] **시간대 구조** — 손잡이는 「슬롯 수」가 아니라 **「사망 구간 칸 수」**(1~3, 기본 1).
-      분석은 `NEXT-ACTION` §🟡 에 있다. 비용: 엔진 26군데(그중 TRICKS 10) · 앱 11 · 검증기 2
+      산장 279자 대 조립 107자. **「산장급」에 남은 최대 격차**이고 세 세션 연속 못 했다
+- [ ] 테스터에서 Pretendard 를 쓰려면 woff2 를 받아 `data:` 로 심는다(1.45MB → 약 3MB).
+      **폰트 내려받기가 필요해서 안 했다** — 사용자 결정
 - [ ] 관계도의 **선** — A(노드만, 지금) / B(마지막 장에 「가명→범인」). 사용자 결정
-- [ ] `app` 이 `js-yaml` 을 import 하면서 선언은 안 한다 (`Generator.jsx:2`).
-      lock 을 건드려야 해서 미뤘다
-- [ ] 인터루드 도착물 화면 4종 · `e_safes`·`a_ph_yuri` 의 `clues` · 색·대비·질감
+- [ ] 한 장소에 방이 둘이면 **단서 라벨이 둘 다에 뜬다**(`hall` = 로비+교육실).
+      렌더가 loc 단위라 「미조사/물증」 상태 라벨도 **원래 그렇게 겹친다**(산장 `main` 도).
+      네 세계 전부 `hall` 한 자리뿐이라 균일하고 규칙 위반 아님 — **디자인 판단**
+- [ ] ⑤ 배포 — `installCommand` 는 고쳤으나 **push 후 Vercel 이 실제로 도는지** 봐야 닫힌다
+- [ ] `app` 이 `js-yaml` 을 import 하면서 선언은 안 한다 (`Generator.jsx:2`) · lock 을 건드린다
+- [ ] 인터루드 도착물 화면 4종 · `e_safes`·`a_ph_yuri` 의 `clues` · 색·대비·질감 · ③ 검열관 LLM
 
 ## Blockers / Issues
 
-- ⚠️ **커밋 없이 `git stash` 를 쓰지 않는다.** 콘솔 에러를 대조하려다 **16파일을
-  통째로 걷어냈다.** `stash pop` 으로 되돌리고 게이트로 확인했다. 대조는
-  `git diff --name-only | xargs grep -l` 로도 됐다(실제로 그것으로 답이 나왔다)
-- ⚠️ **게이트가 JSX 를 안 본다.** 이번 세션에 사용자가 눌러서 찾은 것이 **다섯**이고
-  그동안 7단은 내내 초록이었다
-- ⚠️ **내장 팔레트만으로 재면 못 잡는 결함이 있다.** 「~다은」도 설비 이름 모양
-  갈림도 **사용자 팔레트**에서 나왔다
+- ⚠️ **게이트가 JSX 를 안 본다.** 이번에 닫은 다섯 갈래 전부 7단 초록인 채로 살아 있었다
+- ⚠️ **출력은 읽는 것이 아니라 대조하는 것이다.** 축소 라벨 「새벽 3~5시」를 이 세션
+  **아침에 이미 화면에서 보고** 「축소가 작동한다」로 읽었다. 그 사건의 시간대 이름과
+  맞춰봤으면 그 자리에서 걸렸다
+- ⚠️ **PowerShell 작업 디렉터리가 남는다.** `engine/` 에서 `npm run build` 를 돌려
+  `Missing script: "build"` 로 게이트가 실패했다 — 내 변경 탓으로 오진할 뻔했다.
+  **`Set-Location <루트>` 를 앞에 붙인다**
 - ⚠️ **PowerShell 이 standalone `--` 를 삼킨다.** 엔진 CLI 는 Bash 로 돌린다
-- ⚠️ **`read_page` 가 0x0 을 준다.** `javascript_tool` 로 DOM·localStorage·React
-  fiber 를 직접 읽는다 — 이번에도 그것으로 전부 확인했다
-- ⚠️ 콘솔의 `createRoot` 중복 경고는 **DS 번들 것**이다. `main.jsx:77` 이 방어하는
-  그 자리이고 **산장에서도 똑같이 뜬다** — 생성 사건과 무관
-- ⚠️ **`localStorage.clear()` 금지.** 이번 검증도 `gen-` 접두만 골라 지웠다
+- ⚠️ **`python3` 가 없다.** YAML 을 뜯을 때는 engine 디렉터리에서
+  `node --input-type=module -e` + `await import('js-yaml')` (워크스페이스 밖에서는 해석 실패)
+- ⚠️ **`read_page` 가 앱을 못 본다.** `javascript_tool` 로 DOM·localStorage·React fiber 를 읽는다.
+  React 제어 input 은 네이티브 setter + `dispatchEvent(new Event('input',{bubbles:true}))`
+- ⚠️ **스크린샷이 막혀 있다**(Browser pane 미표시). `getBoundingClientRect`·`innerText` 로 잰다
+- ⚠️ **`file://` 은 정적 스냅샷으로만 열린다** — 단일 HTML 을 실제로 재려면
+  gitignore 안쪽(`app/public/cases/`)에 두고 dev 서버로 띄운다. 끝나면 지운다
+- ⚠️ **커밋 없이 `git stash` 를 쓰지 않는다** · **`localStorage.clear()` 금지**
+- ⚠️ 콘솔의 `createRoot` 중복 경고는 **DS 번들 것**이다 — 산장에서도 똑같이 뜬다
 
 ## Notes for Next Session
 
-- **`before-work` 순서 그대로.** `git pull` 이 맨 앞
+- **`before-work` 순서 그대로.** `git pull` 이 맨 앞. 이 저장소는 **직접 main 푸시**
 - **게이트는 7단이다** — `package.json` 의 `build` 를 믿는다
-- **사용자가 만든 사건이 사용자 브라우저에 산다** — 산문을 입힌 것이 있으면
-  행의 **「YAML」**로 꺼내 `engine/cases/` 에 커밋하라고 알린다. 그게 사건 2번이 된다
-- **⑤ 배포는 「고쳤다」이지 「나갔다」가 아니다** — push 후 Vercel 이 실제로 도는지
-  확인해야 닫힌다
-- 이 저장소는 **직접 main 푸시**
+- **다음 하나는 축소다** — 위 🎯. 앱은 `narrowedLabel()` 로 **이미 준비돼 있다**
+- **사용자가 만든 사건이 사용자 브라우저에 산다** — 산문을 입힌 것이 있으면 행의
+  **「YAML」**로 꺼내 `engine/cases/` 에 커밋하라고 알린다. 그게 사건 2번이 된다
+- **이 브라우저(in-app)에 시험용 생성 사건이 여럿 남아 있다**(`gen-*`). 유용한 고정물이라
+  안 지웠다 — `gen-88291`(레지던시 · 모음 끝 이름) · `gen-60221`(박물관 2칸)
+- **테스터 글꼴이 배포본과 다르다** — 조립기가 말해주지만 처음 보면 놀랄 수 있다
 
 ## Files Modified
 
-- `engine/src/load-case.ts` — **신설.** `loadCaseFile`(node:fs)을 `schema.ts` 에서 분리
-- `engine/src/schema.ts` — `node:fs`·`js-yaml` 제거 → **브라우저에서 돈다**
-- `engine/src/cli.ts` · `export-case.ts` — import 경로
-- `engine/src/generate.ts` — `PlaceSpec` · `placeFixture` · 고정물 조사 이름 ·
-  `secretPhrase`(조사) · **`relationGraph` 신설** · `DEFAULT_PALETTE` 설비 이름
-- `engine/src/verifier.ts` — **§9-3e 신설**(경고)
-- `engine/templates/PALETTE-BRIEF.md` — `places.fixture` · 겹침 금지 · **업계 은어** 절
-- `engine/templates/palette-{residency,museum,example}.json` — `places` 설비 이름 · 합평
-- `app/src/Generator.jsx` — **「YAML」 내보내기** · 왕복 대조 · 서식 되붙임 가드 ·
-  울타리 벗기기 · 문단 `{ko}` 정규화
-- `app/src/App.jsx` — **`_foreignCase` 면 관계 도식을 다시 만든다** ·
-  `relStyle` 이 비면 안 그린다 · `sexAgeOf()` 신설(세 자리 통합) · `rel` 이 구분자를 갖는다
-- `app/vite.config.ts` — 낡은 주석 정정
-- `vercel.json` — `installCommand: npm install --include=dev`
-- `docs/MEMORY.md` · `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md`
+- `engine/src/generate.ts` — **슬롯 자리 계산**(`FIRST`·`WIN[]`·`LAST`·`AXIS`) ·
+  `deathCells` · `expandCells()` · 무고한 셋 **회전 배정** · `statementOf` 축 순회 ·
+  `claimSummaryOf` 창 전체 · `slots` 방출 · **프롤로그 지시 대상** · **`topicParticle` 신설** ·
+  `Palette.times.window`
+- `engine/src/verifier.ts` — **§9-3f 신설**(쪼갠 창의 기계 이름표 · 경고)
+- `engine/src/cli.ts` · `orchestrate.ts` — `--death-cells` · `RunOptions.deathCells`
+- `engine/templates/PALETTE-BRIEF.md` — `times.window` · `times` 가 **가장 비싼 어휘 자리**
+- `app/src/App.jsx` — `FLOOR_CLUES` 도출 · `AUTO` 삭제 · `CLAIMS` 도출 ·
+  **브리핑을 사건 파일에서**(`bodyState`·`sceneState`·창 슬롯) · `_narrowSlots` ·
+  `deathNarrowed()` 선언 기반 · **`narrowedLabel()` 신설**(두 자리 통합) · 빈 줄 안 그림
+- `app/src/Generator.jsx` — **「사망 구간 칸 수」 손잡이**(1~3) · 요약 줄
+- `scripts/bundle-single.mjs` — 바깥 `@import` **제거 + 보고** · 누수 검사를 **CSS 로 확장**
+- `docs/MEMORY.md` · `docs/NEXT-ACTION.md` · `docs/SESSION-LOG.md` · `.omc/worklog/latest.md`

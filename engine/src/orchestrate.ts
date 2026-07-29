@@ -43,6 +43,8 @@ export type RunOptions = {
   palette?: Palette
   /** 보고서 장 수 (2~8). 기본 5 */
   chapters?: number
+  /** 사망 구간 칸 수 (1~3). 기본 1 — 1이면 전과 같은 사건이 나온다 */
+  deathCells?: number
   /**
    * 목표 난이도. **순서가 곧 선호도다** — 앞쪽을 먼저 고른다.
    *
@@ -111,7 +113,7 @@ export function run(seeds: number[], opts: RunOptions = {}): Batch {
   for (const seed of seeds) {
     let base: Case
     try {
-      base = generateCase(seed, opts.palette, { chapters: opts.chapters })
+      base = generateCase(seed, opts.palette, { chapters: opts.chapters, deathCells: opts.deathCells })
     } catch (e) {
       note(`생성 실패: ${(e as Error).message.slice(0, 40)}`)
       continue
