@@ -1941,7 +1941,20 @@ export default class App extends React.Component {
     log.forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { if (!per[c.p]) return; const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; const isNew = seen.indexOf(k) < 0; const logKey = e.action + ':' + e.key; if (!per[c.p].slots[c.slot]) per[c.p].slots[c.slot] = { text: c.ko, isNew, logKey }; per[c.p].clues.push({ text: c.ko, action: e.actionLabel, isNew, logKey }); }); });
     const sd = [{ k: 'motive', l: t.slotMotive }, { k: 'opportunity', l: t.slotOpportunity }, { k: 'means', l: t.slotMeans }];
     const narrBy = {}; log.forEach(e => { if (e.desc && (e.action === 'belongings' || e.action === 'phone') && per[e.key]) { (narrBy[e.key] = narrBy[e.key] || []).push({ title: e.title, desc: e.desc, actionLabel: e.actionLabel, barColor: e.type === 'empty' ? 'var(--fg-4)' : e.type === 'solution' ? 'var(--g-confirm)' : e.type === 'redherring' ? 'var(--status-progress)' : 'var(--accent)' }); } });
-    return this.PEOPLE.map(p => { const d = per[p.id]; const memos = (this.state.memos || []).filter(m => m.targetType === 'person' && m.targetId === p.id); return { id: p.id, name: p.name, color: p.color, ini: p.ini, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age, rel: ln === 'ko' ? p.relKo : p.relEn, claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0, noClues: d.clues.length === 0,
+    return this.PEOPLE.map(p => { const d = per[p.id]; const memos = (this.state.memos || []).filter(m => m.targetType === 'person' && m.targetId === p.id);
+      /**
+       * ★ 「관계」가 없으면 **구분자까지** 없앤다 ★ (2026-07-29 밤)
+       *
+       * 마크업이 `{age} · {job} · {rel}` 로 ` · ` 를 **글자로** 박아뒀다. 생성
+       * 인물은 `relKo` 가 비므로(위 §relStyle 과 같은 이유) **「· 30 · 주방 조리사 ·」**
+       * 처럼 꼬리 점이 남았다 — 첫 실플레이에서 사용자가 찾았다.
+       *
+       * 구분자를 값이 갖게 하고 마크업의 것을 뺀다. **갈래가 안 늘어서**
+       * `port-check` 는 그대로다(그 대조기는 `sc-if`·`sc-for` 이름만 본다).
+       * 산장은 `relKo` 가 언제나 있으므로 **한 글자도 안 바뀐다.**
+       */
+      const relV = ln === 'ko' ? p.relKo : p.relEn;
+      return { id: p.id, name: p.name, color: p.color, ini: p.ini, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: this.sexAgeOf(p), rel: relV ? ' · ' + relV : '', claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0, noClues: d.clues.length === 0,
       narr: narrBy[p.id] || [], hasNarr: !!(narrBy[p.id] || []).length,
       memos: memos.map(m => ({ quote: m.quote, hasQuote: !!m.quote, content: m.content })), hasMemos: memos.length > 0, noMemos: memos.length === 0, memoCount: memos.length,
       onOpen: () => this.openProfileDetail(p.id), onAddMemo: () => this.addMemoForPerson(p.id),
@@ -2847,7 +2860,7 @@ export default class App extends React.Component {
           onDrop: () => this.onDropSlot(bid), onClear: () => { const b = Object.assign({}, this.state.blanks); delete b[bid]; this.setState({ blanks: b }); },
           slotStyle: { minHeight: '46px', border: '1.5px dashed ' + (val ? 'transparent' : 'var(--border-strong)'), borderRadius: 'var(--r-sm)', background: val ? (isPersonVal ? 'var(--bg-elevated)' : 'var(--accent-soft)') : (st === 'locked' ? 'transparent' : 'var(--bg-subtle)'), display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', opacity: st === 'locked' ? 0.4 : 1, boxShadow: isPersonVal ? 'inset 3px 0 0 ' + isPersonVal.color : 'none' } };
       }) }; });
-    const suspects = this.PEOPLE.map(p => ({ kind: 'person', value: p.name, name: p.name, sexAge: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age, color: p.color, onDrag: () => this.onDragCard('person', p.name),
+    const suspects = this.PEOPLE.map(p => ({ kind: 'person', value: p.name, name: p.name, sexAge: this.sexAgeOf(p), color: p.color, onDrag: () => this.onDragCard('person', p.name),
       style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', cursor: 'grab', boxShadow: 'inset 3px 0 0 ' + p.color },
       trayStyle: { display: 'inline-flex', alignItems: 'center', gap: '7px', height: '30px', padding: '0 12px 0 9px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated)', cursor: 'grab', fontSize: '13px', fontWeight: 500, color: 'var(--fg)', whiteSpace: 'nowrap', boxShadow: 'inset 3px 0 0 ' + p.color } }));
     const rev = this.revealedTerms();
@@ -2980,6 +2993,24 @@ export default class App extends React.Component {
     return out;
   }
   /**
+   * 「성별 · 나이」. **성별이 없으면 구분자도 없앤다.** (2026-07-29 밤)
+   *
+   * 생성 인물은 `sexKo` 가 빈다 — 엔진이 `sex` 를 안 내고, `applyCase:551` 이
+   * **같은 인물일 때만** 앱 값을 물려준다(`relKo` 와 같은 규칙). 그래서 세 자리에서
+   * **「· 31 · 도예가」**처럼 앞에 점이 남았다.
+   *
+   * ⚠ **엔진이 `sex` 를 내게 하지 않는다** — 팔레트는 이름만 주므로 성별을 만들려면
+   * **이름에서 도출**해야 하고 그건 없는 사실을 만드는 것이다(그리고 틀린다).
+   * 비는 쪽이 맞고, 비었을 때 안 그리는 것이 이쪽 일이다.
+   *
+   * 세 자리(용의자 카드 · 상황판 카드 · 진술 행)가 같은 꼴을 쓰고 있었으므로
+   * 하나로 모았다 — 셋 중 하나만 고치면 다음에 또 물린다.
+   */
+  sexAgeOf(p) {
+    const s = this.state.lang === 'ko' ? p.sexKo : p.sexEn;
+    return (s ? s + ' · ' : '') + p.age;
+  }
+  /**
    * 관계 칩 3종.
    *
    * **`S()` 로 감싼다** — DC 변환이 여기 하나를 빠뜨려서 CSS **문자열**이
@@ -3001,9 +3032,24 @@ export default class App extends React.Component {
       const firstSent = this.splitSentences(this.STMT[p.id][0])[0] || '';
       return {
         pid: p.id, name: p.name, ini: p.ini, avStyle: this.avStyle(p, 34), color: p.color,
-        relStyle: this.relChip(p.relKo === '산장 거주' ? 'onsite' : (p.relKo.indexOf('불참') >= 0 ? 'absent' : 'arrive')),
+        /**
+         * ★ 값이 없으면 칩을 그리지 않는다 ★ (2026-07-29 밤)
+         *
+         * 「관계」는 산장 인물의 앱 전용 필드다(`아침 도착`·`산장 거주`·`불참`).
+         * 엔진에 대응 필드가 없어서 `applyCase:554` 가 **생성 인물에게는 의도적으로
+         * 비운다** — 안 비우면 온천 여관 사람에게 「산장 거주」가 붙는다. **그 판단은
+         * 옳다.** 그런데 **안 그리게는 안 해서** 테두리만 남은 빈 알약이 떴다
+         * (첫 실플레이에서 사용자가 찾았다).
+         *
+         * **지우는 것과 안 그리는 것은 다른 일이었다.** 마크업을 안 건드리고
+         * 스타일로 끈다 — `relStyle` 이 이미 VM 에서 오므로 갈래가 안 늘고
+         * `port-check` 도 그대로다.
+         */
+        relStyle: p.relKo
+          ? this.relChip(p.relKo === '산장 거주' ? 'onsite' : (p.relKo.indexOf('불참') >= 0 ? 'absent' : 'arrive'))
+          : S('display:none'),
         railLine: { width: '2px', alignSelf: 'stretch', background: p.color, borderRadius: '1px', flex: 'none' },
-        sexAge: (ln === 'ko' ? p.sexKo : p.sexEn) + ' · ' + p.age,
+        sexAge: this.sexAgeOf(p),
         job: ln === 'ko' ? p.jobKo : p.jobEn,
         relation: ln === 'ko' ? p.relKo : p.relEn,
         meta: (ln === 'ko' ? (p.age + '세') : ('' + p.age)) + (this.roleOrJob(p) ? ' · ' + this.roleOrJob(p) : ''),
@@ -4148,7 +4194,7 @@ export default class App extends React.Component {
                       <div style={S("flex:1;min-width:0")}>
                       <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:12px")}>
                         <span style={pf.avRingStyle}>{pf.ini}</span>
-                        <div style={S("min-width:0;flex:1")}><div className="v-title" style={S("color:var(--fg)")}>{pf.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{pf.age} · {pf.job} · {pf.rel}</div></div>
+                        <div style={S("min-width:0;flex:1")}><div className="v-title" style={S("color:var(--fg)")}>{pf.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{pf.age} · {pf.job}{pf.rel}</div></div>
                         {(pf.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:3px;flex:none")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{pf.memoCount}</span></>):null}
                         {(pf.hasVerdict)?(<><span style={S(`font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);border:1px solid ${pf.verdictColor};color:${pf.verdictColor}`)}>{pf.verdictLabel}</span></>):null}
                         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={S("flex:none")}><path d="M6 4l4 4-4 4" /></svg>
@@ -4491,7 +4537,7 @@ export default class App extends React.Component {
                 <div style={S("display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex:none")}>
                   <span style={S(`width:3px;height:34px;background:${V.profileDetail.color};border-radius:2px;flex:none`)}></span>
                   <span style={V.profileDetail.avRingStyle}>{V.profileDetail.ini}</span>
-                  <div style={S("flex:1;min-width:0")}><div className="v-h3" style={S("color:var(--fg)")}>{V.profileDetail.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{V.profileDetail.age} · {V.profileDetail.job} · {V.profileDetail.rel}</div></div>
+                  <div style={S("flex:1;min-width:0")}><div className="v-h3" style={S("color:var(--fg)")}>{V.profileDetail.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{V.profileDetail.age} · {V.profileDetail.job}{V.profileDetail.rel}</div></div>
                   {(V.profileDetail.hasVerdict)?(<><span style={S(`font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);border:1px solid ${V.profileDetail.verdictColor};color:${V.profileDetail.verdictColor}`)}>{V.profileDetail.verdictLabel}</span></>):null}
                   <button className="iconbtn" onClick={V.onCloseProfile}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l8 8M12 4l-8 8" /></svg></button>
                 </div>

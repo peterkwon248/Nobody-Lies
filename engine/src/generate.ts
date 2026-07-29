@@ -1072,6 +1072,27 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 불안하면 지문이 곧 범인 표시"* 다. 여기서 조건이 갈릴 자리를 아예 안 만든다.
    */
   const gestureOf = (i: number) => gestures[i % gestures.length]!
+  /**
+   * 프로필 카드의 **「본인 주장」** 한 줄. (2026-07-29 밤 신설)
+   *
+   * ★ 없어서 카드에 빈칸이 떴다 ★ 산장은 다섯 다 `claim_summary` 를 갖는데
+   * 생성기가 안 냈고, `applyCase` 는 **같은 인물일 때만** 앱 문안을 물려주므로
+   * (`claimKo: ko(p.claimSummary) || (same ? slot.claimKo : '')`) 생성 인물은
+   * 빈 문자열이 됐다. 첫 실플레이에서 사용자가 찾았다.
+   *
+   * ⚠ **새 사실을 만들지 않는다.** 진술 둘째 문단이 이미 말하는 것을 한 줄로
+   * 줄인 것뿐이다 — 그래서 누설이 아니다. `t1` 만 말한다: t0·t2 는 다섯이 전부
+   * 같은 곳이라(모였다 → 흩어졌다 → 다시 모였다) 요약에 넣으면 다섯 줄이 글자까지
+   * 같아진다.
+   *
+   * ⚠ **범인도 같은 틀을 쓴다** — 범인은 `claim`(거짓), 나머지는 `presence`(참)를
+   * 요약하므로 **문장의 모양은 다섯이 같다.** 여기서 갈리면 그게 곧 범인 표시다.
+   */
+  const claimSummaryOf = (cells: { slot: string; location: string }[]) => {
+    const at = cells.find((x) => x.slot === 't1')?.location
+    return { ko: `${slotLabel.t1}에는 ${placeLabel[at!] ?? at}에 있었다고 진술.` }
+  }
+
   const person = (id: PersonId, i: number) => ({
     id,
     name: names[i],
@@ -1081,6 +1102,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     presence: id === culprit ? t.presence : innocentPresence(id),
     // 거짓말은 범인만. 무고한 사람은 claim 을 적지 않는다(= presence 와 같다)
     ...(id === culprit ? { claim: t.claim } : {}),
+    claimSummary: claimSummaryOf(id === culprit ? t.claim : innocentPresence(id)),
     statement: {
       // 진술에서 말하는 것은 주장이다 — 범인은 claim, 나머지는 presence
       paragraphs: statementOf(
