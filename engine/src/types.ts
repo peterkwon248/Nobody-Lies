@@ -225,8 +225,31 @@ export type FloorPlan = {
     x1: number; y1: number; x2: number; y2: number
     building?: string; label?: string; lx?: number; ly?: number
   }[]
-  /** 건물 사이 도보 경로. `min` 은 분 단위 소요 */
-  walks: { building?: string; x1: number; y1: number; x2: number; y2: number; min?: number }[]
+  /**
+   * 건물 사이 도보 경로. `min` 은 분 단위 소요.
+   *
+   * ★ `from`·`to` 는 **장소**다 — 선분이 아니라 사건의 사실이다 ★ (2026-07-29 신설)
+   *
+   * 여기 있던 것은 좌표 선분 + `building` 뿐이었고, 그래서 앱이
+   * *"엔진 `walks` 는 좌표 선분이라 쌍을 도출할 수 없다"* 며 도보 시간표를
+   * **비워버렸다**(`App.jsx` §this.WALK = []). 산장에서는 `building: 'annex'` 가
+   * 우연히 건물 id 이자 장소 id 라 표가 채워졌는데, 생성 사건은 건물이
+   * `b_annex` 고 장소가 `loc3` 이라 **어긋나서 매번 경고만 났다.**
+   *
+   * ★ 그리고 이 숫자는 도면 장식이 아니다 ★ 산장에서 세라의 *"걸어서 10분"* 이
+   * 이 값이다 — 사망 추정 구간이 다섯 시간이면 왕복이 가능하고, 그 판단을
+   * **플레이어가** 한다. 그래서 진술이 이 숫자를 인용할 수 있어야 한다
+   * (`generate.ts` §statementOf). **게임은 대조해주지 않는다** — §절대 규칙의
+   * 「자동 분석 일체 금지」다.
+   */
+  walks: {
+    building?: string
+    /** 출발 장소. 없으면 앱이 도보 시간표에 담지 못한다 */
+    from?: LocationId
+    /** 도착 장소 */
+    to?: LocationId
+    x1: number; y1: number; x2: number; y2: number; min?: number
+  }[]
   /**
    * 고정물 — 화로·창문·금고·시신. 눌러서 조사한다.
    *
@@ -246,7 +269,18 @@ export type FloorPlan = {
    * **영영 안 그려진다.** 2026-07-29에 생성 사건에서 그렇게 죽어 있었다 —
    * 손으로 쓴 사건은 앱 표에 `loc` 이 박혀 있어서 드러나지 않았다.
    */
-  fixtures?: Record<string, { x: number; y: number; label?: string; loc?: LocationId }>
+  fixtures?: Record<string, {
+    x: number; y: number; label?: string; loc?: LocationId
+    /**
+     * 시신인가. 앱이 이것만 **붉게 · 아이콘 없이** 그리고, 누르면 `fixture` 가
+     * 아니라 `autopsy` 를 돌린다(`App.jsx` §buildFloorplan fixtures).
+     *
+     * ⚠ **키는 `body` 여야 한다** — 앱 `targetKey` 가 부검 조사의 키를 언제나
+     * `'body'` 로 만들기 때문이다. 이 플래그는 그 관례를 **데이터로 적어두는 것**이고,
+     * id 만 보고 짐작하지 않게 한다.
+     */
+    body?: boolean
+  }>
 }
 
 export type Fact = {

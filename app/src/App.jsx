@@ -597,6 +597,33 @@ export default class App extends React.Component {
       else if (Object.keys(gest).length && typeof console !== 'undefined') {
         console.warn(`[case] 지문이 ${Object.keys(gest).length}/${c.people.length}명분뿐이라 갈아끼우지 않았다`)
       }
+
+      /**
+       * ★ 평면도의 인물 마커 — **주장한 위치** ★ (2026-07-29 신설)
+       *
+       * `CLAIM_LOC` 이 산장 인물(`sakura`·`wonyoung`)과 산장 장소(`annex`·`home`)로
+       * 굳어 있었다. 생성 사건은 인물이 `p1..p5` 라 **한 명도 안 맞아** 마커가
+       * 전부 `shown:false` 로 떨어졌다 — 도면이 *"시간대를 넘기면 각 인물이
+       * '주장한' 위치로 이동합니다"* 라고 적어놓고 **아무도 안 움직였다.**
+       * `applyCase` 가 안 덮어쓰던 것 하나가 더 있었던 셈이다.
+       *
+       * ⚠ **`presence` 가 아니라 「말한 것」이다.** 범인은 `claim`(거짓말), 무고한
+       * 사람은 `claim` 이 없으니 `presence` 가 곧 주장이다 — 엔진 §statementOf 와
+       * **같은 입력**을 써야 진술과 도면이 어긋나지 않는다. 진실을 그리면 그게
+       * 곧 정답 누설이고 §절대 규칙의 「평면도는 판정하지 않는다」 위반이다.
+       */
+      const claimLoc = {}
+      for (const p of c.people) {
+        const cells = p.claim?.length ? p.claim : p.presence
+        if (!cells?.length) continue
+        const m = {}
+        for (const x of cells) if (x.slot && x.location) m[x.slot] = x.location
+        if (Object.keys(m).length) claimLoc[p.id] = m
+      }
+      if (Object.keys(claimLoc).length === c.people.length) this.CLAIM_LOC = claimLoc
+      else if (Object.keys(claimLoc).length && typeof console !== 'undefined') {
+        console.warn(`[case] 주장 위치가 ${Object.keys(claimLoc).length}/${c.people.length}명분뿐이라 갈아끼우지 않았다`)
+      }
     }
 
     /**
@@ -786,14 +813,30 @@ export default class App extends React.Component {
            */
           this.FIXTURES = Object.entries(fp.fixtures ?? {}).map(([id, f]) => ({
             id, ko: f.label ?? id, en: '', x: f.x, y: f.y, icon: '', loc: f.loc ?? id,
+            /**
+             * ⚠ **`body` 를 안 넘기고 있었다.** 아래 §buildFloorplan 이 이 플래그로
+             * 시신을 가른다 — 붉게 · 아이콘 없이 그리고, 누르면 `fixture` 가 아니라
+             * `autopsy` 를 돌린다. 안 넘어오면 시신이 **다른 설비와 똑같이 생기고
+             * 「고정물 조사」로 실행**된다.
+             */
+            ...(f.body ? { body: true } : {}),
           }))
 
           /**
-           * 도보 시간표도 비운다. 항목이 **장소 쌍**(`{a, b, min}`)이라 도면이
-           * 바뀌면 없는 장소를 가리킨다 — 엔진 `walks` 는 좌표 선분이라 쌍을
-           * 도출할 수 없다. 지어내느니 비우는 쪽이 맞다.
+           * 도보 시간표. 항목이 **장소 쌍**(`{a, b, min}`)이다.
+           *
+           * ★ 여기 `this.WALK = []` 이 있었다 ★ 근거는 *"엔진 `walks` 는 좌표
+           * 선분이라 쌍을 도출할 수 없다. 지어내느니 비우는 쪽이 맞다"* 였고,
+           * **그때는 맞았다.** 이제 엔진이 `from`·`to` 를 장소로 준다
+           * (`types.ts` §walks) — 지어내지 않고 **읽어서** 채운다.
+           *
+           * 비어 있던 대가는 조용했다: 아래 §도보 시간 join 이 크기가 안 맞아
+           * 생성 사건마다 *"엔진과 다르다 — 이 표는 앱 값을 쓴다"* 를 찍었는데,
+           * **앱 값도 없어서**(빈 배열) 아무것도 안 쓰고 있었다.
            */
-          this.WALK = []
+          this.WALK = (fp.walks ?? [])
+            .filter((w) => w.from && w.to && w.min !== undefined)
+            .map((w) => ({ a: w.from, b: w.to, min: w.min }))
 
           if (typeof console !== 'undefined') {
             console.info(
@@ -1275,8 +1318,25 @@ export default class App extends React.Component {
         const e = wks.get(r.b)
         if (e.min != null) r.min = e.min
       }
-      // 같은 값을 읽는 두 번째 표. `WALK` 는 알리바이 대조가 쓴다
-      const wk2 = join('도보 시간', this.WALK, fp.walks, (r) => r.b, (e) => e.building)
+      /**
+       * 같은 값을 읽는 두 번째 표.
+       *
+       * ⚠ **여기 *"`WALK` 는 알리바이 대조가 쓴다"* 고 적혀 있었는데 거짓이었다**
+       * (2026-07-29 확인). `WALK` 를 읽는 코드가 이 파일에 **하나도 없다** —
+       * 정의·비우기·이 동기화가 전부다. **프로토타입에서도 같다**(정의 1회,
+       * 사용 0회)라서 덜 옮긴 것이 아니라 **원본부터 죽은 표**다
+       * (`REVEALS[].yield`·`statements[].y` 와 같은 부류).
+       *
+       * 그리고 알리바이 대조는 **계산이 아니라 저작된 결과**다(`INV_RESULTS`
+       * `alibi:*`). 도보 시간으로 왕복 가능 여부를 앱이 판정하면 그게 곧
+       * §절대 규칙의 「자동 분석 일체 금지」 위반이다 — **그 판단은 플레이어 몫**이고,
+       * 재료는 도면의 「10분」과 진술의 *"걸어서 10분 거리입니다"* 로 준다.
+       *
+       * 그래서 **소비자를 새로 만들지 않고** 표만 참으로 유지한다. 키는 도착
+       * 장소(`to`)다 — `building` 으로 맞추면 산장(건물 id = 장소 id)만 맞고
+       * 생성 사건은 영영 어긋난다.
+       */
+      const wk2 = join('도보 시간', this.WALK, fp.walks, (r) => r.b, (e) => e.to)
       if (wk2) for (const r of this.WALK) {
         const e = wk2.get(r.b)
         if (e.min != null) r.min = e.min
@@ -1976,7 +2036,23 @@ export default class App extends React.Component {
      * **공통 「빈손」 폴백으로 떨어진다.** 물증을 주는 조사가 빈손으로 보이는 것이
      * 제일 나쁘다 — `a_victim_bel` 이 정확히 그 상태였다.
      */
-    const hit = M[a + ':' + k]
+    /**
+     * ★ `M` 은 **산장 사건일 때만** 본다 ★ (2026-07-29 오후)
+     *
+     * 위 주석의 *"앱에 있는 것은 앱 것을 쓴다"* 는 **사건이 하나뿐일 때 맞는
+     * 말이었다.** `M` 은 산장의 저작 문안인데 키(`autopsy:body` 같은 것)가
+     * 사건과 무관하게 생겨서, **생성 사건이 그대로 물려받고 있었다.**
+     *
+     * 실측(2026-07-29): 박물관·레지던시 사건에서 부검을 하면
+     * *"사인은 일산화탄소 중독 … 사망 추정이 새벽 3~5시로 좁혀졌다"* 가 떴다.
+     * 그 사건에 화로도 연탄도 없고 시간대 이름도 다른데. **「박물관 사건을
+     * 열었는데 산장 프롤로그가 나온다」와 같은 부류**이고, 이쪽은 없는 사망
+     * 시각까지 지어내 말한다.
+     *
+     * `_foreignCase` 로 가르면 산장은 **문안도 `ev` 플래그도 한 글자 안 바뀐다**
+     * (위 이식 결정 유지) — 엔진에 없는 `fixture:safe`·`search:room` 둘도 그대로.
+     */
+    const hit = this._foreignCase ? undefined : M[a + ':' + k]
     if (hit) return hit
     const eng = this.CASE_ACTIONS?.[a + ':' + k]
     if (!eng?.result) return undefined
@@ -2565,17 +2641,35 @@ export default class App extends React.Component {
     const ln = this.state.lang, tsel = this.state.mapTime;
     const G = this.GEO, VW = G.vb.w, VH = G.vb.h;
     const px = v => (v / VW * 100), py = v => (v / VH * 100);
-    // 가려진 건물의 **조건**은 엔진이 준다(`floor_plan.buildings[].revealed_after`).
-    // 아래 필터들이 아직 `'annex'` 를 이름으로 찾는 것은 남은 하드코딩이다 —
-    // 다른 건물을 가리는 사건이 오면 그때 필터를 데이터로 돌려야 한다
+    /**
+     * 가려진 건물의 **조건**은 엔진이 준다(`floor_plan.buildings[].revealed_after`).
+     *
+     * ★ 여기 있던 문자열 `'annex'` 일곱 개가 사라졌다 (2026-07-29 오후) ★
+     * 산장 별채의 이름이었다. 조건은 이미 데이터(`b.gate`)로 읽고 있었는데
+     * **무엇을 가릴지만 이름으로 찾고 있어서**, 건물을 `b_annex` 로 짓고 방을
+     * `loc3` 으로 부르는 생성 사건은 **어느 필터에도 안 걸려 별채가 0장부터
+     * 통째로 보였다** — 건물 외곽선·방·문·창·보행선 전부. 「1장 완성 후 공개」가
+     * 조용히 죽어 있었고, `types.ts` 가 *"흐리게 두지 않고 아예 감춘다"* 며
+     * 막아둔 누설이 그대로 났다.
+     *
+     * 바로 위 주석이 *"다른 건물을 가리는 사건이 오면 그때 필터를 데이터로
+     * 돌려야 한다"* 고 예고해둔 자리다. 그 사건이 왔다.
+     */
     const gatedB = G.buildings.find(b => b.gate);
     const annexOn = !gatedB || !!this.state.solved[gatedB.gate];
+    const gateB = gatedB ? gatedB.id : null;
+    // 가려질 수 있는 건물에 속한 방들의 `loc`. 열렸는지와 무관하게 모아둔다 —
+    // 「N장 완성으로 공개」 배지가 **열린 뒤에** 이 집합을 쓴다
+    const gateLoc = {};
+    if (gateB) G.rooms.forEach(r => { if (r.b === gateB) gateLoc[r.loc] = true; });
+    /** 아직 안 열렸으면 감춘다. 인자는 「이것이 가려진 건물의 것인가」 */
+    const hid = x => !annexOn && !!x;
     const eps = 0.6;
 
     const secured = {}; (this.state.invLog || []).forEach(e => { secured[e.action + ':' + e.key] = true; });
     const cluesByLoc = {}; this.FLOOR_CLUES.forEach(c => { if (secured[c.logKey]) { (cluesByLoc[c.loc] = cluesByLoc[c.loc] || []).push({ label: ln === 'ko' ? c.ko : c.en, iconPath: this.termIconPath(c.ko) }); } });
 
-    const areas = G.rooms.concat(G.zones).filter(a => a.loc !== 'annex' || annexOn);
+    const areas = G.rooms.concat(G.zones).filter(a => !hid(gateLoc[a.loc]));
     const anchorByLoc = {}; areas.forEach(a => { if (a.primary && anchorByLoc[a.loc] === undefined) anchorByLoc[a.loc] = a; });
 
     const sRoomFills = [], sHatch = [], sOffsite = [];
@@ -2589,12 +2683,12 @@ export default class App extends React.Component {
     });
 
     const sPoche = [];
-    G.buildings.filter(b => b.id !== 'annex' || annexOn).forEach(b => {
+    G.buildings.filter(b => !hid(b.id === gateB)).forEach(b => {
       sPoche.push({ d: 'M' + b.x + ' ' + b.y + ' H' + (b.x + b.w) + ' V' + (b.y + b.h) + ' H' + b.x + ' Z', color: b.poche, width: 6 });
       sPoche.push({ d: 'M' + (b.x + 3) + ' ' + (b.y + 3) + ' H' + (b.x + b.w - 3) + ' V' + (b.y + b.h - 3) + ' H' + (b.x + 3) + ' Z', color: 'var(--border)', width: 1 });
     });
 
-    const rooms = G.rooms.filter(r => r.b !== 'annex' || annexOn);
+    const rooms = G.rooms.filter(r => !hid(r.b === gateB));
     const raw = [], byB = {}; rooms.forEach(r => (byB[r.b] = byB[r.b] || []).push(r));
     Object.keys(byB).forEach(k => { const rs = byB[k];
       for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) {
@@ -2620,7 +2714,7 @@ export default class App extends React.Component {
     });
 
     const sDoorErase = [], sDoorLeaf = [], sDoorArc = [], doorLabels = [];
-    G.doors.filter(d => d.building !== 'annex' || annexOn).forEach(d => {
+    G.doors.filter(d => !hid(d.building === gateB)).forEach(d => {
       if (d.open) return;
       const p1 = { x: d.x1, y: d.y1 }, p2 = { x: d.x2, y: d.y2 };
       const hinge = d.hinge === 'p1' ? p1 : p2, free = d.hinge === 'p1' ? p2 : p1;
@@ -2636,19 +2730,19 @@ export default class App extends React.Component {
     });
 
     const sWin = [], winLabels = [];
-    G.windows.filter(w => w.building !== 'annex' || annexOn).forEach(w => {
+    G.windows.filter(w => !hid(w.building === gateB)).forEach(w => {
       const dx = w.x2 - w.x1, dy = w.y2 - w.y1, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
       [-3, 0, 3].forEach(o => sWin.push({ x1: w.x1 + nx * o, y1: w.y1 + ny * o, x2: w.x2 + nx * o, y2: w.y2 + ny * o }));
       if (w.ko) winLabels.push({ left: px(w.lx), top: py(w.ly), label: ln === 'ko' ? w.ko : w.en });
     });
 
-    const sWalk = G.walks.filter(w => w.b !== 'annex' || annexOn).map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, mx: px((w.x1 + w.x2) / 2), my: py((w.y1 + w.y2) / 2), label: w.min + (ln === 'ko' ? '분' : ' min') }));
+    const sWalk = G.walks.filter(w => !hid(w.b === gateB)).map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, mx: px((w.x1 + w.x2) / 2), my: py((w.y1 + w.y2) / 2), label: w.min + (ln === 'ko' ? '분' : ' min') }));
 
     const locs = areas.map(a => {
       const st = this.invStatusFor('search', [a.loc]);
       const searched = !!secured['search:' + a.loc], found = (cluesByLoc[a.loc] || []).length > 0, searchable = st === 'ok';
       const col = found ? 'var(--accent)' : searched ? 'var(--g-confirm)' : a.scene ? 'var(--g-contradict)' : 'var(--fg-3)';
-      const gatedNew = a.loc === 'annex' && annexOn;
+      const gatedNew = !!gateLoc[a.loc] && annexOn;
       return {
         id: a.id, primary: !!a.primary, name: ln === 'ko' ? a.ko : a.en,
         nameColor: a.scene ? 'var(--g-contradict)' : a.offsite ? 'var(--fg-4)' : 'var(--fg-2)',

@@ -150,12 +150,24 @@ function floorPlan(raw: Raw): FloorPlan {
     walks: arr(raw.walks).map((w: Raw) => ({
       x1: num(w.x1), y1: num(w.y1), x2: num(w.x2), y2: num(w.y2),
       ...(w.building ? { building: w.building } : {}),
+      // 장소 쌍. 없으면 앱이 도보 시간표를 못 채운다 — `types.ts` §walks
+      ...(w.from ? { from: w.from as string } : {}),
+      ...(w.to ? { to: w.to as string } : {}),
       ...(w.min !== undefined ? { min: num(w.min) } : {}),
     })),
     ...(raw.fixtures ? { fixtures: Object.fromEntries(
       Object.entries(raw.fixtures as Raw).map(([k, v]) => [k, {
         x: num((v as Raw).x), y: num((v as Raw).y),
         ...((v as Raw).label ? { label: String((v as Raw).label) } : {}),
+        /**
+         * ⚠ **`loc` 과 `body` 를 삼키고 있었다.** 여기가 YAML 경로 전용이라
+         * 생성 사건(`generateCase` 가 `Case` 를 직접 만든다)에는 안 걸렸고,
+         * 산장은 앱이 제 표에 `loc`·`body` 를 하드코딩해 갖고 있어서 안 드러났다.
+         * **손으로 쓴 사건이 둘째가 되는 순간 물릴 자리였다** — `loc` 이 없으면
+         * 앱이 `revealedLocs` 로 걸러 **좌표가 있어도 안 그려진다**(types.ts §fixtures).
+         */
+        ...((v as Raw).loc ? { loc: String((v as Raw).loc) } : {}),
+        ...((v as Raw).body ? { body: true } : {}),
       }]),
     ) } : {}),
   }

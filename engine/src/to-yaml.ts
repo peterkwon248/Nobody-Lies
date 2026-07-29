@@ -83,9 +83,9 @@ export function caseToRaw(c: Case): Raw {
         windows: fp.windows?.map((w) => tidy({
           x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, building: w.building, label: w.label, lx: w.lx, ly: w.ly,
         })),
-        walks: fp.walks?.map((w) => tidy({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, building: w.building, min: w.min })),
+        walks: fp.walks?.map((w) => tidy({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, building: w.building, from: w.from, to: w.to, min: w.min })),
         fixtures: fp.fixtures
-          ? Object.fromEntries(Object.entries(fp.fixtures).map(([k, v]) => [k, tidy({ x: v.x, y: v.y, label: v.label })]))
+          ? Object.fromEntries(Object.entries(fp.fixtures).map(([k, v]) => [k, tidy({ x: v.x, y: v.y, label: v.label, loc: v.loc, body: v.body })]))
           : undefined,
       })
       : undefined,

@@ -34,14 +34,41 @@
     "계약 분쟁"
   ],
   "rooms": [
-    "부조정 2실",
-    "자료 보관실",
-    "분장실",
-    "휴게실",
-    "송출 기계실",
-    "로비",
-    "탕비실",
-    "비상계단"
+    {
+      "name": "부조정 2실",
+      "noWindow": true,
+      "fixture": "조정 콘솔"
+    },
+    {
+      "name": "자료 보관실",
+      "noWindow": true,
+      "fixture": "테이프 선반"
+    },
+    {
+      "name": "분장실",
+      "fixture": "분장 거울"
+    },
+    {
+      "name": "휴게실",
+      "fixture": "자판기"
+    },
+    {
+      "name": "송출 기계실",
+      "noWindow": true,
+      "fixture": "송출 랙"
+    },
+    {
+      "name": "로비",
+      "fixture": "안내 데스크"
+    },
+    {
+      "name": "탕비실",
+      "fixture": "싱크대"
+    },
+    {
+      "name": "비상계단",
+      "fixture": "소화전"
+    }
   ],
   "places": {
     "hall": "부조정실",

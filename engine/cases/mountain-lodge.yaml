@@ -176,18 +176,24 @@ floor_plan:
     - { x1: 410, y1: 60, x2: 518, y2: 60, label: 창문, lx: 464, ly: 51 }
     - { x1: 820, y1: 66, x2: 890, y2: 66, building: annex, label: 창문, lx: 855, ly: 61 }
 
-  # 건물 사이 도보. min 은 분. 세라의 진술("걸어서 10분")이 이 값과 맞아야 한다
+  # 건물 사이 도보. min 은 분. 세라의 진술("걸어서 10분")이 이 값과 맞아야 한다.
+  # from·to 는 **장소**다 — 앱의 도보 시간표(WALK)가 장소 쌍이라 이것 없이는 못 채운다.
+  # 여기서는 building 과 to 가 우연히 같은 낱말이지만(annex 가 건물이자 장소),
+  # 생성 사건은 건물이 b_annex 고 장소가 loc3 이라 갈린다
   walks:
-    - { building: annex,    x1: 602, y1: 140, x2: 712, y2: 140, min: 10 }
-    - { building: approach, x1: 602, y1: 500, x2: 712, y2: 500, min: 2 }
+    - { building: annex,    from: main, to: annex,    x1: 602, y1: 140, x2: 712, y2: 140, min: 10 }
+    - { building: approach, from: main, to: approach, x1: 602, y1: 500, x2: 712, y2: 500, min: 2 }
 
   # 눌러서 조사하는 고정물. 키는 조사 대상 id
   # label = 도면 위 한국어 이름표. 영문은 아직 앱에 있다 (로마자 표기 미결)
+  # loc 은 그 고정물이 어느 장소의 것인가. 없으면 앱이 revealedLocs 로 걸러 안 그린다.
+  # body 는 시신 표식 — 앱이 이것만 붉게 그리고 누르면 autopsy 를 돌린다.
+  # 키가 body 여야 한다(앱 targetKey 가 부검 키를 언제나 'body' 로 만든다)
   fixtures:
-    hearth: { x: 200, y: 415, label: 화로 }
-    window: { x: 204, y: 76,  label: 테이프 }
-    safe:   { x: 466, y: 205, label: 금고 }
-    body:   { x: 200, y: 300, label: 시신 }
+    hearth: { x: 200, y: 415, label: 화로,   loc: room }
+    window: { x: 204, y: 76,  label: 테이프, loc: room }
+    safe:   { x: 466, y: 205, label: 금고,   loc: main }
+    body:   { x: 200, y: 300, label: 시신,   loc: room, body: true }
 
 
 # ─────────────────────────────────────────────────────────────────────

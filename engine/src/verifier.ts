@@ -674,6 +674,24 @@ export function verify(c: Case): VerifyResult {
       if (!placed.has(l.id))
         errors.push(`장소 '${l.label}' 이 평면도에 없다 — 플레이어가 갈 수 없다`)
 
+    /**
+     * 9-3d. **보행선의 장소 쌍이 실재하는가** (2026-07-29 신설)
+     *
+     * `from`·`to` 는 앱의 도보 시간표(`WALK`)를 채우는 키다. 오타가 나면
+     * **조용히 안 채워진다** — 경고 한 줄만 찍히고 게임은 멀쩡히 돌아간다.
+     * 이 저장소가 여러 번 밟은 「조용한 탈락」이라 오류로 세운다.
+     *
+     * 없는 것 자체는 오류가 아니다 — 본채 안에서만 도는 사건은 보행선이 없다.
+     */
+    for (const w of c.floorPlan.walks ?? []) {
+      for (const [k, v] of [['from', w.from], ['to', w.to]] as const) {
+        if (v && !locIds.has(v))
+          errors.push(`보행선의 ${k} 가 없는 장소를 가리킨다: '${v}' — 도보 시간표가 조용히 빈다`)
+      }
+      if (w.min !== undefined && (!w.from || !w.to))
+        warnings.push(`보행선에 ${w.min}분이 적혀 있는데 from·to 가 없다 — 앱 도보 시간표에 안 담긴다`)
+    }
+
     // 현장은 반드시 도면에 있고 `scene` 으로 표시돼야 한다
     if (c.incident.scene) {
       const sceneRoom = c.floorPlan.rooms.find((r) => r.loc === c.incident.scene)
