@@ -1,0 +1,43 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+
+  // ★ 포매터는 끈다 ★
+  // 켜면 `App.jsx` 를 통째로 다시 쓰는데, `port-check` 가 **바로 그 파일**을 정규식으로
+  // 훑어 프로토타입 308갈래와 대조한다. 서식 취향 때문에 이식 감시를 깨뜨리는 것은
+  // 남는 장사가 아니다. 그리고 이 저장소 서식(2칸·세미콜론 없음·홑따옴표)은 이미
+  // 일관돼 있다 — **린터를 들인 이유는 서식이 아니라 결함이다.**
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "javascript": { "formatter": { "enabled": false } },
+
+  // `app/src/App.jsx` 는 일부러 뺐다 — DC React export 가 정본이고
+  // (`MEMORY.md` §`App.jsx` 가 정본이다) 손으로 고치는 파일이 아니다.
+  // 그쪽 감시는 `port-check` 가 맡는다.
+  "files": {
+    "ignoreUnknown": false,
+    "includes": ["engine/src/**", "scripts/**", "app/src/main.jsx", "app/src/deriver.js"]
+  },
+
+  // `correctness` 만 켠다. `style`·`complexity` 는 취향 다툼이 섞여 있어 **「늘 빨간 검사」**
+  // 가 되고, 그러면 검사가 거짓말이 된다 (`MEMORY.md` 에 반복 기록된 부류).
+  // 여기서 걸리는 것은 **전부 진짜 결함이어야 한다.**
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none",
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "warn",
+        "noUnreachable": "error",
+        "noConstantCondition": "error",
+        "noSelfAssign": "error",
+        "noSwitchDeclarations": "error",
+        "noVoidTypeReturn": "error",
+        "useValidTypeof": "error",
+        "noInvalidUseBeforeDeclaration": "error"
+      }
+    }
+  }
+}

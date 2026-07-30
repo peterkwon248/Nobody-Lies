@@ -614,12 +614,21 @@ export function verify(c: Case): VerifyResult {
   }
 
   // 시각 공란의 답도 slots 어휘여야 한다
+  //
+  // ★ 인물 계열이 빠져 있었다 (2026-07-31 · 감사 A) ★ 시각·장소는 무는데 **인물은 안
+  // 물었다** — `answer` 를 아무 데도 없는 문자열로 바꿔도 게이트가 초록이었다. 답은
+  // 인물 **id** 다(`sakura`·`yujin`, 이름이 아니다). `closed` 일 때만 본다: `discovered`
+  // 는 확보 단어라 위 §확보 후보 검사가 따로 물고, 여기서 보면 거짓 실패가 된다.
+  const answerPersonIds = new Set([...c.people.map((x) => x.id), c.victim].filter(Boolean))
+  const PERSON_LABELS = new Set(['인물', '마지막목격자', '협박대상'])
   for (const ch of c.chapters)
     for (const b of ch.blanks) {
       if (b.label === '시각' && !slotIds.has(b.answer))
         errors.push(`${ch.order}장 시각 공란의 답 '${b.answer}'이 slots 에 없다`)
       if (b.label === '장소' && !locIds.has(b.answer))
         errors.push(`${ch.order}장 장소 공란의 답 '${b.answer}'이 locations 에 없다`)
+      if (PERSON_LABELS.has(b.label) && b.candidates === 'closed' && !answerPersonIds.has(b.answer))
+        errors.push(`${ch.order}장 ${b.label} 공란의 답 '${b.answer}'이 people 에 없다`)
     }
 
   // 8. 조사 대상 대비 예산 비율

@@ -64,6 +64,50 @@ function arr(v: unknown): any[] {
 }
 
 /**
+ * **필수 숫자 칸.** 있는지만 보지 말고 숫자인지도 본다.
+ *
+ * 2026-07-31에 재서 확인했다 — `cost` 를 지우거나 `'한개'` 를 넣으면 파싱도 검증기도
+ * 통과하고, 게이트가 **`기대 NaN회` 인데 난이도 `easy` · 「검증 통과」**를 인쇄했다.
+ * `types.ts` 는 `cost: number` 라고 말하는데 그걸 확인하는 코드가 한 줄도 없었다.
+ * **타입이 거짓말을 하고 게이트가 초록으로 그 거짓말을 찍는다** — NaN 은 비교가 전부
+ * 거짓이라 난이도 사다리를 조용히 맨 아래로 떨어뜨린다.
+ *
+ * ⚠ 기하(`floorPlan`·`relationGraph`)의 `num` 은 일부러 너그럽다 — 좌표는 검증기
+ * §9-3i 가 따로 재고, 없는 좌표는 0 이 맞는 기본값이다. 여기는 그 층이 아니다.
+ */
+function reqNum(p: Problems, path: string, v: unknown): number {
+  if (v === undefined || v === null) {
+    p.add(path, '필수 숫자인데 비어 있다')
+    return 0
+  }
+  const n = typeof v === 'number' ? v : Number(v)
+  if (!Number.isFinite(n)) {
+    p.add(path, `숫자여야 한다 (받은 값: ${JSON.stringify(v)})`)
+    return 0
+  }
+  return n
+}
+
+/**
+ * **id 중복.** 조회 집합을 `new Set(...)` 으로 만들면 중복이 **조용히 삼켜진다** —
+ * 뒤엣것은 배열에 남아 있는데 id 로는 영원히 앞엣것만 잡힌다.
+ *
+ * 2026-07-31에 재서 확인했다 — 같은 id 를 **더해서** 넣으면 파싱·검증기 둘 다 통과했다.
+ * 그전에 「중복이 물린다」고 보였던 것은 id 를 **덮어써서** 원래 id 가 사라지는 바람에
+ * 엉뚱한 곳의 참조가 깨진 것이었다. **중복 자체는 아무도 안 보고 있었다.**
+ */
+function uniqueIds(p: Problems, path: string, ids: unknown[]): void {
+  const seen = new Set<string>()
+  ids.forEach((raw, i) => {
+    if (raw === undefined || raw === null) return
+    const id = String(raw)
+    if (seen.has(id))
+      p.add(`${path}[${i}]`, `id '${id}' 가 중복이다 — 앞엣것에 가려 영원히 참조되지 않는다`)
+    seen.add(id)
+  })
+}
+
+/**
  * 문장 하나. 저작 편의를 위해 두 형태를 다 받는다.
  *   "한 줄"                     → { ko: '한 줄' }        번역 전
  *   { ko: '한 줄', en: 'A line' } → 그대로               번역 후
@@ -199,9 +243,12 @@ export function parseCase(raw: unknown, source: string): Case {
   const p = new Problems()
   const c = (raw ?? {}) as Raw
 
-  for (const k of ['id', 'title', 'scale', 'budget', 'victim', 'culprit']) {
+  for (const k of ['id', 'title', 'scale', 'victim', 'culprit']) {
     if (c[k] === undefined || c[k] === null) p.add(k, '필수 항목이 비어 있다')
   }
+  // 예산은 게임의 자원 그 자체다. 문자열이 들어오면 난이도 계산이 통째로 어긋난다
+  // (`budget: '여섯'` 이 hard 를 easy 로 바꾸는 것을 재서 확인했다 — 2026-07-31)
+  const budget = reqNum(p, 'budget', c.budget)
   if (c.scale && c.scale !== 'daily' && c.scale !== 'campaign')
     p.add('scale', `'daily' 또는 'campaign' 이어야 한다 (받은 값: ${c.scale})`)
 
@@ -216,6 +263,7 @@ export function parseCase(raw: unknown, source: string): Case {
   })
   if (!slotList.length)
     p.add('slots', '시간 축이 비어 있다 — presence·시각 공란이 쓸 어휘가 없다')
+  uniqueIds(p, 'slots', slotList.map((t) => t.id))
   const slots = new Set(slotList.map((t) => t.id))
 
   // 장소 레지스트리. presence·claim·장소 공란이 이 어휘만 쓴다.
@@ -229,6 +277,7 @@ export function parseCase(raw: unknown, source: string): Case {
   })
   if (!locationList.length)
     p.add('locations', '장소 축이 비어 있다 — presence·장소 공란이 쓸 어휘가 없다')
+  uniqueIds(p, 'locations', locationList.map((l) => l.id))
   const locations = new Set(locationList.map((l) => l.id))
 
   if (inc.scene && locations.size && !locations.has(inc.scene))
@@ -260,6 +309,7 @@ export function parseCase(raw: unknown, source: string): Case {
       } } : {}),
     }
   })
+  uniqueIds(p, 'people', people.map((x) => x.id))
   // people = 용의자다. 피해자는 여기 들어가지 않는다 — guiltTable 이 people 을
   // 순회하므로 피해자를 넣으면 피해자의 유죄를 계산하게 된다.
   // 다만 fact.subject 는 피해자를 가리킬 수 있다(예: 사인).
@@ -291,6 +341,7 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(e?.yields_terms ? { yieldsTerms: e.yields_terms } : {}),
     }
   })
+  uniqueIds(p, 'evidence', evidence.map((e) => e.id))
   const evidenceIds = new Set(evidence.map((e) => e.id))
 
   const facts: Fact[] = arr(c.facts).map((f: Raw, i) => {
@@ -308,6 +359,7 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(f?.available_after !== undefined ? { availableAfter: f.available_after } : {}),
     }
   })
+  uniqueIds(p, 'facts', facts.map((f) => f.id))
   const factIds = new Set(facts.map((f) => f.id))
   facts.forEach((f, i) => {
     for (const r of f.requires ?? [])
@@ -335,8 +387,8 @@ export function parseCase(raw: unknown, source: string): Case {
     for (const b of arr(a?.boosted_by))
       if (!factIds.has(b?.fact)) p.add(`${at}.boosted_by`, `사실 '${b?.fact}' 가 없다`)
     return {
-      id: a?.id, label: a?.label, cost: a?.cost, gives: arr(a?.gives),
-      salience: a?.salience, yield: a?.yield,
+      id: a?.id, label: a?.label, cost: reqNum(p, `${at}.cost`, a?.cost), gives: arr(a?.gives),
+      salience: reqNum(p, `${at}.salience`, a?.salience), yield: a?.yield,
       ...(a?.verb ? { verb: a.verb as Action['verb'] } : {}),
       ...(a?.clues ? { clues: arr(a.clues).map((cl: Raw) => ({
         person: cl.person, slot: cl.slot, text: text(cl.text) ?? { ko: '' },
@@ -351,11 +403,13 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(a?.target ? { target: { kind: a.target.kind, id: a.target.id } } : {}),
     }
   })
+  uniqueIds(p, 'actions', actions.map((a) => a.id))
   const actionIds = new Set(actions.map((a) => a.id))
 
   const chapters: Chapter[] = arr(c.chapters).map((ch: Raw, i) => {
     const at = `chapters[${i}]`
-    if (ch?.order === undefined) p.add(at, 'order 가 없다')
+    // 장 번호는 `reveals` 의 chapterComplete 트리거가 찾는 열쇠다 — 숫자가 아니면 못 찾는다
+    const order = reqNum(p, `${at}.order`, ch?.order)
     if (!ch?.title) p.add(at, 'title 이 없다')
     for (const f of arr(ch?.requires_facts))
       if (!factIds.has(f)) p.add(`${at}.requires_facts`, `사실 '${f}' 가 없다`)
@@ -391,7 +445,7 @@ export function parseCase(raw: unknown, source: string): Case {
     })
 
     return {
-      order: ch?.order, title: ch?.title,
+      order, title: ch?.title,
       ...(ch?.opening ? { opening: ch.opening } : {}),
       blanks,
       ...(report.length ? { report } : {}),
@@ -399,6 +453,15 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(ch?.epilogue_order !== undefined ? { epilogueOrder: ch.epilogue_order } : {}),
       ...(ch?.epilogue ? { epilogue: ch.epilogue } : {}),
     }
+  })
+
+  // 장 번호 중복. `reveals` 의 chapterComplete 가 `chapters.some(ch => ch.order === n)`
+  // 으로 찾으므로 둘이 같으면 **어느 장이 열리는지가 배열 순서에 좌우된다**
+  const seenOrder = new Set<number>()
+  chapters.forEach((ch, i) => {
+    if (seenOrder.has(ch.order))
+      p.add(`chapters[${i}]`, `order ${ch.order} 이 중복이다 — reveals 가 어느 장을 가리키는지 정해지지 않는다`)
+    seenOrder.add(ch.order)
   })
 
   const reveals: Reveal[] = arr(c.reveals).map((r: Raw, i) => {
@@ -491,7 +554,7 @@ export function parseCase(raw: unknown, source: string): Case {
   p.throwIfAny(source)
 
   return {
-    id: c.id, title: c.title, scale: c.scale, budget: c.budget,
+    id: c.id, title: c.title, scale: c.scale, budget,
     incident: {
       kind: inc.kind, subject: inc.subject, description: inc.description,
       ...(inc.scene ? { scene: inc.scene } : {}),

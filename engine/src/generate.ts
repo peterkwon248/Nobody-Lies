@@ -555,7 +555,36 @@ export type GenerateOptions = {
   deathCells?: number
 }
 
+/**
+ * 사건 하나를 만든다. **두 층으로 갈려 있다** (2026-07-31 분리).
+ *
+ * ```
+ * buildWorld       진실 세계 · 평면도 · 진술        1184줄
+ * buildGameLayer   물증 · 조사 · 공란 · 예산         766줄
+ * ```
+ *
+ * **왜 갈랐나.** 사용자의 오프라인 추리 텍스트를 손으로 옮겨보니(2026-07-31),
+ * 원문이 주는 것은 **진실 세계뿐**이고(격자·범인·동기·핵심 물증 = 64항목)
+ * 조사·공란·레드헤링·예산 112항목은 **전부 지어내야 했다.** 그 112개는
+ * 매니페스토 §5 가 코드 몫이라고 못박은 「게임 로직」이다 — LLM 에게 맡기면 안 된다.
+ *
+ * 그래서 들여오기는 `buildWorld` 자리에 **밖에서 온 세계**를 꽂고
+ * `buildGameLayer` 를 그대로 부르는 모양이 된다.
+ *
+ * ⚠ **아직 그 입구는 없다.** 지금은 가르기만 했다 — `buildWorld` 의 반환이
+ * 곧 그 입구의 계약이고, 43개 필드가 그 목록이다.
+ */
 export function generateCase(seed: number, palette?: Palette, opts?: GenerateOptions): Case {
+  return buildGameLayer(buildWorld(seed, palette, opts))
+}
+
+/**
+ * ① 진실 세계 — 누가 어디에 있었나, 무엇이 있었나, 무엇이라고 말했나.
+ *
+ * 트릭을 먼저 고르고 거기서 격자·물증·조사가 갈라져 나온다(아래 §트릭 참조).
+ * **들여오기는 이 함수의 반환을 밖에서 만들어 오는 일이다.**
+ */
+function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
   const r = rng(seed)
   const chapters = Math.max(2, Math.min(8, Math.round(opts?.chapters ?? 5)))
   const midChapters = chapters - 2
@@ -1739,6 +1768,45 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       gesture: { pre: { ko: gestureOf(i).pre }, post: { ko: gestureOf(i).post } },
     },
   })
+
+
+  // ── 이음매 ── 아래 43개가 게임화 층으로 건너간다.
+  // ⚠ 이 목록이 곧 「밖에서 세계를 가져올 때 채워야 할 것」의 정본이다.
+  return {
+    DOORS, FIRST, HERRING, LAST,
+    P, SITES, SUBROOMS, TL,
+    WALKS, WIN, WINDOWS, alias,
+    annexBox, approachBox, awayBox, chapters,
+    claimLoc, claimPerson, culprit, deathCells,
+    ids, innocentPresence, innocents, jobs,
+    locIds, motive, names, onSite,
+    person, pick, placeFixture, placeLabel,
+    places, r, rooms, secretObject,
+    secretOf, seed, slotLabel, strands,
+    t, tool, usedKeys,
+  }
+}
+
+/**
+ * ② 게임화 층 — 진실 세계를 **놀 수 있는 것**으로 만든다.
+ *
+ * 물증 · 조사 · 레드헤링 · 공란 · 보고서 · 확보 단어 · 정보 공개.
+ * 원문 텍스트가 절대 주지 않는 부분이고, **매니페스토 §5 대로 코드가 갖는다.**
+ */
+export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
+  const {
+    DOORS, FIRST, HERRING, LAST,
+    P, SITES, SUBROOMS, TL,
+    WALKS, WIN, WINDOWS, alias,
+    annexBox, approachBox, awayBox, chapters,
+    claimLoc, claimPerson, culprit, deathCells,
+    ids, innocentPresence, innocents, jobs,
+    locIds, motive, names, onSite,
+    person, pick, placeFixture, placeLabel,
+    places, r, rooms, secretObject,
+    secretOf, seed, slotLabel, strands,
+    t, tool, usedKeys,
+  } = w
 
   const baseEvidence: Ev[] = [
     { id: 'e_tool', description: tool, foundAt: places.room, record: '바닥에 떨어져 있었다.', yieldsTerms: [tool] },
