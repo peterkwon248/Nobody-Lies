@@ -783,6 +783,121 @@ export function verify(c: Case): VerifyResult {
           '트릭이 만든 조사는 언제나 물건 이름이라 **모양이 갈리는 쪽이 쓸모 있는 쪽**이 된다 — ' +
           '팔레트의 places·rooms 에 fixture 를 채우면 사라진다',
       )
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  9-3i. **도면의 기하** (2026-07-30 오후 신설)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 배치가 붙박이 좌표에서 **생성**으로 바뀌었다(`generate.ts` §배치). 상수였을
+     * 때는 한 번 맞으면 영영 맞았지만, 비율을 손대는 순간 방이 겹치거나 문이 허공에
+     * 뜬다 — 그리고 **게이트 어디에도 그걸 보는 눈이 없었다.**
+     *
+     * ★ 앱이 방의 테두리를 안 그린다는 것이 이 검사들의 뿌리다 ★ 벽은 **방끼리
+     * 맞닿은 변**에서만 나오므로(`App.jsx` §sWalls), 방이 봉투를 빈틈 없이 채우지
+     * 않으면 그 빈 자리에 **선이 하나도 안 그려져** 방들이 허공으로 번진다.
+     *
+     * ⚠ **손으로 쓴 산장이 넷 다 통과한다** — 검사를 만들고 먼저 산장에 대봤다.
+     * 처음엔 산장이 **네 갈래에서 떨어졌는데 사건이 아니라 측정이 틀렸다**:
+     * `building` 은 **선택 필드**라 산장의 문·창이 생략하고 앱은 본채로 본다.
+     * 그래서 아래는 전부 `bOf()` 로 기본값을 메운다. §9-3g 가 *"「창 슬롯만
+     * 가리켜야 한다」로 걸면 산장이 떨어진다"* 고 적어둔 그 함정을 그대로 밟았다.
+     */
+    const MAIN = c.floorPlan.buildings[0]?.id
+    const bOf = (x: { building?: string }) => x.building ?? MAIN
+    const EPS = 0.6
+    const near = (a: number, b: number) => Math.abs(a - b) < EPS
+    /** 선분이 이 사각형의 **변 위**에 놓였는가 */
+    const onRect = (r: { x: number; y: number; w: number; h: number },
+                    x1: number, y1: number, x2: number, y2: number) => {
+      const L = r.x, R = r.x + r.w, T = r.y, B = r.y + r.h
+      const wi = (a: number, lo: number, hi: number) => a >= lo - 1 && a <= hi + 1
+      return (near(y1, y2) && (near(y1, T) || near(y1, B)) && wi(x1, L, R) && wi(x2, L, R)) ||
+             (near(x1, x2) && (near(x1, L) || near(x1, R)) && wi(y1, T, B) && wi(y2, T, B))
+    }
+    const roomsBy = new Map<string, typeof c.floorPlan.rooms>()
+    for (const r of c.floorPlan.rooms) {
+      const k = bOf(r) ?? ''
+      if (!roomsBy.has(k)) roomsBy.set(k, [])
+      roomsBy.get(k)!.push(r)
+    }
+
+    for (const [bid, rs] of roomsBy) {
+      const b = c.floorPlan.buildings.find((x) => x.id === bid)
+      if (!b) {
+        errors.push(`평면도의 방이 없는 건물을 가리킨다: '${bid}'`)
+        continue
+      }
+      // ⓐ 방끼리 겹치면 **앱이 그대로 겹쳐 그린다** — 07-29에 「엉망」을 만든 그 자리다
+      for (let i = 0; i < rs.length; i++)
+        for (let j = i + 1; j < rs.length; j++) {
+          const A = rs[i]!, B = rs[j]!
+          const ox = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x)
+          const oy = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y)
+          if (ox > EPS && oy > EPS)
+            errors.push(`평면도의 방이 겹친다: '${A.label}' ∩ '${B.label}' (${Math.round(ox)}×${Math.round(oy)})`)
+        }
+      // ⓑ 방이 건물 밖으로 나가면 외벽 밖에 방이 뜬다
+      for (const r of rs)
+        if (r.x < b.x - EPS || r.y < b.y - EPS || r.x + r.w > b.x + b.w + EPS || r.y + r.h > b.y + b.h + EPS)
+          errors.push(`평면도의 방 '${r.label}' 이 건물 '${bid}' 밖으로 나간다`)
+      /**
+       * ⓒ 방이 봉투를 빈틈 없이 채우는가. **면적 합으로 센다** — 겹침(ⓐ)이 0인
+       * 상태에서 합이 같으면 빈틈도 0이다.
+       *
+       * ⚠ **경고다.** 산장도 생성 사건도 지금 전부 지키지만, 이것은 「그렇게 보이면
+       * 안 예쁘다」이지 **게임이 막히는 것은 아니다**(못 가는 방은 ⓓ가 따로 문다).
+       * 오류로 걸면 저작자가 중정 있는 건물을 그리려는 순간 게이트가 막는다 —
+       * §9-3e·§9-10 을 경고로 내린 것과 같은 판단이다.
+       */
+      const sum = rs.reduce((a, r) => a + r.w * r.h, 0)
+      if (Math.abs(sum - b.w * b.h) > 1)
+        warnings.push(
+          `건물 '${bid}' 에 방이 없는 자리가 있다 (방 합 ${sum} ≠ 건물 ${b.w * b.h}) — ` +
+            '앱은 벽을 **방끼리 맞닿은 변**에서만 그리므로 그 자리에는 선이 하나도 안 그려진다',
+        )
+      /**
+       * ⓓ **문으로 서로 닿는가.** 조사 화면이 곧 도면이라 못 가는 방은 없는 방이다.
+       *
+       * ⚠ 「홀에서 닿는가」로 쓰면 **산장이 떨어진다** — 산장의 장소 id 는 `main`
+       * 이고 `hall` 이라는 이름이 없다. 참말은 「그 건물의 방들이 이어져 있다」다.
+       */
+      const inner = c.floorPlan.doors.filter((d) => bOf(d) === bid && !d.ext)
+      const adj = new Map(rs.map((r) => [r.id, [] as string[]]))
+      for (const d of inner) {
+        const touch = rs.filter((r) => onRect(r, d.x1, d.y1, d.x2, d.y2))
+        for (const a of touch) for (const z of touch) if (a !== z) adj.get(a.id)!.push(z.id)
+      }
+      const seen = new Set([rs[0]!.id])
+      const queue = [rs[0]!.id]
+      while (queue.length)
+        for (const nb of adj.get(queue.shift()!) ?? [])
+          if (!seen.has(nb)) { seen.add(nb); queue.push(nb) }
+      for (const r of rs)
+        if (!seen.has(r.id))
+          errors.push(`평면도의 방 '${r.label}' 에 문이 없다 — 다른 방에서 갈 수 없는 방이다`)
+    }
+    // ⓔ 문은 어느 방의 변 위에, 창은 건물 바깥벽 위에
+    for (const d of c.floorPlan.doors)
+      if (!(roomsBy.get(bOf(d) ?? '') ?? []).some((r) => onRect(r, d.x1, d.y1, d.x2, d.y2)))
+        errors.push(`평면도의 문 '${d.id}' 이 어느 방의 변에도 없다 — 허공에 뜬 문이다`)
+    for (const w of c.floorPlan.windows ?? []) {
+      const b = c.floorPlan.buildings.find((x) => x.id === bOf(w))
+      if (!b || !onRect(b, w.x1, w.y1, w.x2, w.y2))
+        errors.push(`평면도의 창(${w.x1},${w.y1})이 건물 바깥벽 위에 없다 — 창은 바깥벽에만 난다`)
+    }
+    /**
+     * ⓕ 고정물이 **자기 장소 안**에 있는가. 07-30까지 시신 좌표가 `x:200, y:300`
+     * 으로 박혀 있었고 현장이 늘 왼쪽 큰 칸이라 맞았다 — 배치가 움직이면
+     * **시신이 남의 방에 눕는다.** 도면이 사실을 잘못 말하는 것이다.
+     */
+    for (const [key, fx] of Object.entries(c.floorPlan.fixtures ?? {})) {
+      if (!fx.loc) continue
+      const host = [...c.floorPlan.rooms, ...c.floorPlan.zones].filter((a) => a.loc === fx.loc)
+      if (!host.length) continue
+      if (!host.some((a) => fx.x >= a.x - 1 && fx.x <= a.x + a.w + 1 && fx.y >= a.y - 1 && fx.y <= a.y + a.h + 1))
+        errors.push(`고정물 '${fx.label ?? key}' 이 자기 장소('${fx.loc}') 밖에 찍힌다`)
+    }
   }
 
   /**

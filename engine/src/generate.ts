@@ -793,9 +793,15 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   /** 팔레트가 문자열로 줘도, 성질을 붙여 줘도 받는다 */
   const asRoom = (r: string | RoomSpec): RoomSpec => (typeof r === 'string' ? { name: r } : r)
   const extraRooms: RoomSpec[] = [...(P.rooms ?? [])].map(asRoom)
-  // 넷째가 **딸린 방**(`SUBROOMS`)의 이름이 된다 — 셋에서 멈추면 그 자리가 빈다
+  /**
+   * 넷째부터가 **딸린 방**(`SUBROOMS`)의 이름이 된다 — 거기서 멈추면 그 자리가 빈다.
+   *
+   * ⚠ **넷에서 여섯으로 늘렸다** (2026-07-30 오후). 딸린 방이 규모에 따라 1~3개
+   * 생기므로(아래 §배치) 이름이 셋 더 필요하다. 기본 팔레트가 여덟을 갖고 있어
+   * 팔레트가 아무것도 안 줘도 채워진다.
+   */
   for (const d of DEFAULT_PALETTE.rooms) {
-    if (extraRooms.length >= 4) break
+    if (extraRooms.length >= 6) break
     const n = asRoom(d)
     if (!extraRooms.some((r) => r.name === n.name)) extraRooms.push(n)
   }
@@ -820,65 +826,207 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     walkMin?: number
   }
   /**
-   * ★ 건물 도면 ★ — 산장(`mountain-lodge.yaml` §floor_plan)의 배치를 따른다.
+   * ─────────────────────────────────────────────────────────────
+   *  배치 — **건물이 한 채뿐이었다** (2026-07-30 오후 재작성)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 07-29에 도면을 「격자에서 건물로」 올렸는데 그 건물이 **한 채**였다. 사용자가
+   * 화면을 보고 잡았다 — *"현장도는 계속 이 구조로 고정인 거 같네."* 100건 전수로
+   * 재니 맞았다:
    *
    * ```
-   *      x=70        330            602      712      940
-   * y=60 ┌──────────┬──────────────┐         ┌────────┐
-   *      │          │     홀        │         │  별채   │ ← 1장 완성 후 나타난다
-   *      │          │  272×200     │         │ 228×150│
-   *      │   현장    ├──────────────┤ 정문     └────────┘
-   *      │  260×485 │    방1        │  ⇢ 10분
-   *      │  ★ 가장  │  272×150     │         ┌────────┐
-   *      │    크다   ├──────────────┤         │자택(밖) │
-   *      │          │    방2        │         └────────┘
-   *      │          │  272×135     │ 후문     ┌────────┐
-   * y=545└──────────┴──────────────┘  ⇢ 2분   │ 진입로  │
+   * 서로 다른 방 배치(좌표)   1종      ← 100건이 좌표까지 동일
+   * 방 개수                  6 고정
+   * 구역 개수                2 고정
    * ```
    *
-   * **다섯이 전부 다른 크기다.** 현장은 126,100 이고 나머지는 30,780~54,400 이라
-   * 도면을 열자마자 어디가 사건의 중심인지 보인다 — 산장이 그렇게 생겼다.
+   * 이름만 바뀌고 있었다. 사건을 여러 개 만들수록 눈에 띈다 — **캠페인 앱에서는
+   * 치명적**이다. 이제 **네 가지 타일링** 중 하나를 트릭과 규모에서 고른다.
+   *
+   * ★ 왜 「타일링」인가 — **앱은 방의 테두리를 안 그린다** ★
+   *
+   * 벽은 **방끼리 맞닿은 변**에서만 나오고(`App.jsx` §sWalls, 2971~2993행),
+   * 건물 외곽선은 `buildings` 의 **직사각형** 하나로 그려진다(§sPoche). 그래서
+   * ㄱ자 외곽선이나 중정(빈 속)을 만들면 그 빈 자리를 두르는 선이 **하나도 안
+   * 그려져** 방들이 허공으로 번져 보인다. 봉투는 직사각형이고 방은 그 안을
+   * **빈틈 없이** 채워야 한다 — 취향이 아니라 렌더러의 계약이다.
+   *
+   * ⚠ **좌표를 흩뿌리지 않는다.** 07-29에 「밋밋하다」를 고치려고 격자를 손보다가
+   * 「엉망」을 만든 적이 있다. 네 타일링은 다 **저작한 비율**이고, 기계가 정하는
+   * 것은 「어느 타일링 · 현장이 어느 칸 · 방을 몇 개로 쪼갤지」뿐이다.
+   *
+   * ★ 추첨은 **독립 스트림**이다 ★ `r()` 을 쓰면 뒤따르는 나이·직업·동선이 전부
+   * 밀려 사건이 통째로 달라진다(팔레트 길이 때문에 트릭 분포가 5종→3종으로
+   * 흔들린 그 부류다). 아키타입 추첨이 이미 같은 방식을 쓴다(684행) — 그래서
+   * **이 변경은 도면만 바꾸고 논리는 한 글자도 안 바꾼다**(diff 로 증명한다).
    */
-  const [x1, xr, xa] = [70, 330, 712] as const
+  const rL = rng(seed ^ 0x0f10a7ed)
+  const RI = (n: number) => Math.floor(rL() * n)
+  const area = (r: Rect) => r.w * r.h
+  const EPS = 0.6
+  const near = (a: number, b: number) => Math.abs(a - b) < EPS
+  /** 비율대로 가로 켜를 나눈다. **마지막 칸이 나머지를 흡수해** 빈틈이 0이다 */
+  const rowsOf = (b: Rect, parts: number[]): Rect[] => {
+    const sum = parts.reduce((a, x) => a + x, 0)
+    let y = b.y
+    return parts.map((p, i) => {
+      const h = i === parts.length - 1 ? b.y + b.h - y : Math.round((b.h * p) / sum)
+      const out = { x: b.x, y, w: b.w, h }
+      y += h
+      return out
+    })
+  }
+  /** 비율대로 세로 칸을 나눈다. 위와 같은 규약 */
+  const colsOf = (b: Rect, parts: number[]): Rect[] => {
+    const sum = parts.reduce((a, x) => a + x, 0)
+    let x = b.x
+    return parts.map((p, i) => {
+      const w = i === parts.length - 1 ? b.x + b.w - x : Math.round((b.w * p) / sum)
+      const out = { x, y: b.y, w, h: b.h }
+      x += w
+      return out
+    })
+  }
   /**
-   * ⚠ **차례는 옛것 그대로 둔다**(hall 먼저). 자리는 이제 `rect` 가 정하므로
-   * 배열 순서는 도면과 무관하지만, `locations` 가 이 순서로 나가고 **07-29에
-   * 인물 순서를 바꿨다가 색이 뒤바뀐 전례**가 있다. 안 건드린다.
+   * 네 타일링. **봉투의 비례부터 다르다** — 칸만 다르게 그으면 실루엣이 같아서
+   * 「같은 건물에 금만 다르게 그은 것」으로 보인다.
+   *
+   * ```
+   * wings     넓은 봉투. 현장이 왼쪽을 통째로 쓰고 오른쪽에 세 칸이 쌓인다  (07-29의 배치)
+   * bar       낮고 긴 봉투. 네 칸이 나란히 선다
+   * stack     거의 정사각. 위아래 두 켜가 각각 둘로 갈린다
+   * pinwheel  두 켜의 가름선이 엇갈려 네 칸이 물려 돌아간다
+   * ```
+   *
+   * 넷 다 **왼쪽 여백 70 · 오른쪽에 딴 채를 놓을 띠**를 남긴다.
    */
+  type Tiling = { name: string; env: Rect; slots: Rect[] }
+  const TILINGS: (() => Tiling)[] = [
+    () => {
+      const env = { x: 70, y: 60, w: 532, h: 485 }
+      const [left, right] = colsOf(env, [260, 272])
+      return { name: 'wings', env, slots: [left!, ...rowsOf(right!, [170, 190, 125])] }
+    },
+    () => {
+      const env = { x: 70, y: 170, w: 600, h: 260 }
+      return { name: 'bar', env, slots: colsOf(env, [190, 150, 130, 130]) }
+    },
+    () => {
+      const env = { x: 70, y: 62, w: 520, h: 470 }
+      const [top, bottom] = rowsOf(env, [200, 270])
+      return { name: 'stack', env, slots: [...colsOf(top!, [300, 220]), ...colsOf(bottom!, [200, 320])] }
+    },
+    () => {
+      const env = { x: 70, y: 60, w: 545, h: 485 }
+      const [top, bottom] = rowsOf(env, [190, 295])
+      return { name: 'pinwheel', env, slots: [...colsOf(top!, [330, 215]), ...colsOf(bottom!, [215, 330])] }
+    },
+  ]
+  const TL = TILINGS[RI(TILINGS.length)]!()
+  /** 봉투의 바깥벽에 닿은 변. 창이 날 수 있는 곳이고, 적을수록 안쪽이다 */
+  const extSidesIn = (r: Rect, env: Rect) => ({
+    left: near(r.x, env.x), right: near(r.x + r.w, env.x + env.w),
+    top: near(r.y, env.y), bottom: near(r.y + r.h, env.y + env.h),
+  })
+  const extCount = (r: Rect) => Object.values(extSidesIn(r, TL.env)).filter(Boolean).length
+  /**
+   * 맞닿은 변. **여기서만 벽이 나오고 문도 여기 위에만 낼 수 있다.**
+   * `min` 은 문 하나가 들어갈 만한 길이 — 짧은 접선은 통로가 못 된다.
+   */
+  type Seam = { o: 'v' | 'h'; c: number; lo: number; hi: number }
+  const seamOf = (a: Rect, b: Rect, min = 24): Seam | null => {
+    if (near(a.x + a.w, b.x) || near(b.x + b.w, a.x)) {
+      const c = near(a.x + a.w, b.x) ? b.x : a.x
+      const lo = Math.max(a.y, b.y), hi = Math.min(a.y + a.h, b.y + b.h)
+      if (hi - lo > min) return { o: 'v', c, lo, hi }
+    }
+    if (near(a.y + a.h, b.y) || near(b.y + b.h, a.y)) {
+      const c = near(a.y + a.h, b.y) ? b.y : a.y
+      const lo = Math.max(a.x, b.x), hi = Math.min(a.x + a.w, b.x + b.w)
+      if (hi - lo > min) return { o: 'h', c, lo, hi }
+    }
+    return null
+  }
+  /**
+   * 현장이 어느 칸인가 — **트릭이 고른다.**
+   *
+   * `sceneLocked`(밀실)면 **바깥벽에 덜 닿은 칸**을, 그 밖은 **가장 큰 칸**을 쓴다
+   * (07-29의 근거: 도면을 열자마자 어디가 사건의 중심인지 보여야 한다).
+   *
+   * ⚠ **직사각형을 네 칸으로 가르면 최소가 2면이다** — 「사방이 막힌 안쪽」은 이
+   * 타일링들에서 나올 수 없다. 그래서 이것은 **선호**이고 계약이 아니다. 검증기
+   * §9-3b 가 무는 것은 창(`sceneWindow`)뿐이고 그쪽은 어느 칸이어도 바깥벽이
+   * 있으니 항상 만족된다.
+   */
+  const sceneIdx = TL.slots
+    .map((_, i) => i)
+    .sort((a, b) =>
+      (t.space?.sceneLocked ? extCount(TL.slots[a]!) - extCount(TL.slots[b]!) : 0) ||
+      area(TL.slots[b]!) - area(TL.slots[a]!))[0]!
+  /**
+   * 홀이 어느 칸인가 — **시신이 옮겨진 사건이면 현장에서 떨어뜨린다.**
+   *
+   * `body_moved` 는 「발견된 자리와 죽은 자리가 다르다」는 트릭이다. 모이는 자리인
+   * 홀이 현장과 맞붙어 있으면 그 거리가 0이라 트릭이 도면에서 무의미해진다.
+   * 그 밖의 트릭은 반대로 **맞붙은 칸**을 고른다 — 현장 문이 홀 쪽으로 나야
+   * 산장처럼 읽힌다(산장의 방문이 거실로 난다).
+   */
+  const hallIdx = (() => {
+    const rest = TL.slots.map((_, i) => i).filter((i) => i !== sceneIdx)
+    const touching = rest.filter((i) => seamOf(TL.slots[i]!, TL.slots[sceneIdx]!))
+    const apart = rest.filter((i) => !seamOf(TL.slots[i]!, TL.slots[sceneIdx]!))
+    return (t.types.includes('body_moved') ? [...apart, ...touching] : [...touching, ...apart])[0]!
+  })()
+  /**
+   * 오른쪽 띠 — **딴 채 둘과 부지 밖 하나.** 봉투가 끝나는 자리에서 시작한다.
+   *
+   * ⚠ **별채가 위인지 아래인지도 흩는다.** 좌표만 바꾸고 순서를 고정하면 네
+   * 타일링이 전부 「오른쪽 위에 별채」로 보인다 — 실루엣의 절반이 그 배치다.
+   */
+  const strip = (() => {
+    const x = TL.env.x + TL.env.w + 58
+    return { x, w: Math.min(240, 955 - x) }
+  })()
+  const annexTop = RI(2) === 0
+  const annexBox: Rect = { x: strip.x, y: annexTop ? 66 : 396, w: strip.w, h: 150 }
+  const approachBox: Rect = { x: strip.x, y: annexTop ? 400 : 70, w: strip.w, h: 145 }
+  const awayBox: Rect = { x: strip.x, y: 246, w: strip.w, h: 120 }
+  /**
+   * ⚠ **차례는 옛것 그대로 둔다**(hall 먼저). 자리는 `rect` 가 정하므로 배열
+   * 순서는 도면과 무관하지만, `locations` 가 이 순서로 나가고 **07-29에 인물
+   * 순서를 바꿨다가 색이 뒤바뀐 전례**가 있다. 안 건드린다.
+   *
+   * ★ 그리고 **장소 수는 안 건드린다** ★ 장소를 늘리면 빈손 조사가 장소마다 둘씩
+   * 붙어 조사 수와 난이도가 같이 움직이고, 무고한 넷의 동선 풀(`innocentRooms`)도
+   * 흔들린다 — 그 풀이 셋보다 작아지면 **두 사람이 같은 방을 받는다**(07-29 오전에
+   * 200건을 세어보고서야 잡았던 결함). 도면을 풍성하게 하는 레버는 **딸린 방**이다.
+   */
+  const restIdx = TL.slots.map((_, i) => i).filter((i) => i !== sceneIdx && i !== hallIdx)
   const SITES: Site[] = [
-    { id: 'hall', label: places.hall!, fixture: placeFixture.hall, building: 'b_main', rect: { x: xr, y: 60, w: 272, h: 170 } },
+    { id: 'hall', label: places.hall!, fixture: placeFixture.hall, building: 'b_main', rect: TL.slots[hallIdx]! },
     // ★ 현장은 팔레트 방이 아니라 `places.room` 이다 ★ 그래서 `noWindow` 가 붙을 수
-    // 없고, 트릭이 창을 요구해도 항상 만족시킬 수 있다(아래 §공간 계약)
-    { id: 'room', label: places.room!, fixture: placeFixture.room, scene: true, building: 'b_main', rect: { x: x1, y: 60, w: 260, h: 485 } },
-    ...extraRooms.slice(0, 3).map((r, i) => ({
-      id: `loc${i + 1}`, label: r.name, noWindow: r.noWindow, fixture: r.fixture,
-      // 셋째 방은 **별채**다 — 1장을 완성해야 도면에 나타나고, 걸어서 10분이다
-      building: i === 2 ? 'b_annex' : 'b_main',
-      ...(i === 2 ? { walkMin: 10 } : {}),
-      rect: [
-        { x: xr, y: 360, w: 272, h: 105 },
-        { x: xr, y: 465, w: 272, h: 80 },
-        { x: xa, y: 66, w: 228, h: 150 },
-      ][i]!,
+    // 없고, 트릭이 창을 요구해도 항상 만족시킬 수 있다(위 §현장이 어느 칸인가)
+    { id: 'room', label: places.room!, fixture: placeFixture.room, scene: true, building: 'b_main', rect: TL.slots[sceneIdx]! },
+    ...extraRooms.slice(0, 2).map((rm, i) => ({
+      id: `loc${i + 1}`, label: rm.name, noWindow: rm.noWindow, fixture: rm.fixture,
+      building: 'b_main', rect: TL.slots[restIdx[i]!]!,
     })),
+    // 셋째 방은 **별채**다 — 1장을 완성해야 도면에 나타나고, 걸어서 10분이다
+    {
+      id: 'loc3', label: extraRooms[2]!.name, noWindow: extraRooms[2]!.noWindow,
+      fixture: extraRooms[2]!.fixture, building: 'b_annex', walkMin: 10, rect: annexBox,
+    },
     // 실외 구역 둘. 진입로는 부지 안이고(`atLodge`) 자택은 밖이다
-    { id: 'approach', label: places.approach!, fixture: placeFixture.approach, hatch: true, walkMin: 2, rect: { x: xa, y: 430, w: 228, h: 140 } },
+    { id: 'approach', label: places.approach!, fixture: placeFixture.approach, hatch: true, walkMin: 2, rect: approachBox },
   ]
   /**
    * ─────────────────────────────────────────────────────────────
-   *  딸린 방 — **장소를 안 늘리고 방만 늘린다** (2026-07-29)
+   *  딸린 방 — **장소를 안 늘리고 방만 늘린다** (2026-07-29 · 07-30 확장)
    * ─────────────────────────────────────────────────────────────
    *
    * ★ 산장은 방이 넷인데 실내 장소가 셋이다 ★ 거실과 부엌이 **같은 `loc: main`**
    * 을 가리킨다(`mountain-lodge.yaml` 159·160행). 그래서 도면은 풍성한데 조사는
-   * 안 늘어난다.
-   *
-   * 앞선 커밋에서 이 사실을 **찾아서 방을 여덟에서 셋으로 줄이는 근거로 썼지만
-   * 정작 쓰지는 않았다.** 여기가 그 레버다 — 방 하나가 더 생기고 조사는 그대로다:
-   *
-   * ```
-   * 방 5 → 6      조사 37 → 37 (그대로)      장소 7 → 7 (그대로)
-   * ```
+   * 안 늘어난다 — 위 §차례 주석이 말한 그 레버다.
    *
    * **딸린 방은 `primary` 가 아니다.** 앱이 `primary` 인 방에 조사 실행 상자를
    * 매달므로(`anchorByLoc`), 한 장소에 상자가 둘 생기지 않는다. 그러나 두 방 다
@@ -887,29 +1035,195 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    *
    * ⚠ **고정물은 장소마다 하나 그대로다.** 딸린 방에는 설비가 없다 — 산장의
    * 부엌에도 없고 거실에만 금고가 있다. 균일성은 **장소 단위**로 지킨다.
+   *
+   * **개수가 규모에서 나온다** (07-30):
+   * ```
+   * 장 2~4   딸린 방 1   방 6      ← 07-29와 같은 개수
+   * 장 5~6   딸린 방 2   방 7
+   * 장 7~8   딸린 방 3   방 8
+   * ```
    */
   type SubRoom = { id: string; loc: string; label: string; rect: Rect; building: string; noWindow?: boolean }
-  const SUBROOMS: SubRoom[] = [
-    {
-      id: 'r_hallside', loc: 'hall', building: 'b_main',
-      // 팔레트의 넷째 방 이름. 없으면 기본 팔레트가 채운다(`extraRooms` 가 늘 8개 이상)
-      label: extraRooms[3]?.name ?? '부엌',
-      noWindow: extraRooms[3]?.noWindow,
-      rect: { x: xr, y: 230, w: 272, h: 130 },
-    },
-  ]
-  /**
-   * 본채에서 떨어진 자리들 — 보행선과 진술의 거리 문구가 **같이** 여기서 나온다.
-   * 좌표는 나가는 문(정문·후문)에 맞춰 저작한다.
-   */
-  const OUTLYING: { site: Site; y: number }[] = [
-    { site: SITES.find((s) => s.walkMin === 10)!, y: 140 },   // 정문 → 별채
-    { site: SITES.find((s) => s.id === 'approach')!, y: 508 }, // 후문 → 진입로
-  ]
+  const SUBROOMS: SubRoom[] = []
+  {
+    const want = chapters >= 7 ? 3 : chapters >= 5 ? 2 : 1
+    /**
+     * 쪼갤 방 — **현장은 뺀다.** 현장을 쪼개면 붉은 칸이 둘이 되어 「현장이 두
+     * 곳」으로 읽힌다. 넓은 칸부터 쪼갠다.
+     */
+    const cand = SITES.filter((s) => s.building === 'b_main' && !s.scene)
+      .sort((a, b) => area(b.rect) - area(a.rect))
+    let n = 0
+    for (const host of cand) {
+      if (n >= want) break
+      const spec = extraRooms[3 + n]
+      if (!spec) break
+      /**
+       * 어느 쪽을 가르나 — **폭을 지키는 쪽으로.**
+       *
+       * 이름표는 방 좌상단에 **가로로** 그려지므로 좁아지면 안 되는 것은 폭이다.
+       * 07-29에 5열 격자에서 칸 폭이 124가 되자 **이름이 한 글자씩 세로로
+       * 깨졌다** — 그때는 격자를 넓혀 고쳤다.
+       *
+       * ⚠ **처음엔 「긴 쪽을 가른다」로 썼고 그게 그 결함을 되살렸다.** 100건을
+       * 재보니 최소 폭이 228 에서 **114** 로 떨어져 있었다(`wings` 의 272 폭 방을
+       * 세로로 갈랐다). 짐작하지 말고 잰 값이다 — 그래서 규칙을 뒤집었다:
+       * **폭이 남을 때만 세로로 가르고, 아니면 가로로 가른다.**
+       */
+      const thin = 0.42                       // 작은 쪽 조각의 비율
+      const canCol = host.rect.w * thin >= 150
+      const canRow = host.rect.h * thin >= 62
+      if (!canCol && !canRow) continue
+      const [keep, cut] = canCol && host.rect.w >= host.rect.h
+        ? colsOf(host.rect, [58, 42])
+        : canRow
+          ? rowsOf(host.rect, [58, 42])
+          : colsOf(host.rect, [58, 42])
+      host.rect = keep!
+      SUBROOMS.push({
+        id: `r_${host.id}side`, loc: host.id, building: 'b_main',
+        label: spec.name, noWindow: spec.noWindow, rect: cut!,
+      })
+      n++
+    }
+  }
   /** 실내 방만. 문·창은 여기서만 나온다 */
   const rooms = SITES.filter((s) => s.building)
   const onSite = SITES
   const locIds = [...SITES.map((l) => l.id), 'away']
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  문 · 창 · 보행선 — **기하에서 나온다** (2026-07-30 오후)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 07-29까지 문 일곱과 창 여섯이 **좌표로 박혀** 있었다. 배치가 하나뿐이라
+   * 맞았던 것이고, 배치가 움직이는 순간 **문이 방 한가운데 뜬다** — 이 파일이
+   * 이미 한 번 밟은 결함이다(아래 §도면 결함 넷의 ①). 이제 전부 도출한다:
+   *
+   * ```
+   * 창     방마다 **가장 긴 바깥벽**에 하나. noWindow 면 건너뛴다
+   * 통로   방끼리 맞닿은 변에서. **홀에서 뻗는 신장 트리**라 도달 불가 방이 0이다
+   * 현장문 현장이 물린 변 하나를 여닫이로 (§9-3b 가 「현장에 문이 없다」를 문다)
+   * 외벽문 딴 채로 나가는 자리. **보행선이 그 문에서 시작한다**
+   * ```
+   *
+   * ⛔ **이름표는 여전히 안 붙인다.** 07-29에 현장 문에만 「잠긴 문」을 달았다가
+   * 걷어냈다 — 하나만 이름이 붙으면 **도면이 트릭을 가리킨다.** §절대 규칙의
+   * *"평면도는 판정하지 않는다"* 위반이고, 「잠겼다」는 조사로 얻어야 할 사실이다.
+   */
+  type DoorOut = {
+    id: string; building: string
+    x1: number; y1: number; x2: number; y2: number
+    hinge?: 'p1' | 'p2'; swing?: number; open?: boolean; ext?: boolean
+  }
+  const drawnRooms = [
+    ...rooms.map((s) => ({ id: s.id, rect: s.rect, building: s.building!, noWindow: s.noWindow, scene: s.scene })),
+    ...SUBROOMS.map((s) => ({ id: s.id, rect: s.rect, building: s.building, noWindow: s.noWindow, scene: false })),
+  ]
+  const envOf = (b: string) => (b === 'b_annex' ? annexBox : TL.env)
+  const WINDOWS = drawnRooms.flatMap((d) => {
+    // 트릭이 창을 요구하면 `noWindow` 와 무관하게 반드시 낸다 (§9-3b)
+    const need = !!d.scene && !!t.space?.sceneWindow
+    if (d.noWindow && !need) return []
+    const s = extSidesIn(d.rect, envOf(d.building))
+    const { x, y, w, h } = d.rect
+    const span = (len: number) => Math.min(Math.round(len * 0.46), 110)
+    const cands: { len: number; seg: { x1: number; y1: number; x2: number; y2: number } }[] = []
+    const mid = (a: number, len: number, l: number) => [Math.round(a + (len - l) / 2), Math.round(a + (len + l) / 2)] as const
+    if (s.top) { const l = span(w); const [a, b] = mid(x, w, l); cands.push({ len: w, seg: { x1: a, y1: y, x2: b, y2: y } }) }
+    if (s.bottom) { const l = span(w); const [a, b] = mid(x, w, l); cands.push({ len: w, seg: { x1: a, y1: y + h, x2: b, y2: y + h } }) }
+    if (s.left) { const l = span(h); const [a, b] = mid(y, h, l); cands.push({ len: h, seg: { x1: x, y1: a, x2: x, y2: b } }) }
+    if (s.right) { const l = span(h); const [a, b] = mid(y, h, l); cands.push({ len: h, seg: { x1: x + w, y1: a, x2: x + w, y2: b } }) }
+    if (!cands.length) return []
+    // 가장 긴 바깥벽 하나에만. 여러 면에 내면 방마다 창 수가 갈리고 그 수가 곧 표시가 된다
+    cands.sort((a, b) => b.len - a.len)
+    return [{ ...cands[0]!.seg, building: d.building }]
+  })
+  const DOORS: DoorOut[] = []
+  const WALKS: { building: string; from: string; to: string; min: number; x1: number; y1: number; x2: number; y2: number }[] = []
+  {
+    const main = drawnRooms.filter((d) => d.building === 'b_main')
+    const byId = new Map(main.map((d) => [d.id, d]))
+    /** 맞닿은 변 가운데에 문을 낸다. 변보다 짧게 내야 벽이 양옆에 남는다 */
+    const cut = (sm: Seam) => {
+      const len = Math.min(80, Math.round((sm.hi - sm.lo) * 0.55))
+      const m = (sm.lo + sm.hi) / 2
+      const a = Math.round(m - len / 2), b = Math.round(m + len / 2)
+      return sm.o === 'v' ? { x1: sm.c, y1: a, x2: sm.c, y2: b } : { x1: a, y1: sm.c, x2: b, y2: sm.c }
+    }
+    const add = (from: string, to: string, sm: Seam) => {
+      // 현장으로 드는 문만 여닫이다 — 나머지는 문짝 없는 통로(선만 끊긴다)
+      const scene = to === 'room' || from === 'room'
+      DOORS.push(scene
+        ? { id: `d_${to}`, building: 'b_main', ...cut(sm), hinge: 'p2', swing: -1 }
+        : { id: `d_${to}`, building: 'b_main', ...cut(sm), open: true })
+    }
+    // 홀에서 뻗는 너비 우선 트리. **트리라서 모든 방이 홀에서 닿는다**
+    const seen = new Set<string>(['hall'])
+    const queue: string[] = ['hall']
+    while (queue.length) {
+      const cur = byId.get(queue.shift()!)!
+      for (const nb of main) {
+        if (seen.has(nb.id)) continue
+        const sm = seamOf(cur.rect, nb.rect)
+        if (!sm) continue
+        seen.add(nb.id)
+        queue.push(nb.id)
+        add(cur.id, nb.id, sm)
+      }
+    }
+    /**
+     * 남은 방 잇기 — 접선이 짧아 위 트리가 못 닿은 방. **짧은 접선이라도 문을
+     * 낸다**(도달 불가 방은 조사 화면이 도면이므로 곧 못 갈 방이다).
+     * 지금 타일링 넷에서는 발화하지 않지만, 비율을 손대면 그 순간 필요해진다.
+     */
+    for (const d of main) {
+      if (seen.has(d.id)) continue
+      const host = main.find((o) => seen.has(o.id) && seamOf(o.rect, d.rect, 8))
+      if (!host) continue
+      seen.add(d.id)
+      add(host.id, d.id, seamOf(host.rect, d.rect, 8)!)
+    }
+    /**
+     * 딴 채로 나가는 문 — **보행선이 이 문에서 시작한다.**
+     *
+     * 짝이 되는 방(`anchor`)은 **오른쪽 바깥벽을 가진 방 가운데 그 채와 가장
+     * 나란한 것**이다. 문이 그 방 안에 나므로 「어느 방에서 나가는가」가 도면에서
+     * 읽힌다 — 산장의 정문이 거실에, 후문이 부엌에 난 것과 같다.
+     *
+     * ⚠ **보행선은 비스듬해도 된다.** 앱은 두 점을 잇는 파선 하나로 그리고 가운데에
+     * 분을 적는다(`App.jsx` §sWalk) — 가로여야 할 이유가 없다. 07-29에 가로로
+     * 박아둔 탓에 방 배치가 그 y 를 따라가야 했다.
+     */
+    const wallX = TL.env.x + TL.env.w
+    const onRight = main.filter((d) => near(d.rect.x + d.rect.w, wallX))
+    const midY = (r: Rect) => r.y + r.h / 2
+    const taken = new Set<string>()
+    for (const spec of [
+      { box: annexBox, to: 'loc3', min: 10, id: 'd_front', building: 'b_annex' },
+      { box: approachBox, to: 'approach', min: 2, id: 'd_back', building: 'z_approach' },
+    ]) {
+      const pool = onRight.filter((d) => !taken.has(d.id))
+      const anchor = (pool.length ? pool : onRight)
+        .slice()
+        .sort((a, b) => Math.abs(midY(a.rect) - midY(spec.box)) - Math.abs(midY(b.rect) - midY(spec.box)))[0]
+      if (!anchor) continue
+      taken.add(anchor.id)
+      const half = Math.round(Math.min(66, anchor.rect.h * 0.4) / 2)
+      const cy = Math.round(Math.max(
+        anchor.rect.y + 14 + half,
+        Math.min(anchor.rect.y + anchor.rect.h - 14 - half, midY(spec.box)),
+      ))
+      DOORS.push({ id: spec.id, building: 'b_main', x1: wallX, y1: cy - half, x2: wallX, y2: cy + half, hinge: 'p2', swing: -1, ext: true })
+      WALKS.push({
+        building: spec.building, from: 'hall', to: spec.to, min: spec.min,
+        x1: wallX, y1: cy, x2: spec.box.x, y2: Math.round(midY(spec.box)),
+      })
+    }
+    // 별채 문. 건물이 감춰져 있으면 이것도 같이 감춰진다
+    const ay = Math.round(midY(annexBox))
+    DOORS.push({ id: 'd_annex', building: 'b_annex', x1: annexBox.x, y1: ay - 20, x2: annexBox.x, y2: ay + 20, hinge: 'p1', swing: -1, ext: true })
+  }
 
   /**
    * ⛔ **여기 있던 격자 계산(`ROWS`·`HALLWAY`·`CW`·`RH`·`cell`·`leftCol`)이
@@ -1810,16 +2124,30 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
      */
     floorPlan: {
       viewBox: { w: 1000, h: 625 },
-      scale: { x: 96, len: 90, y: 585, label: '5m' },
+      /**
+       * 축척 막대 — **가장 아래 칸 밑에 둔다.** 봉투 높이가 배치마다 다르므로
+       * 상수(`y: 585`)로 두면 낮은 봉투에서는 도면과 떨어져 뜨고 높은 봉투에서는
+       * 겹친다. 07-29의 문·창 좌표와 같은 부류의 상수였다.
+       */
+      scale: (() => {
+        const low = Math.max(
+          TL.env.y + TL.env.h, annexBox.y + annexBox.h,
+          approachBox.y + approachBox.h, awayBox.y + awayBox.h,
+        )
+        return { x: TL.env.x + 26, len: 90, y: Math.min(610, low + 40), label: '5m' }
+      })(),
       /**
        * 건물 둘. **별채는 1장을 완성해야 나타난다** — 산장이 그렇다
        * (`mountain-lodge.yaml` 154행). `types.ts` §buildings 가 *"흐리게 두지
        * 않고 아예 감춘다"* 고 못박은 그 자리이고, 스키마에 이미 있던 것을
        * 생성 사건이 한 번도 안 쓰고 있었다.
+       *
+       * ⚠ **외곽선은 직사각형 하나로 그려진다**(`App.jsx` §sPoche) — 봉투가 곧
+       * 건물이고, 그래서 방이 봉투를 빈틈 없이 채워야 한다(위 §배치).
        */
       buildings: [
-        { id: 'b_main', x: 70, y: 60, w: 532, h: 485, poche: 'var(--fg-3)' },
-        { id: 'b_annex', x: xa, y: 66, w: 228, h: 150, poche: 'var(--accent)', revealedAfter: 1 },
+        { id: 'b_main', ...TL.env, poche: 'var(--fg-3)' },
+        { id: 'b_annex', ...annexBox, poche: 'var(--accent)', revealedAfter: 1 },
       ],
       rooms: [
         ...rooms.map((l) => ({
@@ -1846,74 +2174,23 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
          * `primary` 방/구역)에 찍는데, 없으면 **자택을 주장한 사람이 도면에서
          * 사라진다.** 산장의 `homeZ` 에는 붙어 있다(`mountain-lodge.yaml:165`).
          */
-        { id: 'z_away', loc: 'away', x: xa, y: 250, w: 228, h: 120, label: places.away!, offsite: true, hatch: true, primary: true },
+        { id: 'z_away', loc: 'away', ...awayBox, label: places.away!, offsite: true, hatch: true, primary: true },
       ],
       /**
-       * 문 — **건물의 문이지 방의 문이 아니다.** 전에는 방마다 하나씩 복도 쪽에
-       * 냈는데(방 열 개 → 문 열 개), 그것이 격자를 격자로 보이게 하던 것 중
-       * 하나였다. 이제 산장처럼 **역할별로** 낸다: 현장의 스윙 문 · 방 사이
-       * 열린 통로 둘 · 외벽의 정문·후문 · 별채 문.
+       * 문·창은 **위 §문·창·보행선이 기하에서 도출한다.** 07-29까지 여기 문 일곱과
+       * 창 여섯이 좌표로 박혀 있었고, 배치가 하나뿐이라 맞았던 것이다.
        *
-       * ⛔ **이름표를 붙이지 않는다.** 2026-07-29에 현장 문에만 「잠긴 문」을
-       * 달았다가 걷어냈다 — 하나만 이름이 붙으면 **도면이 트릭을 가리킨다.**
-       * §절대 규칙의 *"평면도는 판정하지 않는다"* 위반이고, 「잠겼다」는 조사로
-       * 얻어야 할 사실이라 공짜로 주면 안 된다.
+       * ⛔ **이름표를 붙이지 않는다.** 07-29에 현장 문에만 「잠긴 문」을 달았다가
+       * 걷어냈다 — 하나만 이름이 붙으면 **도면이 트릭을 가리킨다.** §절대 규칙의
+       * *"평면도는 판정하지 않는다"* 위반이고, 「잠겼다」는 조사로 얻어야 할 사실이라
+       * 공짜로 주면 안 된다.
        *
        * > 산장은 문에 이름이 있다(방문·정문·후문). **손으로 쓴 사건은 어느 문이
        * > 트릭에 쓰이는지 작가가 알고 균형을 잡을 수 있지만**, 생성은 그 판단을
        * > 할 사람이 없다. 기하만 산장을 따르고 이름표는 안 따른다.
-       *
-       * ★ 현장 문은 반드시 현장 방의 변 위에 있어야 한다 ★ 검증기 §9-3b 가
-       * *"현장에 문이 없다 — 아무도 드나들 수 없는 방이다"* 로 잡는다.
        */
-      doors: [
-        /**
-         * 현장 문 — 현장 방의 오른쪽 변(x=330) 위, **홀 쪽으로** 난다(y 110~190 이
-         * 홀 60~230 안이다). 스윙 아크가 그려진다.
-         *
-         * ⚠ 방 경계를 걸치면 안 된다. 전에 y 200~280 이었는데 딸린 방이 생기며
-         * 경계가 230 으로 오는 바람에 **문 하나가 두 방에 걸쳤다.**
-         */
-        { id: 'd_room', building: 'b_main', x1: xr, y1: 110, x2: xr, y2: 190, hinge: 'p2' as const, swing: -1 },
-        // 오른쪽 열 네 방 사이의 열린 통로 셋 — 문짝 없이 선만 끊긴다
-        { id: 'd_pass1', building: 'b_main', x1: 400, y1: 230, x2: 480, y2: 230, open: true },
-        { id: 'd_pass2', building: 'b_main', x1: 400, y1: 360, x2: 480, y2: 360, open: true },
-        { id: 'd_pass3', building: 'b_main', x1: 400, y1: 465, x2: 480, y2: 465, open: true },
-        // 외벽. 정문은 별채 쪽으로(홀 안), 후문은 진입로 쪽으로(loc2 안) 난다
-        { id: 'd_front', building: 'b_main', x1: 602, y1: 120, x2: 602, y2: 186, hinge: 'p2' as const, swing: -1, ext: true },
-        { id: 'd_back', building: 'b_main', x1: 602, y1: 478, x2: 602, y2: 538, hinge: 'p2' as const, swing: -1, ext: true },
-        // 별채 문. 건물이 감춰져 있으면 이것도 같이 감춰진다
-        { id: 'd_annex', building: 'b_annex', x1: xa, y1: 124, x2: xa, y2: 158, hinge: 'p1' as const, swing: -1, ext: true },
-      ],
-      /**
-       * 창 — **바깥벽에만.** 팔레트가 `noWindow` 라 한 방(암실·지하)은 건너뛴다.
-       * 현장은 트릭이 요구하면 `noWindow` 여부와 무관하게 반드시 낸다(§9-3b).
-       *
-       * 방마다 바깥벽이 다른 쪽이라 좌표를 방별로 적는다 — 현장은 위쪽,
-       * 홀도 위쪽, 방1은 오른쪽, 방2는 아래쪽, 별채는 위쪽이다.
-       *
-       * ⛔ 여기도 이름표 없음 — 위 §문과 같은 이유다.
-       */
-      windows: (() => {
-        /** 방마다 바깥벽이 다른 쪽이라 자리를 방별로 적는다. 키는 방 id 다 */
-        const W: Record<string, { x1: number; y1: number; x2: number; y2: number }> = {
-          room: { x1: 150, y1: 60, x2: 258, y2: 60 },        // 본채 위쪽 바깥벽
-          hall: { x1: 410, y1: 60, x2: 518, y2: 60 },        // 본채 위쪽 바깥벽
-          r_hallside: { x1: 602, y1: 265, x2: 602, y2: 325 }, // 본채 오른쪽 바깥벽
-          loc1: { x1: 602, y1: 385, x2: 602, y2: 440 },      // 본채 오른쪽 바깥벽
-          loc2: { x1: 400, y1: 545, x2: 500, y2: 545 },      // 본채 아래쪽 바깥벽
-          loc3: { x1: 820, y1: 66, x2: 890, y2: 66 },        // 별채 위쪽
-        }
-        const all: { id: string; noWindow?: boolean; scene?: boolean; building: string }[] = [
-          ...rooms.map((l) => ({ id: l.id, noWindow: l.noWindow, scene: l.scene, building: l.building! })),
-          ...SUBROOMS.map((s) => ({ id: s.id, noWindow: s.noWindow, building: s.building })),
-        ]
-        return all.flatMap((l) => {
-          const need = l.scene && t.space?.sceneWindow
-          if ((l.noWindow && !need) || !W[l.id]) return []
-          return [{ ...W[l.id]!, building: l.building }]
-        })
-      })(),
+      doors: DOORS,
+      windows: WINDOWS,
       /**
        * 고정물 — **장소마다 하나.** 키가 곧 「고정물 조사」의 대상 id 다
        * (`fixture:<장소>`). 이게 비면 그 조사를 **고를 수가 없다**(§9-3c).
@@ -1935,38 +2212,41 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
           loc: l.id,          // 없으면 앱이 못 그린다 — types.ts §fixtures 참조
         }]),
         // 부지 밖도 팔레트가 이름을 주면 그것을 쓴다 (2026-07-29 밤 — 전엔 늘 총칭이었다)
-        ['away', { x: 826, y: 317, loc: 'away', label: placeFixture.away ?? `${places.away}의 설비` }],
+        ['away', {
+          x: awayBox.x + Math.floor(awayBox.w / 2), y: awayBox.y + Math.floor(awayBox.h * 0.56),
+          loc: 'away', label: placeFixture.away ?? `${places.away}의 설비`,
+        }],
         /**
          * ★ 시신 ★ — 산장의 `body` 와 **같은 id**다. 우연이 아니라 계약이다:
          * 앱 `targetKey(action, targets)` 가 `mode:'none'`(부검)에 대해 **언제나
          * `'body'`** 를 돌려주므로(`App.jsx:1975`), 이 id 여야 부검 조사가 자기
          * 결과문을 찾는다.
          *
-         * 여기 없어서 생성 사건의 현장에는 **총칭 설비 하나뿐**이었다 — 산장은
-         * 현장에 시신·화로·테이프 셋이 있고 전부 사건의 핵심인데.
+         * ⚠ **자리를 현장에서 계산한다** (2026-07-30). 여기 `x: 200, y: 300` 이
+         * 박혀 있었다 — 현장이 늘 왼쪽 큰 칸이라 맞았던 것이고, 배치가 움직이면
+         * **시신이 남의 방에 눕는다.** 같은 방의 설비(0.56h)와 겹치지 않게 위쪽에 둔다.
          *
          * ⚠ **현장에 고정물이 둘이 되는 것은 누설이 아니다.** 현장은 이미
          * `scene` 으로 붉게 칠해져 있어 플레이어가 아는 곳이다. 누설이 되는 것은
          * **모르는 방**끼리 개수가 갈릴 때다 — 나머지는 정확히 하나씩이다.
          */
-        ['body', {
-          x: 200, y: 300, loc: 'room', label: '시신', body: true,
-        }],
+        ['body', (() => {
+          const s = SITES.find((l) => l.scene)!.rect
+          return {
+            x: Math.round(s.x + s.w * 0.34), y: Math.round(s.y + s.h * 0.3),
+            loc: 'room', label: '시신', body: true,
+          }
+        })()],
       ]),
       /**
-       * 보행선 — **정문에서 별채로, 후문에서 진입로로.** 산장의 「별채 10분 ·
-       * 진입로 2분」을 그대로 따른다(`mountain-lodge.yaml` 181·182행).
+       * 보행선 — **위 §딴 채로 나가는 문이 같이 만든다.** 문에서 출발해야 「어느
+       * 방에서 나가는가」가 도면에서 읽힌다.
        *
        * ★ 이 숫자가 알리바이의 재료다 ★ 산장에서는 세라의 *"걸어서 10분"* 이
-       * 이 값과 맞아야 한다. 생성 사건에서는 아직 진술이 이 숫자를 인용하지
-       * 않는다 — **다음 자리다**(§보행 시간을 진술이 쓰게 하기).
+       * 이 값과 맞아야 하고, 생성 사건에서도 진술이 이 값을 인용한다
+       * (§statementOf 의 `far`). **게임은 대조해주지 않는다** — 플레이어가 잰다.
        */
-      walks: OUTLYING.map(({ site, y }) => ({
-        building: site.building ?? `z_${site.id}`,
-        // ★ 장소 쌍을 같이 낸다 ★ 이게 없어서 앱이 도보 시간표를 통째로 비웠다
-        from: 'hall', to: site.id, min: site.walkMin,
-        x1: 602, y1: y, x2: xa, y2: y,
-      })),
+      walks: WALKS,
     },
 
     /**
