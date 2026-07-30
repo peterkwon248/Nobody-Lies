@@ -888,6 +888,66 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     })
   }
   /**
+   * ★ 비율 지터 — **구조는 두고 좌표만 사건마다 갈린다** ★ (2026-07-30 오후)
+   *
+   * 타일링 넷만으로는 100건에 **12종**이었고 가장 큰 무리가 **20건**이었다
+   * (캠페인 10건이면 같은 배치가 3.7번 겹친다). 켜 비율을 흔들면 그 무리가 깨진다.
+   *
+   * ⚠ **「좌표를 흩뿌리면 엉망이 된다」와 다른 일이다.** 07-29에 밟은 것은 격자에
+   * 규칙이 없던 상태에서 칸을 손으로 옮긴 것이었다. 여기서 흔드는 것은 **켜의
+   * 비율**이고 타일링이 빈틈·겹침을 계속 지켜준다(검증기 §9-3i 가 대조한다).
+   *
+   * ★ 진폭을 줄여가며 **최소 치수를 지킨다** ★ 폭이 좁아지면 방 이름이 한 글자씩
+   * 세로로 깨진다(07-29). 그래서 흔든 뒤 가장 작은 칸이 기준 미만이면 진폭을
+   * 12%→8%→4%→0 으로 낮춘다. **난수는 먼저 뽑아둔다** — 진폭을 바꿔도 `rL()`
+   * 호출 수가 같아야 뒤따르는 추첨이 안 밀린다(트릭 분포가 흔들린 그 부류다).
+   */
+  const MIN_W = 150   // 방 이름이 한 줄로 들어가는 폭 (실측: 「지하실」이 29px · 도면 0.988배)
+  const MIN_H = 62
+  const jitter = (parts: number[], span: number, min: number): number[] => {
+    const d = parts.map(() => rL() * 2 - 1)
+    /** `rowsOf`/`colsOf` 와 **같은 셈**이어야 한다 — 마지막 칸이 나머지를 흡수한다 */
+    const sizesOf = (p: number[]) => {
+      const sum = p.reduce((a, x) => a + x, 0)
+      let used = 0
+      return p.map((v, i) => {
+        const s = i === p.length - 1 ? span - used : Math.round((span * v) / sum)
+        used += s
+        return s
+      })
+    }
+    /**
+     * ⚠ **바닥은 「요구치」가 아니라 「원래보다 나빠지지 않기」다.**
+     *
+     * 처음엔 `min` 만 봤는데, `bar` 는 넉 칸이라 **흔들기 전부터** 가장 좁은 칸이
+     * 130 이다(넉 칸이 다 150 이려면 봉투가 600 을 넘어야 한다). 그래서 어느 진폭도
+     * 통과 못 해 `return parts` 로 **조용히 포기**했고, 봉투 지터가 그 위에 얹혀
+     * 최소 폭이 **130 → 122** 로 내려갔다. 100건을 재서 잡았다 — 짐작이 아니다.
+     *
+     * 이제 못 지킬 요구치면 **원래 값**을 바닥으로 삼는다. 지터는 도면을 흔들 뿐
+     * 나쁘게 만들지는 않는다.
+     */
+    const floor = Math.min(min, Math.min(...sizesOf(parts)))
+    for (const amp of [0.12, 0.08, 0.04, 0]) {
+      const p = parts.map((v, i) => v * (1 + d[i]! * amp))
+      if (Math.min(...sizesOf(p)) >= floor) return p
+    }
+    return parts
+  }
+  /**
+   * 봉투도 흔든다 — 실루엣이 넷뿐이면 「같은 건물 네 채」로 보인다.
+   *
+   * ⚠ **폭은 늘리기만 한다.** 줄이면 그 안의 칸이 전부 같이 좁아지는데, `bar` 는
+   * 이미 가장 좁은 칸이 130 이라 여유가 없다. 높이는 줄여도 이름이 안 깨진다.
+   */
+  const jitEnv = (w: number, h: number, x: number, y: number): Rect => ({
+    x, y,
+    // ⚠ 오른쪽 띠를 200 아래로 좁히지 않는다. 딴 채도 방이라 이름이 들어가야 한다
+    w: Math.min(Math.round(w * (1 + rL() * 0.06)), 955 - 58 - 200 - x),
+    // ⚠ 축척 막대가 아래에 붙으므로(§scale) 585 를 안 넘긴다
+    h: Math.min(Math.round(h * (1 + (rL() * 2 - 1) * 0.08)), 585 - y),
+  })
+  /**
    * 네 타일링. **봉투의 비례부터 다르다** — 칸만 다르게 그으면 실루엣이 같아서
    * 「같은 건물에 금만 다르게 그은 것」으로 보인다.
    *
@@ -903,23 +963,29 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   type Tiling = { name: string; env: Rect; slots: Rect[] }
   const TILINGS: (() => Tiling)[] = [
     () => {
-      const env = { x: 70, y: 60, w: 532, h: 485 }
-      const [left, right] = colsOf(env, [260, 272])
-      return { name: 'wings', env, slots: [left!, ...rowsOf(right!, [170, 190, 125])] }
+      const env = jitEnv(532, 485, 70, 60)
+      const [left, right] = colsOf(env, jitter([260, 272], env.w, MIN_W))
+      return { name: 'wings', env, slots: [left!, ...rowsOf(right!, jitter([170, 190, 125], right!.h, MIN_H))] }
     },
     () => {
-      const env = { x: 70, y: 170, w: 600, h: 260 }
-      return { name: 'bar', env, slots: colsOf(env, [190, 150, 130, 130]) }
+      const env = jitEnv(600, 260, 70, 170)
+      return { name: 'bar', env, slots: colsOf(env, jitter([190, 150, 130, 130], env.w, MIN_W)) }
     },
     () => {
-      const env = { x: 70, y: 62, w: 520, h: 470 }
-      const [top, bottom] = rowsOf(env, [200, 270])
-      return { name: 'stack', env, slots: [...colsOf(top!, [300, 220]), ...colsOf(bottom!, [200, 320])] }
+      const env = jitEnv(520, 470, 70, 62)
+      const [top, bottom] = rowsOf(env, jitter([200, 270], env.h, MIN_H))
+      return {
+        name: 'stack', env,
+        slots: [...colsOf(top!, jitter([300, 220], top!.w, MIN_W)), ...colsOf(bottom!, jitter([200, 320], bottom!.w, MIN_W))],
+      }
     },
     () => {
-      const env = { x: 70, y: 60, w: 545, h: 485 }
-      const [top, bottom] = rowsOf(env, [190, 295])
-      return { name: 'pinwheel', env, slots: [...colsOf(top!, [330, 215]), ...colsOf(bottom!, [215, 330])] }
+      const env = jitEnv(545, 485, 70, 60)
+      const [top, bottom] = rowsOf(env, jitter([190, 295], env.h, MIN_H))
+      return {
+        name: 'pinwheel', env,
+        slots: [...colsOf(top!, jitter([330, 215], top!.w, MIN_W)), ...colsOf(bottom!, jitter([215, 330], bottom!.w, MIN_W))],
+      }
     },
   ]
   const TL = TILINGS[RI(TILINGS.length)]!()
