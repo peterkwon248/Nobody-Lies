@@ -721,12 +721,31 @@ export default class App extends React.Component {
       for (const t of this.TIMES) prev[t.id] = t
       this.TIMES = c.slots.map((s) => {
         const old = prev[s.id] || {}
+        /**
+         * ★ 부제(`subKo`)를 물려받으면 안 된다 — 산장 슬롯 순서로 새고 있었다 ★
+         * (2026-07-30 실측, 3칸 사건 격자)
+         *
+         * `prev` 가 **슬롯 id 로** 키잉돼 있어서 산장의 `t2='사망 추정'`·`t3='발견'`
+         * 이 생성 사건의 **중반·후반 칸**에 그대로 얹혔다:
+         *
+         *     전날 밤[~새벽] │ 새벽(전반) │ 새벽(중반)[사망 추정] │ 새벽(후반)[발견] │ 아침[]
+         *                                                        ↑ 발견이 사망 구간 한복판
+         *
+         * 07-30에 걷어낸 다섯(`FLOOR_CLUES`·`CLAIMS`·`AUTO`·브리핑·축소 라벨)과
+         * **같은 부류의 여섯째**이고, 게이트 7단은 그때도 초록이었다.
+         *
+         * 부제는 **`isWindow` 에서 도출한다** — 엔진이 말한 것만 쓴다. 「발견」은
+         * 엔진이 어느 칸에서 발견됐다고 말한 적이 없으므로 **안 만든다**(빈 칸).
+         * 산장은 저작된 표를 그대로 쓴다 — `_foreignCase` 가 아니면 불변.
+         */
+        const sub = this._foreignCase
+          ? (s.isWindow ? { subKo: '사망 추정', subEn: 'death window' } : { subKo: '', subEn: '' })
+          : { subKo: old.subKo || '', subEn: old.subEn || '' }
         return {
           id: s.id,
           ko: s.label || old.ko || s.id,
           en: old.en || '',
-          subKo: old.subKo || '',
-          subEn: old.subEn || '',
+          ...sub,
           ...(s.isWindow ? { window: true } : {}),
         }
       })
@@ -2579,7 +2598,9 @@ export default class App extends React.Component {
     const ids = this._narrowSlots || [];
     const lab = (id) => { const t = this.TIMES.find(x => x.id === id); return t ? (ln === 'ko' ? t.ko : t.en) : id; };
     if (!ids.length) return '';
-    return ids.length > 1 ? `${lab(ids[0])} ~ ${lab(ids[ids.length - 1])}` : lab(ids[0]);
+    // 범위의 양 끝이 같은 칸이면 이름 하나다 — `[t1, t1]` 이 「전반 ~ 전반」으로 나오던 자리
+    const first = lab(ids[0]), last = lab(ids[ids.length - 1]);
+    return first === last ? first : `${first} ~ ${last}`;
   }
   revealedClaims() {
     const out = {}, seen = this.state.seenClaims || {};
@@ -3110,13 +3131,52 @@ export default class App extends React.Component {
     const narrowed = this.deathNarrowed();
     const tsel = this.state.mapTime;
     const revClaims = this.revealedClaims();
+    /**
+     * ★ 축소는 「이름 갈아끼우기」가 아니라 「칸을 사망 구간에서 빼는 것」이다 ★
+     *
+     * 전에는 `tm.window && narrowed` 로 **창 칸 전부**를 좁힌 이름으로 덮었다.
+     * **산장은 창 슬롯이 `t2` 하나뿐이라 우연히 맞았다** — `deathCells` 가 2~3이면
+     * 창이 여럿이라 **세 열이 전부 같은 이름**이 된다.
+     *
+     * `narrowsWindow` 는 `[from, to]` **범위**다(산장 `[t1, t2]`). 슬롯 순서로 잘라
+     * 남는 창 칸을 구한다. 범위 밖 창 칸은 **사망 구간에서 빠진다** — 그게 부검이
+     * 사는 값이다.
+     *
+     *   남은 칸 1개  → 그 칸이 좁혀진 이름을 갖는다   (산장 「새벽 3~5시」 · 불변)
+     *   남은 칸 2개+ → 각자 제 이름을 지킨다          (같은 글자 중복을 안 만든다)
+     */
+    const inNarrow = (() => {
+      if (!narrowed) return null;
+      const ids = this._narrowSlots || [];
+      const order = this.TIMES.map(x => x.id);
+      const a = order.indexOf(ids[0]), b = order.indexOf(ids[ids.length - 1]);
+      if (a < 0 || b < 0) return null;
+      const set = new Set(this.TIMES.slice(Math.min(a, b), Math.max(a, b) + 1).filter(x => x.window).map(x => x.id));
+      return set.size ? set : null;
+    })();
+    const stillWindow = (tm) => !!tm.window && (!inNarrow || inNarrow.has(tm.id));
+    const soleWindow = !!inNarrow && inNarrow.size === 1;
+    /** 좁혀지기 **전**의 구간 이름 — 산장은 저작된 문안, 그 밖은 창 칸 양 끝에서 도출 */
+    const prevWin = (() => {
+      const ws = this.TIMES.filter(x => x.window);
+      if (!ws.length) return '';
+      const f = ln === 'ko' ? ws[0].ko : ws[0].en, l = ln === 'ko' ? ws[ws.length - 1].ko : ws[ws.length - 1].en;
+      return f === l ? f : `${f} ~ ${l}`;
+    })();
+    const winSub = () => this._foreignCase
+      ? (ln === 'ko' ? `사망 추정 · 이전 ${prevWin}` : `death · was ${prevWin}`)
+      : (ln === 'ko' ? '사망 추정 · 이전 3~8시' : 'death · was 03–08');
     const times = this.TIMES.map(tm => { const active = tm.id === tsel; return ({
-      label: (tm.window && narrowed) ? this.narrowedLabel(ln) : (ln === 'ko' ? tm.ko : tm.en),
-      sub: (tm.window && narrowed) ? (ln === 'ko' ? '사망 추정 · 이전 3~8시' : 'death · was 03–08') : (ln === 'ko' ? tm.subKo : tm.subEn),
-      narrowed: tm.window && narrowed,
+      label: (stillWindow(tm) && narrowed && soleWindow) ? this.narrowedLabel(ln) : (ln === 'ko' ? tm.ko : tm.en),
+      sub: !narrowed ? (ln === 'ko' ? tm.subKo : tm.subEn)
+        : stillWindow(tm) ? winSub()
+        : tm.window ? ''
+        : (ln === 'ko' ? tm.subKo : tm.subEn),
+      narrowed: stillWindow(tm) && narrowed,
       onClick: () => this.setState({ mapTime: tm.id }),
       labelStyle: { color: 'var(--fg-2)', fontWeight: 600 },
-      headStyle: { flex: 1, minWidth: '130px', padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: '2px', borderLeft: '1px solid var(--border)', background: tm.window ? 'rgba(255,255,255,.02)' : 'transparent' },
+      // 빠진 칸은 강조도 같이 빠진다 — 산장은 창이 하나뿐이라 `stillWindow` = `tm.window`
+      headStyle: { flex: 1, minWidth: '130px', padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: '2px', borderLeft: '1px solid var(--border)', background: stillWindow(tm) ? 'rgba(255,255,255,.02)' : 'transparent' },
     }); });
     const rows = this.PEOPLE.map(p => {
       const cells = this.TIMES.map((tm, ti) => {
@@ -3443,7 +3503,19 @@ export default class App extends React.Component {
       confirmAbandon: s.confirmAbandon, onAbandon: () => this.abandon(), onCancelAbandon: () => this.setState({ confirmAbandon: false }), onGoHome: () => this.goHome(), onAbandonReq: () => this.setState({ confirmAbandon: true }),
       dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 },
       roomBtnStyle: { flex: '0 0 auto', opacity: 0.4, pointerEvents: 'none' },
-      briefRows: [{ k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: t.ovWhenV }, { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV }].map((o, i, a) => ({ k: o.k, v: o.v, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
+      /**
+       * ⚠ **여기도 빈 줄을 걸러야 한다** (2026-07-30 · 사용자가 눌러서 찾음)
+       *
+       * 07-30에 `buildDetail`(사건 개요)에만 `.filter(o => o.v)` 를 넣었다. **같은
+       * `DICT` 값을 읽는 화면이 둘인데 한 곳만 고쳤다** — 브리핑(읽기 전 확인)은
+       * 네 줄을 그대로 그려서 **「시신」·「현장」 옆이 빈 채로** 나왔다.
+       * `applyCase` 주석의 *"빈 문자열이면 그 줄을 안 그린다"* 가 이 화면에서는
+       * 거짓이었다.
+       *
+       * ★ 오늘 같은 부류가 셋째다 ★ 서식 문단 규격(본문↔생성기 보충)도, 주석↔코드
+       * (감추는 문장)도 같은 모양이다 — **한 값을 두 곳이 쓰는데 한 곳만 고쳤다.**
+       */
+      briefRows: [{ k: t.ovVictimK, v: this.victimLine(ln) }, { k: t.ovWhenK, v: t.ovWhenV }, { k: t.ovBodyK, v: t.ovBodyV }, { k: t.ovSceneK, v: t.ovSceneV }].filter((o) => o.v).map((o, i, a) => ({ k: o.k, v: o.v, style: { display: 'flex', gap: '12px', padding: '12px 16px', alignItems: 'baseline', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
       readCard: this.buildReadCard(), briefBtnStyle: { width: '100%', justifyContent: 'center' }, onStartRead: () => this.startRead(),
       isWide: !s.isNarrow, isNarrow: s.isNarrow,
       isNarrative: isNarr, isStatements: isStmt, isReference: isRef,

@@ -268,6 +268,13 @@ evidence:
   - id: e_herring4
     description: 일부가 지워진 기록
 
+  # ★ 범인(p1)의 것 — 2026-07-30에 **누설을 막으려고** 늘렸다 ★
+  # 전에는 무고한 넷(p2~p5)만 소지품에서 무언가 나왔다. 그러면 소지품을 다섯 번
+  # 눌러본 플레이어는 **빈손인 하나가 범인**이라는 것을 안다. 검증기 §9-3h 가 문다.
+  # 범인도 사건과 무관한 것 하나를 갖는다 — 산장도 다섯 전원의 소지품에서 나온다.
+  - id: e_herring5
+    description: 낡은 명함
+
 
 # ─────────────────────────────────────────────────────────────────────
 #  사실
@@ -305,6 +312,8 @@ facts:
   - { id: f_h2, kind: context, subject: p3, content: 감추는 것이 있다, revealed_by: [e_herring2] }
   - { id: f_h3, kind: context, subject: p4, content: 감추는 것이 있다, revealed_by: [e_herring3] }
   - { id: f_h4, kind: context, subject: p5, content: 감추는 것이 있다, revealed_by: [e_herring4] }
+  # 범인도 하나 갖는다 — context 라 유죄 계산에는 안 낀다 (§9-3h)
+  - { id: f_h5, kind: context, subject: p1, content: 감추는 것이 있다, revealed_by: [e_herring5] }
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -451,6 +460,21 @@ actions:
     result:
       title: 지워진 기록
       body: 소지품에서 일부가 지워진 기록이 나왔다.
+
+  # ★ 범인의 소지품 — **비워두면 그 빈자리가 곧 정답이다** (§9-3h)
+  # 무고한 넷에만 레드 헤링을 달면, 소지품을 다섯 번 눌러본 플레이어가 답을 얻는다.
+  # 범인도 **사건과 무관한** 것 하나를 갖는다 — 살인과 이어지는 것을 두면 안 된다.
+  - id: a_h5
+    label: 소지품 검사 · 인물 하나
+    cost: 1
+    gives: [e_herring5]
+    salience: 0.65
+    yield: redherring
+    verb: belongings
+    target: { kind: person, id: p1 }
+    result:
+      title: 낡은 명함
+      body: 소지품에서 낡은 명함 한 장이 나왔다.
 
   # 짝 조사 — 장소가 없으므로 target 대신 pair 로 두 인물을 지정한다
   - id: a_alibi

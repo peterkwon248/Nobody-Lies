@@ -661,6 +661,15 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     { ev: '오래된 사진', rec: '오래전에 찍힌 사진이었다.', res: '소지품에서 오래된 사진 한 장이 나왔다.', s: 0.8 },
     { ev: '접힌 영수증', rec: '여러 번 접힌 자국이 있었다.', res: '소지품에서 접힌 영수증 한 장이 나왔다.', s: 0.75 },
     { ev: '지워진 기록', rec: '일부가 지워진 채 남아 있었다.', res: '소지품에서 일부가 지워진 기록이 나왔다.', s: 0.7 },
+    /**
+     * ★ 다섯째는 2026-07-30에 **누설을 막으려고** 늘렸다 ★
+     *
+     * 전에는 넷이었고 `innocents.map` 이라 **범인만 소지품이 비었다.** 150건 전수로
+     * 쟀더니 **150/150** — 소지품 검사가 비는 유일한 사람이 언제나 범인이었다.
+     * 앱의 빈손 문구가 하필 *"이 대상은 배제해도 좋다"* 라, 다섯 번 눌러본 사람은
+     * 답을 손에 쥔다(예산 11 중 5). **게이트 7단은 내내 초록이었다.**
+     */
+    { ev: '낡은 명함', rec: '오래 지니고 다닌 자국이 있었다.', res: '소지품에서 낡은 명함 한 장이 나왔다.', s: 0.65 },
   ]
 
   // ★ 트릭을 먼저 고른다 ★ 트릭이 격자·물증·조사를 결정하기 때문이다.
@@ -1040,24 +1049,69 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * 그때는 서술문이었고 이번은 진술이다. 내장 팔레트로만 재면 안 드러난다.
    *
    * 세 꼴을 받는다: 「…것」(명사구) · 「…다」(문장) · 그 밖의 명사구.
+   *
+   * ⚠ **꼴은 「…을/를」이다** — 진술이 아니라 **소지품 검사 결과문**에 들어가기
+   * 때문이다(2026-07-30에 자리를 옮겼다. 아래 §비밀은 조사로 드러난다 참조).
    */
-  const secretPhrase = (raw: string) => {
+  const secretObject = (raw: string) => {
     const s = raw.trim().replace(/[.·]+$/, '')
-    if (/것$/.test(s)) return `${s}은`         // 「…했다는 것」 → 「…것은」
-    if (/다$/.test(s)) return `${s}는 것은`     // 「…대고 있다」 → 「…있다는 것은」
+    if (/것$/.test(s)) return `${s}을`         // 「…했다는 것」 → 「…것을」
+    if (/다$/.test(s)) return `${s}는 것을`     // 「…대고 있다」 → 「…있다는 것을」
     // 그 밖의 명사구는 받침으로 가른다 — `subjectParticle` 과 같은 셈법
     const ch = s.charCodeAt(s.length - 1) - 0xac00
-    if (ch < 0 || ch > 11171) return `${s}은`
-    return `${s}${ch % 28 === 0 ? '는' : '은'}`
+    if (ch < 0 || ch > 11171) return `${s}을`
+    return `${s}${ch % 28 === 0 ? '를' : '을'}`
   }
 
+  /**
+   * ★ 비밀은 **진술에서 말하지 않는다 — 조사로 드러난다** ★
+   * (2026-07-30 · 사용자 지적 · 레퍼런스 대조로 확인)
+   *
+   * 전에는 진술 마지막 문단이 이랬다:
+   *
+   * ```
+   * 이력서를 부풀렸다는 것은 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.
+   * ```
+   *
+   * **셋이 한꺼번에 틀렸다.** ① 다섯 명이 **글자까지 같았다**(틀이 하나였다).
+   * ② **내용을 전부 말해놓고** 「말씀드리고 싶지 않습니다」로 끝난다 — 이미 다 말했다.
+   * ③ **제목의 규칙을 뒤집는다** — *"다만 자기 비밀은 **말하지 않는다**"* 이지
+   * 「말하지 않겠다고 말한다」가 아니다.
+   *
+   * ★ 골든 케이스가 답을 갖고 있었다 ★ **산장 진술에 감춤 선언은 0/5**다. 아무도
+   * 그런 말을 하지 않고, 대신 **소지품 검사가 그 사람의 비밀을 드러낸다**
+   * (`a_yuri → 약물 투약 흔적` · redherring). 여기도 그 모양으로 옮겼다 —
+   * 진술은 침묵하고, 비밀은 아래 §HERRING 의 소지품 결과문에서 나온다.
+   *
+   * 문단은 **넷에서 셋으로** 줄었다(축의 칸 + 도입구). 다섯 전원이 같이 줄므로
+   * §9-9(길이 쏠림)는 흔들리지 않는다.
+   */
   const statementOf = (
     cells: { slot: string; location: string }[],
     opener: string,
-    secret: string,
   ) => {
     const at = new Map(cells.map((x) => [x.slot, x.location]))
-    const line = (s: string, first: boolean) => {
+    /**
+     * ★ 안 움직인 사람이 **같은 문장을 세 번** 말하고 있었다 ★
+     * (2026-07-30 · 사용자가 화면에서 잡았다)
+     *
+     * ```
+     * 전날 밤에는 홀에 있었습니다.
+     * 새벽에는 홀에 있었습니다.      ← 글자까지 같다
+     * 아침에는 홀에 있었습니다.      ← 또 같다
+     * ```
+     *
+     * 자리가 **바뀌었는지**를 보고 문장을 고른다. 데이터는 한 글자도 안 바뀌고
+     * 정보량도 그대로다 — 제자리인지 아닌지는 **전에도 글자로 다 보였다**
+     * (「홀·홀·홀」). 읽는 결만 고친다.
+     *
+     * ⚠ **문단 수는 안 건드린다** — 묶어서 줄이면 「안 움직인 사람만 짧다」가 되고
+     * 그 모양이 곧 범인 쪽 표시다(§9-9 · 아래 §축의 칸마다 한 문단).
+     *
+     * ⚠ **변수 뒤 조사를 안 쓴다** — 자리 이름이 팔레트에서 오므로 끝 글자를
+     * 모른다. 「…로/으로」를 피해 「자리를 옮겨 …에」로 쓴다.
+     */
+    const line = (s: string, first: boolean, prevLoc?: string, nth = 0) => {
       const loc = at.get(s)
       /**
        * ★ 본채에서 떨어진 자리면 **얼마나 먼지 말한다** ★ (2026-07-29)
@@ -1074,10 +1128,27 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
        * 주장하면 무고한 하나도 같은 문장을 받는다 — 모양으로 안 튄다.
        */
       const far = loc ? SITES.find((x) => x.id === loc)?.walkMin : undefined
-      const body = loc
-        ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.` +
-          (far ? ` ${places.hall}에서 걸어서 ${far}분 거리입니다.` : '')
-        : `${slotLabel[s]}에는 그곳에 없었습니다.`
+      // 자리를 안 옮겼을 때. 칸 번호로 갈라서 **연달아 같은 문장이 안 나오게** 한다
+      const SAME = [
+        `${slotLabel[s]}에도 같은 자리에 있었습니다.`,
+        `${slotLabel[s]}까지 자리를 뜨지 않았습니다.`,
+        `${slotLabel[s]}에도 그 자리를 지켰습니다.`,
+      ]
+      // 자리를 옮겼을 때. 여기도 갈라야 한다 — 안 그러면 「자리를 옮겨」가 네 번 나온다
+      const MOVE = [
+        `${slotLabel[s]}에는 자리를 옮겨 ${placeLabel[loc!]}에 있었습니다.`,
+        `${slotLabel[s]}에는 ${placeLabel[loc!]}에 가 있었습니다.`,
+        `${slotLabel[s]}에는 ${placeLabel[loc!]}으로 옮겼습니다.`.replace(/([가-힣])으로 옮겼습니다/, (_m, ch) =>
+          // 「…로/으로」는 받침으로 갈린다 — 자리 이름이 팔레트에서 오므로 여기서 센다
+          (ch.charCodeAt(0) - 0xac00) % 28 === 0 ? `${ch}로 옮겼습니다` : `${ch}으로 옮겼습니다`,
+        ),
+      ]
+      const body = !loc
+        ? `${slotLabel[s]}에는 그곳에 없었습니다.`
+        : loc === prevLoc
+          ? SAME[nth % SAME.length]!
+          : (first ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.` : MOVE[nth % MOVE.length]!) +
+            (far ? ` ${places.hall}에서 걸어서 ${far}분 거리입니다.` : '')
       return { ko: first ? `${opener} ${body}` : body }
     }
     return [
@@ -1086,10 +1157,10 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
        * *"문단 수가 곧 범인 표시가 된다"* 를 칸 수가 늘어도 지킨다
        * (§9-9 진술 길이 쏠림도 같은 이유로 안 흔들린다).
        */
-      ...AXIS.map((s, i) => line(s, i === 0)),
-      // 감추지만 **거짓말은 아니다** — 있다는 것은 인정하고 내용을 안 밝힌다.
-      // 이 문장이 곧 제목의 규칙이다
-      { ko: `${secretPhrase(secret)} 이 일과 상관없는 일이라, 말씀드리고 싶지 않습니다.` },
+      ...AXIS.map((s, i) => line(s, i === 0, i > 0 ? at.get(AXIS[i - 1]!) : undefined, i)),
+      // ⛔ **여기에 「감추는 것이 있다」 문단을 다시 넣지 마라.** 그것이 제목의 규칙을
+      // 뒤집는다 — 비밀은 말하지 않는 것이지 말하지 않겠다고 말하는 것이 아니다.
+      // 산장 진술 5편에 그런 문장은 0개다. 비밀은 소지품 검사가 드러낸다(§HERRING).
     ]
   }
 
@@ -1269,7 +1340,6 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       paragraphs: statementOf(
         id === culprit ? t.claim : innocentPresence(id),
         openerOf(i),
-        secretOf(i),
       ),
       gesture: { pre: { ko: gestureOf(i).pre }, post: { ko: gestureOf(i).post } },
     },
@@ -1303,12 +1373,32 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     { id: 'a_ledger', label: '장부 조사', cost: 1, gives: ['e_alias2'], salience: 0.3, yield: 'solution',
       verb: 'search', target: { kind: 'location', id: 'hall' },
       result: res('두 번째 기록', '장부에 같은 이름이 한 번 더 적혀 있었다.') },
-    // 레드 헤링 — 무고한 넷 전원. salience 를 해답보다 높게
-    ...innocents.map((id, i) => ({
+    /**
+     * 레드 헤링 — **다섯 전원.** salience 를 해답보다 높게.
+     *
+     * ⚠ **`innocents` 를 쓰면 안 된다** — 그러면 범인만 소지품이 비고, 그 빈자리가
+     * 곧 정답이다(2026-07-30 실측 150/150). 범인도 사건과 무관한 것 하나를 갖는다 —
+     * 서식이 *"감추는 것은 다섯 명 전원이 하나씩, **범인도 포함**"* 이라고 이미
+     * 요구하던 것이고, 산장도 다섯 전원의 소지품에서 무언가가 나온다.
+     *
+     * HERRING 배정이 `ids` 순서라 범인이 특정 salience 에 고정되지 않는다
+     * (범인 인덱스 분포 150건 실측: 18.7/16.7/17.3/27.3/20.0%, χ² p≈0.24).
+     */
+    ...ids.map((id, i) => ({
       id: `a_h${i + 1}`, label: `소지품 검사 · ${names[ids.indexOf(id)]}`, cost: 1,
       gives: [`e_herring${i + 1}`], salience: HERRING[i].s, yield: 'redherring' as const,
       verb: 'belongings' as const, target: { kind: 'person' as const, id },
-      result: res(HERRING[i].ev, HERRING[i].res),
+      /**
+       * ★ 여기가 비밀이 드러나는 자리다 ★ (2026-07-30에 진술에서 옮겨 왔다)
+       *
+       * 제목은 **물건**, 본문은 **물건 + 그 사람의 비밀**이다. 산장이 그 모양이고
+       * (`a_yuri → 약물 투약 흔적`), 진술은 비밀에 대해 **한 마디도 안 한다.**
+       *
+       * `secretOf(i)` 의 `i` 가 `person(id, i)` 와 **같은 축(`ids`)**이라 사람과
+       * 비밀이 어긋나지 않는다. 조사(助詞)는 `secretObject` 가 붙인다 —
+       * 팔레트가 「…것」·「…다」·명사구 세 꼴로 오기 때문이다.
+       */
+      result: res(HERRING[i].ev, `${HERRING[i].res} ${secretObject(secretOf(i))} 확인했다.`),
     })),
     // 짝을 이름으로 적는다 — 아래 빈손 아홉 쌍과 **같은 모양**이어야 한다.
     // 이것만 「알리바이 대조」로 밋밋하면 목록에서 그 자체가 유용도 표시다
@@ -1541,7 +1631,51 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     return ch % 28 === 0 ? '는' : '은'
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  ★ 사망 구간 축소 — 부검이 시간에 대해 말하게 한다 ★ (2026-07-30)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 산장은 `narrows_window: [t1, t2]` 를 갖는다(YAML 1077행). 생성기는 안 냈고,
+   * 07-30에 앱의 축소를 **선언 기반**으로 바꾸면서 생성 사건은 축소가 **아예
+   * 없어졌다.** 그 자리를 되살린다 — 시간을 다루는 유일한 조사가 시간에 대해
+   * 침묵하고 있었다.
+   *
+   * ⚠ **`deathCells === 1` 이면 안 낸다.** 칸이 하나면 좁힐 데가 없다. 기본값이
+   * 1이라 **지금 나가는 사건은 한 글자도 안 바뀐다**(회귀 0 — diff 로 증명한다).
+   *
+   * 범위는 **마지막 칸을 뺀 것**이다. 남는 칸이 하나면 앱이 그 칸 이름을 그대로
+   * 쓰고, 둘이면 각자 제 이름을 지킨다(같은 글자가 두 열에 겹치지 않게).
+   *
+   * ⚠ **조사 id 를 글자로 박지 않는다** — 부검을 내는 자리가 아키타입마다 다르다
+   * (`staged_suicide` 는 `a_lividity`). `verb` 로 찾는다.
+   *
+   * ⚠ **조사(助詞)가 갈리는 문장을 안 쓴다** — 칸 이름이 팔레트에서 오므로 끝
+   * 글자를 모른다. 「안으로」·「사이로」를 범위 쪽에 붙여 변수 뒤 조사를 없앴다.
+   * (07-30의 「문세라은」과 같은 부류를 미리 막는다)
+   */
+  const autopsyId = allActions.find((a) => a.verb === 'autopsy')?.id
+  const narrowFrom = WIN[0]!
+  const narrowTo = WIN[Math.max(0, deathCells - 2)]!
+  const narrowRange =
+    narrowFrom === narrowTo
+      ? `${slotLabel[narrowFrom]!} 안으로`
+      : `${slotLabel[narrowFrom]!}에서 ${slotLabel[narrowTo]!} 사이로`
+  const narrowReveals =
+    deathCells >= 2 && autopsyId
+      ? [
+          {
+            trigger: { on: 'action' as const, actionId: autopsyId },
+            yield: 'narrow' as const,
+            surface: 'overview' as const,
+            narrowsWindow: [narrowFrom, narrowTo] as [string, string],
+            narration: `부검 결과, 사망 시각이 ${narrowRange} 좁혀졌다.`,
+          },
+        ]
+      : []
+
   const chapterReveals = [
+    ...narrowReveals,
     {
       trigger: { on: 'chapterComplete' as const, chapterOrder: 1 },
       yield: 'path' as const,
@@ -1906,8 +2040,10 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       { id: 'f_identity', kind: 'identity', subject: culprit, content: `${alias} = 범인`, revealedBy: ['e_alias', 'e_alias2'] },
       { id: 'f_means', kind: 'means', subject: culprit, content: '도구를 다룰 수 있었다', revealedBy: ['e_tool', 'e_toolmark'] },
       { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, revealedBy: ['e_motive'], requires: ['f_identity'] },
-      // 레드 헤링 — 무고한 사람의 비밀. 수상해 보이지만 사건과 무관하다
-      ...innocents.map((id, i) => ({
+      // 레드 헤링 — **다섯 전원**의 비밀. 수상해 보이지만 사건과 무관하다.
+      // `context` 라 유죄 계산에 안 낀다 — 범인이 하나 더 갖는다고 논리는 안 바뀐다.
+      // ⚠ 위 §HERRING 과 **같은 순서(`ids`)여야** `e_herring{i}` 짝이 맞는다
+      ...ids.map((id, i) => ({
         id: `f_h${i + 1}`, kind: 'context' as const, subject: id,
         content: '감추는 것이 있다', revealedBy: [`e_herring${i + 1}`],
       })),

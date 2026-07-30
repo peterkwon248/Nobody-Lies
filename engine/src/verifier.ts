@@ -816,6 +816,88 @@ export function verify(c: Case): VerifyResult {
       )
   }
 
+  /**
+   * 9-3g. **사망 구간 축소가 가리키는 범위** (2026-07-30 신설)
+   *
+   * `narrows_window` 는 슬롯 **범위 `[from, to]`** 다. `schema.ts` 는 두 슬롯이
+   * **존재하는지만** 보므로, 범위가 뒤집히거나 사망 구간을 한 칸도 안 덮어도
+   * 통과한다 — 그러면 부검을 해도 **아무것도 안 좁혀지고 오류도 안 난다.**
+   *
+   * ⚠ **「창 슬롯만 가리켜야 한다」로 걸면 안 된다** — 산장이 `[t1, t2]` 인데
+   * `t1`(새벽 3시)은 창이 아니다. 축소의 정밀도(3~5시)가 슬롯보다 잘아서 범위의
+   * 시작을 앞 칸에 두는 것이고, **그것이 골든 케이스다.** 서식이 허용하는 모양을
+   * 검증기가 반려하면 둘 중 하나가 거짓말이 된다(§9-3e·§9-3f 와 같은 판단).
+   *
+   * 그래서 무는 것은 둘뿐이다 — **뒤집힘**과 **사망 구간을 하나도 안 덮음.**
+   */
+  {
+    const order = c.slots.map((s) => s.id)
+    const winIds = new Set(c.slots.filter((s) => s.isWindow).map((s) => s.id))
+    for (const r of c.reveals) {
+      const nw = r.narrowsWindow
+      if (!nw?.length) continue
+      const from = nw[0]!, to = nw[nw.length - 1]!
+      const a = order.indexOf(from), b = order.indexOf(to)
+      if (a < 0 || b < 0) continue // 슬롯 존재는 schema 가 본다
+      if (a > b) {
+        errors.push(`narrows_window 범위가 뒤집혔다 ('${from}' → '${to}') — 좁혀지는 구간이 없다`)
+        continue
+      }
+      if (!order.slice(a, b + 1).some((id) => winIds.has(id)))
+        errors.push(
+          `narrows_window '${from}'~'${to}' 가 사망 구간(isWindow)을 한 칸도 안 덮는다 — ` +
+            '부검을 해도 아무것도 안 좁혀지고 화면은 조용하다',
+        )
+    }
+  }
+
+  /**
+   * 9-3h. **사람을 겨누는 조사에서 범인만 혼자 다르다** (2026-07-30 신설)
+   *
+   * ★ 이 검사는 실제 누설을 잡고 만들어졌다 ★ 생성기가 소지품 레드 헤링을
+   * `innocents` 에만 달아서 **범인만 소지품이 비었다.** 150건 전수로 재니
+   * **150/150** 이었다 — 소지품을 다섯 번 누르면 답이 나온다(예산 11 중 5).
+   * 게이트 7단은 내내 초록이었고, 앱의 빈손 문구가 하필
+   * *"이 대상은 배제해도 좋다"* 라 화면에서도 안 튀었다.
+   *
+   * ── 왜 「전원 같아야 한다」로 안 걸었나 ──────────────────
+   *
+   * **산장이 떨어진다.** 산장의 통화 기록은 둘이 결과를 주고 셋이 빈손이다
+   * (`a_ph_yuri`·`a_ph_wy` ↔ `a_ph_sakura`·`a_ph_yena`·`a_ph_yujin`).
+   * 갈리는 것 자체는 정상이다 — **고립이 문제**다. 넷 대 하나로 갈리고 그 하나가
+   * 범인이면, 플레이어는 같은 조사를 다섯 번 눌러 답을 얻는다.
+   *
+   * 그래서 무는 것은 하나뿐이다 — **같은 동사 안에서 범인이 혼자인 쪽에 있을 때.**
+   * 등급이 **오류**인 것은 §9-1·§9-9 와 같다. 정답 누설이 이 저장소에서 가장 비싸다.
+   */
+  {
+    const suspects = c.people.map((p) => p.id).filter((id) => id !== c.victim)
+    /**
+     * ⚠ **사람을 기준으로 센다 — 조사를 기준으로 세면 구멍이 난다.** 범인만 그
+     * 동사의 조사를 **아예 안 가지는** 경우가 같은 크기의 누설인데, 조사 목록만
+     * 훑으면 범인 행이 없어서 검사가 그냥 지나간다. 없는 것도 「빈손」으로 센다.
+     */
+    const verbs = new Set(
+      c.actions
+        .filter((a) => a.target?.kind === 'person' && a.target.id !== c.victim && a.verb)
+        .map((a) => a.verb!),
+    )
+    for (const verb of verbs) {
+      if (suspects.length < 3) continue // 둘 이하면 「혼자」가 뜻을 갖지 않는다
+      const productive = (pid: string) =>
+        c.actions.some(
+          (a) => a.verb === verb && a.target?.kind === 'person' && a.target.id === pid && a.yield !== 'empty',
+        )
+      const mine = productive(c.culprit)
+      const sameSide = suspects.filter((pid) => productive(pid) === mine)
+      if (sameSide.length === 1)
+        errors.push(
+          `'${verb}' 조사에서 범인만 혼자 ${mine ? '결과를 준다' : '빈손이다'} ` +
+            `(용의자 ${suspects.length}명 중 1명) — 같은 조사를 사람마다 눌러보면 답이 나온다`,
+        )
+    }
+  }
+
   // 9-4. 조사 ↔ 조사 지점 정합
   //
   // `target` 이 가리키는 것이 사라지면 **조사가 조용히 실행 불가가 된다** —
