@@ -1,0 +1,1332 @@
+id: closing-theater
+title: 폐관을 앞둔 지방 극장 사건
+scale: daily
+budget: 10
+incident:
+  kind: homicide
+  subject: victim
+  description: 분장실에서의 사망
+  scene: room
+prose:
+  source: authored
+floor_plan:
+  view_box:
+    w: 1000
+    h: 625
+  scale:
+    x: 96
+    len: 90
+    'y': 585
+    label: 5m
+  buildings:
+    - id: b_main
+      x: 70
+      'y': 170
+      w: 618
+      h: 264
+      poche: var(--fg-3)
+    - id: b_annex
+      x: 746
+      'y': 66
+      w: 209
+      h: 150
+      poche: var(--accent)
+      revealed_after: 1
+  rooms:
+    - id: r_hall
+      x: 269
+      'y': 170
+      w: 137
+      h: 264
+      label: 로비
+      building: b_main
+      loc: hall
+      primary: true
+    - id: r_room
+      x: 406
+      'y': 170
+      w: 144
+      h: 264
+      label: 분장실
+      building: b_main
+      loc: room
+      scene: true
+      tint: rgba(235,87,87,.10)
+      primary: true
+    - id: r_loc1
+      x: 70
+      'y': 170
+      w: 199
+      h: 153
+      label: 무대
+      building: b_main
+      loc: loc1
+      primary: true
+    - id: r_loc2
+      x: 550
+      'y': 170
+      w: 138
+      h: 153
+      label: 영사실
+      building: b_main
+      loc: loc2
+      primary: true
+    - id: r_loc3
+      x: 746
+      'y': 66
+      w: 209
+      h: 150
+      label: 조명실
+      building: b_annex
+      loc: loc3
+      primary: true
+    - id: r_loc1side
+      x: 70
+      'y': 323
+      w: 199
+      h: 111
+      label: 의상 창고
+      building: b_main
+      loc: loc1
+    - id: r_loc2side
+      x: 550
+      'y': 323
+      w: 138
+      h: 111
+      label: 소품 창고
+      building: b_main
+      loc: loc2
+  zones:
+    - id: z_approach
+      x: 746
+      'y': 400
+      w: 209
+      h: 145
+      label: 극장 뒷마당
+      loc: approach
+      hatch: true
+      primary: true
+    - id: z_away
+      x: 746
+      'y': 246
+      w: 209
+      h: 120
+      label: 역 앞 큰길
+      loc: away
+      hatch: true
+      offsite: true
+      primary: true
+  doors:
+    - id: d_room
+      x1: 406
+      y1: 262
+      x2: 406
+      y2: 342
+      hinge: p2
+      swing: -1
+      building: b_main
+    - id: d_loc1
+      x1: 269
+      y1: 207
+      x2: 269
+      y2: 287
+      open: true
+      building: b_main
+    - id: d_r_loc1side
+      x1: 269
+      y1: 348
+      x2: 269
+      y2: 409
+      open: true
+      building: b_main
+    - id: d_loc2
+      x1: 550
+      y1: 207
+      x2: 550
+      y2: 287
+      hinge: p2
+      swing: -1
+      building: b_main
+    - id: d_r_loc2side
+      x1: 550
+      y1: 348
+      x2: 550
+      y2: 409
+      hinge: p2
+      swing: -1
+      building: b_main
+    - id: d_front
+      x1: 688
+      y1: 184
+      x2: 688
+      y2: 246
+      hinge: p2
+      swing: -1
+      ext: true
+      building: b_main
+    - id: d_back
+      x1: 688
+      y1: 376
+      x2: 688
+      y2: 420
+      hinge: p2
+      swing: -1
+      ext: true
+      building: b_main
+    - id: d_annex
+      x1: 746
+      y1: 121
+      x2: 746
+      y2: 161
+      hinge: p1
+      swing: -1
+      ext: true
+      building: b_annex
+  windows:
+    - x1: 306
+      y1: 170
+      x2: 369
+      y2: 170
+      building: b_main
+    - x1: 445
+      y1: 170
+      x2: 511
+      y2: 170
+      building: b_main
+    - x1: 803
+      y1: 66
+      x2: 899
+      y2: 66
+      building: b_annex
+  walks:
+    - x1: 688
+      y1: 215
+      x2: 746
+      y2: 141
+      building: b_annex
+      from: hall
+      to: loc3
+      min: 10
+    - x1: 688
+      y1: 398
+      x2: 746
+      y2: 473
+      building: z_approach
+      from: hall
+      to: approach
+      min: 2
+  fixtures:
+    hall:
+      x: 337
+      'y': 317
+      label: 벽시계
+      loc: hall
+    room:
+      x: 478
+      'y': 317
+      label: 화장대 전등
+      loc: room
+    loc1:
+      x: 169
+      'y': 255
+      label: 도르래 밧줄
+      loc: loc1
+    loc2:
+      x: 619
+      'y': 255
+      label: 영사기
+      loc: loc2
+    loc3:
+      x: 850
+      'y': 150
+      label: 조명 조작대
+      loc: loc3
+    approach:
+      x: 850
+      'y': 481
+      label: 극장 뒷마당의 설비
+      loc: approach
+    away:
+      x: 850
+      'y': 313
+      label: 역 앞 큰길의 설비
+      loc: away
+    body:
+      x: 455
+      'y': 249
+      label: 시신
+      loc: room
+      body: true
+relation_graph:
+  nodes:
+    - id: victim
+      kind: victim
+      x: 50
+      'y': 50
+      label: 임소현
+    - id: p1
+      kind: person
+      x: 22
+      'y': 22
+    - id: p2
+      kind: person
+      x: 50
+      'y': 15
+    - id: p3
+      kind: person
+      x: 80
+      'y': 30
+    - id: p4
+      kind: person
+      x: 82
+      'y': 72
+    - id: p5
+      kind: person
+      x: 24
+      'y': 78
+  edges: []
+  discoveries: []
+seed_terms:
+  - 청테이프
+prologue:
+  - 폐관까지 두 주가 남은 극장이었다. 마지막 공연이 끝나고 관객이 빠져나간 뒤에도 다섯 사람은 건물 안에 남아 있었다.
+  - 다음 날 아침, 분장실에서 임소현이 발견됐다. 서른, 이 극장의 지배인이었다.
+  - 로비의 불은 밤새 켜져 있었고, 앞문은 잠겨 있었다. 뒷마당으로 나가는 문만 여닫힌 자국이 있었다.
+  - 다섯 사람은 모두 그날 밤 극장에 있었다고 말했다. 조사는 그 말들에서 시작됐다.
+terms:
+  - word: 청테이프
+    source: 분장실 수색 · 시신 검사
+    note: 극장에서 흔히 쓰는 회색 접착 테이프. 분장실 바닥 구석에서 뭉치가 나왔다.
+  - word: 윤다래
+    source: 서류 조사 · 장부 조사
+    note: 폐관 서류 한 장과 장부 뒷장에 적혀 있던 이름.
+  - word: 퍼진 소문
+    source: 서류 조사
+    note: 정산 밖에서 오간 돈을 두고 극장 안에서 돌던 이야기.
+  - word: 근무 교대표
+    source: 근무 교대표 확인
+    note: 그날 밤 남기로 돼 있던 사람과 실제로 남은 사람을 적어둔 표.
+  - word: 열쇠 반납 장부
+    source: 열쇠 반납 장부 확인
+    note: 빌려간 열쇠와 돌려준 시각을 짝지어 적는 장부.
+  - word: 당일 입장권 내역
+    source: 당일 입장권 내역 확인
+    note: 그날 판매된 표의 수와 회차, 취소 처리가 남은 기록.
+slots:
+  - id: t0
+    label: 마지막 공연이 끝난 직후
+  - id: t1
+    label: 밤 열 시부터 열한 시 사이
+    window: true
+  - id: t2
+    label: 자정을 조금 넘긴 무렵
+locations:
+  - id: hall
+    label: 로비
+    at_lodge: true
+  - id: room
+    label: 분장실
+    at_lodge: true
+  - id: loc1
+    label: 무대
+    at_lodge: true
+  - id: loc2
+    label: 영사실
+    at_lodge: true
+  - id: loc3
+    label: 조명실
+    at_lodge: true
+  - id: approach
+    label: 극장 뒷마당
+    at_lodge: true
+  - id: away
+    label: 역 앞 큰길
+    at_lodge: false
+people:
+  - id: p1
+    name: 하경석
+    age: 33
+    job: 극장 지배인
+    claim_summary: 밤 열 시부터 열한 시 사이에는 로비에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: hall
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 의자를 조금 뒤로 물리고 앉았다.
+        post: 시선이 잠깐 문 쪽으로 갔다.
+      paragraphs:
+        - >-
+          정확하게 말하면, 저는 관객이 다 빠져나갈 때까지 로비를 지키는 게 일입니다. 마지막 공연이 끝난 직후에도 그랬습니다. 앞문을 걸어 잠그고 나면 그 다음은 계산이라, 매표구 옆
+          탁자에 앉아 서류를 펴놓습니다.
+        - 밤 열 시부터 열한 시 사이까지 자리를 뜨지 않았습니다. 미숙 선배가 옆에서 계속 말을 붙이는 통에 숫자를 두 번 다시 맞췄습니다.
+        - 자정을 조금 넘긴 무렵에도 그 자리를 지켰습니다. 여기 문 닫는다는 얘기가 나온 뒤로는 정리할 것이 더 늘었습니다.
+  - id: p2
+    name: 문선호
+    age: 32
+    job: 영사 기사
+    claim_summary: 밤 열 시부터 열한 시 사이에는 극장 뒷마당에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: approach
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 탁자 모서리를 손가락으로 짚었다.
+        post: 말끝이 조금 흐려졌다.
+      paragraphs:
+        - >-
+          제 기억으로는, 영사기 끄고 나면 열이 식을 때까지는 손을 못 댑니다. 그래서 마지막 공연이 끝난 직후에는 로비에 내려와 있었어요. 지배인님이 탁자에서 뭘 적고 계셨고, 저는 그냥
+          소파 끝에 걸터앉아 있었습니다.
+        - >-
+          밤 열 시부터 열한 시 사이에는 극장 뒷마당에 가 있었어요. 로비에서 걸어서 2분 거리입니다. 담배 한 대 피우려고 나갔다가 좀 오래 있었네요. 뒷문 손잡이가 헐거워서 누가
+          청테이프를 감아뒀더라구요. 그거 만지작거리면서 서 있었어요.
+        - 자정을 조금 넘긴 무렵에는 로비로 옮겼습니다. 바깥이 생각보다 추워서요.
+  - id: p3
+    name: 조태식
+    age: 35
+    job: 의상 담당
+    claim_summary: 밤 열 시부터 열한 시 사이에는 영사실에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: loc2
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 발끝으로 바닥을 두어 번 눌렀다.
+        post: 손등으로 이마를 문질렀다.
+      paragraphs:
+        - >-
+          글쎄요, 그러니까, 저는 무대 옷부터 걷어야 하는 사람이라 공연 끝나면 제일 늦게까지 남습니다. 그래도 마지막 공연이 끝난 직후에는 로비에 있었어요. 걷어온 걸 소파에 산더미로
+          쌓아놓고 앉아 있었죠. 미숙 누나가 그거 좀 치우라고 잔소리하는 게 매번 있는 일이구요.
+        - >-
+          밤 열 시부터 열한 시 사이에는 영사실에 가 있었습니다. 청테이프를 거기 두고 온 게 생각나서요. 옷단 터진 걸 급하면 그걸로 붙여놓거든요. 우리 극장에서 그게 없으면 되는 일이
+          없습니다.
+        - 자정을 조금 넘긴 무렵에는 로비로 옮겼구요. 옷을 그대로 두고 갈 수는 없으니까 다시 그 앞에 앉았죠.
+  - id: p4
+    name: 표미숙
+    age: 38
+    job: 매표 직원
+    claim_summary: 밤 열 시부터 열한 시 사이에는 로비에 있었다고 진술.
+    hidden_role: ringleader
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: room
+      - slot: t2
+        at: hall
+    claim:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: hall
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 목을 한 번 가다듬었다.
+        post: 대답이 끝나자 어깨가 조금 내려앉았다.
+      paragraphs:
+        - >-
+          솔직히 말하자면, 저는 이십 년 가까이 저 매표구 안에만 앉아 있던 사람이에요. 매표구가 로비에 있으니 제 자리도 로비죠. 마지막 공연이 끝난 직후에도 거기 있었어요. 표 파는
+          사람은 끝나고도 한참을 남아요. 관객보다 늦게 나가는 게 매표 직원이라고, 예전 지배인님이 그렇게 말했었죠.
+        - >-
+          밤 열 시부터 열한 시 사이까지도 자리를 뜨지 않았어요. 경석이가, 아니 지배인님이 옆에서 숫자를 맞추고 있길래 제가 커피를 타다 줬고요. 태식이가 옷을 저렇게 쌓아놓고 다니는
+          것도 하루이틀이 아니라서 그 얘기도 했고. 준기는 원래 말이 없는 애라 뭘 물어도 대답이 짧아요. 선호씨는 담배 냄새를 달고 다니는데 본인만 모르는 것 같고요.
+        - >-
+          자정을 조금 넘긴 무렵에도 그 자리를 지켰어요. 저야 갈 데가 없으니까. 문 닫는다는 얘기 나온 뒤로 다들 말수가 줄었는데, 그렇게 조용한 극장은 저도 처음 봤어요. 이십 년을
+          다녔는데 마지막이 이런 식이 되는 게 맞나 싶고.
+  - id: p5
+    name: 서준기
+    age: 33
+    job: 영사 기사
+    claim_summary: 밤 열 시부터 열한 시 사이에는 무대에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: loc1
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 소맷단을 접었다 폈다 했다.
+        post: 마지막 말은 목소리가 반쯤 잠겼다.
+      paragraphs:
+        - 그날 일이라면, 마지막 공연이 끝난 직후에는 로비에 있었습니다. 다들 거기 있었으니까요.
+        - 밤 열 시부터 열한 시 사이에는 무대에 가 있었습니다. 스크린 밑단이 말려 올라간 걸 청테이프로 눌러놓으려고요. 그거 안 하면 다음 상영 때 화면 아래가 접힙니다.
+        - 자정을 조금 넘긴 무렵에는 로비로 옮겼습니다.
+victim: victim
+victim_profile:
+  name: 임소현
+  age: 30
+  job: 극장 지배인
+culprit: p4
+trick:
+  types:
+    - locked_room
+  props:
+    - e_tool
+  staging:
+    - e_seal
+  illusions:
+    - id: il_sealed
+      kind: absence
+      impression: 그 방에는 아무도 드나들 수 없었다
+      made_by:
+        - e_seal
+      broken_by:
+        - e_gap
+  exit:
+    slot: t1
+    method: 잠금이 걸리기 전에 빠져나갔다
+    enabled_by:
+      - e_seal
+    broken_by:
+      - e_gap
+  flaw:
+    text: 안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가
+    planted_in:
+      - p4
+evidence:
+  - id: e_tool
+    description: 청테이프
+    found_at: 분장실
+    record: 분장실 바닥 구석에서 나온 청테이프 뭉치. 끝이 손으로 뜯겨 있었고 안쪽 면에 먼지가 붙어 있었다.
+    yields_terms:
+      - 청테이프
+  - id: e_toolmark
+    description: 도구가 남긴 자국
+    record: 임소현의 목덜미와 손목 안쪽에 남은 폭이 일정한 자국. 위에 끈적한 것이 얇게 묻어 있었다.
+    yields_terms:
+      - 청테이프
+  - id: e_alias
+    description: '''윤다래'' 라는 이름의 기록'
+    record: 폐관 서류 묶음에서 나온 한 장. 윤다래라는 이름이 적혀 있었고 서명란 필체가 다른 서류와 달랐다.
+    yields_terms:
+      - 윤다래
+  - id: e_alias2
+    description: '''윤다래'' 가 적힌 두 번째 기록'
+    record: 장부 뒷장에 적힌 이름. 정산과 별개로 오간 돈을 받는 쪽이 윤다래로 되어 있었다.
+    yields_terms:
+      - 윤다래
+  - id: e_motive
+    description: 금전 기록
+    record: 정산 밖에서 오간 돈이 적힌 몇 줄. 마지막 줄은 폐관 발표가 있던 달에서 끊겨 있었다.
+    yields_terms:
+      - 퍼진 소문
+  - id: e_mutual
+    description: 넷의 상호 보증
+    record: 로비에 남아 있던 넷이 서로에 대해 말한 내용. 서로 어긋나지 않았고 본 범위는 로비 안이었다.
+  - id: e_herring1
+    description: 개인적인 편지
+    record: 하경석의 수첩에 끼워져 있던 부치지 않은 편지. 가족에게 쓴 것이었다.
+  - id: e_herring2
+    description: 오래된 사진
+    record: 문선호의 지갑에서 나온 오래된 사진. 뒷면 글씨가 지워져 있었다.
+  - id: e_herring3
+    description: 접힌 영수증
+    record: 조태식의 주머니에서 나온 접힌 영수증. 값이 적지 않은 장비를 지난해에 산 것이었다.
+  - id: e_herring4
+    description: 지워진 기록
+    record: 표미숙의 가방 바닥에 있던 이력서 사본. 학력란 한 줄이 지워지고 다시 적혀 있었다.
+  - id: e_herring5
+    description: 낡은 명함
+    record: 서준기의 공구 주머니에서 나온 낡은 명함. 다른 곳의 이름이 찍혀 있었다.
+  - id: e_seal
+    description: 안쪽에서 걸린 잠금
+    record: 분장실 문의 걸쇠가 안쪽에서 내려와 있던 상태. 부서진 데는 없었고 축 주변에 마른 자국이 있었다.
+    is_staging: true
+  - id: e_gap
+    description: 문틀의 틈
+    record: 문과 틀 사이의 틈. 안쪽 페인트가 한 뼘 길이로 한쪽 방향으로 벗겨져 있었다.
+  - id: e_rec1
+    description: 근무 교대표
+    record: 그날 밤 남기로 돼 있던 사람과 실제로 남은 사람이 적힌 표. 한 칸이 고쳐 쓰여 있었다.
+    yields_terms:
+      - 근무 교대표
+  - id: e_rec2
+    description: 열쇠 반납 장부
+    record: 빌려간 열쇠와 돌려준 시각이 적힌 장부. 그날 밤 한 줄은 반납란이 비어 있었다.
+    yields_terms:
+      - 열쇠 반납 장부
+  - id: e_rec3
+    description: 당일 입장권 내역
+    record: 그날 판매된 표의 수와 회차가 적힌 내역. 몇 장은 판매 시각이 공연 시작 뒤로 찍혀 있었다.
+    yields_terms:
+      - 당일 입장권 내역
+facts:
+  - id: f_opp
+    kind: opportunity
+    subject: p4
+    content: 새벽에 현장에 있었다
+    revealed_by:
+      - e_gap
+      - e_seal
+  - id: f_no_p1
+    kind: no_opportunity
+    subject: p1
+    content: 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p2
+    kind: no_opportunity
+    subject: p2
+    content: 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p3
+    kind: no_opportunity
+    subject: p3
+    content: 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p5
+    kind: no_opportunity
+    subject: p5
+    content: 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p1_ok
+    kind: no_opportunity
+    subject: p1
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p2_ok
+    kind: no_opportunity
+    subject: p2
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p3_ok
+    kind: no_opportunity
+    subject: p3
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p5_ok
+    kind: no_opportunity
+    subject: p5
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_identity
+    kind: identity
+    subject: p4
+    content: 윤다래 = 범인
+    revealed_by:
+      - e_alias
+      - e_alias2
+  - id: f_means
+    kind: means
+    subject: p4
+    content: 도구를 다룰 수 있었다
+    revealed_by:
+      - e_tool
+      - e_toolmark
+  - id: f_motive
+    kind: motive
+    subject: p4
+    content: 퍼진 소문
+    revealed_by:
+      - e_motive
+    requires:
+      - f_identity
+  - id: f_h1
+    kind: context
+    subject: p1
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring1
+  - id: f_h2
+    kind: context
+    subject: p2
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring2
+  - id: f_h3
+    kind: context
+    subject: p3
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring3
+  - id: f_h4
+    kind: context
+    subject: p4
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring4
+  - id: f_h5
+    kind: context
+    subject: p5
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring5
+  - id: f_rec1
+    kind: context
+    subject: p4
+    content: 근무 교대표에 남은 정황
+    revealed_by:
+      - e_rec1
+  - id: f_rec2
+    kind: context
+    subject: p4
+    content: 열쇠 반납 장부에 남은 정황
+    revealed_by:
+      - e_rec2
+  - id: f_rec3
+    kind: context
+    subject: p4
+    content: 당일 입장권 내역에 남은 정황
+    revealed_by:
+      - e_rec3
+actions:
+  - id: a_room
+    label: 분장실 수색
+    verb: search
+    cost: 1
+    gives:
+      - e_tool
+    salience: 0.5
+    yield: solution
+    target:
+      kind: location
+      id: room
+    result:
+      title: 분장실 안쪽
+      body: >-
+        화장대 전등이 켜진 채였고 의자 하나가 벽 쪽으로 밀려 있었다. 바닥 구석에서 청테이프 뭉치가 나왔다. 끝이 손으로 뜯긴 자리였고 안쪽 면에 먼지가 붙어 있었다. 거울 앞 선반은
+        물건이 놓였던 자국만 남아 있었다.
+  - id: a_body
+    label: 시신 검사
+    verb: autopsy
+    cost: 1
+    gives:
+      - e_toolmark
+    salience: 0.6
+    yield: solution
+    target:
+      kind: fixture
+      id: body
+    result:
+      title: 임소현의 상태
+      body: >-
+        외상은 크지 않았다. 목덜미와 손목 안쪽에 가늘고 곧은 자국이 남아 있었고, 폭이 일정했다. 자국 위로 끈적한 것이 얇게 묻어 있었다. 옷매무새는 흐트러져 있었으나 신발은 벗겨지지
+        않은 채였다.
+  - id: a_papers
+    label: 서류 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_alias
+      - e_motive
+    salience: 0.3
+    yield: solution
+    target:
+      kind: location
+      id: hall
+    result:
+      title: 캐비닛의 서류
+      body: >-
+        폐관 절차를 위해 묶어둔 서류철이었다. 대부분은 계약서와 신고서 사본이었다. 그 사이에 끼어 있던 한 장에 윤다래라는 이름이 적혀 있었다. 서명란의 필체가 같은 묶음의 다른 서류와
+        달랐다.
+  - id: a_ledger
+    label: 장부 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_alias2
+    salience: 0.3
+    yield: solution
+    target:
+      kind: location
+      id: loc1
+    result:
+      title: 장부의 뒷장
+      body: >-
+        매달 정산이 손글씨로 적혀 있었다. 뒷장에는 정산과 별개로 오간 돈이 몇 줄 남아 있었고, 받는 쪽 이름이 윤다래로 적혀 있었다. 극장 안에서 그 돈에 대해 이야기가 돌았다는 말은
+        여러 사람에게서 나왔다. 마지막 줄은 폐관 발표가 있던 달에서 끊겨 있었다.
+  - id: a_h1
+    label: 소지품 검사 · 하경석
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring1
+    salience: 0.85
+    yield: redherring
+    target:
+      kind: person
+      id: p1
+    result:
+      title: 하경석의 소지품
+      body: >-
+        수첩과 열쇠 꾸러미, 접힌 안경집이 나왔다. 수첩 뒤쪽에 부치지 않은 편지가 끼워져 있었다. 가족에게 쓴 것이었고 극장 일을 진작 그만둔 것처럼 적혀 있었다. 날짜는 적혀 있지
+        않았다.
+  - id: a_h2
+    label: 소지품 검사 · 문선호
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring2
+    salience: 0.8
+    yield: redherring
+    target:
+      kind: person
+      id: p2
+    result:
+      title: 문선호의 소지품
+      body: >-
+        담뱃갑과 손전등, 얇은 수건이 나왔다. 지갑 안쪽에서 오래된 사진 한 장이 나왔다. 무대 위에 선 젊은 사람이 찍혀 있었고 뒷면에 오디션 날짜로 보이는 글씨가 지워져 있었다. 사진
+        모서리는 여러 번 접힌 자국이 있었다.
+  - id: a_h3
+    label: 소지품 검사 · 조태식
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring3
+    salience: 0.75
+    yield: redherring
+    target:
+      kind: person
+      id: p3
+    result:
+      title: 조태식의 소지품
+      body: >-
+        실패와 가위, 옷핀이 든 주머니가 나왔다. 그 안에 접힌 영수증이 하나 있었다. 값이 적지 않은 장비를 산 것이었고 결제일이 지난해였다. 포장을 뜯은 흔적에 대한 언급은 어디에도
+        없었다.
+  - id: a_h4
+    label: 소지품 검사 · 표미숙
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring4
+    salience: 0.7
+    yield: redherring
+    target:
+      kind: person
+      id: p4
+    result:
+      title: 표미숙의 소지품
+      body: 손거울과 잔돈 지갑, 여벌 스타킹이 나왔다. 가방 바닥에 이력서 사본이 접힌 채로 있었다. 학력란의 한 줄이 지워지고 그 위에 다시 적혀 있었다. 종이는 여러 해 지난 것이었다.
+  - id: a_h5
+    label: 소지품 검사 · 서준기
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring5
+    salience: 0.65
+    yield: redherring
+    target:
+      kind: person
+      id: p5
+    result:
+      title: 서준기의 소지품
+      body: >-
+        공구 주머니와 마른 걸레, 필터 몇 장이 나왔다. 주머니 안쪽에서 낡은 명함이 한 장 나왔다. 이 극장이 아닌 다른 곳의 이름이 찍혀 있었고 모서리가 닳아 있었다. 뒷면에는 아무것도
+        적혀 있지 않았다.
+  - id: a_alibi
+    label: 알리바이 대조 · 하경석 ↔ 문선호
+    verb: alibi
+    cost: 1
+    gives:
+      - e_mutual
+    salience: 0.45
+    yield: exclusion
+    pair:
+      - p1
+      - p2
+    result:
+      title: 하경석과 문선호의 진술 대조
+      body: >-
+        두 사람의 말은 서로 어긋나지 않았다. 로비에 남아 있던 사람들이 서로에 대해 말한 내용도 같은 방향이었고, 넷의 말이 서로를 받치고 있었다. 다만 각자가 본 것은 로비 안에 한정돼
+        있었다.
+  - id: a_lock
+    label: 잠금장치 조사
+    verb: fixture
+    cost: 1
+    gives:
+      - e_seal
+    salience: 0.5
+    yield: solution
+    target:
+      kind: fixture
+      id: room
+    result:
+      title: 분장실 잠금장치
+      body: 문은 안쪽에서 걸린 상태였다. 걸쇠는 제자리에 내려와 있었고 부서진 데는 없었다. 걸쇠 축 주변에 마른 자국이 얇게 남아 있었다. 열쇠 구멍 쪽에는 긁힌 자리가 없었다.
+  - id: a_frame
+    label: 문틀 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_gap
+    salience: 0.25
+    yield: solution
+    target:
+      kind: location
+      id: loc2
+    result:
+      title: 문틀
+      body: >-
+        문과 틀 사이에 손가락이 들어갈 만한 틈이 있었다. 오래된 건물이라 틀이 아래쪽으로 내려앉아 있었다. 틈 안쪽 페인트가 한 뼘 길이로 벗겨져 있었고 벗겨진 방향이 한쪽으로 쏠려
+        있었다.
+  - id: a_rec1
+    label: 근무 교대표 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec1
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: loc3
+    result:
+      title: 근무 교대표
+      body: 그날 밤 남기로 돼 있던 사람과 실제로 남은 사람이 적혀 있었다. 마지막 공연 뒤의 칸은 손으로 고쳐 쓴 자리가 있었다. 고친 글씨와 원래 글씨는 같은 펜이었다.
+  - id: a_rec2
+    label: 열쇠 반납 장부 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec2
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: approach
+    result:
+      title: 열쇠 반납 장부
+      body: 빌려간 열쇠와 돌려준 시각이 짝을 이루어 적혀 있었다. 그날 밤 것 중 한 줄은 반납란이 비어 있었다. 어느 문의 열쇠인지는 번호로만 적혀 있었고 번호표는 사무실 벽에 걸려 있었다.
+  - id: a_rec3
+    label: 당일 입장권 내역 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec3
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: away
+    result:
+      title: 당일 입장권 내역
+      body: 판매된 표의 수와 회차가 적혀 있었다. 마지막 회차의 표 몇 장은 판매 시각이 공연 시작 뒤로 찍혀 있었다. 취소 처리된 줄도 있었고 그 옆에 손글씨로 짧은 표시가 되어 있었다.
+  - id: a_e1
+    label: 벽시계 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.22
+    yield: empty
+    target:
+      kind: fixture
+      id: hall
+  - id: a_e2
+    label: 도르래 밧줄 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.212
+    yield: empty
+    target:
+      kind: fixture
+      id: loc1
+  - id: a_e3
+    label: 영사기 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.20400000000000001
+    yield: empty
+    target:
+      kind: fixture
+      id: loc2
+  - id: a_e4
+    label: 조명 조작대 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.196
+    yield: empty
+    target:
+      kind: fixture
+      id: loc3
+  - id: a_e5
+    label: 극장 뒷마당 설비 확인
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.188
+    yield: empty
+    target:
+      kind: fixture
+      id: approach
+  - id: a_e6
+    label: 역 앞 큰길 설비 확인
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.18
+    yield: empty
+    target:
+      kind: fixture
+      id: away
+  - id: a_e7
+    label: 통화내역 조회 · 하경석
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.172
+    yield: empty
+    target:
+      kind: person
+      id: p1
+  - id: a_e8
+    label: 통화내역 조회 · 문선호
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.164
+    yield: empty
+    target:
+      kind: person
+      id: p2
+  - id: a_e9
+    label: 통화내역 조회 · 조태식
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.156
+    yield: empty
+    target:
+      kind: person
+      id: p3
+  - id: a_e10
+    label: 통화내역 조회 · 표미숙
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.148
+    yield: empty
+    target:
+      kind: person
+      id: p4
+  - id: a_e11
+    label: 통화내역 조회 · 서준기
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.14
+    yield: empty
+    target:
+      kind: person
+      id: p5
+  - id: a_e12
+    label: 소지품 검사 · 임소현
+    verb: belongings
+    cost: 1
+    gives: []
+    salience: 0.132
+    yield: empty
+    target:
+      kind: person
+      id: victim
+  - id: a_e13
+    label: 통화내역 조회 · 임소현
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.124
+    yield: empty
+    target:
+      kind: person
+      id: victim
+  - id: a_e14
+    label: 알리바이 대조 · 하경석 ↔ 조태식
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.11599999999999999
+    yield: empty
+    pair:
+      - p1
+      - p3
+  - id: a_e15
+    label: 알리바이 대조 · 하경석 ↔ 표미숙
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.108
+    yield: empty
+    pair:
+      - p1
+      - p4
+  - id: a_e16
+    label: 알리바이 대조 · 하경석 ↔ 서준기
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.1
+    yield: empty
+    pair:
+      - p1
+      - p5
+  - id: a_e17
+    label: 알리바이 대조 · 문선호 ↔ 조태식
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.092
+    yield: empty
+    pair:
+      - p2
+      - p3
+  - id: a_e18
+    label: 알리바이 대조 · 문선호 ↔ 표미숙
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.08399999999999999
+    yield: empty
+    pair:
+      - p2
+      - p4
+  - id: a_e19
+    label: 알리바이 대조 · 문선호 ↔ 서준기
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.07599999999999998
+    yield: empty
+    pair:
+      - p2
+      - p5
+  - id: a_e20
+    label: 알리바이 대조 · 조태식 ↔ 표미숙
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.068
+    yield: empty
+    pair:
+      - p3
+      - p4
+  - id: a_e21
+    label: 알리바이 대조 · 조태식 ↔ 서준기
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.06
+    yield: empty
+    pair:
+      - p3
+      - p5
+  - id: a_e22
+    label: 알리바이 대조 · 표미숙 ↔ 서준기
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.05199999999999999
+    yield: empty
+    pair:
+      - p4
+      - p5
+chapters:
+  - order: 1
+    title: 발견
+    opening: 먼저 그 자리에 무엇이 있었는지를 적는다.
+    requires_facts:
+      - f_no_p1
+      - f_no_p2
+      - f_no_p3
+      - f_no_p5
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p1
+        particle: 이/가
+      - label: 장소
+        candidates: closed
+        answer: room
+      - label: 시각
+        candidates: closed
+        answer: t2
+      - label: 도구
+        candidates: discovered
+        answer: 청테이프
+        particle: 이/가
+    report:
+      - blank: 2
+      - ', '
+      - blank: 0
+      - ' 가장 먼저 일어났다. '
+      - blank: 1
+      - '에서 '
+      - blank: 3
+      - ' 발견됐다.'
+    epilogue_order: 1
+  - order: 2
+    title: 근무 교대표
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec1
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p1
+        particle: 이/가
+      - label: 물품
+        candidates: discovered
+        answer: 근무 교대표
+        particle: 이/가
+      - label: 시각
+        candidates: closed
+        answer: t1
+        particle: 을/를
+    report:
+      - '기록을 확인한 것은 '
+      - blank: 0
+      - ' 있던 자리였다. '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다.'
+    epilogue_order: 2
+  - order: 3
+    title: 열쇠 반납 장부
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec2
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p2
+        particle: 이/가
+      - label: 접촉수단
+        candidates: discovered
+        answer: 열쇠 반납 장부
+        particle: 이/가
+      - label: 장소
+        candidates: closed
+        answer: hall
+        particle: 을/를
+    report:
+      - '기록을 확인한 것은 '
+      - blank: 0
+      - ' 있던 자리였다. '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다.'
+    epilogue_order: 3
+  - order: 4
+    title: 당일 입장권 내역
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec3
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p3
+        particle: 이/가
+      - label: 은닉처
+        candidates: discovered
+        answer: 당일 입장권 내역
+        particle: 이/가
+      - label: 시각
+        candidates: closed
+        answer: t1
+        particle: 을/를
+    report:
+      - '기록을 확인한 것은 '
+      - blank: 0
+      - ' 있던 자리였다. '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다.'
+    epilogue_order: 4
+  - order: 5
+    title: 이름과 이유
+    opening: 남은 것은 이름과 이유다.
+    requires_facts:
+      - f_motive
+      - f_opp
+      - f_means
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p4
+        is_accusation: true
+      - label: 정체
+        candidates: discovered
+        answer: 윤다래
+      - label: 동기
+        candidates: discovered
+        answer: 퍼진 소문
+    report:
+      - '모든 정황이 한 사람을 가리켰다. 진범은 '
+      - blank: 0
+      - '. 기록에 남은 이름은 '
+      - blank: 1
+      - ', 그리고 그를 움직인 것은 '
+      - blank: 2
+      - .
+    epilogue_order: 5
+reveals:
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 1
+    yield: path
+    surface: map
+    actions:
+      - a_ledger
+    narration: >-
+      자정을 조금 넘긴 무렵의 정황이 한 줄로 정리됐다. 로비의 불이 언제 꺼졌는지, 앞문이 언제 잠겼는지가 시간 위에 놓였다. 정리가 끝날 때쯤 사무실 캐비닛에 묶여 있던 종이 뭉치 이야기가
+      나왔다. 극장이 문을 닫기로 한 뒤로 아무도 손대지 않은 것들이었다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 2
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p5
+        content: >-
+          밤 열 시부터 열한 시 사이에 무대에 있었던 건 스크린 밑단 때문이었습니다. 그거 안 눌러놓으면 다음 상영 때 화면 아래가 접힙니다. 제 일이라 갔던 거고, 그 밖에 보탤 건
+          없습니다.
+        target: statement
+    narration: 종이를 넘기는 소리가 멎고 한동안 아무도 말을 하지 않았다. 서준기가 의자를 조금 당겨 앉더니 묻지 않은 것을 먼저 꺼냈다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 3
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p4
+        content: 다시 여쭈시니 말씀드리면, 밤 열 시부터 열한 시 사이에 제가 있던 곳은 로비예요. 저는 이십 년을 그 매표구 앞에서 보냈어요. 그 시간에 제가 다른 데 가 있을 이유가 없죠.
+        target: statement
+    narration: 정리가 끝나고 종이가 다시 제자리로 돌아갔다. 표미숙이 식은 잔을 두 손으로 감싸 쥔 채 앉아 있다가 입을 열었다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 4
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p3
+        content: 영사실에 있던 시간에 대해서는 앞서 말씀드린 그대로입니다. 두고 온 걸 가지러 갔고, 찾아서 들고 나왔어요. 더 보태면 없는 말을 지어내는 게 되니까 그만하겠습니다.
+        target: statement
+    narration: 확인이 끝나자 조태식이 무릎에 올려둔 옷가지를 옆으로 밀어놓았다. 몇 번 입을 열었다 다물더니 앞서 한 말을 되짚었다.
+reopen_per_chapter: 1

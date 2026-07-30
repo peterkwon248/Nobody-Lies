@@ -530,7 +530,7 @@ export type GenerateOptions = {
    * **손잡이가 「슬롯 수」가 아닌 이유.** 시간 축은 「모였다 → 흩어졌다 → 다시
    * 모였다」이고 **양 끝은 논리가 붙잡고 있다**: `t0` 는 프롤로그가 *"다섯이 자리에
    * 있었다"* 고 말하고 `TRICKS` 넷이 범인 t0 를 `hall` 로 두며, 마지막 칸에는 무고한
-   * 넷의 배제(`f_no_*_ok` · `e_mutual` 「도착 시각 상호 일치」)가 걸려 있다.
+   * 넷의 배제(`f_no_*_ok` · `e_mutual` 「머문 자리 상호 일치」)가 걸려 있다.
    * 양 끝을 늘리면 다섯이 *"거기도 홀에 있었습니다"* 를 한 줄씩 더 말할 뿐이고
    * **진술만 길어지고 판단할 것은 그대로다.**
    *
@@ -1571,13 +1571,28 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
    * ```
    * t0  전원 hall     프롤로그가 이미 그렇게 말한다 — "다섯이 자리에 있었다"
    * t1  넷이 딴 방     ★ 여기서 갈린다. 현장(room)만 아니면 된다
-   * t2  전원 hall     배제의 근거 — f_no_* "아침에 함께 도착했다" · e_mutual
+   * t2  전원 hall     배제의 근거 — f_no_* "<홀>에 함께 있었다" · e_mutual
    * ```
    *
    * **t2 를 건드리지 않는 이유**: 배제가 거기 걸려 있다. `f_no_<id>_ok`
-   * (「도착 시각 상호 일치」)가 `e_mutual`(「넷의 상호 보증」)로 공개되므로
+   * (「머문 자리 상호 일치」)가 `e_mutual`(「넷의 상호 보증」)로 공개되므로
    * **넷은 t2 에 모여 있어야 그 산문이 참이다.** 흩어뜨리면 데이터는 통과하고
    * 기록만 거짓이 된다 — §9-8 이 잡는 바로 그 형태다.
+   *
+   * ★ **이 주석이 경고한 형태에 이 주석 자신이 걸려 있었다** (2026-07-30 밤) ★
+   * 배제 사유가 **「아침에 함께 도착했다」**였다. 위 구조가 말하듯 넷은 **밤새 건물
+   * 안에** 있고 t1 에 흩어질 뿐이라 **아무도 아침에 도착하지 않는다.** 자기 진술이
+   * 그렇게 말하는데(*"밤 열 시부터 열한 시 사이에는 뒷마당에 있었어요"*) 1장 보고서는
+   * *"그날 아침 ○○이 가장 먼저 도착했다"* 를 쓰게 했다. `revealedBy: []` 라
+   * **조사 없이 공짜로** 나가는 줄이다.
+   *
+   * 뿌리는 **산장의 문구를 전제 없이 가져온 것**이다 — 산장은 넷이 실제로 오전에
+   * 도착하고 격자의 밤 슬롯이 `·`(부재)다. 생성 세계는 「모였다→흩어졌다→모였다」라
+   * 부재가 없다. 그래서 사유를 **머문 자리**로 바꿨다(t0·t2 전원 hall — 참이다).
+   *
+   * ⚠ **풀이는 안 막혀 있었다** — 배제는 `e_mutual` 이 기계적으로 받치므로 거짓인
+   * 것은 **사유 문장뿐**이었다. 그래서 검증기·게이트 7단이 내내 초록이었다.
+   * 진술을 **읽어서** 잡혔다.
    *
    * **t0 를 흩지 않는 이유 둘**: 프롤로그가 「t0 에 다섯이 hall 에 모였다」고
    * 말하고(참이 된다 — 전에는 넷이 「그곳에 없었습니다」라고 해서 **프롤로그와
@@ -1732,7 +1747,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     { id: 'e_alias', description: `'${alias}' 라는 이름의 기록`, yieldsTerms: [alias] },
     { id: 'e_alias2', description: `'${alias}' 가 적힌 두 번째 기록`, yieldsTerms: [alias] },
     { id: 'e_motive', description: '금전 기록', yieldsTerms: [motive] },
-    { id: 'e_mutual', description: '넷의 상호 보증', record: '네 사람이 말한 도착 시각이 서로 맞물렸다.' },
+    { id: 'e_mutual', description: '넷의 상호 보증', record: `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.` },
     ...HERRING.map((h, i) => ({ id: `e_herring${i + 1}`, description: h.ev, record: h.rec })),
   ]
 
@@ -1785,7 +1800,7 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
     { id: 'a_alibi', label: `알리바이 대조 · ${names[ids.indexOf(innocents[0])]} ↔ ${names[ids.indexOf(innocents[1])]}`,
       cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
       verb: 'alibi', pair: [innocents[0], innocents[1]],
-      result: res('맞물리는 시각', '네 사람이 말한 도착 시각이 서로 맞물렸다.') },
+      result: res('맞물리는 자리', `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.`) },
   ]
 
   /**
@@ -2377,11 +2392,11 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
       // 자기 진술에만 기대면 그 사람을 범인으로 가정했을 때 배제가 사라진다.
       ...innocents.map((id) => ({
         id: `f_no_${id}`, kind: 'no_opportunity' as const, subject: id,
-        content: '아침에 함께 도착했다', revealedBy: [] as string[],
+        content: `${places.hall}에 함께 있었다`, revealedBy: [] as string[],
       })),
       ...innocents.map((id) => ({
         id: `f_no_${id}_ok`, kind: 'no_opportunity' as const, subject: id,
-        content: '도착 시각 상호 일치', revealedBy: ['e_mutual'],
+        content: '머문 자리 상호 일치', revealedBy: ['e_mutual'],
       })),
       { id: 'f_identity', kind: 'identity', subject: culprit, content: `${alias} = 범인`, revealedBy: ['e_alias', 'e_alias2'] },
       { id: 'f_means', kind: 'means', subject: culprit, content: '도구를 다룰 수 있었다', revealedBy: ['e_tool', 'e_toolmark'] },
@@ -2421,8 +2436,8 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
      */
     chapters: [
       {
-        order: 1, title: '아침의 발견',
-        opening: '먼저 그 아침에 무엇이 있었는지를 적는다.',
+        order: 1, title: '발견',
+        opening: '먼저 그 자리에 무엇이 있었는지를 적는다.',
         requiresFacts: innocents.map((id) => `f_no_${id}`),
         blanks: [
           { label: '인물', candidates: 'closed', answer: innocents[0], particle: '이/가' },
@@ -2432,9 +2447,8 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
           { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
         ],
         report: [
-          { text: '그날 아침 ' }, { blank: 0 }, { text: ' 가장 먼저 도착했다. ' },
-          { blank: 2 }, { text: ', ' }, { blank: 1 }, { text: '에서 ' },
-          { blank: 3 }, { text: ' 발견됐다.' },
+          { blank: 2 }, { text: ', ' }, { blank: 0 }, { text: ' 가장 먼저 일어났다. ' },
+          { blank: 1 }, { text: '에서 ' }, { blank: 3 }, { text: ' 발견됐다.' },
         ],
         epilogueOrder: 1,
       },
