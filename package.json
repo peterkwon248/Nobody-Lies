@@ -18,6 +18,7 @@
     "dev": "npm run dev -w nobody-lies-app",
     "port-check": "node scripts/port-check.mjs",
     "yaml-check": "node scripts/yaml-comma-check.mjs",
-    "voice-check": "node scripts/voice-check.mjs"
+    "voice-check": "node scripts/voice-check.mjs",
+    "world-check": "node scripts/world-check.mjs"
   }
 }
