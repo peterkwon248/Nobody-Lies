@@ -1,0 +1,420 @@
+# =====================================================================
+#  ★ 결정 실험의 증거물 ★  (2026-07-31)
+#
+#  「사용자의 오프라인 크라임씬 텍스트도 캠페인이 되나」를 **의견 대신 재서** 답한 것.
+#  원문(「연습실 살인사건」)을 손으로 이 스키마에 옮겼고 **검증을 통과한다.**
+#
+#  ── 이 파일이 증명하는 것 ──────────────────────────────────────────
+#    첫 시도 오류 둘 → 고치니 통과. 그리고 **둘 다 게임화 층**이었다:
+#      x 3장 조합 수 20 — 30 미만이면 찍기가 가능하다
+#      x 2장 완성에는 서사가 없다
+#    **논리 골격은 손도 안 대고 통과했다** — 유일성·기회·트릭 계약·획득 경로.
+#
+#    원문에서 온 것  64   격자 19칸 · 거짓말 4칸 · 진술 15문단 · 인물 6 · 범인 · 핵심물증
+#    지어낸 것      112   조사 21 · 공란 10 · 레드헤링 20 · 예산·salience  ← 전부 게임화 층
+#
+#    그래서 들여오기는 **LLM 이 진실 세계만, 게임화는 코드**다 (`MANIFESTO.md` §5·§6).
+#    아래에 원문에 없어서 지어내야 했던 자리마다 ★지어냄★ 을 달아뒀다 —
+#    **그 표시가 곧 IMPORT-BRIEF 가 채워야 할 목록이다.**
+#
+#  ⚠ **말투 본보기가 아니다.** 진술을 원문 요약으로 썼기 때문에 `voice-check` 가
+#     최장/최단 **1.29**(산장 2.46)로 낮게 나온다. 이 파일은 **논리 층 증거물**이다.
+#     산문 기준선은 `mountain-lodge`·`closing-theater` 를 본다.
+#
+#  ⚠ **이름은 전부 바꿨다** — 원문은 실존 아이돌 이름을 쓰는데
+#     `templates/case-template.yaml:90` 이 「실존 인물명을 쓰지 마라」고 못박는다.
+#     ★ 그런데 **게이트에 그 검사가 없다** ★ UGC 가 상품이라 급소다.
+# =====================================================================
+
+id: practice-room
+title: 연습실 살인사건
+scale: campaign
+budget: 7                      # ★지어냄★ 원문에 예산·조사 개념이 없다
+
+incident:
+  kind: homicide
+  subject: v_mina
+  description: 신년 휴일의 빈 사옥, 3층 피아노 녹음실에서 한 사람이 숨진 채 발견됐다
+  scene: piano
+  body_state: 복부에 과도가 꽂힌 채 피아노 의자에 기대어 있었다
+  scene_state: 소지품은 소파에 가지런히 놓여 있었고 그 옆에서부터 핏자국이 이어졌다
+
+prose:
+  source: authored
+
+# 원문: 과도가 복부에 꽂힌 채 발견 = 브리핑에서 무료로 보이는 것
+seed_terms: [과도]
+
+# ─────────────────────────────────────────────────────────────────────
+#  시간 축 — 원문의 시각을 슬롯으로 잘랐다 ★일부 지어냄★
+#  원문은 12시·2시·4시·4시50분·5시를 말한다. 격자 열로 만들려면 묶어야 한다
+# ─────────────────────────────────────────────────────────────────────
+slots:
+  - { id: t0, label: 정오 무렵 }
+  - { id: t1, label: 오후 }
+  - { id: t2, label: 네 시 반 이후, window: true }   # 원문 사망추정시각 4시반~5시
+  - { id: t3, label: 다섯 시 }
+
+# ─────────────────────────────────────────────────────────────────────
+#  장소 — 원문에 그대로 있다
+# ─────────────────────────────────────────────────────────────────────
+locations:
+  - { id: piano,   label: 3층 피아노 녹음실, at_lodge: true }    # ← 현장
+  - { id: vocal,   label: 2층 보컬실,        at_lodge: true }
+  - { id: dance,   label: 1층 안무 연습실,   at_lodge: true }
+  - { id: wc,      label: 1층 화장실,        at_lodge: true }
+  - { id: cvs,     label: 편의점,            at_lodge: false }
+  - { id: chicken, label: 치킨집,            at_lodge: false }
+  - { id: dorm,    label: 숙소,              at_lodge: false }
+
+# ─────────────────────────────────────────────────────────────────────
+#  인물 — 원문의 5용의자. 진술·비밀은 원문에 있다. 이름만 바꿨다
+# ─────────────────────────────────────────────────────────────────────
+people:
+  # 원문 「채영」 = 범인
+  - id: p1
+    name: 서채린
+    age: 20
+    job: 같은 그룹 멤버
+    hidden_role: ringleader
+    presence:
+      - { slot: t0, at: dance }
+      - { slot: t1, at: dance }
+      - { slot: t2, at: piano }   # ← 범행
+      - { slot: t3, at: wc }
+    claim:
+      - { slot: t0, at: dance }
+      - { slot: t1, at: dance }
+      - { slot: t2, at: dance }   # ← 이 사건의 유일한 거짓말 (취해서 잠들었다)
+      - { slot: t3, at: wc }
+    statement:
+      voice: 감정이 앞서고 말끝이 흐려진다
+      paragraphs:
+        - 오늘이 스무 살 되고 처음 맞는 신년이라 연습실에서 조촐하게 모였습니다. 회사에 아무도 없는 날이 흔치 않으니까요.
+        - 언니가 잠깐 올라왔다 갔어요. 너무 많이 마시지 말라고. 늘 그런 식이죠. 저도 이제 성인인데.
+        - 술이 약해서 금방 잠이 들었고, 깨워서 일어나 보니 다들 위층으로 뛰어가고 있었습니다.
+
+  # 원문 「사나」 = 2층 방음 보컬실, 최초 발견자
+  - id: p2
+    name: 문사희
+    age: 23
+    job: 같은 그룹 멤버
+    hidden_role: unaware
+    presence:
+      - { slot: t1, at: vocal }
+      - { slot: t2, at: vocal }
+      - { slot: t3, at: piano }
+    statement:
+      voice: 또박또박 시각을 짚는다
+      paragraphs:
+        - 두 시쯤 언니와 같이 나왔습니다. 언니는 피아노를 친다고 3층에 남고 저는 2층 보컬실로 내려갔어요.
+        - 그 방은 안팎으로 방음이라 아무 소리도 못 들었습니다. 휴대폰은 숙소에 두고 나왔고요.
+        - 부를 방법이 없어서 직접 올라갔는데, 문이 열려 있었고 언니가 피아노 의자에 기대어 있었습니다.
+
+  # 원문 「나연」 = 4시 50분 입장
+  - id: p3
+    name: 한나경
+    age: 24
+    job: 같은 그룹 멤버
+    hidden_role: unaware
+    presence:
+      - { slot: t0, at: dorm }
+      - { slot: t1, at: dorm }
+      - { slot: t2, at: dance }
+      - { slot: t3, at: piano }
+    statement:
+      voice: 조심스럽고 남 이야기를 먼저 꺼낸다
+      paragraphs:
+        - 쉬는 날이라 숙소에 있었는데 언니가 사희 휴대폰 좀 가져다 달라고 연락이 왔습니다.
+        - 사옥에 도착한 게 다섯 시가 다 되어서였어요. 사희가 어느 층에 있는지 몰라서 1층부터 찾고 있었습니다.
+        - 위층에서 비명이 들려서 뛰어 올라갔습니다.
+
+  # 원문 「쯔위」 = 편의점
+  - id: p4
+    name: 위즈안
+    age: 20
+    job: 같은 그룹 멤버
+    hidden_role: unaware
+    presence:
+      - { slot: t0, at: dance }
+      - { slot: t1, at: dance }
+      - { slot: t2, at: cvs }
+      - { slot: t3, at: piano }
+    statement:
+      voice: 짧게 끊어 말한다
+      paragraphs:
+        - 채린이가 모이자고 해서 나갔습니다. 언니가 중간에 올라와서 적당히 마시라고 하고 갔고요.
+        - 채린이는 술이 약해서 일찍 잠들었습니다. 네 시쯤 술이랑 안주가 떨어져서 사러 나갔어요.
+        - 편의점은 왕복 사십 분 거리입니다. 돌아왔더니 채린이가 없어서 찾다가 비명을 들었습니다.
+
+  # 원문 「예리」 = 치킨집
+  - id: p5
+    name: 예리솔
+    age: 20
+    job: 다른 그룹 멤버
+    hidden_role: unaware
+    presence:
+      - { slot: t0, at: dance }
+      - { slot: t1, at: dance }
+      - { slot: t2, at: chicken }
+      - { slot: t3, at: dance }
+    statement:
+      voice: 말이 빠르고 솔직하다
+      paragraphs:
+        - 채린이가 불러서 왔습니다. 이 그룹 언니라는 분이 와서 괜히 한 소리 하고 가서 기분이 좀 그랬어요.
+        - 즈안이랑 같이 나갔다가 갑자기 치킨이 당겨서 저만 되돌아왔습니다. 지갑을 두고 나왔거든요.
+        - 그때 채린이는 연습실에서 자고 있었습니다. 치킨집은 반대 방향으로 이십 분이고요.
+
+victim: v_mina
+victim_profile:
+  name: 도미나
+  age: 22
+  job: 같은 그룹 멤버
+
+culprit: p1
+
+# ─────────────────────────────────────────────────────────────────────
+#  트릭 — 원문에서 유추했다 ★일부 지어냄★
+#  원문에 「트릭 아키타입」 개념이 없다. 「잠들어 있었다고 주장」 = alibi_fabrication
+# ─────────────────────────────────────────────────────────────────────
+trick:
+  types: [alibi_fabrication]
+  props: [e_knife]
+  staging: []
+  illusions:
+    - id: il_asleep
+      kind: absence
+      impression: 범인은 그 시각 1층에서 잠들어 있었다
+      made_by: []
+      broken_by: [e_keys, e_cctv]
+  flaw:
+    text: 잠들어 있었다면 어떻게 1층 화장실에서 발견됐는가
+    planted_in: [p1]
+
+# ─────────────────────────────────────────────────────────────────────
+#  물증 — 원문에 있는 것 + 게임화에 필요해서 지어낸 것
+# ─────────────────────────────────────────────────────────────────────
+evidence:
+  - id: e_knife
+    description: 과도
+    found_at: 피해자의 복부
+    record: 손잡이까지 밀려 들어가 있었다.
+    yields_terms: [과도]
+    at_scene: true
+
+  - id: e_trail
+    description: 이어진 핏자국
+    record: 소파 옆에서부터 피아노까지 자국이 이어졌다.
+    yields_terms: [과도]
+
+  # ★원문의 핵심 단서★ 피아노 건반의 핏자국(도=C)과 그 옆의 >- (=Y) → CY
+  - id: e_keys
+    description: 건반 위의 표시
+    found_at: 3층 피아노
+    record: 한 건반에 붉은 점이 찍혀 있었고 그 옆에 두 획이 그어져 있었다.
+
+  - id: e_cctv
+    description: 입구 기록
+    record: 네 시 정각에 둘이 나갔고 네 시 십분에 하나가 들어왔다가 십삼분에 다시 나갔다. 네 시 오십분에 하나가 들어왔다.
+
+  - id: e_mutual
+    description: 두 사람의 왕복 시간
+    record: 한쪽은 왕복 사십 분, 다른 쪽은 편도 이십 분 거리라고 말했다.
+
+  - id: e_memo
+    description: 접힌 메모
+    yields_terms: [쌓인 반감]
+
+  - id: e_chat
+    description: 남아 있던 대화
+    yields_terms: [쌓인 반감]
+
+  - id: e_herring1
+    description: 지워진 통화 목록
+  - id: e_herring2
+    description: 오래된 편지
+  - id: e_herring3
+    description: 접힌 영수증
+  - id: e_herring4
+    description: 낡은 사진
+  - id: e_herring5
+    description: 빈 약통
+
+# ─────────────────────────────────────────────────────────────────────
+#  사실
+# ─────────────────────────────────────────────────────────────────────
+facts:
+  - { id: f_opp, kind: opportunity, subject: p1,
+      content: 사망 구간에 3층에 있었다, revealed_by: [e_keys, e_cctv] }
+
+  - { id: f_no_p2, kind: no_opportunity, subject: p2, content: 2층 방음실에 있었다, revealed_by: [] }
+  - { id: f_no_p3, kind: no_opportunity, subject: p3, content: 사옥 밖에 있었다,   revealed_by: [] }
+  - { id: f_no_p4, kind: no_opportunity, subject: p4, content: 사옥 밖에 있었다,   revealed_by: [] }
+  - { id: f_no_p5, kind: no_opportunity, subject: p5, content: 사옥 밖에 있었다,   revealed_by: [] }
+
+  - { id: f_no_p2_ok, kind: no_opportunity, subject: p2, content: 왕복 시간이 맞물린다, revealed_by: [e_mutual] }
+  - { id: f_no_p3_ok, kind: no_opportunity, subject: p3, content: 왕복 시간이 맞물린다, revealed_by: [e_mutual] }
+  - { id: f_no_p4_ok, kind: no_opportunity, subject: p4, content: 왕복 시간이 맞물린다, revealed_by: [e_mutual] }
+  - { id: f_no_p5_ok, kind: no_opportunity, subject: p5, content: 왕복 시간이 맞물린다, revealed_by: [e_mutual] }
+
+  - { id: f_means,  kind: means,  subject: p1, content: 과도를 쥘 수 있었다, revealed_by: [e_knife, e_trail] }
+  - { id: f_motive, kind: motive, subject: p1, content: 쌓인 반감,          revealed_by: [e_memo, e_chat] }
+
+  - { id: f_h1, kind: context, subject: p2, content: 감추는 것이 있다, revealed_by: [e_herring1] }
+  - { id: f_h2, kind: context, subject: p3, content: 감추는 것이 있다, revealed_by: [e_herring2] }
+  - { id: f_h3, kind: context, subject: p4, content: 감추는 것이 있다, revealed_by: [e_herring3] }
+  - { id: f_h4, kind: context, subject: p5, content: 감추는 것이 있다, revealed_by: [e_herring4] }
+  - { id: f_h5, kind: context, subject: p1, content: 감추는 것이 있다, revealed_by: [e_herring5] }
+
+# ─────────────────────────────────────────────────────────────────────
+#  조사 — ★통째로 지어냄★ 원문에 「조사」라는 개념 자체가 없다
+#  크라임씬은 토론으로 좁히는 게임이라 예산·탐색 공간이 없다
+# ─────────────────────────────────────────────────────────────────────
+actions:
+  - { id: a_piano, label: 피아노 조사, cost: 1, gives: [e_keys], salience: 0.3, yield: solution,
+      verb: fixture, target: { kind: location, id: piano },
+      result: { title: 건반 위의 붉은 점, body: 한 건반에 붉은 점이 찍혀 있었고 그 옆에 두 획이 그어져 있었다. } }
+
+  - { id: a_cctv, label: 입구 기록 조회, cost: 1, gives: [e_cctv], salience: 0.4, yield: solution,
+      verb: fixture, target: { kind: location, id: dance },
+      result: { title: 드나든 시각, body: 네 시 전후로 드나든 기록이 남아 있었다. } }
+
+  - { id: a_body, label: 시신 검사, cost: 1, gives: [e_knife], salience: 0.6, yield: solution,
+      verb: autopsy, target: { kind: location, id: piano },
+      result: { title: 꽂힌 채였다, body: 손잡이까지 밀려 들어가 있었다. } }
+
+  - { id: a_sofa, label: 소파 주변 수색, cost: 1, gives: [e_trail], salience: 0.5, yield: solution,
+      verb: search, target: { kind: location, id: piano },
+      result: { title: 이어진 자국, body: 소파 옆에서부터 자국이 이어졌다. } }
+
+  - { id: a_memo, label: 연습실 수색, cost: 1, gives: [e_memo], salience: 0.35, yield: solution,
+      verb: search, target: { kind: location, id: dance },
+      result: { title: 접힌 종이, body: 접힌 종이 한 장이 나왔다. } }
+
+  - { id: a_chat, label: 통화내역 조회, cost: 1, gives: [e_chat], salience: 0.3, yield: solution,
+      verb: phone, target: { kind: person, id: p4 },
+      result: { title: 남아 있던 대화, body: 지워지지 않은 대화가 남아 있었다. } }
+
+  - { id: a_alibi, label: 알리바이 대조, cost: 1, gives: [e_mutual], salience: 0.45, yield: exclusion,
+      verb: alibi, pair: [p4, p5],
+      result: { title: 맞물리는 시간, body: 두 사람이 말한 왕복 시간이 서로 맞물렸다. } }
+
+  - { id: a_h1, label: 소지품 검사 · 문사희, cost: 1, gives: [e_herring1], salience: 0.85, yield: redherring,
+      verb: belongings, target: { kind: person, id: p2 },
+      result: { title: 지워진 목록, body: 소지품에서 지워진 통화 목록이 나왔다. } }
+
+  - { id: a_h2, label: 소지품 검사 · 한나경, cost: 1, gives: [e_herring2], salience: 0.8, yield: redherring,
+      verb: belongings, target: { kind: person, id: p3 },
+      result: { title: 오래된 편지, body: 소지품에서 오래된 편지가 나왔다. } }
+
+  - { id: a_h3, label: 소지품 검사 · 위즈안, cost: 1, gives: [e_herring3], salience: 0.75, yield: redherring,
+      verb: belongings, target: { kind: person, id: p4 },
+      result: { title: 접힌 영수증, body: 소지품에서 접힌 영수증이 나왔다. } }
+
+  - { id: a_h4, label: 소지품 검사 · 예리솔, cost: 1, gives: [e_herring4], salience: 0.7, yield: redherring,
+      verb: belongings, target: { kind: person, id: p5 },
+      result: { title: 낡은 사진, body: 소지품에서 낡은 사진이 나왔다. } }
+
+  - { id: a_h5, label: 소지품 검사 · 서채린, cost: 1, gives: [e_herring5], salience: 0.65, yield: redherring,
+      verb: belongings, target: { kind: person, id: p1 },
+      result: { title: 빈 약통, body: 소지품에서 빈 약통이 나왔다. } }
+
+  - { id: a_vocal,   label: 보컬실 수색,   cost: 1, gives: [], salience: 0.2,  yield: empty, verb: search, target: { kind: location, id: vocal } }
+  - { id: a_wc,      label: 화장실 확인,   cost: 1, gives: [], salience: 0.18, yield: empty, verb: search, target: { kind: location, id: wc } }
+  - { id: a_stair,   label: 계단 조사,     cost: 1, gives: [], salience: 0.16, yield: empty, verb: search, target: { kind: location, id: dance } }
+  - { id: a_cvs,     label: 편의점 확인,   cost: 1, gives: [], salience: 0.12, yield: empty, verb: search, target: { kind: location, id: cvs } }
+  - { id: a_chicken, label: 치킨집 확인,   cost: 1, gives: [], salience: 0.1,  yield: empty, verb: search, target: { kind: location, id: chicken } }
+  - { id: a_dorm,    label: 숙소 확인,     cost: 1, gives: [], salience: 0.14, yield: empty, verb: search, target: { kind: location, id: dorm } }
+  - { id: a_bin,     label: 쓰레기 확인,   cost: 1, gives: [], salience: 0.08, yield: empty, verb: search, target: { kind: location, id: piano } }
+  - { id: a_win,     label: 창가 조사,     cost: 1, gives: [], salience: 0.15, yield: empty, verb: fixture, target: { kind: location, id: vocal } }
+  - { id: a_phone2,  label: 통화내역 조회 · 한나경, cost: 1, gives: [], salience: 0.22, yield: empty, verb: phone, target: { kind: person, id: p3 } }
+
+# ─────────────────────────────────────────────────────────────────────
+#  보고서 — ★통째로 지어냄★ 원문에 공란도 장 구성도 없다
+# ─────────────────────────────────────────────────────────────────────
+chapters:
+  - order: 1
+    title: 빈 사옥의 발견
+    opening: 먼저 그날 무엇이 있었는지를 적는다.
+    requires_facts: [f_no_p2, f_no_p3, f_no_p4, f_no_p5]
+    blanks:
+      - { label: 시각, candidates: closed,     answer: t2 }
+      - { label: 장소, candidates: closed,     answer: piano }
+      - { label: 인물, candidates: closed,     answer: p2, particle: 이/가 }
+      - { label: 도구, candidates: discovered, answer: 과도, particle: (으)로 }
+    report:
+      - ""
+      - { blank: 0 }
+      - ", "
+      - { blank: 1 }
+      - "에서 "
+      - { blank: 2 }
+      - " 피해자를 발견했다. 복부에 꽂힌 "
+      - { blank: 3 }
+      - " 인한 과다출혈이 사인이었다."
+    epilogue_order: 1
+    epilogue: 신년의 빈 사옥에서 한 사람이 죽었다.
+
+  - order: 2
+    title: 드나든 시각
+    opening: 남은 것은 누가 어디에 있었는가다.
+    requires_facts: [f_no_p4_ok, f_no_p5_ok]
+    blanks:
+      - { label: 인물, candidates: closed, answer: p4, particle: 과/와 }
+      - { label: 인물, candidates: closed, answer: p5, particle: 은/는 }
+      - { label: 장소, candidates: closed, answer: cvs, particle: (으)로 }
+    report:
+      - "네 시 정각, "
+      - { blank: 0 }
+      - " "
+      - { blank: 1 }
+      - " 함께 건물을 나섰다. 한 사람은 "
+      - { blank: 2 }
+      - " 향했고 왕복 사십 분이 걸린다."
+    epilogue_order: 2
+    epilogue: 드나든 시각이 둘을 지웠다.
+
+  - order: 3
+    title: 건반이 가리킨 것
+    opening: 이제 이름을 적는다.
+    requires_facts: [f_motive, f_opp, f_means]
+    # ★검증기가 요구해서 늘렸다★ 인물 5 × 동기 4 = 20 이라 「찍기가 가능하다」로
+    # 떨어졌다. 장소를 더해 5×4×7 = 140. 원문에 없던 요구다
+    blanks:
+      - { label: 인물, candidates: closed,     answer: p1, is_accusation: true }
+      - { label: 장소, candidates: closed,     answer: piano, particle: (으)로 }
+      - { label: 동기, candidates: discovered, answer: 쌓인 반감 }
+    report:
+      - "모든 정황이 한 사람을 가리켰다. 진범은 "
+      - { blank: 0 }
+      - ". 그는 그 시각 "
+      - { blank: 1 }
+      - " 올라갔고, 그를 움직인 것은 "
+      - { blank: 2 }
+      - "."
+    epilogue_order: 3
+    epilogue: 건반 하나와 두 획이 이름을 적고 있었다.
+
+reopen_per_chapter: 1
+
+reveals:
+  - trigger: { on: chapterComplete, chapter_order: 1 }
+    yield: path
+    actions: [a_cctv]
+    surface: map
+    narration: 그날의 정황이 정리됐다. 입구에 기록이 남아 있다는 것을 알게 됐다.
+
+  # ★검증기가 요구해서 더했다★ 「뜨는 전환과 안 뜨는 전환이 갈리면 그게 유용도
+  # 신호다」 — 전부 또는 전무. 원문에 인터루드라는 개념이 없다
+  - trigger: { on: chapterComplete, chapter_order: 2 }
+    yield: flavor
+    surface: statement
+    narration: 드나든 시각이 정리됐다. 남은 것은 건반 위의 표시다.
+
+prologue:
+  - 신년이라 사옥에는 아무도 없었다. 입구를 뺀 카메라는 전부 꺼져 있었다.
+  - 세 사람은 1층에 모였고, 둘은 각자의 층으로 올라갔다.
+
+terms:
+  - { word: 과도,      source: 시신 검사 · 소파 주변 수색, note: 복부에 꽂힌 채였다. }
+  - { word: 쌓인 반감, source: 연습실 수색 · 통화내역 조회, note: 접힌 종이와 대화에 남아 있었다. }
