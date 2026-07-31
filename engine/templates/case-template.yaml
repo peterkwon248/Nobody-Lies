@@ -383,7 +383,7 @@ actions:
     salience: 0.6
     yield: solution
     verb: autopsy
-    target: { kind: location, id: room }
+    target: { kind: fixture, id: body }
     result:
       title: 같은 폭의 자국
       body: 같은 폭으로 눌린 자국이 남아 있었다.
@@ -407,7 +407,7 @@ actions:
     salience: 0.35
     yield: solution
     verb: fixture
-    target: { kind: location, id: room }
+    target: { kind: fixture, id: door }
     result:
       title: 새벽의 여닫힘
       body: 문이 새벽에 한 번 여닫힌 기록이 있었다.
@@ -500,7 +500,7 @@ actions:
   - { id: a_desk,    label: 책상 조사,   cost: 1, gives: [], salience: 0.22, yield: empty, verb: search, target: { kind: location, id: room } }
   - { id: a_bin,     label: 쓰레기 확인, cost: 1, gives: [], salience: 0.08, yield: empty, verb: search, target: { kind: location, id: hall } }
   - { id: a_phone,   label: 통화내역 조회, cost: 1, gives: [], salience: 0.28, yield: empty, verb: phone, target: { kind: person, id: p4 } }
-  - { id: a_window,  label: 창가 조사,   cost: 1, gives: [], salience: 0.16, yield: empty, verb: fixture, target: { kind: location, id: room } }
+  - { id: a_window,  label: 창가 조사,   cost: 1, gives: [], salience: 0.16, yield: empty, verb: fixture, target: { kind: fixture, id: window } }
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -646,3 +646,54 @@ terms:
 #  검증기가 이 중 대부분을 자동 검사한다.
 #  통과 후 볼 것: **오라클 회차 + 여유 ≥ 1 ≤ 예산**
 # =====================================================================
+
+# ─────────────────────────────────────────────────────────────────────
+#  평면도 — **반드시 있어야 한다** (검증기 §9-3j)
+#
+#  ⚠ 이 절이 **서식에 없었다** (2026-07-31에 추가). 그래서 이 파일을 베낀 사건이
+#  평면도 없이 나갔고, 앱이 자기 하드코딩 도면(산장)으로 폴백해 **다른 사건에
+#  「다인의 방」·「거실」이 떴다.** 사람이 베끼는 파일이 빠뜨린 것을 가르치고 있었다.
+#
+#  앱에서는 **조사 화면이 곧 도면**이다 — 좌표가 없는 장소에는 갈 수가 없다.
+#
+#  두 계약을 지킨다:
+#   ① **봉투는 직사각형이고 방은 빈틈 없이 채운다.** 앱이 방의 테두리를 안 그리고
+#      건물 외곽선을 직사각형 하나로만 그리기 때문이다(`App.jsx` §sWalls·§sPoche).
+#      ㄱ자·중정은 지금 앱으로 못 만든다 — 빈 자리에 선이 없어 방이 허공으로 번진다.
+#      검산: 아래는 400x420 = 168,000 = 84,000 + 84,000.
+#   ② **현장에는 문이 있어야 한다**(§9-3b). 트릭이 창으로 빠져나간다고 말하면
+#      **그 창이 현장 방의 변에 실재해야** 한다 — 좌표로 대조한다.
+#
+#  `fixture`·`autopsy` 조사는 `fixtures` 에 **같은 id 의 항목**이 있어야 하고
+#  `target.kind` 를 `fixture` 로 둔다(§9-3c 와 그 거울상이 양방향으로 문다).
+# ─────────────────────────────────────────────────────────────────────
+floor_plan:
+  view_box: { w: 1000, h: 625 }
+  scale: { x: 96, len: 90, y: 585, label: 5m }
+
+  buildings:
+    - { id: b_main, x: 100, y: 100, w: 400, h: 420, poche: var(--fg-3) }
+
+  rooms:
+    # 현장. tint 는 상태 표시이지 강조가 아니다 (절대 규칙 §유용도 시각 구분)
+    - { id: r_room, building: b_main, loc: room, x: 100, y: 100, w: 200, h: 420, label: 방, scene: true, tint: "rgba(235,87,87,.10)", primary: true }
+    - { id: r_hall, building: b_main, loc: hall, x: 300, y: 100, w: 200, h: 420, label: 홀, primary: true }
+
+  # 부지 밖. 알리바이가 걸리는 자리는 도면에 있어야 진술과 대조된다
+  zones:
+    - { id: z_away, loc: away, x: 640, y: 230, w: 210, h: 130, label: "자택 (현장 밖)", offsite: true, primary: true }
+
+  doors:
+    # 현장에 문이 없으면 아무도 드나들 수 없는 방이 된다 (§9-3b)
+    - { id: d_room,  x1: 300, y1: 260, x2: 300, y2: 340, hinge: p2, swing: -1, label: 방문, lx: 340, ly: 300 }
+    - { id: d_front, x1: 380, y1: 520, x2: 460, y2: 520, hinge: p2, swing: -1, ext: true, label: 정문, lx: 420, ly: 545 }
+
+  # `a_window`(창가 조사)가 방을 겨눈다 — 그 창이 현장 방의 변에 실재해야 한다
+  windows:
+    - { x1: 140, y1: 100, x2: 260, y2: 100, label: 창문, lx: 200, ly: 91 }
+
+  # 눌러서 조사하는 고정물. **키가 곧 조사의 target.id 다**
+  fixtures:
+    body:   { x: 200, y: 300, label: 시신, loc: room, body: true }
+    door:   { x: 300, y: 300, label: 방문, loc: room }
+    window: { x: 200, y: 110, label: 창가, loc: room }
