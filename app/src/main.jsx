@@ -2,6 +2,7 @@ import React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
+import { isRoutableId } from './case-id.js';
 import './styles.css';
 
 /**
@@ -134,7 +135,10 @@ function caseName() {
     if (!raw) return CASE_DEFAULT;
     // `local:` 접두는 localStorage 에서 읽는다(생성기 산출물). 나머지는 파일명 조각.
     // 어느 쪽이든 경로 구분자와 점은 막는다 — 상위 디렉터리로 새지 않게
-    return /^(local:)?[A-Za-z0-9_-]+$/.test(raw) ? raw : CASE_DEFAULT;
+    // ★ 규칙은 `case-id.js` 하나에 있다 ★ 들여오기가 문에서 **같은 것**을 쓴다 —
+    // 여기서 걸리면 조용히 산장으로 되돌아가므로 저장되고도 안 열리는 사건이 생긴다
+    const bare = raw.startsWith('local:') ? raw.slice(6) : raw;
+    return isRoutableId(bare) ? raw : CASE_DEFAULT;
   } catch {
     return CASE_DEFAULT;
   }
@@ -154,6 +158,22 @@ function loadLocalCase(name) {
     console.warn('[nobody-lies] 생성 사건을 못 읽었다:', e.message);
   }
   return null;
+}
+
+/**
+ * 홈 목록(카탈로그). `export-case` 가 `cases/index.json` 으로 방출한다.
+ *
+ * **못 받으면 앱의 내장 목록으로 돈다** — 사건 파일이 없어도 게임이 열리는 것과 같은
+ * 규약이다. 홈이 안 뜨는 것보다 옛 목록이 뜨는 편이 낫다.
+ */
+function loadCatalog() {
+  return fetch('/cases/index.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((v) => (Array.isArray(v) && v.length ? v : null))
+    .catch((e) => {
+      console.warn('[nobody-lies] 홈 목록을 못 읽었다 — 내장 목록으로 돈다:', e.message);
+      return null;
+    });
 }
 
 function loadCase() {
@@ -260,10 +280,10 @@ function renderRoute() {
     });
     return;
   }
-  Promise.all([designSystem(), loadCase()])
-    .then(([, caseData]) => root.render(
+  Promise.all([designSystem(), loadCase(), loadCatalog()])
+    .then(([, caseData, catalog]) => root.render(
       <Boundary key={key}>
-        <App caseData={caseData} />
+        <App caseData={caseData} catalog={catalog} />
       </Boundary>,
     ));
 }

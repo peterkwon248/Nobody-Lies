@@ -4,6 +4,7 @@ import { run } from '@engine/orchestrate.ts';
 import { verify } from '@engine/verifier.ts';
 import { caseToRaw } from '@engine/to-yaml.ts';
 import { parseCase } from '@engine/schema.ts';
+import { freshCaseId, isRoutableId } from './case-id.js';
 import briefRaw from '../../engine/templates/PALETTE-BRIEF.md?raw';
 import proseRaw from '../../engine/templates/PROSE-BRIEF.md?raw';
 import stmtRaw from '../../engine/templates/STATEMENT-BRIEF.md?raw';
@@ -18,6 +19,11 @@ import stmtRaw from '../../engine/templates/STATEMENT-BRIEF.md?raw';
  * `?raw` 로 읽는 것은 서식 둘과 **같은 경로**다. 파싱은 붙여넣기와 한 코드로
  * 지나가게 해서 「내장이라 다르게 동작한다」가 안 생기게 한다.
  */
+/**
+ * 진술 말투의 기준선. **`voice-check` 와 같은 파일을 읽는다** — 이 숫자가 도구와
+ * 서식 양쪽에 손으로 박혀 있던 것을 한 곳으로 모았다(`MANIFESTO.md` §남은 일 ③).
+ */
+import voiceRef from '../../engine/templates/voice-ref.json';
 import paletteResidency from '../../engine/templates/palette-residency.json?raw';
 import paletteMuseum from '../../engine/templates/palette-museum.json?raw';
 import paletteExample from '../../engine/templates/palette-example.json?raw';
@@ -142,7 +148,51 @@ function statementRequest(c) {
     '- **다섯 명을 한 번에** 써 주세요. 말투 구분·불안 편중 금지·**문단 수** 균일이',
     '  전부 인물 **사이**의 규칙이라 한 번에 봐야 지켜집니다.',
     '  ⚠️ **글자 수는 고르게 만들지 마세요.** 할 말이 많은 사람은 길게 씁니다 —',
-    '  레퍼런스 산장은 최장/최단 2.46배입니다.',
+    `  레퍼런스 산장은 최장/최단 ${voiceRef.ratio}배입니다.`,
+    '',
+    /**
+     * ★ 「합격 기준」에 말투가 하나도 없었다 ★ (2026-07-31 · 물음표 0을 쫓다 찾음)
+     *
+     * 서식 복사 구간의 마지막 절이 **「합격 기준 (기계가 검사합니다)」** 인데 거기
+     * 걸린 것은 문단 수·금지 낱말·지문 셋뿐이다. 말투 여섯 지표는 **레퍼런스 표**로만
+     * 있었다 — 챗봇은 통과 기준을 맞추고 나머지는 참고 문헌으로 읽는다.
+     *
+     * 실측이 그 말을 그대로 한다. 서로 다른 세 경로가 전부 **물음표 0**이다:
+     * ```
+     *                       최장/최단  부름  호칭  물음표  끝맺음
+     *   mountain-lodge(손)     2.46    4/5    12      8       4
+     *   closing-theater(왕복)  2.84    3/5     6      0       4
+     *   pipe-organ-workshop    1.17    0/5     0      0       2
+     *   practice-room(이식)    1.29    3/5     7      0       3
+     * ```
+     * 다른 지표는 자기 번호를 단 규칙이 있는데 **물음표만 규칙 5의 꼬리 문장**이다.
+     *
+     * ⚠ **숫자를 여기 손으로 쓰지 않는다.** `voice-ref.json` 이 유일한 출처이고
+     * `voice-check` 가 같은 파일을 읽는다 — 이 저장소 최다 재발 부류를 하나 더
+     * 만들지 않으려는 것이다.
+     */
+    '### 말투 — 다섯이 서로 다른 사람으로 읽혀야 합니다',
+    '',
+    `손으로 쓴 레퍼런스(산장, ${voiceRef.people}명)를 재면 이렇습니다. **다섯을 서로 바꿔 놓았을 때`,
+    '누구 것인지 알 수 있어야** 하고, 아래는 그것이 숫자로 드러난 모습입니다:',
+    '',
+    '```',
+    `최장/최단 글자 수     ${voiceRef.ratio}배      ← 고르게 만들지 마세요`,
+    `서로를 부른 사람      ${voiceRef.callers}/${voiceRef.people}명`,
+    `호칭(언니·씨·님)      ${voiceRef.honor}회`,
+    `물음표                ${voiceRef.question}회      ← ${voiceRef.people}명 **전원**이 씁니다`,
+    `서로 다른 끝맺음      ${voiceRef.endings}종      ← 요 / 습니다 / 죠 / 구요·네요 / 평서 중`,
+    '```',
+    '',
+    /**
+     * ★ 서식이 자기 레퍼런스를 틀리게 서술하고 있었다 ★
+     * 규칙 5가 *"물음표를 쓰는 사람이 따로 있습니다"* 라고 **구분 장치**로 적어놨는데,
+     * 산장 실측은 **2·1·2·2·1 — 다섯 전원**이다. 「따로 있다」로 읽으면 한 명에게
+     * 몰아주거나 아예 빼도 지킨 것이 되고, 실제로 세 번 다 0이 나왔다.
+     */
+    `- **물음표는 다섯 전원이 씁니다.** 산장은 한 사람이 1~2회씩 총 ${voiceRef.question}회입니다.`,
+    '  스스로 품는 의문(「왜 우리를 불렀을까요?」)이라 **답을 말하지 않으므로 누설이 아닙니다.**',
+    '  판정(「수상하다」·「범인일 것이다」)과는 다릅니다.',
     '',
     '### ⛔ 진술에 나오면 안 되는 낱말',
     '',
@@ -249,7 +299,6 @@ function proseRequest(c) {
     .concat((c.terms || []).map((t) => `  - word: ${t.word}\n    note: "..."`))
     .join('\n');
 
-  const slots = c.slots || [];
   const 보충 = [
     '## 이 사건에 대한 보충',
     '',
@@ -368,6 +417,103 @@ function caseYaml(c) {
   return { text, same: JSON.stringify(stable(back)) === JSON.stringify(stable(clean)) };
 }
 
+/**
+ * ★ §9 수정 브리프 — 오류 목록을 **완성된 지시서**로 바꾼다 ★ (2026-07-31 신설)
+ *
+ * ★ 왜 ★ 매니페스토 §9 는 *"오류가 있으면 **수정 브리프를 다시 생성한다**"* 고 하는데
+ * 앱은 오류를 **보여주고 「복사」 버튼**만 줬다. 유저가 챗봇에 붙인 뒤 **자기가 상황을
+ * 설명하고 자기가 답 형식을 정해야** 했다 — 원래 요구가 뭐였는지도, 어떤 꼴로 답해야
+ * 앱이 받아주는지도 안 들어간다. 매니페스토가 §미이행에 적어둔 그대로다:
+ * **「UGC 가 상품이므로 여기서 사람이 가장 많이 떨어져 나간다.」**
+ *
+ * 지시서가 되려면 조각이 셋이다. 앱에는 ②만 있었다:
+ *
+ *   ① 무엇을 하던 중이었나   원래 요구. 오류만 보면 챗봇이 맥락을 모른다
+ *   ② 무엇이 틀렸나          검사기가 낸 문장 그대로
+ *   ③ 어떻게 답해야 하나      답 형식. 없으면 **되붙일 수 없는 꼴**로 답이 온다
+ *
+ * ⚠ **복사 구간에는 기계가 낸 오류만 넣는다.** 화면의 첫 줄은 *"아래를 챗봇에 붙여
+ * 넣어라"* 처럼 **유저에게 하는 말**인데, 그게 복사 구간에 섞여 들어가면 챗봇이 그것을
+ * **자기에게 내린 지시로** 읽는다 — 2026-07-30에 옛 금지문을 인용했다가 물린 것과
+ * 같은 부류다(`brief-is-a-prompt`). 그래서 메시지가 `errors`(기계)와 화면 문구를
+ * **따로** 들고 다닌다.
+ */
+const FIX_KINDS = {
+  palette: {
+    label: '세계 어휘',
+    fence: 'json',
+    doing: '이 게임이 쓰는 **세계 어휘(팔레트)** 를 JSON 으로 만들어 주셨습니다.\n앱이 그 어휘로 사건을 만들려다 아래에서 막혔습니다.',
+    reply: '고친 **JSON 전체**를 코드블록 하나에 담아 주세요 — `{` 로 시작해서 `}` 로 끝나게.\n설명하고 싶은 것은 코드블록 **밖**에 적어 주세요.',
+    srcLabel: '보내주셨던 팔레트 JSON',
+  },
+  statement: {
+    label: '진술',
+    fence: 'yaml',
+    doing: '이 게임의 **진술 서식**을 받아 다섯 사람의 진술을 YAML 로 써 주셨습니다.\n앱의 검사기가 아래를 이유로 반려했습니다.',
+    reply: '고친 **YAML 전체**를 코드블록 하나에 담아 주세요 — 앞서 보내주신 것과 **같은 구조**로.\n설명하고 싶은 것은 코드블록 **밖**에 적어 주세요.',
+    srcLabel: '보내주셨던 진술 YAML',
+  },
+  prose: {
+    label: '산문',
+    fence: 'yaml',
+    doing: '이 게임의 **산문 서식**을 받아 프롤로그·장 서사·조사 결과문 등을 YAML 로 써 주셨습니다.\n앱의 검사기가 아래를 이유로 반려했습니다.',
+    reply: '고친 **YAML 전체**를 코드블록 하나에 담아 주세요 — 앞서 보내주신 것과 **같은 구조**로.\n설명하고 싶은 것은 코드블록 **밖**에 적어 주세요.',
+    srcLabel: '보내주셨던 산문 YAML',
+  },
+  import: {
+    label: '사건 파일',
+    fence: 'yaml',
+    doing: '추리 게임 **「노바디 라이즈」** 의 사건 파일(YAML)을 앱에 들여오려는데,\n앱의 검사기가 아래를 이유로 반려했습니다. 이 파일에는 사건의 인물·시간표·장소·\n조사·보고서가 들어 있고, 앱은 **앞뒤가 맞을 때만** 받아들입니다.',
+    reply: '고친 **YAML 전체**를 코드블록 하나에 담아 주세요.\n설명하고 싶은 것은 코드블록 **밖**에 적어 주세요.',
+    srcLabel: '들여오려던 사건 파일',
+  },
+};
+
+/**
+ * `kind` 는 위 표의 키, `errors` 는 **기계가 낸 줄만**, `source` 는 고칠 원본(있으면).
+ *
+ * 원본을 같이 넣는 이유: 챗봇에게 *"아까 그거"* 는 없다. 세션이 끊겼거나 남이 만든
+ * 파일이면 더욱 그렇다. 붙여넣기 하나로 **혼자 서는 지시서**가 되어야 한다.
+ */
+function fixBrief(kind, errors, source) {
+  const k = FIX_KINDS[kind];
+  const list = (errors || []).map((s) => String(s).trim()).filter(Boolean);
+  if (!k) return list.join('\n');
+
+  const out = [
+    `# 수정 요청 — ${k.label}`,
+    '',
+    '## 무엇을 하던 중이었나',
+    '',
+    k.doing,
+    '',
+    '## 무엇이 틀렸나',
+    '',
+    /**
+     * 여러 줄짜리 오류가 있다 — `js-yaml` 은 틀린 줄과 캐럿(`----^`)까지 같이 준다.
+     * 이어지는 줄을 그대로 두면 markdown 이 **목록 밖 문단**으로 떼어내서 어느 오류에
+     * 딸린 것인지 사라진다. 두 칸 들여 목록 항목 안에 붙여둔다.
+     */
+    ...list.map((l) => {
+      const [head, ...rest] = l.replace(/^[·•]\s*/, '').split('\n');
+      return [`- ${head}`, ...rest.map((x) => `  ${x}`)].join('\n');
+    }),
+    '',
+    '위가 가리키는 자리만 고치고 나머지는 그대로 두세요.',
+    '',
+    '## 어떻게 답해야 하나',
+    '',
+    k.reply,
+    '',
+    '고친 것을 앱의 같은 칸에 붙여 넣으면 앱이 **다시 검사**합니다.',
+    '또 막히면 이 요청이 새 오류로 다시 만들어집니다.',
+  ];
+  if (source?.trim()) {
+    out.push('', `## ${k.srcLabel}`, '', '```' + k.fence, source.trim(), '```');
+  }
+  return out.join('\n');
+}
+
 const DIFFS = [
   { id: 'easy', ko: '쉬움', hint: '예산에 여유가 둘. 헛발질해도 된다' },
   { id: 'normal', ko: '보통', hint: '여유 하나. 권장' },
@@ -436,7 +582,14 @@ export default function Generator() {
   const [world, setWorld] = React.useState(() => pref.world || 'residency');
   const [paletteText, setPaletteText] = React.useState(() => pref.text || '');
   const [busy, setBusy] = React.useState(false);
-  const [errs, setErrs] = React.useState([]);
+  /**
+   * 생성 실패. `{ head, errors, hint }` 또는 `null`.
+   *
+   * **`errors` 는 기계가 낸 줄만**이고 §9 수정 브리프에 그것만 들어간다.
+   * `head`·`hint` 는 **유저에게 하는 말**이라 화면에만 산다 — 복사 구간에 섞이면
+   * 챗봇이 유저용 문장을 자기 지시로 읽는다(§`fixBrief` 머리말).
+   */
+  const [errBox, setErrBox] = React.useState(null);
   const [made, setMade] = React.useState(() => Object.values(loadStore()));
   const [copied, setCopied] = React.useState('');
   // 클립보드가 막혔을 때 직접 복사할 자리. `{ what, text }`
@@ -454,6 +607,16 @@ export default function Generator() {
   const [proseMsg, setProseMsgRaw] = React.useState(null);
   // 내보내기 결과. `{ id, ok, line }` — 사건 행 밑에 그 행 것만 뜬다
   const [saveMsg, setSaveMsg] = React.useState(null);
+  /**
+   * ③ 들여오기 — 받은 YAML/JSON 과 결과(`{ ok, lines }`).
+   *
+   * **접어둔다.** 사건을 *만드는* 흐름과 *받는* 흐름은 나란한 입구지 순서가 아니다 —
+   * 1·2·3 번 사이에 끼우면 만들러 온 사람의 길이 길어지고, 번호를 붙이면
+   * 「이것도 해야 하는 단계」로 읽힌다.
+   */
+  const [importOpen, setImportOpen] = React.useState(false);
+  const [importText, setImportText] = React.useState('');
+  const [importMsg, setImportMsg] = React.useState(null);
 
   /**
    * 복사. **세 단계로 내려간다.**
@@ -547,15 +710,18 @@ export default function Generator() {
   };
 
   const generate = () => {
-    setErrs([]);
+    setErrBox(null);
     let palette;
     const raw = worldRaw();
     if (raw.trim()) {
       try {
         palette = JSON.parse(raw);
       } catch (e) {
-        setErrs([`팔레트가 JSON 이 아니다 — ${e.message}`,
-          '챗봇이 설명을 같이 줬다면 코드블록 안의 { … } 만 붙여넣어라.']);
+        setErrBox({
+          head: '팔레트가 JSON 이 아니다',
+          errors: [e.message],
+          hint: '챗봇이 설명을 같이 줬다면 코드블록 안의 { … } 만 붙여넣어라.',
+        });
         return;
       }
     }
@@ -579,8 +745,11 @@ export default function Generator() {
         const seedBase = Math.floor(Math.random() * 100000);
         const batch = run([seedBase], { palette, chapters, deathCells, want: [difficulty] });
         if (!batch.passed.length) {
-          setErrs(['검증을 통과한 사건이 없다. 아래를 챗봇에 그대로 붙여 넣고 팔레트를 고쳐 달라고 해라.',
-            ...[...batch.rejections].map(([why, n]) => `${n}회 — ${why}`)]);
+          setErrBox({
+            head: '검증을 통과한 사건이 없다 — 기각 사유는 아래와 같다.',
+            errors: [...batch.rejections].map(([why, n]) => `${n}회 — ${why}`),
+            hint: '아래 「수정 요청 복사」를 눌러 챗봇에 붙여 넣으면 팔레트를 고쳐 준다.',
+          });
           setBusy(false);
           return;
         }
@@ -598,7 +767,7 @@ export default function Generator() {
         setMade(Object.values(store));
         setBusy(false);
       } catch (e) {
-        setErrs([`생성 중 오류 — ${e.message}`]);
+        setErrBox({ head: '생성 중 오류', errors: [e.message] });
         setBusy(false);
       }
     }, 30);
@@ -686,6 +855,164 @@ export default function Generator() {
   };
 
   /**
+   * 받은 YAML/JSON 을 **사건으로 들여온다** — 내보내기의 반쪽 (2026-07-31 신설).
+   *
+   * ★ 왜 필요한가 ★ 사건이 앱에 들어오는 길은 둘뿐이었다 — 빌드에 든 정적 파일과
+   * `localStorage`(이 브라우저에서 만든 것). **내보내기만 있고 들여오기가 없어서**
+   * 만든 사건을 남에게 줄 수 없었고, 브라우저를 갈면 내려받은 YAML 이 손에 있어도
+   * 되돌릴 수 없었다. **UGC 가 상품이므로 그건 상품 전체의 구멍이다.**
+   *
+   * ★ 문지기가 넷이고 순서가 있다 ★ 앞의 것이 뒤의 것의 전제다.
+   *
+   *   1. `load`       YAML/JSON 문법 — YAML 이 JSON 의 상위집합이라 **한 코드**로 지나간다
+   *   2. `parseCase`  구조·어휘·참조 무결성. 한국어 오류가 그대로 나온다
+   *   3. `verify`     논리(유죄가 유일한가). **난이도와 최소 조사 수가 여기서 나온다** —
+   *                   생성 경로가 `p.result` 에서 읽는 것과 **같은 자**다
+   *   4. 왕복 대조     다시 써서 다시 읽으면 같은가 — `caseYaml`, **내보내기와 같은 함수**
+   *
+   * 4번이 매니페스토 §9(내부 코드가 항상 최종 검증)가 요구하는 자리다. 내보낼 때
+   * 막는 것을 들여올 때도 막는다 — *"조용히 다른 사건이 되는 것이 아무것도 안 나가는
+   * 것보다 나쁘다"*(`exportOne` 머리말).
+   *
+   * ⚠ **`js-yaml` 의 `load` 가 남의 파일에 안전한지 재고 들어왔다** (2026-07-31 ·
+   * js-yaml 5.2.2 실측): `!!js/function`·`!!js/eval` 류 임의 타입은 **전부 예외**로
+   * 떨어지고 그런 스키마가 **아예 존재하지 않는다**(`CORE`·`JSON`·`FAILSAFE`·`YAML11` 뿐).
+   * `__proto__` 는 **평범한 own key** 로 들어와 프로토타입을 오염시키지 않고, 별칭은
+   * 참조를 공유해 확장 폭탄이 안 된다(9^6 이 0.2ms). **`load` 를 그대로 쓴다.**
+   */
+  const importCase = (text, sourceLabel) => {
+    setImportMsg(null);
+    setSaveMsg(null);
+
+    const src = String(text || '').trim();
+    if (!src) {
+      setImportMsg({ ok: false, lines: ['빈 내용이다 — 파일을 고르거나 YAML 을 붙여넣어라'] });
+      return;
+    }
+
+    /**
+     * 거절 하나. `errors` 는 **기계가 낸 줄만** — §9 수정 브리프에 그것만 들어간다.
+     * `head`·`hint` 는 유저에게 하는 말이라 화면에만 산다(§`fixBrief` 머리말).
+     *
+     * `src` 를 같이 들고 다니는 이유: **파일로 들여올 때는 칸이 비어 있다.**
+     * 그러면 지시서에 고칠 원본이 안 들어가서 챗봇이 허공에 대고 고쳐야 한다.
+     */
+    const fail = (head, errors, hint) => setImportMsg({
+      ok: false, errors, src,
+      lines: [head, ...errors, ...(hint ? [hint] : [])],
+    });
+
+    let raw;
+    try {
+      raw = load(src);
+    } catch (e) {
+      fail('YAML/JSON 문법이 아니다', [e.message],
+        '챗봇이 설명을 같이 줬다면 코드블록 안의 내용만 붙여넣어라.');
+      return;
+    }
+
+    let c;
+    try {
+      c = parseCase(raw, sourceLabel);
+    } catch (e) {
+      // `parseCase` 는 문제를 줄줄이 이어 붙여 **한 예외**로 던진다. 줄로 갈라야 읽힌다
+      const [head, ...rest] = String(e.message).split('\n');
+      fail(head, rest);
+      return;
+    }
+
+    /**
+     * ⚠ **`parseCase` 는 id 가 있는지만 보고 문자 집합은 안 본다** — 엔진에는 URL 이
+     * 없으니 옳다. 라우팅 제약은 앱의 것이라 앱이 문에서 지킨다. 안 지키면
+     * `main.jsx` 가 **조용히 산장으로 되돌아간다** — 「들여왔다」고 말해놓고
+     * 제목을 누르면 다른 사건이 열린다.
+     */
+    if (!isRoutableId(c.id)) {
+      fail('들여올 수 없는 사건 id 다',
+        [`id: '${c.id}' — 영문·숫자·하이픈(-)·밑줄(_) 만 쓸 수 있다. ` +
+          '주소가 `#case=local:<id>` 라서 그 밖의 글자는 앱이 열지 못한다'],
+        'YAML 의 `id:` 를 고쳐서 다시 들여오면 된다.');
+      return;
+    }
+
+    const r = verify(c);
+    if (!r.ok) {
+      fail('검증기가 반려했다', r.errors.map((e) => `오류: ${e}`),
+        '아래 「수정 요청 복사」를 눌러 챗봇에 그대로 붙여넣어라.');
+      return;
+    }
+
+    // 이미 있는 id 면 **비켜난다.** 산문을 입힌 사건은 저작물이라 덮어쓰면 못 되찾는다
+    const store = loadStore();
+    const id = freshCaseId(c.id, (k) => Object.hasOwn(store, k));
+    const cased = { ...c, id };
+
+    let out;
+    try {
+      out = caseYaml(cased);
+    } catch (e) {
+      fail('YAML 왕복에 실패했다', [e.message]);
+      return;
+    }
+    if (!out.same) {
+      fail('왕복 대조 실패 — 들여오지 않았다',
+        ['읽은 것을 다시 써서 다시 읽으면 내용이 달라진다 — 이 파일은 조용히 다른 사건이 될 수 있다'],
+        '엔진이 내보낼 때 exit 1 로 막는 자리와 같은 검사다.');
+      return;
+    }
+
+    store[id] = {
+      ...cased,
+      _difficulty: r.difficulty,
+      _oracle: r.minActions,
+      /**
+       * `prose.source` 가 정본이고 `_prose` 는 **목록 표시용 파생**이다. 반대로 두면
+       * 2026-07-30에 물린 「같은 사실의 두 표현 중 한쪽만 고쳤다」가 재발한다 —
+       * 그때는 앱이 `_prose` 만 세워서 내보낸 파일이 `source: template` 이라 거짓말했다.
+       */
+      _prose: c.prose?.source === 'authored',
+      // 파일에서 왔으므로 **이미 기계 밖에 있다.** 「⚠ 아직 안 꺼냈다」가 뜨면 거짓이다
+      _exported: true,
+    };
+    saveStore(store);
+
+    /**
+     * ★ `saveStore` 는 용량 초과를 **삼킨다** ★ 생성 경로에서는 그게 맞다(막지 않는다).
+     * 그러나 들여오기에서 삼키면 **「들여왔다」가 거짓말이 된다** — 유저는 파일을
+     * 줬고 앱은 성공했다고 말했는데 목록에 없다. 그래서 여기서만 되읽어 확인한다.
+     */
+    if (!Object.hasOwn(loadStore(), id)) {
+      setImportMsg({
+        ok: false,
+        lines: ['저장하지 못했다 — 이 브라우저의 저장 용량이 찼다.',
+          '안 쓰는 사건을 지우고 다시 시도해라. 파일은 그대로 있으니 잃은 것은 없다.'],
+      });
+      return;
+    }
+
+    setMade(Object.values(loadStore()));
+    setImportText('');
+    setImportMsg({
+      ok: true,
+      id,
+      lines: [
+        `들여왔다 — 「${cased.title}」 · ${cased.chapters?.length}장 · 예산 ${cased.budget} · 최소 ${r.minActions}회 · ${r.difficulty}`,
+        ...(id === c.id ? [] : [`⚠ id '${c.id}' 가 이미 있어서 '${id}' 로 넣었다 — 덮어쓰지 않았다`]),
+        ...(r.warnings || []).map((w) => `경고: ${w}`),
+      ],
+    });
+  };
+
+  /** 파일로 받는 문. `readAsText` 는 UTF-8 로 읽는다 — 한글 사건 제목이 안 깨진다 */
+  const importFile = (file) => {
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onerror = () => setImportMsg({ ok: false, lines: [`'${file.name}' 을 읽지 못했다`] });
+    rd.onload = () => importCase(String(rd.result || ''), file.name);
+    rd.readAsText(file);
+  };
+
+  /**
    * 받은 YAML 을 사건에 넣고 **다시 검증한다.**
    *
    * 검증기가 브라우저에서 도는 것이 이 단계의 전제다 — 통과해야만 저장한다.
@@ -748,7 +1075,7 @@ export default function Generator() {
     try {
       frag = load(source);
     } catch (e) {
-      setProseMsg({ ok: false, lines: ['YAML 을 읽지 못했다 — ' + e.message] });
+      setProseMsg({ ok: false, errors: [e.message], lines: ['YAML 을 읽지 못했다 — ' + e.message] });
       return;
     }
     /**
@@ -965,10 +1292,12 @@ export default function Generator() {
 
     const r = verify(next);
     if (!r.ok) {
+      // `errors` 가 §9 브리프로 가고, `lines` 는 화면 문구다 — 첫 줄은 유저에게 하는 말이라 뺀다
+      const errors = r.errors.map((e) => `오류: ${e}`);
       setProseMsg({
         ok: false,
-        lines: ['검증기가 반려했다 — 아래를 그대로 챗봇에 되붙이고 그 부분만 고쳐 달라고 해라',
-          ...r.errors.map((e) => `오류: ${e}`)],
+        errors,
+        lines: ['검증기가 반려했다 — 아래 「수정 요청 복사」를 눌러 챗봇에 그대로 붙여넣어라', ...errors],
       });
       return;
     }
@@ -1013,6 +1342,107 @@ export default function Generator() {
         사건의 <b>논리·트릭·평면도는 이 앱이</b> 만든다. 당신이 가져올 것은 <b>세계의 어휘</b>뿐이다 —
         무대·이름·직업·물건·동기. 그건 챗봇이 잘한다.
       </p>
+
+      {/**
+        * 들여오기 — **번호를 안 붙인다.** 만들기 흐름(1·2·3)과 나란한 입구지 그 안의
+        * 단계가 아니다. 번호를 붙이면 「이것도 해야 한다」로 읽히고, 1번 위에 펼쳐
+        * 두면 사건을 만들러 온 사람의 길이 길어진다. **접어서 위에 둔다** —
+        * 파일을 받아 온 사람은 첫 화면에서 자기 입구를 봐야 한다.
+        */}
+      <section style={{ ...box, marginBottom: '14px', padding: '13px 20px' }}>
+        <button
+          onClick={() => { setImportOpen(!importOpen); setImportMsg(null); }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '9px', width: '100%',
+            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+            color: 'var(--fg, #e6e9ef)', font: 'inherit', textAlign: 'left',
+          }}>
+          <span style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', flex: 'none' }}>
+            {importOpen ? '▾' : '▸'}
+          </span>
+          <span style={{ fontSize: '14px', fontWeight: 700 }}>사건 파일을 들여온다</span>
+          <span style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', fontWeight: 400 }}>
+            받은 <code>.yaml</code> · <code>.json</code> 을 열어 여기서 논다
+          </span>
+        </button>
+
+        {!importOpen ? null : (
+          <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border, #2a2e35)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+              남이 만든 사건도, <b>예전에 내가 꺼내 둔 사건도</b> 여기로 돌아온다.
+              들여오기 전에 <b>문법 · 구조 · 논리 · 왕복</b> 넷을 다 통과해야 한다 —
+              하나라도 걸리면 <b>넣지 않고</b> 무엇이 틀렸는지 그대로 보여준다.
+            </p>
+
+            <label style={{ ...btn(false), display: 'inline-block' }}>
+              파일 고르기
+              <input
+                type="file"
+                accept=".yaml,.yml,.json,text/yaml,application/json,text/plain"
+                style={{ display: 'none' }}
+                // 같은 파일을 고쳐서 다시 고를 수 있게 값을 비운다 — 안 비우면 `change` 가 안 뜬다
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; importFile(f); }}
+              />
+            </label>
+
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              placeholder={'또는 YAML 을 그대로 붙여넣어라.\n챗봇이 준 것도, 파일을 연 것도 같은 길로 지나간다.'}
+              spellCheck={false}
+              style={{
+                width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '14px',
+                background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
+                border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
+                padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
+              }}
+            />
+            <button
+              onClick={() => importCase(importText, '붙여넣은 YAML')}
+              disabled={!importText.trim()}
+              style={{ ...btn(true), marginTop: '10px', opacity: importText.trim() ? 1 : 0.5 }}>
+              들여오기
+            </button>
+
+            {importMsg && (
+              <div style={{
+                marginTop: '13px', padding: '11px 14px', borderRadius: 'var(--r-sm, 7px)',
+                background: 'var(--bg-app, #0e1013)',
+                border: '1px solid ' + (importMsg.ok ? 'var(--border, #2a2e35)' : 'var(--g-contradict, #EB5757)'),
+              }}>
+                {importMsg.lines.map((l, i) => (
+                  <p key={i} style={{
+                    margin: i ? '5px 0 0' : 0, fontSize: '12px', lineHeight: 1.65,
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    color: importMsg.ok
+                      ? (i ? 'var(--fg-3, #8b93a1)' : 'var(--fg, #e6e9ef)')
+                      : (i ? 'var(--fg-3, #8b93a1)' : 'var(--g-contradict, #EB5757)'),
+                  }}>{l}</p>
+                ))}
+                {/* 성공하면 **바로 열 수 있게** 한다 — 4번까지 스크롤해 찾게 하지 않는다 */}
+                {importMsg.ok && importMsg.id && (
+                  <a href={`#case=local:${encodeURIComponent(importMsg.id)}`}
+                    style={{ ...btn(true), display: 'inline-block', marginTop: '11px', textDecoration: 'none' }}>
+                    바로 열기
+                  </a>
+                )}
+                {/* §9 — 오류 목록이 아니라 **완성된 수정 지시서**를 준다.
+                    기계가 낸 오류가 있을 때만. 「빈 내용」처럼 유저 쪽 조건이면 보낼 것이 없다 */}
+                {!importMsg.ok && importMsg.errors?.length > 0 && (
+                  <>
+                    <button onClick={() => copy(fixBrief('import', importMsg.errors, importMsg.src), 'import-err')}
+                      style={{ ...btn(false), marginTop: '11px' }}>
+                      {copied === 'import-err' ? '복사됐다 ✓' : '수정 요청 복사 — 챗봇에 그대로 붙여넣기'}
+                    </button>
+                    {manualBox('import-err')}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* 1 — 설정 */}
       <section style={{ ...box, marginBottom: '14px' }}>
@@ -1124,8 +1554,8 @@ export default function Generator() {
         </button>
       </section>
 
-      {/* 오류 — 그대로 챗봇에 되붙일 수 있게 */}
-      {errs.length > 0 && (
+      {/* 오류 — 「수정 요청」으로 만들어 챗봇에 그대로 붙여넣을 수 있게 (§9) */}
+      {errBox && (
         <section style={{ ...box, marginBottom: '14px', borderColor: 'var(--g-contradict, #EB5757)' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 10px', color: 'var(--g-contradict, #EB5757)' }}>
             만들지 못했다
@@ -1134,9 +1564,10 @@ export default function Generator() {
             margin: '0 0 12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             fontSize: '12px', lineHeight: 1.7, color: 'var(--fg-2, #c8ccd4)',
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          }}>{errs.join('\n')}</pre>
-          <button onClick={() => copy(errs.join('\n'), 'err')} style={btn(false)}>
-            {copied === 'err' ? '복사됐다 ✓' : '오류 복사 — 챗봇에 그대로 붙여넣기'}
+          }}>{[errBox.head, ...errBox.errors, ...(errBox.hint ? ['', errBox.hint] : [])].join('\n')}</pre>
+          {/* 복사되는 것은 `errors` 뿐이다 — `head`·`hint` 는 유저에게 하는 말이라 뺀다 */}
+          <button onClick={() => copy(fixBrief('palette', errBox.errors, worldRaw()), 'err')} style={btn(false)}>
+            {copied === 'err' ? '복사됐다 ✓' : '수정 요청 복사 — 챗봇에 그대로 붙여넣기'}
           </button>
           {manualBox('err')}
         </section>
@@ -1359,11 +1790,17 @@ export default function Generator() {
                   fontSize: '12px', lineHeight: 1.7, color: 'var(--fg-2, #c8ccd4)',
                   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                 }}>{proseMsg.lines.join('\n')}</pre>
-                {proseMsg.ok ? null : (
+                {/* 기계가 낸 오류가 있을 때만 지시서를 만든다 — 「넣을 진술이 없었다」
+                    처럼 유저 쪽 조건뿐이면 챗봇에게 보낼 것이 없다 */}
+                {proseMsg.ok || !proseMsg.errors?.length ? null : (
                   <>
-                    <button onClick={() => copy(proseMsg.lines.join('\n'), tag + 'Err')}
+                    <button
+                      onClick={() => copy(
+                        fixBrief(tag === 'stmt' ? 'statement' : 'prose', proseMsg.errors, text),
+                        tag + 'Err',
+                      )}
                       style={{ ...btn(false), marginTop: '11px' }}>
-                      {copied === tag + 'Err' ? '복사됐다 ✓' : '오류 복사 — 챗봇에 그대로 붙여넣기'}
+                      {copied === tag + 'Err' ? '복사됐다 ✓' : '수정 요청 복사 — 챗봇에 그대로 붙여넣기'}
                     </button>
                     {manualBox(tag + 'Err')}
                   </>

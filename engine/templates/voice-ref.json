@@ -1,0 +1,36 @@
+{
+  "_why": [
+    "진술 말투의 기준선 — 한 곳에만 둔다. (2026-07-31 신설)",
+    "",
+    "손으로 쓴 산장(engine/cases/mountain-lodge.yaml)을 npm run voice-check 로 잰 값이다.",
+    "**목표가 아니라 기준선**이다: 격식체 세계는 「…했습니다」가 맞고, 말투의 자연스러움은",
+    "사람이 읽어야 판정된다. 그래서 빌드 게이트에 걸지 않는다.",
+    "",
+    "★ 왜 파일로 뺐나 ★ 이 숫자가 scripts/voice-check.mjs 와 진술 서식 양쪽에 손으로",
+    "박혀 있었고, MANIFESTO.md §남은 일 ③ 이 「서식 쪽은 아직 열려 있다」고 적어둔 자리다.",
+    "이제 재는 쪽(voice-check)과 의뢰하는 쪽(Generator 의 STATEMENT 보충)이 같은 파일을 읽는다.",
+    "",
+    "⚠ 고칠 때는 npm run voice-check 로 산장을 다시 재서 맞춘다 — 손으로 고치지 않는다."
+  ],
+  "source": "mountain-lodge.yaml",
+  "measured": "2026-07-31",
+  "people": 5,
+
+  "ratio": 2.46,
+  "callers": 4,
+  "honor": 12,
+  "question": 8,
+
+  "_endings": [
+    "★ 여기 5 가 박혀 있었는데 산장의 실측은 4 다 ★ (2026-07-31 정정)",
+    "5 는 분류의 상한(endingMax)이지 산장이 낸 값이 아니다. 그래서 도구가",
+    "「끝맺음 4 ✔ (산장 5)」를 인쇄했다 — **기준선을 말하는 줄이 기준선을 틀리게 말했다.**",
+    "MANIFESTO.md §남은 일 ③ 이 열어둔 항목이다."
+  ],
+  "endings": 4,
+  "endingMax": 5,
+
+  "paraLo": 63,
+  "paraHi": 285,
+  "median": 280
+}

@@ -32,8 +32,18 @@ import { load } from 'js-yaml'
 
 const CASES = 'engine/cases'
 
-/** 산장 실측 (2026-07-30 밤). **목표가 아니라 기준선**이다 */
-const REF = { ratio: 2.46, callers: 4, honor: 12, question: 8, endings: 5, paraLo: 63, paraHi: 285 }
+/**
+ * 산장 실측. **목표가 아니라 기준선**이다.
+ *
+ * ★ 숫자를 여기서 뺐다 ★ (2026-07-31) — 진술 서식도 같은 숫자를 쓰는데 양쪽에 손으로
+ * 박혀 있었다(`MANIFESTO.md` §남은 일 ③). 이제 **재는 쪽과 의뢰하는 쪽이 같은 파일을
+ * 읽는다** — `Generator.jsx` 의 STATEMENT 보충이 여기서 합격 기준을 만든다.
+ *
+ * 그러면서 `endings` 를 **5 → 4 로 고쳤다.** 5 는 분류의 상한이지 산장이 낸 값이
+ * 아니어서, 도구가 「끝맺음 4 ✔ (산장 5)」를 인쇄하고 있었다 — **기준선을 말하는
+ * 줄이 기준선을 틀리게 말했다.**
+ */
+const REF = JSON.parse(readFileSync(join('engine', 'templates', 'voice-ref.json'), 'utf8'))
 
 /**
  * ⚠ **공백을 포함해 센다.** 문서의 「중앙값 279자」가 공백 포함 기준이었고,

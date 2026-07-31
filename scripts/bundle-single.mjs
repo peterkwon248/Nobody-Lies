@@ -30,7 +30,7 @@
  *
  * 사용: node scripts/bundle-single.mjs
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -40,8 +40,19 @@ const PUB = join(ROOT, 'app', 'public')
 const DS = '_ds/vector-design-system-490b734e-7df2-4af7-b176-9c91211b1ef6'
 const OUT = join(ROOT, 'out', 'nobody-lies-tester.html')
 
-/** 이 사건을 담는다. 늘리려면 여기 이름을 더한다 — `?case=<이름>` 으로 열린다 */
-const CASES = ['mountain-lodge']
+/**
+ * 담을 사건. **`engine/cases/*.yaml` 이 정본 목록이다 — 손으로 적지 않는다.**
+ *
+ * ★ 여기 `['mountain-lodge']` 한 줄이 박혀 있었다 ★ (2026-07-31)
+ * 사건이 넷이 된 뒤에도 그대로라 **테스터에게는 산장 하나만 나갔다.** 번들러는
+ * 원래부터 N건을 담게 만들어져 있었고(사건마다 `<script data-case>` + fetch 가로채기)
+ * **목록만 안 자랐다.** 「늘리려면 여기 이름을 더한다」는 주석이 그걸 사람에게
+ * 맡겼는데, 사람이 잊었다. 이제 파일이 곧 목록이다.
+ */
+const CASES = readdirSync(join(ROOT, 'engine', 'cases'))
+  .filter((f) => f.endsWith('.yaml'))
+  .map((f) => f.replace(/\.yaml$/, ''))
+  .sort()
 
 const read = (p) => {
   if (!existsSync(p)) {
@@ -132,7 +143,12 @@ if (extLeft.length) {
   process.exit(1)
 }
 
-const caseTags = CASES.map((id) =>
+/**
+ * `index` 도 같이 싣는다 — 홈 목록이 `fetch('/cases/index.json')` 으로 읽는다.
+ * 아래 fetch 가로채기가 `cases/<이름>.json` 을 통째로 받으므로 **같은 길로 지나간다**.
+ * 안 실으면 브라우저에서는 홈에 넷이 뜨고 **테스터 파일에서만 하나가 뜬다.**
+ */
+const caseTags = [...CASES, 'index'].map((id) =>
   `<script type="application/json" data-case="${id}">${safe(read(join(PUB, `cases/${id}.json`)))}</script>`,
 ).join('\n')
 
@@ -143,7 +159,18 @@ const caseTags = CASES.map((id) =>
  * 둘은 예외다. 위 조각이 가로채는 자리라 번들에 남아 있는 것이 정상이고,
  * **사라지면 오히려 조각이 헛돌고 있다는 뜻**이다.
  */
-const HOOKED = [/_ds_bundle\.js$/, /^\/cases\/$/]
+/**
+ * `/cases/index.json` 이 셋째다 (2026-07-31 · 홈 목록).
+ *
+ * 앞의 `/cases/` 는 `'/cases/' + name + '.json'` 처럼 **조립되는** 접두라 조각으로
+ * 남는데, 홈 목록은 `fetch('/cases/index.json')` 이라 **경로가 통째로** 남는다.
+ * 가로채기 정규식(`cases\/([A-Za-z0-9_-]+)\.json`)이 `index` 를 그대로 받고
+ * 위 `caseTags` 가 `data-case="index"` 를 싣는다 — **가로채는 자리라 남는 게 정상**이다.
+ *
+ * 이 목록이 **양방향으로 문다**: 선언했는데 번들에 없으면 그것도 실패다
+ * (`missing`). 조각이 헛도는 것을 그렇게 잡는다.
+ */
+const HOOKED = [/_ds_bundle\.js$/, /^\/cases\/$/, /^\/cases\/index\.json$/]
 const leaks = [...new Set([...APP_JS.matchAll(/["'](\/(?:assets|cases|_ds|mark)[^"']*)["']/g)].map((m) => m[1]))]
 const unhandled = leaks.filter((l) => !HOOKED.some((re) => re.test(l)))
 const missing = HOOKED.filter((re) => !leaks.some((l) => re.test(l)))

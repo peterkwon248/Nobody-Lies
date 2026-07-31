@@ -379,6 +379,48 @@ export default class App extends React.Component {
    */
   BUDGET = 6;
 
+  /**
+   * 난이도 배지. 기본값은 산장이다 — 사건 파일이 `_difficulty` 를 실어 오면 덮인다.
+   *
+   * ⚠ **전에는 이 값이 JSX 안에 `hard` 리터럴로 박혀 있었다** (2026-07-31 발견).
+   * 사건 넷 중 셋이 우연히 hard 라 안 걸렸고 `pipe-organ-workshop`(normal)에서 드러났다.
+   * 앱에서 다시 계산하지 않는다 — `verify` 가 계산해 `export-case` 가 실어 보낸다.
+   */
+  DIFF = 'hard';
+
+  /** 지금 열려 있는 사건의 id. `applyCase` 가 채운다 */
+  CASE_ID = 'mountain-lodge';
+
+  /**
+   * ★ 홈 목록을 파일에서 받는다 ★ (2026-07-31)
+   *
+   * 아래 `CASES` 여섯 줄은 **하드코딩**이고 산장 하나만 `real: true` 다. 커밋된
+   * 캠페인이 넷이 돼도 **홈에는 산장 하나만 뜨고 나머지는 「준비 중」 껍데기**였다 —
+   * 테스터가 한 판 끝내고 홈으로 돌아오면 더 놀 것이 없다.
+   *
+   * `export-case` 가 `cases/index.json` 을 방출하고 `main.jsx` 가 받아 넘긴다.
+   * **못 받으면 아래 내장 목록으로 돈다** — 사건 파일이 없어도 게임이 열리는 것과
+   * 같은 규약이다.
+   *
+   * ⚠ 오늘 같은 부류를 세 곳에서 잡았다(`bundle-single` 의 `CASES` · `export-case` 의
+   * 기본 인자 · 여기). **목록을 사람이 손으로 늘리게 두면 사람이 잊는다.**
+   */
+  applyCatalog(list) {
+    if (!Array.isArray(list) || !list.length) return
+    const est = (n) => (n <= 3 ? ['20–30분', '20–30 min']
+      : n === 4 ? ['30–40분', '30–40 min']
+        : ['40–60분', '40–60 min'])
+    this.CASES = list.map((e, i) => {
+      const [ko, en] = est(e.chapters || 5)
+      return {
+        n: i + 1, id: e.id, real: true,
+        // 생성 사건은 영문 제목이 없다 — 한국어를 그대로 쓴다(빈 칸보다 낫다)
+        titleKo: e.title, titleEn: e.title,
+        diff: e.diff, estKo: ko, estEn: en,
+      }
+    })
+  }
+
   INV_ACTIONS = [{ id: 'belongings', k: 'actBelong', cost: 1, mode: 'person' }, { id: 'search', k: 'actSearch', cost: 1, mode: 'place' }, { id: 'phone', k: 'actPhone', cost: 1, mode: 'person' }, { id: 'alibi', k: 'actAlibi', cost: 1, mode: 'pair' }, { id: 'autopsy', k: 'actAutopsy', cost: 1, mode: 'none' }, { id: 'fixture', k: 'actFixture', cost: 1, mode: 'fixture' }];
   PROLOG = ['산길 끝에 산장이 하나 있다. 윤다인은 그곳에서 넉 달째 지내고 있었다. 소설을 쓰기 위해서였지만, 최근 그녀가 완성한 원고는 없었다.', '분위기를 바꿔보려 했는지, 다인은 오랜만에 옛 지인들을 불러 모았다. 초대장은 전날 밤에 돌았고, 다섯 사람이 답했다.', '그날 아침, 가장 먼저 도착한 두 사람이 창밖으로 새어 나오는 연기를 보았다. 방문은 잠겨 있지 않았는데도 열리지 않았다.', '문이 열렸을 때, 윤다인은 이미 숨을 쉬지 않았다.'];
   CASES = [
@@ -456,6 +498,8 @@ export default class App extends React.Component {
      * 그대로 열린다.
      */
     if (c.id) this.SAVE_KEY = `nobody-lies:${c.id}`
+    // 홈 목록이 「지금 열려 있는 것이 어느 사건인가」를 알아야 상태 칩을 바로 단다
+    if (c.id) this.CASE_ID = c.id
 
     /**
      * 기본 캠페인(산장) 말고 다른 사건인가. `componentDidMount` 가 이걸 보고
@@ -465,6 +509,8 @@ export default class App extends React.Component {
     this._foreignCase = Boolean(c.id) && c.id !== 'mountain-lodge'
 
     if (typeof c.budget === 'number') this.BUDGET = c.budget
+    // 난이도는 `verify` 가 계산해 `export-case` 가 실어 보낸다 — 앱은 받아 쓰기만 한다
+    if (c._difficulty) this.DIFF = c._difficulty
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
     /**
@@ -1610,6 +1656,8 @@ export default class App extends React.Component {
   constructor(props) {
     super(props)
     this.applyCase(props?.caseData)
+    // 홈 목록은 사건과 **따로** 온다 — 사건 하나가 없어도 목록은 살고, 반대도 같다
+    this.applyCatalog(props?.catalog)
   }
 
   /**
@@ -2420,11 +2468,34 @@ export default class App extends React.Component {
   buildHome() {
     const t = this.T(), ln = this.state.lang, status = this.caseStatus();
     const solved = (this.state.solved.s1 ? 1 : 0) + (this.state.solved.s2 ? 1 : 0) + (this.state.solved.s3 ? 1 : 0);
-    const cases = this.CASES.map(c => { const st = c.real ? status : 'soon'; const chip = this.statusChip(st === 'soon' ? 'unplayed' : st);
+    /**
+     * ★ 다른 사건의 진행 상태 ★ (2026-07-31)
+     *
+     * `caseStatus()` 는 **지금 열려 있는 사건**의 것이다 — `allSealed()` 가 그 사건의
+     * `SECTIONS` 를 세기 때문에 다른 사건에는 못 쓴다. 그래서 목록의 나머지는
+     * **저장 키가 있나**로만 가른다.
+     *
+     * ⚠ **끝낸 사건도 「진행 중」으로 보인다** — 완료 여부는 그 사건을 열어야 안다.
+     * 「미플레이」로 보이는 것보다는 낫다(그건 거짓이다). 정확히 하려면 저장에
+     * 완료 표시를 넣어야 하고, 그건 저장 형식 변경이라 따로 정한다.
+     */
+    const otherStatus = (id) => {
+      try { return localStorage.getItem('nobody-lies:' + id) ? 'inProgress' : 'unplayed' } catch (e) { return 'unplayed' }
+    }
+    const cases = this.CASES.map(c => {
+      const mine = c.id && c.id === this.CASE_ID;
+      const st = !c.real ? 'soon' : mine ? status : c.id ? otherStatus(c.id) : status;
+      const chip = this.statusChip(st === 'soon' ? 'unplayed' : st);
       return { num: ('0' + c.n).slice(-2), title: ln === 'ko' ? c.titleKo : (c.titleEn || c.titleKo), diff: c.diff, est: ln === 'ko' ? c.estKo : c.estEn,
         chipLabel: st === 'soon' ? t.soonPrep : chip.label, chipStyle: chip.style,
         diffStyle: { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' },
-        onClick: () => this.openDetail(c.n),
+        /**
+         * 지금 열려 있는 사건이면 **상세 화면**으로(이어하기·포기가 거기 있다).
+         * 다른 사건이면 **주소를 바꾼다** — 앱은 사건 하나만 들고 있어서
+         * `main.jsx` 가 `key` 로 다시 마운트해야 표가 갈린다. 생성 사건이 이미
+         * 그 길로 열린다(§만든 사건들의 `goRoute`).
+         */
+        onClick: () => (mine || !c.id ? this.openDetail(c.n) : this.goRoute('case=' + encodeURIComponent(c.id))),
         cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
 
     /**
@@ -2529,7 +2600,8 @@ export default class App extends React.Component {
   buildDetail() {
     const t = this.T(), ln = this.state.lang, c = this.CASES[(this.state.selectedCase || 1) - 1] || this.CASES[0];
     const real = !!c.real, status = real ? this.caseStatus() : 'soon', chip = this.statusChip(status === 'soon' ? 'unplayed' : status);
-    return { title: ln === 'ko' ? c.titleKo : (c.titleEn || c.titleKo), real, chipLabel: real ? chip.label : t.soonPrep, chipStyle: chip.style,
+    // 배지도 `rows` 의 난이도와 **같은 값**을 쓴다 — 전에는 배지만 `hard` 리터럴이었다
+    return { title: ln === 'ko' ? c.titleKo : (c.titleEn || c.titleKo), real, diff: c.diff, chipLabel: real ? chip.label : t.soonPrep, chipStyle: chip.style,
       rows: [{ k: t.difficulty, v: c.diff }, { k: t.budgetLabel, v: real ? String(this.BUDGET) : '\u2014' }, { k: t.estTime, v: ln === 'ko' ? c.estKo : c.estEn }, { k: t.suspects, v: real ? t.suspectsVal : '\u2014' }].map((r, i, a) => ({ k: r.k, v: r.v, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < a.length - 1 ? '1px solid var(--border)' : 'none' } })),
       notPlayedNote: !real ? t.demoOnly : (status === 'unplayed' ? t.notPlayedYet : ''),
       primaryLabel: !real ? t.playSolo : status === 'clear' ? t.review : status === 'inProgress' ? t.resume : t.playSolo,
@@ -3609,7 +3681,7 @@ export default class App extends React.Component {
       ref: this.buildRef(),
       quotePickerOpen: !!s.quotePicker, quotePicker: (() => { const p = s.quotePins || {}; const ms = s.memos || []; const numOf = {}; ms.forEach((m, i) => { numOf[m.id] = i + 1; }); return ms.filter(m => p[m.id]).map(m => ({ num: '#' + numOf[m.id], excerpt: (((m.content || m.quote || '').split('\n')[0]) || ('메모 ' + numOf[m.id])).slice(0, 40), onPick: () => this.appendQuote(m.id, s.quotePicker) })); })(),
       onQuotePickNew: () => this.newMemoFromQuote(s.quotePicker), onQuotePickCancel: () => this.setState({ quotePicker: null }), stopModal: (e) => { try { e.stopPropagation(); } catch (x) {} },
-      status: { budget: (this.BUDGET - this.invSpent()) + ' / ' + this.BUDGET },
+      status: { budget: (this.BUDGET - this.invSpent()) + ' / ' + this.BUDGET, diff: this.DIFF },
       gridSort: { on: false, onToggle: () => {}, chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '6px', height: '26px', padding: '0 10px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--border-strong)'), background: s.viewOpts.timelineSort ? 'var(--accent-soft)' : 'transparent', color: s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 } },
       langSeg: { koCls: 'seg' + (ln === 'ko' ? ' active' : ''), enCls: 'seg' + (ln === 'en' ? ' active' : ''), stKo: 'st' + (ln === 'ko' ? ' active' : ''), stEn: 'st' + (ln === 'en' ? ' active' : ''), onKo: () => this.setLang('ko'), onEn: () => this.setLang('en') },
       themeSeg: { stDark: 'st' + (s.theme === 'dark' ? ' active' : ''), stLight: 'st' + (s.theme === 'light' ? ' active' : ''), onDark: () => { if (s.theme !== 'dark') this.toggleTheme(); }, onLight: () => { if (s.theme !== 'light') this.toggleTheme(); } },
@@ -3796,7 +3868,7 @@ export default class App extends React.Component {
               </div>
               <div style={S("margin-top:auto;padding:12px 8px 4px;border-top:1px solid var(--border)")}>
                 <div style={S("display:flex;align-items:center;gap:8px")}>
-                  <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>hard</span>
+                  <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>{V.status.diff}</span>
                   <span className="v-meta">{V.ui.budget} · <b className="v-num" style={S("color:var(--fg-2)")}>{V.status.budget}</b></span>
                 </div>
                 <div className="v-micro" style={S("margin-top:10px;line-height:1.55;color:var(--fg-4)")}>{V.ui.sidebarNote}</div>
@@ -4772,7 +4844,7 @@ export default class App extends React.Component {
               <div style={S("flex:1;display:flex;align-items:center;justify-content:center;padding:24px")}>
                 <div style={S("max-width:460px;width:100%")}>
                   <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:18px")}>
-                    <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>hard</span>
+                    <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>{V.detail.diff}</span>
                     <span style={V.detail.chipStyle}>{V.detail.chipLabel}</span>
                   </div>
                   <div className="v-h1" style={S("margin-bottom:20px")}>{V.detail.title}</div>

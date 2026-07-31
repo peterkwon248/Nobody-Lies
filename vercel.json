@@ -3,5 +3,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": "app/dist",
   "installCommand": "npm install --include=dev",
-  "github": { "silent": true }
+  "github": { "silent": false }
 }
