@@ -1,4 +1,7 @@
 import React from 'react';
+// §sPoche — 방들의 합집합에서 건물 외곽선을 뽑는다 (ㄱ자·중정).
+// 매니페스토 §2·§3(오픈소스 우선). 재보고 들어갔다 — 합집합이 구멍 링까지 준다.
+import { union as polyUnion } from 'martinez-polygon-clipping';
 
 /* ---------- helpers ---------- */
 // Parse an inline-CSS string into a React style object (memoized).
@@ -3033,27 +3036,111 @@ export default class App extends React.Component {
       if (fill) sRoomFills.push({ x: a.x, y: a.y, w: a.w, h: a.h, fill });
     });
 
+    const rooms = G.rooms.filter(r => !hid(r.b === gateB));
+    /**
+     * ⚠ `building` 은 **선택 필드**라 `r.b` 가 빌 수 있다(§rooms 매핑이 있을 때만
+     * 넣는다). 검증기 `bOf()` 처럼 **첫 건물로 메운다** — 안 메우면 건물이 둘인
+     * 사건에서 **서로 다른 건물의 방이 한 무리로 묶인다.**
+     */
+    const MAIN_B = (G.buildings[0] || {}).id;
+    const bOf = r => r.b || MAIN_B;
+    const roomsBy = {}; rooms.forEach(r => (roomsBy[bOf(r)] = roomsBy[bOf(r)] || []).push(r));
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  §sPoche — 건물 외곽선. **직사각형이 아닐 수 있다** (2026-07-31 개정)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 전에는 언제나 `b.x,b.y,b.w,b.h` **직사각형 하나**였다. 그래서 ㄱ자·중정이
+     * 불가능했다 — 빈 자리의 바깥 변까지 건물인 양 그렸다.
+     *
+     * 방이 봉투를 **빈틈 없이 채우면 합집합이 곧 그 직사각형**이므로 **전과 똑같이**
+     * 그린다(직사각형 + 안쪽 3 헤어라인). 커밋된 5건이 전부 이쪽이라 **무변화**다.
+     *
+     * 빈틈이 있으면 **방들의 합집합**을 외곽선으로 쓴다(`martinez`). 중정은 구멍
+     * 링으로 나오므로 같은 path 의 둘째 subpath 가 된다 — `fill="none"` 이라 그대로
+     * 테두리로 그려진다.
+     *
+     * ⚠ 안쪽 헤어라인은 그때 생략한다. 임의 직교 다각형의 **내부 오프셋**은 이
+     * 자리에서 풀 문제가 아니고(불리언이지 오프셋이 아니다), 없다고 도면이 덜
+     * 읽히지 않는다. 필요해지면 그때 짓는다.
+     */
     const sPoche = [];
     G.buildings.filter(b => !hid(b.id === gateB)).forEach(b => {
-      sPoche.push({ d: 'M' + b.x + ' ' + b.y + ' H' + (b.x + b.w) + ' V' + (b.y + b.h) + ' H' + b.x + ' Z', color: b.poche, width: 6 });
-      sPoche.push({ d: 'M' + (b.x + 3) + ' ' + (b.y + 3) + ' H' + (b.x + b.w - 3) + ' V' + (b.y + b.h - 3) + ' H' + (b.x + 3) + ' Z', color: 'var(--border)', width: 1 });
+      const rs = roomsBy[b.id] || [];
+      const sum = rs.reduce((a, r) => a + r.w * r.h, 0);
+      // 검증기 §9-3i ⓒ 와 같은 판정 — 겹침이 0인 상태에서 면적 합이 같으면 빈틈도 0
+      if (!rs.length || Math.abs(sum - b.w * b.h) <= 1) {
+        sPoche.push({ d: 'M' + b.x + ' ' + b.y + ' H' + (b.x + b.w) + ' V' + (b.y + b.h) + ' H' + b.x + ' Z', color: b.poche, width: 6 });
+        sPoche.push({ d: 'M' + (b.x + 3) + ' ' + (b.y + 3) + ' H' + (b.x + b.w - 3) + ' V' + (b.y + b.h - 3) + ' H' + (b.x + 3) + ' Z', color: 'var(--border)', width: 1 });
+        return;
+      }
+      const mp = rs.reduce((acc, r) => {
+        const p = [[[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h], [r.x, r.y]]];
+        return acc ? polyUnion(acc, p) : p;
+      }, null);
+      const d = (mp || []).map(poly => poly.map(ring => 'M' + ring.map(pt => pt[0] + ' ' + pt[1]).join(' L') + ' Z').join(' ')).join(' ');
+      if (d) sPoche.push({ d: d, color: b.poche, width: 6 });
     });
 
-    const rooms = G.rooms.filter(r => !hid(r.b === gateB));
-    const raw = [], byB = {}; rooms.forEach(r => (byB[r.b] = byB[r.b] || []).push(r));
-    Object.keys(byB).forEach(k => { const rs = byB[k];
-      for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) {
-        const A = rs[i], B = rs[j];
-        if (Math.abs(A.x + A.w - B.x) < eps || Math.abs(B.x + B.w - A.x) < eps) {
-          const x = Math.abs(A.x + A.w - B.x) < eps ? B.x : A.x;
-          const a = Math.max(A.y, B.y), b = Math.min(A.y + A.h, B.y + B.h);
-          if (b - a > eps) raw.push({ o: 'v', c: x, a: a, b: b });
-        }
-        if (Math.abs(A.y + A.h - B.y) < eps || Math.abs(B.y + B.h - A.y) < eps) {
-          const y = Math.abs(A.y + A.h - B.y) < eps ? B.y : A.y;
-          const a = Math.max(A.x, B.x), b = Math.min(A.x + A.w, B.x + B.w);
-          if (b - a > eps) raw.push({ o: 'h', c: y, a: a, b: b });
-        }
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  §sWalls — **방의 테두리를 그린다** (2026-07-31 개정)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 전에는 **방끼리 맞닿은 변**에서만 벽이 났다. 그래서 방이 봉투를 빈틈 없이
+     * 채우지 않으면 **빈 자리에 선이 하나도 안 그려져 방이 허공으로 번졌다.**
+     * 그것이 중정·ㄱ자를 못 만들던 이유다.
+     *
+     * ★ 막고 있던 것이 이 함수였다 ★ 검증기 §9-3i ⓒ 는 빈 자리를 **오류가 아니라
+     * 경고**로 뒀다 — *"오류로 걸면 저작자가 중정 있는 건물을 그리려는 순간 게이트가
+     * 막는다"*. 즉 **데이터·검증기는 이미 허락하고 있었고 렌더러만 못 그렸다.**
+     *
+     * 이제 **방마다 네 변을 전부** 내고, **양쪽에 방이 있는 구간만** 내벽으로 그린다.
+     *
+     * ```
+     * 같은 자리를 방 둘이 쓴다  →  내벽 (얇다 4.5)   ← 여기
+     * 한 방만 쓴다             →  외벽 (두껍다 6)   ← sPoche 몫. 봉투든 중정이든
+     * ```
+     *
+     * ★ **덮인 횟수만 세면 된다** ★ 기하 판정도, 봉투와의 대조도 필요 없다.
+     * 봉투 위의 변은 저절로 1회라 빠지고(전과 같다), 중정·노치 테두리도 1회라
+     * **외벽으로 넘어간다** — 안 그러면 poche 6 위에 벽 4.5 가 겹쳐 그려진다
+     * (실측으로 확인하고 고쳤다. 색이 같아 안 보였을 뿐 별채처럼 `poche` 색이
+     * 다르면 드러난다).
+     *
+     * 이 규칙 덕에 **봉투를 빈틈 없이 채우는 기존 사건은 화면이 안 바뀐다** —
+     * 맞닿은 변은 언제나 2회다.
+     *
+     * (`rooms`·`bOf` 는 §sPoche 앞에서 이미 잡았다 — 둘이 같은 것을 쓴다.)
+     */
+    const edges = [];
+    rooms.forEach(r => {
+      const put = (o, c, a, b) => edges.push({ k: bOf(r) + '|' + o, o: o, c: c, a: a, b: b });
+      put('v', r.x,       r.y, r.y + r.h);
+      put('v', r.x + r.w, r.y, r.y + r.h);
+      put('h', r.y,       r.x, r.x + r.w);
+      put('h', r.y + r.h, r.x, r.x + r.w);
+    });
+    const raw = [], lanes = {};
+    edges.forEach(e => (lanes[e.k] = lanes[e.k] || []).push(e));
+    Object.keys(lanes).forEach(k => {
+      const es = lanes[k].slice().sort((p, q) => p.c - q.c || p.a - q.a);
+      for (let i = 0; i < es.length;) {
+        // 같은 직선 위(좌표 차 < eps)를 한 묶음으로
+        let j = i; while (j < es.length && es[j].c - es[i].c < eps) j++;
+        const o = es[i].o, c = es[i].c;
+        // 구간 끝점을 훑으며 덮인 횟수를 센다 — 2 이상인 동안이 내벽이다
+        const ev = [];
+        es.slice(i, j).forEach(e => { ev.push([e.a, 1]); ev.push([e.b, -1]); });
+        ev.sort((p, q) => p[0] - q[0] || q[1] - p[1]);
+        let depth = 0, from = null;
+        ev.forEach(([t, d]) => {
+          const was = depth; depth += d;
+          if (was < 2 && depth >= 2) from = t;
+          else if (was >= 2 && depth < 2) { if (t - from > eps) raw.push({ o: o, c: c, a: from, b: t }); from = null; }
+        });
+        i = j;
       }
     });
     const intDoors = G.doors.filter(d => !d.ext).map(d => { const o = Math.abs(d.x1 - d.x2) < eps ? 'v' : 'h'; return { o: o, c: o === 'v' ? d.x1 : d.y1, a: o === 'v' ? Math.min(d.y1, d.y2) : Math.min(d.x1, d.x2), b: o === 'v' ? Math.max(d.y1, d.y2) : Math.max(d.x1, d.x2) }; });

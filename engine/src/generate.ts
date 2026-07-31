@@ -1053,11 +1053,34 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
    * §9-3b 가 무는 것은 창(`sceneWindow`)뿐이고 그쪽은 어느 칸이어도 바깥벽이
    * 있으니 항상 만족된다.
    */
-  const sceneIdx = TL.slots
+  const sceneOrder = TL.slots
     .map((_, i) => i)
     .sort((a, b) =>
       (t.space?.sceneLocked ? extCount(TL.slots[a]!) - extCount(TL.slots[b]!) : 0) ||
-      area(TL.slots[b]!) - area(TL.slots[a]!))[0]!
+      area(TL.slots[b]!) - area(TL.slots[a]!))
+  /**
+   * ★ 1위냐 2위냐 ★ (2026-07-31 · 사용자 결정)
+   *
+   * 「가장 큰 칸」만 쓰면 **자리가 굳는다.** 300건을 재보니:
+   * ```
+   * 크기 순위   1위 96%
+   * 3×3 자리    오른·아래 46% · 왼·중 44%   ← 아홉 칸 중 두 칸에 90%
+   * ```
+   * 크기 규칙이 문제가 아니라 **타일링이 어느 칸을 가장 크게 만들지 이미
+   * 정해버리기** 때문이다(`wings` 는 왼쪽 열이 늘 2.4배).
+   *
+   * 그래서 **1위와 2위 사이에서 고른다.** 현장은 여전히 「큰 축」이고, 07-29의
+   * *"도면을 열자마자 어디가 사건의 중심인지"* 는 **붉은 기**(§floorPlan `tint`)가
+   * 계속 받친다 — 그 근거가 전부 크기에 걸려 있지는 않았다.
+   *
+   * ⚠ **밀실은 안 흔든다.** `sceneLocked` 의 「바깥벽에 덜 닿은 칸」은 연출이
+   * 아니라 **트릭의 조건**이다. 거기서 2위를 고르면 더 노출된 칸이 현장이 된다.
+   */
+  const sceneIdx = (() => {
+    if (t.space?.sceneLocked) return sceneOrder[0]!
+    const second = sceneOrder[1]
+    return second !== undefined && RI(100) < 45 ? second : sceneOrder[0]!
+  })()
   /**
    * 홀이 어느 칸인가 — **시신이 옮겨진 사건이면 현장에서 떨어뜨린다.**
    *
@@ -1133,15 +1156,31 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
    *
    * **개수가 규모에서 나온다** (07-30):
    * ```
-   * 장 2~4   딸린 방 1   방 6      ← 07-29와 같은 개수
-   * 장 5~6   딸린 방 2   방 7
-   * 장 7~8   딸린 방 3   방 8
+   * 장 2~4   딸린 방 1        장 5~6   딸린 방 2        장 7~8   딸린 방 3
    * ```
+   *
+   * ★ **그리고 사건마다 ±1 흔든다** ★ (2026-07-31 · ③방 개수의 출처 넓히기)
+   *
+   * 규모만이 출처면 **방 수가 한 가지로 굳는다** — `chapters` 는 표준 경로에서
+   * 언제나 5라(`opts.chapters ?? 5`) 300건 중 **299건이 6칸**이었다
+   * (`npm run plan-check` 가 센다). 실루엣도 현장 자리도 풀렸는데 방 수만 남았다.
+   *
+   * **딸린 방이 옳은 레버다** — 위 §딸린 방이 못박은 대로 장소를 안 늘리므로
+   * 조사 수·난이도·무고한 넷의 동선 풀이 **하나도 안 움직인다.** 장소를 늘리면
+   * 그 셋이 같이 흔들리고 07-29에 물린 「두 사람이 같은 방」으로 돌아간다.
+   *
+   * ⚠ **1~3 을 벗어나지 않는다.** 위는 이름 공급이 정하고(`extraRooms` 는 6개로
+   * 채워지므로 딸린 방 이름은 3개뿐), 아래는 0이 되면 도면이 07-29 이전으로 돌아간다.
+   *
+   * ⚠ **폭은 안 좁아진다** — 아래 쪼개기 가드가 세로로 가를 때 작은 쪽 폭을
+   * 150 이상으로 지키고, 가로로 가르면 폭이 그대로다. 실측으로 확인했다
+   * (최소 폭 130 유지 · 130은 `bar` 타일링의 기본 배분에서 오는 값이다).
    */
   type SubRoom = { id: string; loc: string; label: string; rect: Rect; building: string; noWindow?: boolean }
   const SUBROOMS: SubRoom[] = []
   {
-    const want = chapters >= 7 ? 3 : chapters >= 5 ? 2 : 1
+    const byScale = chapters >= 7 ? 3 : chapters >= 5 ? 2 : 1
+    const want = Math.max(1, Math.min(3, byScale + (RI(3) - 1)))
     /**
      * 쪼갤 방 — **현장은 뺀다.** 현장을 쪼개면 붉은 칸이 둘이 되어 「현장이 두
      * 곳」으로 읽힌다. 넓은 칸부터 쪼갠다.
@@ -1180,6 +1219,81 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
         label: spec.name, noWindow: spec.noWindow, rect: cut!,
       })
       n++
+    }
+  }
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  빈 자리 — **중정과 모서리 노치** (2026-07-31 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 타일링 넷은 봉투를 **빈틈 없이** 가른다. 그래야 했던 까닭은 설계가 아니라
+   * **렌더러의 한계**였다 — 앱이 벽을 「방끼리 맞닿은 변」에서만 그려서 빈 자리에
+   * 선이 하나도 안 그려졌다. 검증기 §9-3i ⓒ 가 그것을 경고로 적어두고 있었다.
+   *
+   * 2026-07-31에 렌더러가 고쳐졌다(`App.jsx` §sWalls 는 덮인 횟수가 1인 변을
+   * 외벽으로 넘기고, §sPoche 는 봉투 직사각형 대신 **방들의 합집합**을 외곽선으로
+   * 쓴다). **그래서 이제 빈 자리를 내도 된다.**
+   *
+   * 방 하나의 한 변을 안쪽으로 물린다. 방은 여전히 직사각형이라 겹치지도(ⓐ)
+   * 봉투를 나가지도(ⓑ) 않는다. 생기는 빈 자리는 둘 중 하나다:
+   *
+   * ```
+   * 물린 변이 바깥벽 위  →  봉투가 패인다        (ㄱ자 · 모서리 노치)
+   * 물린 변이 안쪽       →  방들에 둘러싸인 자리  (중정)
+   * ```
+   *
+   * ⚠ **현장과 홀은 안 건드린다.** 현장은 창(§9-3b)과 「가장 큰 칸」이 걸려 있고,
+   * 홀은 문 트리의 뿌리다.
+   * ⚠ **물리고 나서 도달성을 다시 잰다.** 방 하나라도 홀에서 문으로 못 닿으면
+   * **되돌린다** — 조사 화면이 곧 도면이라 못 가는 방은 없는 방이다(ⓓ).
+   * ⚠ **절반쯤만 낸다.** 전부 패면 「빈 자리 있는 건물」이 새 단일 모양이 된다.
+   */
+  {
+    const cells = [
+      ...SITES.filter((s) => s.building === 'b_main')
+        .map((s) => ({ id: s.id, get: () => s.rect, set: (r: Rect) => { s.rect = r }, fixed: !!s.scene || s.id === 'hall' })),
+      ...SUBROOMS.filter((s) => s.building === 'b_main')
+        .map((s) => ({ id: s.id, get: () => s.rect, set: (r: Rect) => { s.rect = r }, fixed: false })),
+    ]
+    /** 홀에서 뻗는 문 트리와 **같은 판정**. 여기서 참이어야 아래 §문·창이 다 잇는다 */
+    const allLinked = () => {
+      const seen = new Set<string>(['hall'])
+      const queue: string[] = ['hall']
+      while (queue.length) {
+        const id = queue.shift()!
+        const cur = cells.find((c) => c.id === id)
+        if (!cur) continue
+        for (const nb of cells)
+          if (!seen.has(nb.id) && seamOf(cur.get(), nb.get())) { seen.add(nb.id); queue.push(nb.id) }
+      }
+      return seen.size === cells.length
+    }
+    const free = cells.filter((c) => !c.fixed)
+    if (free.length && RI(100) < 45) {
+      const off = RI(free.length)
+      for (let k = 0; k < free.length; k++) {
+        const cell = free[(k + off) % free.length]!
+        const r0 = cell.get()
+        const sideOff = RI(4)
+        let done = false
+        for (let s = 0; s < 4 && !done; s++) {
+          const side = (s + sideOff) % 4                 // 0=왼 1=오른 2=위 3=아래
+          const horiz = side < 2
+          const span = horiz ? r0.w : r0.h
+          // 남는 쪽이 이름 한 줄을 지키고(MIN_W·MIN_H), 문 자리도 남아야 한다
+          const cut = Math.min(Math.round(span * 0.34), span - (horiz ? MIN_W : MIN_H))
+          if (cut < 44) continue                          // 이보다 얕으면 눈에 안 띈다
+          cell.set(
+            side === 0 ? { ...r0, x: r0.x + cut, w: r0.w - cut }
+              : side === 1 ? { ...r0, w: r0.w - cut }
+                : side === 2 ? { ...r0, y: r0.y + cut, h: r0.h - cut }
+                  : { ...r0, h: r0.h - cut },
+          )
+          if (allLinked()) done = true
+          else cell.set(r0)
+        }
+        if (done) break
+      }
     }
   }
   /** 실내 방만. 문·창은 여기서만 나온다 */
