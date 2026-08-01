@@ -77,10 +77,24 @@ type InvariantId = (typeof INVARIANTS)[number]['id']
 type Cell = {
   channel: ChannelId
   invariant: InvariantId
-  /** covered = 검사가 있다 · open = 없다 · na = 이 조합은 성립하지 않는다 */
-  status: 'covered' | 'open' | 'na'
-  /** covered 면 검사 표식. 소스에 없으면 실패한다 */
+  /**
+   * covered = 그 불변식을 **다 덮는다** · partial = 검사는 있는데 **일부만** 본다 ·
+   * open = 없다 · na = 이 조합은 성립하지 않는다
+   *
+   * ★ `partial` 은 2026-08-01에 늘렸다 ★ 처음엔 `covered`/`open` 둘뿐이었는데,
+   * 어휘 봉쇄를 재려다 **`진술 × 누설` 이 ✓ 인데 반만 덮고 있는 것**을 찾았다 —
+   * §9-10 은 **확보 단어 누설만** 보고, 「남의 사망 구간 위치를 말한다」(공짜 알리바이)는
+   * `STATEMENT-BRIEF` 규칙 4가 금지하는데 **검사가 없다.**
+   *
+   * **✓ 가 「완전히 덮였다」를 뜻하지 않으면 비율 자체가 거짓말이다** — `verifier §5` 가
+   * 조합 수를 정확히 계산하면서 틀린 명제를 재던 것과 같은 부류를, **이 표가 자기에게
+   * 저지르고 있었다.** 그래서 머리 숫자는 **완전히 덮인 칸만** 센다.
+   */
+  status: 'covered' | 'partial' | 'open' | 'na'
+  /** covered·partial 이면 검사 표식. 소스에 없으면 실패한다 */
   marker?: { file: string; text: string }
+  /** partial 이면 **안 보는 것**을 여기 적는다. 이게 곧 남은 일이다 */
+  missing?: string
   /** open 이면 무엇을 지어야 하나 · na 면 왜 성립 안 하나 */
   note: string
 }
@@ -99,15 +113,17 @@ const CELLS: Cell[] = [
   { channel: 'grid', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '레지스트리에 없다' },
     note: 'presence·claim 의 slot·location 이 레지스트리에 있는가' },
-  { channel: 'grid', invariant: 'leak', status: 'covered',
+  { channel: 'grid', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '사망 시간대에 현장' },
+    missing: '격자의 **모양**이 범인을 지목하는지 안 본다 — 「범인만 밤을 다 설명했다」가 그 부류였다(07-30)',
     note: '무고한 자가 사망 구간에 현장에 있으면 기회가 생겨 유일성이 무너진다' },
   { channel: 'grid', invariant: 'derivable', status: 'na',
     note: '격자는 답을 묻지 않는다 — 주장을 보여주는 표면이다' },
 
   // ── 보고서 서술문 — 08-01에 한 칸이 비어 48개가 빠져나갔다 ──
-  { channel: 'report', invariant: 'derivable', status: 'covered',
+  { channel: 'report', invariant: 'derivable', status: 'partial',
     marker: { file: V, text: '6.8 페어플레이' },
+    missing: '**인물 공란만** 본다. 시각·장소·discovered 는 안 문다(proof-check 이 재기만 한다: 시각 0/60)',
     note: '인물 공란의 답을 집어낼 근거가 있나(경고). 정밀 판본은 proof.ts' },
   { channel: 'report', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.75 보고서 서술문' },
@@ -130,11 +146,13 @@ const CELLS: Cell[] = [
     note: '확보 단어는 조사의 산출물이라 정의상 비용을 치른다' },
 
   // ── 조사 결과 ──
-  { channel: 'actionResult', invariant: 'contradiction', status: 'covered',
+  { channel: 'actionResult', invariant: 'contradiction', status: 'partial',
     marker: { file: V, text: '6.55 조사 결과문과 실제 산출이 어긋나는가' },
+    missing: '**산출**과만 대조한다. 결과문이 **격자·트릭**과 어긋나는지는 안 본다',
     note: '결과문이 말하는 것과 실제로 주는 것' },
-  { channel: 'actionResult', invariant: 'leak', status: 'covered',
+  { channel: 'actionResult', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '9-7' },
+    missing: '**확보 단어**만 본다. 결과문이 범인을 가리키는 다른 방식은 안 본다',
     note: '결과문이 그 조사가 주지 않는 확보 단어를 말하는가' },
   { channel: 'actionResult', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.4 decoy' },
@@ -143,8 +161,9 @@ const CELLS: Cell[] = [
     note: '결과는 답이 아니라 단서다 — 도출되는 쪽이 아니라 도출하는 쪽' },
 
   // ── 물증 ──
-  { channel: 'evidence', invariant: 'wiring', status: 'covered',
+  { channel: 'evidence', invariant: 'wiring', status: 'partial',
     marker: { file: V, text: '6.57 레드 헤링 회수' },
+    missing: '**레드 헤링 회수**만 본다. 물증 전반의 참조 무결성은 스키마가 따로 본다',
     note: '심어놓고 닫지 않은 물증' },
   { channel: 'evidence', invariant: 'contradiction', status: 'open',
     note: '물증 기록이 격자·트릭과 어긋나는지 안 본다' },
@@ -154,8 +173,9 @@ const CELLS: Cell[] = [
     note: '물증은 답이 아니라 단서다' },
 
   // ── 진술 산문 — 명제 둘이 여기서 무검사다 ──
-  { channel: 'statement', invariant: 'leak', status: 'covered',
+  { channel: 'statement', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '9-10' },
+    missing: '★ 08-01 발견 ★ **확보 단어**만 본다. 「남의 사망 구간 위치를 말한다」(공짜 알리바이)는 STATEMENT-BRIEF 규칙 4가 금지하는데 **검사가 없다**. 16건 실측 0건이라 지금은 지켜지고 있다 — 회귀 감시가 없을 뿐',
     note: '진술이 조사로 얻을 단어를 먼저 말하는가' },
   { channel: 'statement', invariant: 'contradiction', status: 'open',
     note: '★ 가장 큰 빈칸 ★ 「무고한 사람은 진실만 말한다」가 **격자에서만** 강제된다. 산문은 무검사다' },
@@ -175,8 +195,9 @@ const CELLS: Cell[] = [
     note: '추가 진술은 답이 아니라 단서다' },
 
   // ── 장 전환 서사 ──
-  { channel: 'revealNarration', invariant: 'leak', status: 'covered',
+  { channel: 'revealNarration', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '6.7 서사 조각의 균일성' },
+    missing: '**유무의 균일성**만 본다. 서사 **내용**이 답을 흘리는지는 §9-7(d)가 확보 단어까지만',
     note: '서사의 유무가 유용도를 노출한다' },
   { channel: 'revealNarration', invariant: 'contradiction', status: 'open',
     note: '★ 08-01에 이 채널이 §6.8 을 속였다 — 「…가 한마디를 보탰다」가 증거로 셈해졌다' },
@@ -186,8 +207,9 @@ const CELLS: Cell[] = [
   { channel: 'revealNarration', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
   // ── 프롤로그·개요 ──
-  { channel: 'prologue', invariant: 'leak', status: 'covered',
+  { channel: 'prologue', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '9-7' },
+    missing: '**확보 단어**만 본다. 프롤로그가 범인·트릭을 가리키는지는 안 본다',
     note: '프롤로그가 확보 단어를 먼저 말하는가' },
   { channel: 'prologue', invariant: 'contradiction', status: 'open',
     note: 'closing-theater 에 **일부러 남긴 재현 테스트**가 여기 있다' },
@@ -275,10 +297,12 @@ const byKey = new Map<string, Cell>()
 for (const c of CELLS) byKey.set(`${c.channel}|${c.invariant}`, c)
 
 let covered = 0
+let half = 0
 let open = 0
 let na = 0
 const stale: string[] = []
 const openList: { ch: string; inv: string; note: string }[] = []
+const halfList: { ch: string; inv: string; missing: string }[] = []
 
 const rows: string[][] = []
 for (const ch of CHANNELS) {
@@ -292,11 +316,20 @@ for (const ch of CHANNELS) {
       continue
     }
     if (cell.status === 'na') { na++; row.push('—'); continue }
-    covered++
-    row.push('✓')
+    if (cell.status === 'partial') {
+      half++
+      row.push('◐')
+      halfList.push({ ch: ch.label, inv: inv.label, missing: cell.missing ?? '(안 보는 것이 안 적혀 있다)' })
+    } else {
+      covered++
+      row.push('✓')
+    }
     // ★ 양방향으로 문다 — 적어놨는데 소스에 없으면 실패
     if (cell.marker && !read(cell.marker.file).includes(cell.marker.text))
       stale.push(`${ch.label} × ${inv.label} → '${cell.marker.text}' 가 ${cell.marker.file} 에 없다`)
+    // partial 인데 안 보는 것을 안 적었으면 그것도 실패다 — 「반쯤 덮었다」가 뜻을 잃는다
+    if (cell.status === 'partial' && !cell.missing)
+      stale.push(`${ch.label} × ${inv.label} → partial 인데 missing 이 비어 있다`)
   }
   rows.push(row)
 }
@@ -312,7 +345,9 @@ const live = total - na
 const brief = process.argv.includes('--brief')
 
 if (brief) {
-  console.log(`\n  불변식 행렬 — 찬 칸 ${covered}/${live} (${((covered / live) * 100).toFixed(0)}%) · 빈칸 ${open}`)
+  console.log(
+    `\n  불변식 행렬 — 완전 ${covered}/${live} (${((covered / live) * 100).toFixed(0)}%) · 부분 ${half} · 빈칸 ${open}`,
+  )
   if (stale.length) {
     console.log(`\n  ✗ 표식이 소스에 없다 (${stale.length})`)
     for (const s of stale) console.log(`    ${s}`)
@@ -336,9 +371,16 @@ console.log(line(head))
 console.log('  ' + '─'.repeat(52))
 for (const r of rows) console.log(line(r))
 
-console.log(`\n  ✓ 찬 칸 ${covered} / ${live}   (${((covered / live) * 100).toFixed(0)}%)`)
-console.log(`  · 빈 칸 ${open}        ← 이것이 「검사되지 않는 축」이다`)
-console.log(`  — 해당없음 ${na}\n`)
+console.log(`\n  ✓ 완전히 덮임 ${covered} / ${live}   (${((covered / live) * 100).toFixed(0)}%)`)
+console.log(`  ◐ 부분만     ${half}        ← 검사는 있는데 일부만 본다. **✓ 로 세지 않는다**`)
+console.log(`  · 빈 칸      ${open}        ← 검사가 없다`)
+console.log(`  — 해당없음   ${na}\n`)
+
+if (halfList.length) {
+  console.log('  ── 부분만 덮인 칸 — 「안 보는 것」이 곧 남은 일이다 ──')
+  for (const h of halfList) console.log(`    ${h.ch} × ${h.inv}\n        ${h.missing}`)
+  console.log('')
+}
 
 if (openList.length) {
   console.log('  ── 빈칸 목록 ──')
