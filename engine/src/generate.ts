@@ -2262,6 +2262,35 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
    * 그때는 조사 오류 문안이었고 이번엔 프롤로그다 — `subjectParticle` 이 이미
    * 옆에 있었는데 **은/는 짝이 없어서** 안 쓰였다.
    */
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  ★ 식별 고리 ★ — 인물 공란이 「배열 첨자」가 아니게 만든다 (2026-08-01)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * **무고한 넷은 산문에서 완전히 교환 가능했다.** 12건을 재보니 넷의 이름이 나오는
+   * 자리가 **조사 제목뿐**이었고(소지품 검사·통화내역 조회·알리바이 대조), 진술 ·
+   * 물증 기록 · 조사 결과문 · 프롤로그 어디에도 특정 무고한 사람을 가리키는 문장이
+   * 없었다. 그런데 보고서는 `innocents[0]`·`innocents[i % 4]` 를 정답으로 물었다 —
+   * **지목 아닌 인물 공란 48개가 전부 찍기였다**(12건 × 1~4장).
+   *
+   * 페어플레이의 핵심 조항(Knox 8 · Van Dine 1·15)이 *"플레이어가 답에 도달할
+   * 수단을 손에 쥐고 있어야 한다"* 이고, 게이트는 이것을 한 번도 안 봤다 —
+   * 검증기는 **장 전체의 조합 수 ≥ 30**(찍기 난이도)과 어휘 유효성만 본다.
+   *
+   * ★ 고리는 이미 있었다 ★ `HERRING` 이 **사람마다 다른 물건**을 주고
+   * `a_h{i}`(소지품 검사)가 그것을 1:1 로 드러낸다. 공란이 그걸 안 쓰고 있었을 뿐이다.
+   * 이것이 Obra Dinn 식 「인물마다 다른 이야기 최소 하나」의 가장 작은 판본이다.
+   *
+   * ⚠ **누설이 아니다.** 서술문은 「누군가 이 물건을 갖고 있다」까지만 말하고
+   * **누구인지는 조사해야** 안다. 레드 헤링이라 배제도 주지 않는다.
+   */
+  const carried = (pid: PersonId) => HERRING[ids.indexOf(pid)]!.ev
+  /** 「소지품에서 X가 나온 것은 」 — 뒤에 인물 공란이 온다 */
+  const carriedLead = (pid: PersonId) => {
+    const ev = carried(pid)
+    return `소지품에서 ${ev}${subjectParticle(ev)} 나온 것은 `
+  }
+
   const topicParticle = (word: string) => {
     const ch = word.charCodeAt(word.length - 1) - 0xac00
     if (ch < 0 || ch > 11171) return '은'
@@ -2682,15 +2711,22 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
         opening: '먼저 그 자리에 무엇이 있었는지를 적는다.',
         requiresFacts: innocents.map((id) => `f_no_${id}`),
         blanks: [
-          { label: '인물', candidates: 'closed', answer: innocents[0], particle: '이/가' },
+          // ⚠ 조사(particle)를 안 붙인다 — 서술문 끝에서 문장이 닫힌다(§식별 고리)
+          { label: '인물', candidates: 'closed', answer: innocents[0] },
           { label: '장소', candidates: 'closed', answer: 'room' },
           // 발견 시각 = **다시 모인 칸**. 창을 쪼개면 `t2` 가 창 라벨이 된다
           { label: '시각', candidates: 'closed', answer: LAST },
           { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
         ],
+        /**
+         * ⚠ **「[인물]이 가장 먼저 일어났다」였다** (2026-08-01에 걷어냈다).
+         * 세계에 기상 시각이 없으므로 **대조할 것이 없는 주장**이었고, 넷이 산문에서
+         * 대칭이라 답은 1/4 찍기였다. 지금은 §식별 고리가 소지품으로 사람을 집는다.
+         */
         report: [
-          { blank: 2 }, { text: ', ' }, { blank: 0 }, { text: ' 가장 먼저 일어났다. ' },
-          { blank: 1 }, { text: '에서 ' }, { blank: 3 }, { text: ' 발견됐다.' },
+          { blank: 2 }, { text: ', ' }, { blank: 1 }, { text: '에서 ' },
+          { blank: 3 }, { text: ' 발견됐다. ' },
+          { text: carriedLead(innocents[0]!) }, { blank: 0 }, { text: '.' },
         ],
         epilogueOrder: 1,
       },
@@ -2702,13 +2738,23 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
         opening: '다음으로 기록에 남은 것을 적는다.',
         requiresFacts: [s.fact.id],
         blanks: [
-          { label: '인물', candidates: 'closed', answer: innocents[i % innocents.length], particle: '이/가' },
+          /**
+           * ★ 넷을 고르게 쓴다 ★ 전에는 `innocents[i % 4]` 라 1장(`innocents[0]`)과
+           * 2장이 **같은 사람**을 물었다. `i + 1` 로 밀어 1~4장이 넷을 하나씩 맡는다.
+           */
+          { label: '인물', candidates: 'closed', answer: innocents[(i + 1) % innocents.length] },
           { label: s.label, candidates: 'discovered', answer: s.word, particle: '이/가' },
           { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? WIN[0]! : 'hall', particle: '을/를' },
         ] as Blank[],
+        /**
+         * ⚠ **「기록을 확인한 것은 [인물]이 있던 자리였다」였다** (2026-08-01에 걷어냈다).
+         * 그 사람이 그 자리에 있었다는 근거가 세계에 없었다 — 다시 모인 칸에는 넷이
+         * 다 있고, 가닥 기록은 사람 이름을 한 번도 안 말한다. §식별 고리 참조.
+         */
         report: [
-          { text: '기록을 확인한 것은 ' }, { blank: 0 }, { text: ' 있던 자리였다. ' },
-          { blank: 1 }, { text: ' 남아 있었고, ' }, { blank: 2 }, { text: ' 가리켰다.' },
+          { text: '기록에 ' }, { blank: 1 }, { text: ' 남아 있었고, ' },
+          { blank: 2 }, { text: ' 가리켰다. ' },
+          { text: carriedLead(innocents[(i + 1) % innocents.length]!) }, { blank: 0 }, { text: '.' },
         ],
         epilogueOrder: 2 + i,
       })),

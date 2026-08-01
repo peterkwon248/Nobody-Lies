@@ -468,6 +468,92 @@ export function verify(c: Case): VerifyResult {
     })
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  6.8 페어플레이 — 인물 공란의 답이 **집어낼 수 있는가** (2026-08-01 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ★ 왜 있나 ★ 생성 사건의 **지목 아닌 인물 공란 48개가 전부 찍기였다**(12건 실측).
+   * 답이 `innocents[0]`·`innocents[i % 4]` 라는 **배열 첨자**였고, 무고한 넷은 산문에서
+   * 완전히 대칭이라(이름이 나오는 자리가 조사 제목뿐) 누구를 골라도 근거가 같았다.
+   * 그런데 **게이트는 내내 초록**이었다 — 위 §5 는 **장 전체의 조합 수 ≥ 30**(찍기
+   * 난이도)만 보고, §6.5 는 `discovered` 공란만 보며, 아래 §시각·장소 검사는
+   * 「그 낱말이 어휘에 있나」까지다. **공란 하나가 근거 없이 정해져도 곱이 크면 통과한다.**
+   *
+   * 이것이 페어플레이의 핵심 조항이다 — Knox 8 · Van Dine 1·15,
+   * *"플레이어가 답에 도달할 수단을 손에 쥐고 있어야 한다"*.
+   * `MEMORY.md` §절대 규칙이 **「말하지 마라」쪽만** 성문화해서 반대쪽이 비어 있었다.
+   *
+   * ## 무엇을 「집어낼 수 있다」로 보나 — 두 갈래
+   *
+   * ```
+   * ⓐ 서술문이 그 사람만 주는 조사 결과를 말한다   생성 사건의 §식별 고리
+   *    「소지품에서 개인적인 편지가 나온 것은 [인물]」 → 소지품 검사가 1:1 로 짚는다
+   * ⓑ 그 사람의 이름이 산문 「내용」에 나온다        손저작의 방식
+   *    산장: 한유빈의 진술이 일찍 온 사연을 말한다
+   * ```
+   *
+   * ⚠ **조사 「제목」은 안 친다.** `소지품 검사 · 남주원` 은 다섯 명 전원이 똑같이
+   * 갖는 목록이라 아무도 구별하지 않는다. 바로 그것 때문에 48개가 통과하고 있었다.
+   *
+   * ⛔ **오류가 아니라 경고다.** 손저작 사건은 논리 골격을 먼저 세우고 산문을 나중에
+   * 입힌다(`PROSE-BRIEF` 왕복). 오류로 걸면 **산문 이전 단계가 전부 빨개져** 검사가
+   * 거짓말이 된다 — §9-3e·§9-10 을 경고로 내린 것과 같은 판단이다.
+   */
+  {
+    const ko = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+    /** 그 제목을 주는 사람이 유일하면 그 사람. 둘 이상이면 무효(`null`) */
+    const soleOwner = new Map<string, string | null>()
+    for (const a of c.actions) {
+      const pid = a.target?.kind === 'person' ? a.target.id : null
+      const title = ko(a.result?.title)
+      if (!pid || !title) continue
+      soleOwner.set(title, soleOwner.has(title) ? null : pid)
+    }
+    /**
+     * 근거로 칠 산문. **플레이어가 「증거로 읽는 것」만** 담는다.
+     *
+     * ⛔ **조사 제목(라벨)은 뺀다** — `소지품 검사 · 남주원` 은 다섯 명 전원이 똑같이
+     * 갖는 목록이라 아무도 구별하지 않는다. 48개가 통과하던 이유가 이것이다.
+     *
+     * ⛔ **장 전환 서사(`reveals[].narration`)도 뺀다** — 심어서 확인하다 잡았다.
+     * *"기록에 대한 정리가 끝나자, 남주원이 한마디를 보탰다"* 가 이름을 말하지만
+     * **누가 말하는지를 알릴 뿐** 그 사람을 집는 근거가 아니다. 이 한 줄 때문에
+     * 고치기 전 상태를 심었는데도 검사가 통과했다. **지문은 증거가 아니다.**
+     */
+    const bodies: string[] = []
+    for (const p of c.people) for (const para of p.statement?.paragraphs ?? []) bodies.push(ko(para))
+    for (const e of c.evidence) bodies.push(`${ko(e.description)} ${ko(e.record)}`)
+    for (const a of c.actions) bodies.push(ko(a.result?.body))
+    bodies.push(ko(c.prologue))
+
+    for (const ch of c.chapters) {
+      for (const b of ch.blanks) {
+        if (b.isAccusation) continue           // 지목은 §1 유일성이 받친다
+        if (b.candidates !== 'closed') continue
+        if (!c.people.some((p) => p.id === b.answer)) continue   // 인물 공란만
+        const name = ko(c.people.find((p) => p.id === b.answer)?.name)
+        const report = (ch.report ?? []).map((r) => ('text' in r ? r.text : '')).join('')
+
+        /**
+         * ⚠ **성을 뗀 꼴로도 찾는다** — 한국어 진술은 「한유빈」을 「유빈 언니」로
+         * 부른다. 처음 판은 성을 붙인 이름만 봐서 **손으로 쓴 산장이 다섯 줄 빨개졌다**
+         * (한유빈은 실제로 도출된다 — 다른 진술이 일찍 온 사연을 말한다).
+         * `voice-check` 의 §남을 불렀나가 같은 이유로 뒤 두 글자를 쓴다.
+         */
+        const short = name.length > 2 ? name.slice(-2) : name
+        const byObject = [...soleOwner].some(([t, pid]) => pid === b.answer && report.includes(t))
+        const byName = !!short && bodies.some((t) => t.includes(short))
+        if (!byObject && !byName)
+          warnings.push(
+            `${ch.order}장 '${b.label}' 공란의 답(${name || b.answer})을 집어낼 근거가 없다 — ` +
+              `서술문이 그 사람만 주는 조사 결과를 말하지 않고, 산문 어디에도 이름이 없다. ` +
+              `다른 후보와 갈리지 않으므로 플레이어에게는 찍기다`,
+          )
+      }
+    }
+  }
+
   const chapterReveals = c.reveals.filter((r) => r.trigger.on === 'chapterComplete')
   const narrated = chapterReveals.filter((r) => r.narration).length
   if (narrated > 0 && narrated < chapterReveals.length)
