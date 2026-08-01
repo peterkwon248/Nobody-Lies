@@ -11,7 +11,8 @@
     "prop-check": "tsx src/prop-check.ts",
     "plan-check": "tsx src/plan-check.ts",
     "gen-baseline": "tsx src/gen-baseline.ts",
-    "proof-check": "tsx src/proof-check.ts"
+    "proof-check": "tsx src/proof-check.ts",
+    "matrix": "tsx src/matrix.ts"
   },
   "devDependencies": {
     "@types/d3-hierarchy": "^3.1.7",
