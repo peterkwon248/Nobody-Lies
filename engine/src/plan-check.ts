@@ -18,6 +18,7 @@
  * 같은 길인 `orchestrate.run` 으로 간다.
  */
 import { run } from './orchestrate.js'
+import { FLOOR_W } from './generate.js'
 
 type R = { x: number; y: number; w: number; h: number }
 
@@ -48,13 +49,13 @@ const sceneExt = new Map<number, number>()
  * 가른다」로 썼더니 100건 최소 폭이 228 → **114** 로 떨어져 **이름이 한 글자씩
  * 세로로 깨졌다.** 딸린 방을 늘리면 그 자리로 다시 간다 — 그래서 여기서 센다.
  *
- * ⚠ **바닥은 `MIN_W`(150)가 아니라 130 이다** (2026-07-31 실측으로 확인).
- * `bar` 타일링의 기본 배분이 `[190, 150, 130, 130]` 이고 `jitter` 의 바닥은
- * `Math.min(min, 기본배분 최소)` 라 **150을 요구해도 130으로 내려앉는다.**
- * 그래서 지금도 300건 중 296건에 150 미만 방이 있다 — 결함이 아니라 **실제 계약이
- * 130** 이라는 뜻이다. 여기가 더 내려가는지를 본다.
+ * ⚠ **바닥은 요구치(`WANT_W` 150)가 아니라 `FLOOR_W`(130) 다.** 이유는 그쪽 선언에
+ * 적혀 있다 — `jitter` 의 바닥이 `Math.min(요구치, 기본배분 최소)` 라 `bar` 에서
+ * 130으로 내려앉는다. 여기가 **더** 내려가는지를 본다.
+ *
+ * ★ **값을 손으로 들지 않고 가져온다** ★ (2026-08-01) 전에는 이 파일이 `130` 을
+ * 따로 적어뒀다 — 같은 계약이 두 파일에 각자 살면 한쪽만 고쳐도 아무도 모른다.
  */
-const FLOOR_W = 130
 let minW = Number.POSITIVE_INFINITY
 let minH = Number.POSITIVE_INFINITY
 let minWAt = ''
@@ -125,7 +126,7 @@ console.log(`
     봉투 크기      ${envSizes.size}종
     현장 크기      ${sceneSizes.size}종
     방 수          ${counts}
-    가장 좁은 방    폭 ${minW} · 높이 ${minH}   (실제 바닥 폭 ${FLOOR_W} · MIN_H 62)
+    가장 좁은 방    폭 ${minW} · 높이 ${minH}   (계약 폭 ${FLOOR_W} · 요구치 WANT_W 150)
                    바닥 미만 ${underFloor}개  ${underFloor ? `← ★ 이름이 세로로 깨진다 · 최악 ${minWAt}` : '← 없다. 바닥을 지킨다'}
 
   현장 자리 (②의 계측)

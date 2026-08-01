@@ -36,6 +36,23 @@ import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './type
 /** 용의자 수. ★ 고정이다 ★ 손잡이가 아니다 — `SYSTEM-DECISIONS.md` §3 */
 const SUSPECTS = 5
 
+/**
+ * ★ 평면도 방 폭의 **진짜 바닥** ★ (2026-08-01)
+ *
+ * 방 이름은 좌상단에 **가로로** 그려지므로 폭이 좁으면 한 글자씩 세로로 깨진다.
+ * 07-29에 딸린 방 규칙을 잘못 써서 100건 최소 폭이 228 → **114** 로 떨어져 실제로 깨졌다.
+ *
+ * ⚠ **이 값은 `WANT_W`(150)가 아니다.** `bar` 타일링의 기본 가로 배분이
+ * `[190, 150, 130, 130]` 이고 `jitter` 의 바닥이 `Math.min(요구치, 기본배분 최소)` 라
+ * **150을 요구해도 130으로 내려앉는다.** 그래서 150을 「최소」라 부르던 시절
+ * **300건 중 296건이 그 「최소」를 어기고 있었다** — 어기는 게 정상이었다는 뜻이다.
+ * 130에서 이름이 한 줄로 들어가는 것은 화면에서 확인했다. **여기가 실제 계약이다.**
+ *
+ * `plan-check` 가 이 값을 **가져다 쓴다** — 전에는 그쪽이 130을 손으로 들고 있어서
+ * 같은 계약이 두 파일에 각자 적혀 있었다.
+ */
+export const FLOOR_W = 130
+
 /*
  * ⛔ `EMPTY_SPOTS = 14` 가 여기 있었다 — **선언만 되고 아무도 안 읽었다**
  * (2026-07-29에 지웠다). 근거 주석이 *"예산이 7~8로 나오므로 24개가 필요하다"*
@@ -937,8 +954,20 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
    * 12%→8%→4%→0 으로 낮춘다. **난수는 먼저 뽑아둔다** — 진폭을 바꿔도 `rL()`
    * 호출 수가 같아야 뒤따르는 추첨이 안 밀린다(트릭 분포가 흔들린 그 부류다).
    */
-  const MIN_W = 150   // 방 이름이 한 줄로 들어가는 폭 (실측: 「지하실」이 29px · 도면 0.988배)
-  const MIN_H = 62
+  /**
+   * ⚠ **요구치지 보장치가 아니다** (2026-08-01 이름을 고쳤다).
+   *
+   * 전에는 `WANT_W = 150` 이었는데 **150 미만 방이 300건 중 296건**이었다.
+   * `jitter` 의 바닥이 `Math.min(min, 기본배분 최소)` 라 `bar`(`[190,150,130,130]`)
+   * 에서는 **요구해도 130으로 내려앉기** 때문이다. 즉 `WANT_W` 라는 이름과
+   * *"방 이름이 한 줄로 들어가는 폭"* 이라는 주석이 **둘 다 거짓**이었다 —
+   * 지켜지지도 않고, 130에서도 이름은 한 줄로 들어간다(화면 실측).
+   *
+   * 진짜 계약은 아래 `FLOOR_W` 다. 이것은 「이만큼이면 좋겠다」이고,
+   * 못 지키면 `jitter` 가 **원래보다 나빠지지 않기**로 물러선다.
+   */
+  const WANT_W = 150   // 넉넉한 폭 (실측: 「지하실」이 29px · 도면 0.988배)
+  const WANT_H = 62
   const jitter = (parts: number[], span: number, min: number): number[] => {
     const d = parts.map(() => rL() * 2 - 1)
     /** `rowsOf`/`colsOf` 와 **같은 셈**이어야 한다 — 마지막 칸이 나머지를 흡수한다 */
@@ -999,27 +1028,27 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
   const TILINGS: (() => Tiling)[] = [
     () => {
       const env = jitEnv(532, 485, 70, 60)
-      const [left, right] = colsOf(env, jitter([260, 272], env.w, MIN_W))
-      return { name: 'wings', env, slots: [left!, ...rowsOf(right!, jitter([170, 190, 125], right!.h, MIN_H))] }
+      const [left, right] = colsOf(env, jitter([260, 272], env.w, WANT_W))
+      return { name: 'wings', env, slots: [left!, ...rowsOf(right!, jitter([170, 190, 125], right!.h, WANT_H))] }
     },
     () => {
       const env = jitEnv(600, 260, 70, 170)
-      return { name: 'bar', env, slots: colsOf(env, jitter([190, 150, 130, 130], env.w, MIN_W)) }
+      return { name: 'bar', env, slots: colsOf(env, jitter([190, 150, 130, 130], env.w, WANT_W)) }
     },
     () => {
       const env = jitEnv(520, 470, 70, 62)
-      const [top, bottom] = rowsOf(env, jitter([200, 270], env.h, MIN_H))
+      const [top, bottom] = rowsOf(env, jitter([200, 270], env.h, WANT_H))
       return {
         name: 'stack', env,
-        slots: [...colsOf(top!, jitter([300, 220], top!.w, MIN_W)), ...colsOf(bottom!, jitter([200, 320], bottom!.w, MIN_W))],
+        slots: [...colsOf(top!, jitter([300, 220], top!.w, WANT_W)), ...colsOf(bottom!, jitter([200, 320], bottom!.w, WANT_W))],
       }
     },
     () => {
       const env = jitEnv(545, 485, 70, 60)
-      const [top, bottom] = rowsOf(env, jitter([190, 295], env.h, MIN_H))
+      const [top, bottom] = rowsOf(env, jitter([190, 295], env.h, WANT_H))
       return {
         name: 'pinwheel', env,
-        slots: [...colsOf(top!, jitter([330, 215], top!.w, MIN_W)), ...colsOf(bottom!, jitter([215, 330], bottom!.w, MIN_W))],
+        slots: [...colsOf(top!, jitter([330, 215], top!.w, WANT_W)), ...colsOf(bottom!, jitter([215, 330], bottom!.w, WANT_W))],
       }
     },
   ]
@@ -1286,8 +1315,8 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
           const side = (s + sideOff) % 4                 // 0=왼 1=오른 2=위 3=아래
           const horiz = side < 2
           const span = horiz ? r0.w : r0.h
-          // 남는 쪽이 이름 한 줄을 지키고(MIN_W·MIN_H), 문 자리도 남아야 한다
-          const cut = Math.min(Math.round(span * 0.34), span - (horiz ? MIN_W : MIN_H))
+          // 남는 쪽이 이름 한 줄을 지키고(WANT_W·WANT_H), 문 자리도 남아야 한다
+          const cut = Math.min(Math.round(span * 0.34), span - (horiz ? WANT_W : WANT_H))
           if (cut < 44) continue                          // 이보다 얕으면 눈에 안 띈다
           cell.set(
             side === 0 ? { ...r0, x: r0.x + cut, w: r0.w - cut }
