@@ -18,6 +18,7 @@ import { load } from 'js-yaml'
 import { parseCase } from './schema.js'
 import { generateCase } from './generate.js'
 import { proveBlanks, type BlankProof } from './proof.js'
+import { isDeclaredPremise } from './clues.js'
 import type { Case } from './types.js'
 
 const n = Number(process.argv[2] ?? 0)
@@ -36,6 +37,9 @@ if (n > 0) {
 let total = 0
 let proved = 0
 let free = 0
+/** 비용 0 을 두 갈래로 가른다 — 전에는 이 판단을 사람에게 미루고 있었다 */
+let premise = 0
+const leaks: BlankProof[] = []
 const byLabel = new Map<string, { n: number; ok: number }>()
 const ruleHits = new Map<string, number>()
 const naked: BlankProof[] = []
@@ -49,7 +53,11 @@ for (const { c } of cases) {
       proved++
       b.ok++
       for (const s of p.steps) ruleHits.set(s.rule, (ruleHits.get(s.rule) ?? 0) + 1)
-      if (p.cost === 0) free++
+      if (p.cost === 0) {
+        free++
+        if (isDeclaredPremise(p)) premise++
+        else leaks.push(p)
+      }
     } else naked.push(p)
     byLabel.set(p.label, b)
   }
@@ -60,7 +68,13 @@ const pct = (a: number, b: number) => (b ? `${((a / b) * 100).toFixed(0)}%` : '�
 console.log(`\n  사건 ${cases.length}건 · 공란 ${total}개\n`)
 console.log(`  증명됨        ${String(proved).padStart(4)} / ${total}   ${pct(proved, total)}`)
 console.log(`  증명 없음     ${String(total - proved).padStart(4)}        ← 찍기이거나, 아직 규칙이 없는 자리`)
-console.log(`  비용 0        ${String(free).padStart(4)}        ← 조사 없이 풀린다. 전제가 아니면 누설이다\n`)
+console.log(`  비용 0        ${String(free).padStart(4)}        ← 조사 없이 풀린다`)
+console.log(`    · 선언된 전제 ${String(premise).padStart(4)}      발견 시각 · 현장. 정당하다`)
+console.log(`    · 누설       ${String(leaks.length).padStart(4)}      ← 0 이 아니면 결함이다\n`)
+for (const p of leaks.slice(0, 8))
+  console.log(`      ⛔ ${p.chapter}장 '${p.label}' → ${p.answerLabel}  [${p.steps.map((s) => s.rule).join('·') || '걸음 없음'}]`)
+if (leaks.length > 8) console.log(`      … 그 밖 ${leaks.length - 8}개`)
+if (leaks.length) console.log('')
 
 console.log('  ── 라벨별 ──')
 for (const [label, v] of [...byLabel.entries()].sort((a, b) => b[1].n - a[1].n))

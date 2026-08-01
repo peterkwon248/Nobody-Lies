@@ -9,9 +9,15 @@
  *
  * ```
  * ① 생성 N건에 약한 공란이 0 인가        ← 회귀 감시. 이것이 본체다
- * ② 이동을 심어서 실제로 무나             ← 없으면 ①이 「이동이 죽어도 초록」이다
- * ③ 검증기가 그것을 실제로 말하나          ← 08-02 §5 교체와 한 벌. 배선이 무방비였다
+ * ② 심어서 실제로 무나                   ← 없으면 ①이 「검사가 죽어도 초록」이다
+ *     이동 둘(M1·M2)  → guess 갈래       심고 나서 루프가 닫는 것까지 본다
+ *     누설 하나(L1)   → free  갈래       루프가 못 고치는 부류라 탐지만 본다
+ * ③ 검증기가 그것을 실제로 말하나          ← §5 교체와 한 벌. 배선이 무방비였다
  * ```
+ *
+ * ★ **종료 조건의 두 항에 각각 심는다** ★ `unique ∧ (cost > 0 ∨ 전제)` 에서 M1·M2 는
+ * 앞항(`unique`)을 치고 **L1 이 뒷항을 친다.** L1 이 붙기 전에는 뒷항을 가르는
+ * `isDeclaredPremise` 가 **항상 참을 돌려줘도 초록**이었다(실측이 늘 0 이라서다).
  *
  * ★ **③이 왜 붙었나** ★ ①②는 `weakBlanks` 를 **직접** 부른다. 그래서 `verifier` §5-b 의
  * 배선(`weakBlanks` → `warnings`)을 통째로 지워도 **이 검사는 초록**이다. 08-02에 §5 를
@@ -83,7 +89,7 @@ function plant(name: string, seed: number, breakIt: (c: Case) => void) {
   console.log(`    ✓ ${name} — 심어서 ${after.length}개가 물렸고 루프가 전부 닫았다`)
 }
 
-console.log(`\n  ── 이동을 심어서 확인 (${MOVE_IDS.length}개) ──`)
+console.log(`\n  ── 심어서 확인 (이동 ${MOVE_IDS.length} · 누설 1) ──`)
 
 plant('M1 발견 시각 전제', 1, (c) => {
   // 08-01 이전 상태 — 브리핑이 발견 시각을 한 글자도 안 말했다
@@ -94,6 +100,39 @@ plant('M2 기록이 가리킨다', 2, (c) => {
   // 08-01 이전 상태 — 가닥 기록이 *"기록에 그대로 남아 있었다"* 였다
   for (const e of c.evidence) if (e.record?.includes('적힌 줄이 남아 있었다')) e.record = '기록에 그대로 남아 있었다.'
 })
+
+/**
+ * ★ **누설 갈래에도 심는다** ★ (2026-08-01 밤)
+ *
+ * 위 둘은 **`guess` 만 만든다.** 종료 조건의 나머지 절반(`cost > 0`)은 **심긴 적이
+ * 없었고**, 실측이 늘 0 이라 `isDeclaredPremise` 가 **항상 참을 돌려줘도 초록**이었다.
+ * 「선언된 전제」와 「누설」을 가르는 것이 그 함수 하나라 **여기가 죽으면 종료 조건이
+ * 반쪽이 된다.**
+ *
+ * ⛳ **루프가 못 고치는 부류다** — 이동 둘은 *단서를 깐다*. 누설은 **조사 비용이 0 인
+ * 것**이라 문안을 더 써서 고칠 수 없다. 그래서 `plant()` 와 달리 **닫히는지는 안 묻고
+ * 물리는지만** 본다. 실제로 이 상태가 나오면 `closeClues` 가 못 닫고 ①이 크게 실패한다 —
+ * **조용한 통과보다 낫다**(R1 역방향 이동을 안 지은 것과 같은 판단).
+ */
+{
+  const name = 'L1 무료 관측 (누설)'
+  const c = generateCase(4) as Case
+  if (weakBlanks(c).length) {
+    failed = true
+    console.log(`    ✗ ${name} — 심기 전부터 약하다. 이 씨앗으로는 못 잰다`)
+  } else {
+    for (const a of c.actions) a.cost = 0 // 조사가 전부 공짜 = 조사할 이유가 없다
+    const after = weakBlanks(c)
+    const free = after.filter((w) => w.kind === 'free')
+    if (!free.length) {
+      failed = true
+      console.log(
+        `    ✗ ${name} — 심었는데 'free' 가 0 (약한 공란 ${after.length}). ` +
+          `**전제와 누설을 안 가르고 있다**`,
+      )
+    } else console.log(`    ✓ ${name} — 심어서 누설 ${free.length}개가 물렸다 (전제는 안 물린다)`)
+  }
+}
 
 // ── ③ 검증기가 그 명제를 실제로 말하나 ────────────────────────
 /**

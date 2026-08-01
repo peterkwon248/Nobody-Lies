@@ -26,7 +26,7 @@
  * **회귀를 막는 데** 있다(08-01 부류가 일곱 번 재발했고 매번 게이트가 초록이었다).
  */
 import type { Case } from './types.js'
-import { proveBlanks } from './proof.js'
+import { proveBlanks, type BlankProof } from './proof.js'
 
 const ko = (x: unknown): string =>
   typeof x === 'string' ? x : ((x as { ko?: string } | undefined)?.ko ?? '')
@@ -39,6 +39,24 @@ const ko = (x: unknown): string =>
  * 둘**이다(발견 시각 · 현장). 뭉뚱그려 물면 **검사가 거짓말이 된다.**
  */
 const PREMISE = new Set(['R5 현장 전제', 'R7 발견 시각 전제'])
+
+/**
+ * **비용 0 인데 정당한가** — 걸음이 **전부** 선언된 전제인가.
+ *
+ * 「조사 없이 풀린다」는 두 가지가 겹쳐 있다. **가르는 것이 이 함수 하나다:**
+ *
+ * ```
+ * 전제라서 0    발견 시각 · 현장 — 사건이 열릴 때 이미 적혀 있다. 정당하다
+ * 누설이라서 0   그 밖 전부 — 조사할 이유가 사라진다. 결함이다
+ * ```
+ *
+ * `weakBlanks`(종료 조건)와 `proof-check`(계측)이 **같은 함수를 부른다** — 예전에는
+ * 계측 쪽이 *"전제가 아니면 누설이다"* 라고 **판단을 사람에게 미루고** 있어서
+ * 「손저작 비용 0 셋을 아직 안 갈랐다」가 블로커로 남아 있었다(2026-08-01에 닫음).
+ */
+export function isDeclaredPremise(p: BlankProof): boolean {
+  return p.steps.length > 0 && p.steps.every((s) => PREMISE.has(s.rule))
+}
 
 /** 최대 회차. 이동이 서로를 열어줄 수 있으므로 한 바퀴로 안 끝날 수 있다 */
 const MAX_ROUNDS = 4
@@ -75,7 +93,7 @@ export function weakBlanks(c: Case): Weakness[] {
       continue
     }
     if (p.cost > 0) continue
-    if (p.steps.length > 0 && p.steps.every((s) => PREMISE.has(s.rule))) continue
+    if (isDeclaredPremise(p)) continue
     const by = p.steps.map((s) => s.rule).join('·') || '걸음 없음'
     out.push({ ...at, kind: 'free', why: `조사 없이 풀린다 (${by})` })
   }
