@@ -8,7 +8,7 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run tmpl-check && npm run brief-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "lint": "biome lint",
     "prop-check": "npm run prop-check -w engine",
@@ -26,6 +26,7 @@
     "plan-check": "npm run plan-check -w engine --",
     "lock-fix": "node scripts/lock-peer-restore.mjs",
     "proof-check": "npm run proof-check -w engine --",
+    "clue-check": "npm run clue-check -w engine -- 40",
     "matrix": "npm run matrix -w engine",
     "matrix-check": "npm run matrix -w engine -- --brief"
   },

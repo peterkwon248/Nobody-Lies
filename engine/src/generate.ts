@@ -1,4 +1,6 @@
 import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './types.js'
+// 되먹임 3단째. `clues.ts` → `proof.ts` → `types.js` 로만 가므로 순환이 없다
+import { closeClues } from './clues.js'
 
 /**
  * 작가 — 논리 골격 생성기.
@@ -596,9 +598,31 @@ export type GenerateOptions = {
  *
  * ⚠ **아직 그 입구는 없다.** 지금은 가르기만 했다 — `buildWorld` 의 반환이
  * 곧 그 입구의 계약이고, 43개 필드가 그 목록이다.
+ *
+ * ─────────────────────────────────────────────────────────────
+ *  ★ 3단째 — 되먹임 ★ (2026-08-02 · `clues.ts`)
+ * ─────────────────────────────────────────────────────────────
+ *
+ * **생성이 거꾸로 돌던 것을 여기서 뒤집는다.** 답이 `innocents[0]`·`WIN[0]` 같은
+ * **배열 첨자**로 정해지고 **그 답에 도달할 단서를 깔았는지는 아무도 안 물었다** —
+ * 08-01에 인물 48개·시각 60개가 그렇게 찍기였고 **게이트는 내내 초록이었다.**
+ *
+ * ```
+ * 전    buildWorld → buildGameLayer → (끝)              검사는 전부 사후
+ * 후    buildWorld → buildGameLayer → closeClues        증명이 생성 경로 안으로
+ * ```
+ *
+ * ⚠ **평소에 아무 일도 안 하는 것이 정상이다.** 착수 시점 실측이 **320/320**
+ * 이었으므로 깔 것이 남아 있지 않다. 값은 **회귀를 막는 데** 있다.
+ *
+ * ⛔ **못 닫아도 throw 하지 않는다** — 이 함수를 브라우저의 `Generator.jsx` 가
+ * 부른다. 던지면 **유저 화면이 통째로 빈다**(2026-07-26 `StatusIcon` 선례).
+ * 무는 것은 게이트 `clue-check` 쪽이다.
  */
 export function generateCase(seed: number, palette?: Palette, opts?: GenerateOptions): Case {
-  return buildGameLayer(buildWorld(seed, palette, opts))
+  const c = buildGameLayer(buildWorld(seed, palette, opts))
+  closeClues(c)
+  return c
 }
 
 /**
