@@ -369,10 +369,16 @@ const res = (title: string, body: string) => ({ title: { ko: title }, body: { ko
  * 다섯 아키타입. **계약을 코드가 채운다** —
  * `ARCHETYPES` 가 요구하는 exit·인상 종류를 여기서 만족시킨다.
  * `identity_swap` 은 빠져 있다(용의자 목록이 거짓이 되면 공란 체계가 무너진다).
+ *
+ * ⛔ **범인을 인자로 받지 않는다 — 다시 붙이지 마라** (2026-08-01).
+ * 아키타입은 `t0`·`t1`·`t2` 로 **자리의 뜻**(모임 · 갈림 · 다시모임)만 선언하고
+ * 범인 id 는 아래 호출부가 붙인다(§트릭을 먼저 고른다 의 주석 참조).
+ * `(culprit: PersonId)` 가 타입에도 다섯 아키타입에도 선언돼 있었는데
+ * **한 곳도 안 읽었다** — 07-31에 biome 이 잡아놓고 경고로만 남아 있던 죽은 배선이다.
  */
-const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
+const TRICKS: Record<string, () => TrickBuild> = {
   // 그 시각 그 자리에 없었다 — 범인은 현장에 있었고 홀에 있었다고 말한다
-  alibi_fabrication: (culprit) => ({
+  alibi_fabrication: () => ({
     types: ['alibi_fabrication'],
     illusion: {
       id: 'il_absent', kind: 'absence', impression: '범인은 그 시각 현장에 없었다',
@@ -398,7 +404,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
   }),
 
   // 스스로 목숨을 끊었다 — 남겨진 것이 있고, 나간 자리가 있다
-  staged_suicide: (culprit) => ({
+  staged_suicide: () => ({
     types: ['staged_suicide'],
     illusion: {
       id: 'il_own_hand', kind: 'death', impression: '스스로 목숨을 끊었다',
@@ -426,7 +432,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
   }),
 
   // 아무도 드나들 수 없었다 — 닫힌 것처럼 보이는 자리에 틈이 있다
-  locked_room: (culprit) => ({
+  locked_room: () => ({
     types: ['locked_room'],
     illusion: {
       id: 'il_sealed', kind: 'absence', impression: '그 방에는 아무도 드나들 수 없었다',
@@ -454,7 +460,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
   }),
 
   // 발견된 곳에서 죽었다 — 옮겨진 자국이 남는다
-  body_moved: (culprit) => ({
+  body_moved: () => ({
     types: ['body_moved'],
     illusion: {
       id: 'il_here', kind: 'place', impression: '발견된 자리에서 그대로 죽었다',
@@ -487,7 +493,7 @@ const TRICKS: Record<string, (culprit: PersonId) => TrickBuild> = {
   // 범인이 있을 때 벌어졌다 — 실은 미리 놓여 있었다.
   // ★ 이것만 격자가 다르다 ★ 범인은 전날 밤에 현장에 들어갔고 사망 구간에는
   // 부지 안 다른 곳에 있었다. 그리고 부지에 있었다는 사실 자체를 숨긴다.
-  delayed_mechanism: (culprit) => ({
+  delayed_mechanism: () => ({
     types: ['delayed_mechanism'],
     illusion: {
       id: 'il_then', kind: 'time', impression: '숨을 거둔 그 시각에 누군가 그 자리에 있었다',
@@ -710,7 +716,7 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
    * 그 횟수는 팔레트 배열 길이에 달려 있어서, **어휘를 바꿨을 뿐인데 트릭
    * 분포가 바뀐다.** 팔레트는 논리에 영향을 주면 안 된다.
    */
-  const tRaw = TRICKS[TRICK_KEYS[Math.floor(rng(seed ^ 0x5bf03635)() * TRICK_KEYS.length)]](culprit)
+  const tRaw = TRICKS[TRICK_KEYS[Math.floor(rng(seed ^ 0x5bf03635)() * TRICK_KEYS.length)]]()
   /**
    * ★ 아키타입의 3칸 선언을 **축 전체로 늘린다** ★ (2026-07-30)
    *
