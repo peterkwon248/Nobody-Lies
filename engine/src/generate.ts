@@ -1922,14 +1922,39 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
     t, tool, usedKeys,
   } = w
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  기록 문장의 단일 출처 (2026-07-31 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ★ **같은 문장을 두 곳이 따로 들고 있었다** ★ 전수로 대조해서 찾았다:
+   *
+   * ```
+   * e_mutual.record  ≡  a_alibi 결과문      「네 사람이 말한 …자리가 서로 맞물렸다」
+   * e_tool.record    ≡  terms[도구].note    「바닥에 떨어져 있었다」
+   * ```
+   *
+   * 두 곳에 **보이는 것**은 맞다 — 물증 카드와 조사 기록/확보 단어는 다른 화면이다.
+   * 문제는 **두 곳이 각자 손으로 쓰고 있었다**는 것이고, 한쪽만 고치면 갈라진다.
+   * 이 저장소가 한 세션에 여섯 번 물린 **「한 값이 여러 곳에 있는데 한 곳만 고쳤다」**
+   * 부류다(2026-07-30). 보이는 자리는 그대로 두고 **출처만 하나로** 만든다.
+   *
+   * ⚠ **`a_room` 과 `a_body` 는 합치지 않았다.** 문안이 서로 다르고(조사는
+   * *"물건 하나가 떨어져 있었다"*, 카드는 *"바닥에 떨어져 있었다"*) **일부러 다르게
+   * 쓴 것과 낡아서 갈라진 것을 가를 수 없었다** — `MEMORY.md` §이식 규칙 6 이
+   * *"안 서면 묻는다"* 고 한 자리다. 같은 사실을 두 문장이 말한다는 것만 적어둔다.
+   */
+  const REC_TOOL = '바닥에 떨어져 있었다.'
+  const REC_MUTUAL = `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.`
+
   const baseEvidence: Ev[] = [
-    { id: 'e_tool', description: tool, foundAt: places.room, record: '바닥에 떨어져 있었다.', yieldsTerms: [tool] },
+    { id: 'e_tool', description: tool, foundAt: places.room, record: REC_TOOL, yieldsTerms: [tool] },
     // 핵심 사실은 획득 경로가 둘 이상이어야 한다 — 비평가가 강제한다
     { id: 'e_toolmark', description: '도구가 남긴 자국', record: '같은 폭의 자국이 남아 있었다.', yieldsTerms: [tool] },
     { id: 'e_alias', description: `'${alias}' 라는 이름의 기록`, yieldsTerms: [alias] },
     { id: 'e_alias2', description: `'${alias}' 가 적힌 두 번째 기록`, yieldsTerms: [alias] },
     { id: 'e_motive', description: '금전 기록', yieldsTerms: [motive] },
-    { id: 'e_mutual', description: '넷의 상호 보증', record: `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.` },
+    { id: 'e_mutual', description: '넷의 상호 보증', record: REC_MUTUAL },
     ...HERRING.map((h, i) => ({ id: `e_herring${i + 1}`, description: h.ev, record: h.rec })),
   ]
 
@@ -1982,7 +2007,7 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
     { id: 'a_alibi', label: `알리바이 대조 · ${names[ids.indexOf(innocents[0])]} ↔ ${names[ids.indexOf(innocents[1])]}`,
       cost: 1, gives: ['e_mutual'], salience: 0.45, yield: 'exclusion',
       verb: 'alibi', pair: [innocents[0], innocents[1]],
-      result: res('맞물리는 자리', `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.`) },
+      result: res('맞물리는 자리', REC_MUTUAL) },
   ]
 
   /**
@@ -2676,7 +2701,7 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
      * 없으면 `discovered` 공란의 후보가 이전 사건의 단어로 남는다(2026-07-29 확인).
      */
     terms: [
-      { word: tool, source: { ko: `${places.room} 수색 · 시신 검사` }, note: { ko: '바닥에 떨어져 있었다.' } },
+      { word: tool, source: { ko: `${places.room} 수색 · 시신 검사` }, note: { ko: REC_TOOL } },
       { word: alias, source: { ko: '서류 조사 · 장부 조사' }, note: { ko: '여러 기록에 반복 등장했다.' } },
       { word: motive, source: { ko: '서류 조사' }, note: { ko: '금전 기록에 남아 있었다.' } },
       ...strands.map((s) => s.term),
