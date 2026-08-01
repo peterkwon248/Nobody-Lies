@@ -173,10 +173,9 @@ const CELLS: Cell[] = [
     note: '물증은 답이 아니라 단서다' },
 
   // ── 진술 산문 — 명제 둘이 여기서 무검사다 ──
-  { channel: 'statement', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '9-10' },
-    missing: '★ 08-01 발견 ★ **확보 단어**만 본다. 「남의 사망 구간 위치를 말한다」(공짜 알리바이)는 STATEMENT-BRIEF 규칙 4가 금지하는데 **검사가 없다**. 16건 실측 0건이라 지금은 지켜지고 있다 — 회귀 감시가 없을 뿐',
-    note: '진술이 조사로 얻을 단어를 먼저 말하는가' },
+  { channel: 'statement', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-11. **진술이 남의 사망 구간 위치를 말한다**' },
+    note: '누설 두 갈래를 덮는다 — §9-10 확보 단어 선점 · §9-11 남의 사망 구간 위치(공짜 알리바이). ★ 08-01에 §9-11 을 지어 ◐ → ✓ 로 올렸다' },
   { channel: 'statement', invariant: 'contradiction', status: 'open',
     note: '★ 가장 큰 빈칸 ★ 「무고한 사람은 진실만 말한다」가 **격자에서만** 강제된다. 산문은 무검사다' },
   { channel: 'statement', invariant: 'derivable', status: 'open',

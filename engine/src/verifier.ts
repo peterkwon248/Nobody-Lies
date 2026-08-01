@@ -1530,6 +1530,68 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-11. **진술이 남의 사망 구간 위치를 말한다** — 공짜 알리바이 (2026-08-01 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ★ 왜 있나 ★ `STATEMENT-BRIEF` 규칙 4가 **이미 금지하고 있는데 검사가 없었다.**
+   *
+   * > *"남이 사망 구간에 어디 있었는지 말하지 마세요. 「그때 ○○씨도 홀에 있었다」는
+   * > 남의 알리바이를 공짜로 만들어 줍니다. **무고한 사람은 거짓말하지 않으므로 그 말은
+   * > 참으로 확정되고**, 플레이어가 조사로 알아낼 것이 하나 사라집니다."*
+   *
+   * 오늘 불변식 행렬을 만들며 `진술 × 누설` 이 ✓ 인데 **반만 덮인 것**을 찾았다 —
+   * §9-10 은 **확보 단어 누설만** 본다. 규칙이 서식에 적혀 있고 검사가 없는 것은
+   * 오늘 §6.8 을 만든 이유(인물 공란 48개)와 **정확히 같은 꼴**이다.
+   *
+   * ## 판정 — 한 문단에 셋이 같이 있으면
+   *
+   * ```
+   * 남의 이름  +  사망 구간 칸 이름  +  장소 이름     → 공짜 알리바이 의심
+   * ```
+   *
+   * ⚠ **경고다.** 판정이 **낱말 동시 출현**이라 정밀하지 않다 — §9-7(c)·§9-10 과 같은
+   * 등급이고 같은 이유다. 실제로 오늘 재보니 순진한 낱말 대조는 **20/20 거짓 양성**이
+   * 나왔다(「홀에서 걸어서 2분」 같은 거리 참조점 · 「무대 옷」 같은 합성명사).
+   * 이 검사는 조건이 셋이라 그보다 훨씬 좁지만, **오류로 걸 만큼 좁지는 않다.**
+   *
+   * ⚠ **성을 뗀 꼴로 찾는다** — 한국어 진술은 「한유빈」을 「유빈 언니」로 부른다.
+   * 성을 붙여서 찾다가 산장이 다섯 줄 빨개진 것이 오늘 §6.8 에서 있었다.
+   *
+   * ★ **16건(손저작 4 · 생성 12) 실측 0건이다.** 즉 지금은 지켜지고 있고, 이 검사는
+   * **회귀 감시**다 — 특히 산문 왕복에서 LLM 이 이 규칙을 어길 때가 진짜 자리다.
+   */
+  {
+    const ko9 = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+    const winLabels = c.slots.filter((s) => s.isWindow).map((s) => ko9(s.label)).filter(Boolean)
+    const locLabels = c.locations.map((l) => ko9(l.label)).filter(Boolean)
+    if (winLabels.length && locLabels.length) {
+      for (const p of c.people) {
+        const others = c.people
+          .filter((q) => q.id !== p.id)
+          .map((q) => ({ id: q.id, name: ko9(q.name) }))
+          .filter((q) => q.name)
+          .map((q) => ({ ...q, short: q.name.length > 2 ? q.name.slice(-2) : q.name }))
+        for (const para of p.statement?.paragraphs ?? []) {
+          const t = ko9(para)
+          if (!t) continue
+          const who = others.find((q) => t.includes(q.short))
+          if (!who) continue
+          const win = winLabels.find((L) => t.includes(L))
+          if (!win) continue
+          const loc = locLabels.find((L) => t.includes(L))
+          if (!loc) continue
+          warnings.push(
+            `'${ko9(p.name)}'의 진술이 '${who.name}'의 사망 구간 위치를 말한다 ` +
+              `(「${win}」+「${loc}」) — 무고한 사람의 말은 참으로 확정되므로 ` +
+              `**공짜 알리바이**가 된다 (STATEMENT-BRIEF 규칙 4)`,
+          )
+        }
+      }
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
