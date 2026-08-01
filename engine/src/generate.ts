@@ -1696,10 +1696,18 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
       const MOVE = [
         `${slotLabel[s]}에는 자리를 옮겨 ${placeLabel[loc!]}에 있었습니다.`,
         `${slotLabel[s]}에는 ${placeLabel[loc!]}에 가 있었습니다.`,
-        `${slotLabel[s]}에는 ${placeLabel[loc!]}으로 옮겼습니다.`.replace(/([가-힣])으로 옮겼습니다/, (_m, ch) =>
-          // 「…로/으로」는 받침으로 갈린다 — 자리 이름이 팔레트에서 오므로 여기서 센다
-          (ch.charCodeAt(0) - 0xac00) % 28 === 0 ? `${ch}로 옮겼습니다` : `${ch}으로 옮겼습니다`,
-        ),
+        `${slotLabel[s]}에는 ${placeLabel[loc!]}으로 옮겼습니다.`.replace(/([가-힣])으로 옮겼습니다/, (_m, ch) => {
+          /**
+           * 「…로/으로」는 받침으로 갈린다 — 자리 이름이 팔레트에서 오므로 여기서 센다.
+           *
+           * ⚠ **`ㄹ` 받침도 「로」다** (2026-08-01 수정). 받침 없음(`% 28 === 0`)만
+           * 보고 있어서 **「홀으로 옮겼습니다」**가 나왔다. 종성 인덱스에서 `ㄹ` 은 8이다.
+           * 앱 쪽 `particle()` 은 처음부터 맞았다(`App.jsx` — `jong(w) === 8`) —
+           * **같은 규칙이 두 벌이라 한쪽만 틀린** 그 부류다(2026-07-24에 14곳).
+           */
+          const jong = (ch.charCodeAt(0) - 0xac00) % 28
+          return jong === 0 || jong === 8 ? `${ch}로 옮겼습니다` : `${ch}으로 옮겼습니다`
+        }),
       ]
       const body = !loc
         ? `${slotLabel[s]}에는 그곳에 없었습니다.`
