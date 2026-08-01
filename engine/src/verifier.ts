@@ -558,60 +558,40 @@ export function verify(c: Case): VerifyResult {
    * ⛔ **오류가 아니라 경고다.** 손저작 사건은 논리 골격을 먼저 세우고 산문을 나중에
    * 입힌다(`PROSE-BRIEF` 왕복). 오류로 걸면 **산문 이전 단계가 전부 빨개져** 검사가
    * 거짓말이 된다 — §9-3e·§9-10 을 경고로 내린 것과 같은 판단이다.
+   *
+   * ─────────────────────────────────────────────────────────────
+   *  ⛔ **접혔다 — 위 §5-b 가 이것을 포함한다** (2026-08-01 밤)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * **이 검사는 `R1 ∨ R3` 를 더 느슨하게 다시 쓴 것이었다.** ⓐ는 `proof.ts` 의
+   * `R1 소지품 고리`, ⓑ는 `R3 산문 지목`과 같은 자리를 본다. 오늘 §5 에서 걷어낸
+   * **「검사 둘이 서로 다른 명제를 말한다」**가 여기 그대로 남아 있었다.
+   *
+   * ★★ **그리고 재보니 ⓑ가 손저작에서 무의미했다** ★★ 답을 다른 사람으로 바꿔치기해
+   * 다시 물어봤다:
+   *
+   * ```
+   * §6.8 이 통과시킨 인물 공란 16개
+   *   무의미 (아무 답이나 통과)  13   ← 다섯 명 이름이 전부 산문에 나온다
+   *   가르는 것                  3   ← practice-room. 그것도 넷 중 하나만 배제한다
+   *   ⓐ(조사 결과)가 참인 것      0   ← 손저작은 식별 고리를 안 쓴다
+   * ```
+   *
+   * **「이름이 산문 어딘가에 나온다」는 5인 사건에서 언제나 참이다.** 그래서 이 검사는
+   * 손저작 4건에 대해 **경고를 한 번도 안 냈고**, 그 침묵이 *"저 공란들은 도출된다"* 는
+   * **거짓 안심**이었다. 07-31의 「세는 것과 확인하는 것이 다르다」가 한 층 위에서
+   * 반복된 꼴이다 — 이번엔 **검사가 있는데 아무것도 안 가르고 있었다.**
+   *
+   * ⚠ **그래서 §5-b 의 경고 26개를 「소음」으로 읽으면 안 된다.** 소음이라 볼 근거가
+   * §6.8 의 통과였는데 그 통과에 내용이 없었다. **아직 갈리지 않은 상태**가 참이다.
+   *
+   * ⛳ **없애지 않고 접는 이유**: ⓐ·ⓑ 두 갈래와 「지문은 증거가 아니다」는 08-01에
+   * 심어보며 얻은 것이라 `proof.ts` 의 R1·R3 주석이 그것을 물려받았다. 이 문단은
+   * **그 판단이 어디서 왔는지의 기록**으로 남긴다.
    */
-  {
-    const ko = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
-    /** 그 제목을 주는 사람이 유일하면 그 사람. 둘 이상이면 무효(`null`) */
-    const soleOwner = new Map<string, string | null>()
-    for (const a of c.actions) {
-      const pid = a.target?.kind === 'person' ? a.target.id : null
-      const title = ko(a.result?.title)
-      if (!pid || !title) continue
-      soleOwner.set(title, soleOwner.has(title) ? null : pid)
-    }
-    /**
-     * 근거로 칠 산문. **플레이어가 「증거로 읽는 것」만** 담는다.
-     *
-     * ⛔ **조사 제목(라벨)은 뺀다** — `소지품 검사 · 남주원` 은 다섯 명 전원이 똑같이
-     * 갖는 목록이라 아무도 구별하지 않는다. 48개가 통과하던 이유가 이것이다.
-     *
-     * ⛔ **장 전환 서사(`reveals[].narration`)도 뺀다** — 심어서 확인하다 잡았다.
-     * *"기록에 대한 정리가 끝나자, 남주원이 한마디를 보탰다"* 가 이름을 말하지만
-     * **누가 말하는지를 알릴 뿐** 그 사람을 집는 근거가 아니다. 이 한 줄 때문에
-     * 고치기 전 상태를 심었는데도 검사가 통과했다. **지문은 증거가 아니다.**
-     */
-    const bodies: string[] = []
-    for (const p of c.people) for (const para of p.statement?.paragraphs ?? []) bodies.push(ko(para))
-    for (const e of c.evidence) bodies.push(`${ko(e.description)} ${ko(e.record)}`)
-    for (const a of c.actions) bodies.push(ko(a.result?.body))
-    bodies.push(ko(c.prologue))
-
-    for (const ch of c.chapters) {
-      for (const b of ch.blanks) {
-        if (b.isAccusation) continue           // 지목은 §1 유일성이 받친다
-        if (b.candidates !== 'closed') continue
-        if (!c.people.some((p) => p.id === b.answer)) continue   // 인물 공란만
-        const name = ko(c.people.find((p) => p.id === b.answer)?.name)
-        const report = (ch.report ?? []).map((r) => ('text' in r ? r.text : '')).join('')
-
-        /**
-         * ⚠ **성을 뗀 꼴로도 찾는다** — 한국어 진술은 「한유빈」을 「유빈 언니」로
-         * 부른다. 처음 판은 성을 붙인 이름만 봐서 **손으로 쓴 산장이 다섯 줄 빨개졌다**
-         * (한유빈은 실제로 도출된다 — 다른 진술이 일찍 온 사연을 말한다).
-         * `voice-check` 의 §남을 불렀나가 같은 이유로 뒤 두 글자를 쓴다.
-         */
-        const short = name.length > 2 ? name.slice(-2) : name
-        const byObject = [...soleOwner].some(([t, pid]) => pid === b.answer && report.includes(t))
-        const byName = !!short && bodies.some((t) => t.includes(short))
-        if (!byObject && !byName)
-          warnings.push(
-            `${ch.order}장 '${b.label}' 공란의 답(${name || b.answer})을 집어낼 근거가 없다 — ` +
-              `서술문이 그 사람만 주는 조사 결과를 말하지 않고, 산문 어디에도 이름이 없다. ` +
-              `다른 후보와 갈리지 않으므로 플레이어에게는 찍기다`,
-          )
-      }
-    }
-  }
+  // (실행부 없음 — 위 §5-b 가 `proof.ts` 의 R1·R3 로 같은 자리를 본다.
+  //  ⓐ·ⓑ 두 갈래를 얻은 경위와 「성을 뗀 꼴로 찾는다」·「지문은 증거가 아니다」는
+  //  그쪽 규칙 주석이 물려받았다.)
 
   const chapterReveals = c.reveals.filter((r) => r.trigger.on === 'chapterComplete')
   const narrated = chapterReveals.filter((r) => r.narration).length
