@@ -167,8 +167,10 @@ const CELLS: Cell[] = [
     note: '심어놓고 닫지 않은 물증' },
   { channel: 'evidence', invariant: 'contradiction', status: 'open',
     note: '물증 기록이 격자·트릭과 어긋나는지 안 본다' },
-  { channel: 'evidence', invariant: 'leak', status: 'open',
-    note: '물증 기록이 범인을 지목하는지 안 본다 — 소지품 150/150 이 그 부류였다' },
+  { channel: 'evidence', invariant: 'leak', status: 'partial',
+    marker: { file: V, text: '9-14. **확보 단어를 주는 물증의 기록이 비어 있다**' },
+    missing: '**기록의 유무가 갈리는 것**만 본다(§6.7 과 같은 부류). 기록의 **내용**이 범인을 가리키는지는 안 본다 — 소지품 150/150 이 그 부류였고, 그건 관측면 자료구조가 서야 잰다',
+    note: '확보 단어를 주는 물증인데 카드가 비면 그 유무가 곧 유용도 표시다' },
   { channel: 'evidence', invariant: 'derivable', status: 'na',
     note: '물증은 답이 아니라 단서다' },
 
