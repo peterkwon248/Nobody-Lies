@@ -26,6 +26,47 @@ export function S(css) {
 // sc-for used to tolerate undefined lists while streaming; keep that safety.
 export const arr = (x) => (Array.isArray(x) ? x : []);
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  `press` — 눌러지는 `<div>` 를 키보드·스크린리더에 보이게 한다 (2026-08-01)
+ * ─────────────────────────────────────────────────────────────
+ *
+ * ★ 왜 있나 ★ 사이드바 열한 항목이 `<div onClick>` 이라 **접근성 트리에서 통째로
+ * 빠져 있었다.** 화면에는 「진술 · 현장 · 메모」가 멀쩡히 보이는데 `read_page` 로
+ * 훑으면 상단 크롬 여섯 개만 나온다 — 키보드로 탭이 안 가고, 스크린리더가 못 읽고,
+ * 자동 도구로도 못 누른다.
+ *
+ * ⛳ **`<button>` 으로 바꾸지 않는다.** 마크업의 정본은 프로토타입이고
+ * (`MEMORY.md` §이식 규칙: 클래스·구조·스타일은 그쪽), `.nav-item` 은 `div` 를
+ * 전제로 한 CSS 다. **의도적으로 다르게 가는 것이 아니라 얹는 것**이라
+ * 구조는 그대로 두고 역할만 준다 — 이식 규칙 5의 「근거를 대고 적는다」에 해당한다.
+ *
+ * 키 처리는 네이티브 버튼의 규약을 그대로 따른다: **Enter 와 Space**.
+ * Space 는 `preventDefault` 가 필요하다 — 안 막으면 페이지가 같이 스크롤된다.
+ *
+ * 둘째 인자로 **그 항목의 클래스 문자열을 그대로** 넘긴다. `active` 가 들어 있으면
+ * `aria-current="page"` 가 붙는다 — `.nav-item.active` 는 **색으로만** 지금 자리를
+ * 말하는데 색은 스크린리더에 없다. 클래스를 그대로 받는 이유는 「지금 어디인가」의
+ * 출처를 **하나로** 두기 위해서다(`navCls` 가 이미 그것을 정한다).
+ *
+ * ★ 셋째 인자 `label` 을 반드시 준다 ★ 이름을 내용에서 계산하게 두면 **배지가
+ * 이름에 붙는다** — 항목 안에 안 읽은 표시 점과 `.count` 배지가 같이 살아서
+ * 「조사 기록 3」·「진술 ●」로 읽힌다. 넘기는 값은 바로 옆 `<span>` 이 렌더하는
+ * **그 변수 그대로**다(`V.ui.navStatements` 등) — 문안을 새로 쓰지 않는다.
+ */
+export const press = (onClick, cls, label) => ({
+  role: 'button',
+  tabIndex: 0,
+  onClick,
+  onKeyDown: (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (onClick) onClick(e);
+  },
+  ...(label ? { 'aria-label': label } : {}),
+  ...(/\bactive\b/.test(String(cls ?? '')) ? { 'aria-current': 'page' } : {}),
+});
+
 // Vector Design System components come from the bundle loaded in index.html.
 const DS = () => (typeof window !== 'undefined' && window.VectorDesignSystem_490b73) || {};
 export function Button(props) { const C = DS().Button; return C ? <C {...props} /> : <button {...props} />; }
@@ -3946,48 +3987,48 @@ export default class App extends React.Component {
                 <button className="iconbtn" onClick={V.shell.onToggleLeft} title={V.ui.toggleLeft}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="7" y1="3.6" x2="7" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="2.8" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button>
               </div>
               <div className="nav">
-                <div className="nav-item" onClick={V.onGoHome}><svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 7l5-4 5 4v6H3z" /></svg><span>{V.ui.goHome}</span></div>
+                <div className="nav-item" {...press(V.onGoHome, null, V.ui.goHome)}><svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 7l5-4 5 4v6H3z" /></svg><span>{V.ui.goHome}</span></div>
                 <div className="nav-caption">{V.ui.navCase}</div>
-                <div className={V.nav.overviewCls} onClick={V.nav.onOverview}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></svg>
+                <div className={V.nav.overviewCls} {...press(V.nav.onOverview, V.nav.overviewCls, V.ui.navOverview)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></svg>
                   <span>{V.ui.navOverview}</span>{(V.nav.overviewUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
-                <div className={V.nav.narrCls} onClick={V.nav.onNarr}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></svg>
+                <div className={V.nav.narrCls} {...press(V.nav.onNarr, V.nav.narrCls, V.ui.navNarrative)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></svg>
                   <span>{V.ui.navNarrative}</span>{(V.nav.narrUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}<span className="count">{V.nav.narrProgress}</span>
                 </div>
                 <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navClue}</div>
-                <div className={V.nav.stmtCls} onClick={V.nav.onStmt}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></svg>
+                <div className={V.nav.stmtCls} {...press(V.nav.onStmt, V.nav.stmtCls, V.ui.navStatements)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></svg>
                   <span>{V.ui.navStatements}</span>{(V.nav.stmtUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
-                <div className={V.nav.profileCls} onClick={V.nav.onProfile}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></svg>
+                <div className={V.nav.profileCls} {...press(V.nav.onProfile, V.nav.profileCls, V.ui.navProfile)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></svg>
                   <span>{V.ui.navProfile}</span>
                 </div>
-                <div className={V.nav.mapCls} onClick={V.nav.onMap}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></svg>
+                <div className={V.nav.mapCls} {...press(V.nav.onMap, V.nav.mapCls, V.ui.navMap)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></svg>
                   <span>{V.ui.navMap}</span>{(V.nav.mapUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
-                <div className={V.nav.graphCls} onClick={V.nav.onGraph}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" /><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4" /></svg>
+                <div className={V.nav.graphCls} {...press(V.nav.onGraph, V.nav.graphCls, V.ui.navGraph)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" /><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4" /></svg>
                   <span>{V.ui.navGraph}</span>
                 </div>
                 <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navTool}</div>
-                <div className={V.nav.logCls} onClick={V.nav.onLog}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
+                <div className={V.nav.logCls} {...press(V.nav.onLog, V.nav.logCls, V.ui.invLogTitle)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                   <span>{V.ui.invLogTitle}</span><span className="count">{V.nav.logBadge}</span>
                 </div>
-                <div className={V.nav.boardCls} onClick={V.nav.onBoard}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><path d="M7 4.75h2M4.75 7v2" /></svg>
+                <div className={V.nav.boardCls} {...press(V.nav.onBoard, V.nav.boardCls, V.ui.navBoard)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><path d="M7 4.75h2M4.75 7v2" /></svg>
                   <span>{V.ui.navBoard}</span>
                 </div>
-                <div className={V.nav.memoCls} onClick={V.nav.onMemo}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
+                <div className={V.nav.memoCls} {...press(V.nav.onMemo, V.nav.memoCls, V.ui.navMemo)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
                   <span>{V.ui.navMemo}</span><span className="count">{V.nav.memoBadge}</span>
                 </div>
-                <div className={V.nav.refCls} onClick={V.nav.onRef}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="11" height="4" rx="1" /><rect x="2.5" y="9.5" width="11" height="4" rx="1" /></svg>
+                <div className={V.nav.refCls} {...press(V.nav.onRef, V.nav.refCls, V.ui.navReference)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="11" height="4" rx="1" /><rect x="2.5" y="9.5" width="11" height="4" rx="1" /></svg>
                   <span>{V.ui.navReference}</span>
                 </div>
               </div>
@@ -3997,7 +4038,7 @@ export default class App extends React.Component {
                   <span className="v-meta">{V.ui.budget} · <b className="v-num" style={S("color:var(--fg-2)")}>{V.status.budget}</b></span>
                 </div>
                 <div className="v-micro" style={S("margin-top:10px;line-height:1.55;color:var(--fg-4)")}>{V.ui.sidebarNote}</div>
-                <div className="linklike" onClick={V.onAbandonReq} style={S("margin-top:10px;padding-left:0;color:var(--label-red);font-size:12px")}>{V.ui.abandon}</div>
+                <div className="linklike" {...press(V.onAbandonReq, null, V.ui.abandon)} style={S("margin-top:10px;padding-left:0;color:var(--label-red);font-size:12px")}>{V.ui.abandon}</div>
               </div>
             </div>
           </>):null}
@@ -4927,7 +4968,7 @@ export default class App extends React.Component {
                   <div className="v-body" style={S("color:var(--fg-3);margin-top:4px")}>{V.ui.gameTagline}</div></div>
                 </div>
                 {(V.home.resumeShow)?(<><div onClick={V.home.onResume} style={S("display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);cursor:pointer;margin-bottom:26px")}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.5"><path d="M5 3.5l7 4.5-7 4.5z" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.5"><path d="M5 3.5l7 4.5-7 4.5z" /></svg>
                   <div style={S("flex:1;min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{V.ui.resume} · {V.home.resumeTitle}</div><div className="v-meta" style={S("color:var(--fg-3);margin-top:2px")}>{V.ui.narrProg} {V.home.resumeProgress} · {V.ui.budget} {V.home.resumeBudget}</div></div>
                   <span className="v-meta" style={S("color:var(--accent);font-size:16px")}>›</span>
                 </div></>):null}
@@ -4945,7 +4986,7 @@ export default class App extends React.Component {
                 </div>
                 <div className="v-caption" style={S("color:var(--fg-2);margin:26px 0 12px;display:block")}>{V.ui.daily}</div>
                 <div style={S("display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-md);opacity:.55")}>
-                  <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="11" rx="1.5" /><path d="M2.5 6h11M6 2v2M10 2v2" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="11" rx="1.5" /><path d="M2.5 6h11M6 2v2M10 2v2" /></svg>
                   <span className="v-title" style={S("color:var(--fg-2);flex:1")}>{V.ui.daily}</span><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.dailyDesc}</span>
                 </div>
                 <div className="v-caption" style={S("color:var(--fg-2);margin:26px 0 12px;display:block")}>{V.ui.more}</div>
