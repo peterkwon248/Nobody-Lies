@@ -115,7 +115,7 @@ const CELLS: Cell[] = [
     note: 'presence·claim 의 slot·location 이 레지스트리에 있는가' },
   { channel: 'grid', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '사망 시간대에 현장' },
-    missing: '격자의 **모양**이 범인을 지목하는지 안 본다 — 「범인만 밤을 다 설명했다」가 그 부류였다(07-30)',
+    missing: '모양 누설 검사(§동선 모양)는 **`prose.source === \'template\'` 일 때만** 돈다. 산문을 입히면 꺼진다 — 손저작은 모양이 같아도 문장이 달라서 걸면 틀리기 때문이고 이유가 적혀 있다. 다만 **누설이 없어지는 게 아니라 볼 수 없어지는 것**이다',
     note: '무고한 자가 사망 구간에 현장에 있으면 기회가 생겨 유일성이 무너진다' },
   { channel: 'grid', invariant: 'derivable', status: 'na',
     note: '격자는 답을 묻지 않는다 — 주장을 보여주는 표면이다' },

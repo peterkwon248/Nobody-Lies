@@ -230,6 +230,66 @@ const RULES: Rule[] = [
   },
 
   /**
+   * R6 기록이 가리킨다 — 가닥 장의 서술문이 *"기록에 [단어]가 남아 있었고 [답]을
+   * 가리켰다"* 고 묻고, **그 기록의 문안이 실제로 그 답을 말한다**(2026-08-01).
+   *
+   * 전에는 기록이 *"기록에 그대로 남아 있었다"* 라 **시각을 한 글자도 안 말했다** —
+   * 인물 공란 48개와 같은 부류였고 `proof-check` 이 `시각 0/60` 으로 인쇄하던 자리다.
+   */
+  {
+    id: 'R6 기록이 가리킨다',
+    applies: (x) => x.label === '시각' || x.label === '장소',
+    step: (x) => {
+      const want =
+        x.label === '시각'
+          ? ko(x.c.slots.find((s) => s.id === x.answer)?.label)
+          : ko(x.c.locations.find((l) => l.id === x.answer)?.label)
+      if (!want) return null
+      // 그 답을 문안에 말하는 물증 · 그것을 주는 조사
+      for (const e of x.c.evidence) {
+        if (!ko(e.record).includes(want)) continue
+        const giving = x.c.actions.filter((a) => a.gives.includes(e.id))
+        if (!giving.length) continue
+        const gone = x.pool.filter((v) => v !== x.answer)
+        if (!gone.length) continue
+        return {
+          observation: `「${ko(giving[0]!.label)}」의 기록이 「${want}」을 말한다`,
+          cost: Math.min(...giving.map((a) => a.cost)),
+          rule: 'R6 기록이 가리킨다',
+          eliminates: gone,
+        }
+      }
+      return null
+    },
+  },
+
+  /**
+   * R7 발견 시각 전제 — 시각 공란의 답이 **다시 모인 칸**(발견 시각)이면 브리핑이
+   * 처음부터 말한다. 사건은 시신이 발견되면서 열리므로 **조사로 알아낼 것이 아니다.**
+   *
+   * ⚠ 그런데 08-01까지 **적혀 있지도 않았다** — 프롤로그·개요·현장 상태 셋 다 재봤고
+   * 전부 없었다. 「전제라서 괜찮다」가 아니라 **전제로 쓰여 있지 않았던 것**이다.
+   * 지금은 `incident.sceneState` 가 말한다.
+   */
+  {
+    id: 'R7 발견 시각 전제',
+    applies: (x) => x.label === '시각',
+    step: (x) => {
+      const want = ko(x.c.slots.find((s) => s.id === x.answer)?.label)
+      const brief = `${ko(x.c.incident.sceneState)} ${ko(x.c.incident.description)}`
+      if (!want || !brief.includes(want)) return null
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `브리핑이 발견 시각을 말한다 (전제)`,
+        cost: 0,
+        rule: 'R7 발견 시각 전제',
+        eliminates: gone,
+      }
+    },
+  },
+
+  /**
    * R5 현장 전제 — 장소 공란의 답이 **현장**이면 사건 개요가 처음부터 말한다.
    * 비용 0 이지만 **누설이 아니다** — 시신이 어디서 나왔는지는 전제이지 답이 아니다.
    */

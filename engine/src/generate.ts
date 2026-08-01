@@ -1987,6 +1987,41 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
    * 쓴 것과 낡아서 갈라진 것을 가를 수 없었다** — `MEMORY.md` §이식 규칙 6 이
    * *"안 서면 묻는다"* 고 한 자리다. 같은 사실을 두 문장이 말한다는 것만 적어둔다.
    */
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  ★ 가닥 기록이 시각·장소를 말한다 ★ (2026-08-01)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 가닥 장의 서술문이 *"기록에 [단어]가 남아 있었고, **[시각]을 가리켰다**"* 라고
+   * 묻는데, 그 기록의 문안은 *"기록에 그대로 남아 있었다"* 로 **시각을 한 글자도
+   * 말하지 않았다.** 08-01에 인물 공란 48개를 닫은 것과 **같은 부류**다 —
+   * `proof-check` 이 `시각 0/60` 으로 매번 인쇄하던 자리.
+   *
+   * 공란의 답이 짝수 가닥은 `WIN[0]`(사망 구간 첫 칸), 홀수 가닥은 `hall` 이다.
+   * **기록이 그 답을 말하게** 하면 조사 `a_rec{n}` 하나로 갈린다.
+   *
+   * ⚠ **여기서 계산하는 이유** — `slotLabel` 은 `buildWorld` 안에서 `strands` 보다
+   * **뒤에** 선다. 그래서 가닥을 만들 때는 아직 없다. 위 §기록 문장의 단일 출처와
+   * 같은 손으로, **한 번 계산해 세 자리(물증 기록 · 조사 결과문 · 확보 단어 카드)에
+   * 먹인다.** 세 곳이 각자 쓰면 그게 이 저장소 최다 재발 부류다.
+   */
+  const REC_STRAND = (i: number) =>
+    i % 2 === 0
+      ? `${slotLabel[WIN[0]!]}으로 적힌 줄이 남아 있었다.`.replace(/([가-힣])으로 적힌/, (_m, ch) => {
+          const jong = (ch.charCodeAt(0) - 0xac00) % 28
+          return `${ch}${jong === 0 || jong === 8 ? '로' : '으로'} 적힌`
+        })
+      : `${places.hall}이 적힌 줄이 남아 있었다.`.replace(/([가-힣])이 적힌/, (_m, ch) => {
+          const jong = (ch.charCodeAt(0) - 0xac00) % 28
+          return `${ch}${jong === 0 ? '가' : '이'} 적힌`
+        })
+  for (const [i, s] of strands.entries()) {
+    const rec = REC_STRAND(i)
+    s.evidence.record = rec
+    s.action.result = res(s.word!, rec)
+    s.term.note = { ko: rec }
+  }
+
   const REC_TOOL = '바닥에 떨어져 있었다.'
   const REC_MUTUAL = `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.`
 
@@ -2394,9 +2429,22 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
     title: `${P.setting ?? DEFAULT_PALETTE.setting} 사건`,
     scale: 'daily',
     budget: 3,
+    /**
+     * ⚠ **`sceneState` 가 발견 시각을 말한다** (2026-08-01 신설).
+     *
+     * 1장 서술문이 *"**[시각]**, [장소]에서 [도구]가 발견됐다"* 라고 묻는데
+     * **답(다시 모인 칸)을 사건 어디도 말하지 않았다** — 프롤로그·개요·현장 상태
+     * 셋 다 재봤고 전부 없었다. 「전제라서 괜찮다」고 넘어갈 뻔한 자리인데,
+     * **재보니 전제로 적혀 있지도 않았다.**
+     *
+     * 발견 시각은 **진짜로 전제다** — 사건은 시신이 발견되면서 열린다. 그러니
+     * 조사로 알아낼 것이 아니라 **처음부터 적혀 있어야** 하는 것이고, 그 자리가
+     * 브리핑(`sceneState`)이다. 비용 0 이지만 §현장 전제와 같은 이유로 누설이 아니다.
+     */
     incident: {
       kind: 'homicide', subject: 'victim', description: `${places.room}에서의 사망`,
       scene: 'room',
+      sceneState: { ko: `${slotLabel[LAST]}, ${places.room}에서 발견됐다.` },
     },
     prose: { source: 'template' },
 
