@@ -10,7 +10,13 @@
  * ```
  * ① 생성 N건에 약한 공란이 0 인가        ← 회귀 감시. 이것이 본체다
  * ② 이동을 심어서 실제로 무나             ← 없으면 ①이 「이동이 죽어도 초록」이다
+ * ③ 검증기가 그것을 실제로 말하나          ← 08-02 §5 교체와 한 벌. 배선이 무방비였다
  * ```
+ *
+ * ★ **③이 왜 붙었나** ★ ①②는 `weakBlanks` 를 **직접** 부른다. 그래서 `verifier` §5-b 의
+ * 배선(`weakBlanks` → `warnings`)을 통째로 지워도 **이 검사는 초록**이다. 08-02에 §5 를
+ * 「조합 수 ≥ 30」에서 이 명제로 갈아 끼우면서 생긴 자리다 — **부르는 쪽이 둘이면 한 쪽이
+ * 조용히 죽는다**(`REVEALS[].yield` 부류).
  *
  * ★ **②가 왜 필요한가** ★ 착수 시점 실측이 **320/320** 이라 **①은 이동이 전부
  * 죽어 있어도 초록이다.** 이 저장소는 그 부류로 여러 번 물렸다(`TRICKS` 죽은 인자 ·
@@ -22,6 +28,7 @@
  */
 import { generateCase } from './generate.js'
 import { weakBlanks, closeClues, MOVE_IDS } from './clues.js'
+import { verify, weaknessWarning } from './verifier.js'
 import type { Case } from './types.js'
 
 const N = Number(process.argv[2] ?? 40)
@@ -87,6 +94,44 @@ plant('M2 기록이 가리킨다', 2, (c) => {
   // 08-01 이전 상태 — 가닥 기록이 *"기록에 그대로 남아 있었다"* 였다
   for (const e of c.evidence) if (e.record?.includes('적힌 줄이 남아 있었다')) e.record = '기록에 그대로 남아 있었다.'
 })
+
+// ── ③ 검증기가 그 명제를 실제로 말하나 ────────────────────────
+/**
+ * **배선 검사다.** ①②가 통과해도 `verifier` §5-b 가 `weakBlanks` 를 안 읽으면
+ * 사람에게는 아무 말도 안 간다. 세 가지를 본다:
+ *
+ * ```
+ * 깨끗한 사건    약한 공란 0 → 경고도 0        거짓 양성이 없다
+ * 심은 사건      약한 공란 > 0 → 경고가 그만큼   삼키지 않는다
+ * 문안           weaknessWarning() 과 글자까지 같다   단일 출처가 살아 있다
+ * ```
+ *
+ * ⚠ **개수만 세면 안 된다** — 다른 검사가 우연히 그만큼 경고를 낼 수 있다. 그래서
+ * `weaknessWarning()` 이 낸 **바로 그 줄**이 들어 있는지 본다(같은 함수를 쓰므로
+ * 문안을 고쳐도 안 깨진다 — 배선이 끊길 때만 깨진다).
+ */
+console.log('\n  ── 검증기가 말하나 (§5-b 배선) ──')
+{
+  const clean = generateCase(3) as Case
+  const cleanSaid = verify(clean).warnings.filter((w) => w.includes('증명 사슬이 안 선다')).length
+  if (weakBlanks(clean).length || cleanSaid) {
+    failed = true
+    console.log(`    ✗ 깨끗한 사건인데 §5-b 경고 ${cleanSaid}개 — 거짓 양성이다`)
+  } else console.log('    ✓ 깨끗한 사건에는 §5-b 경고가 0')
+
+  const broken = generateCase(3) as Case
+  broken.incident.sceneState = undefined
+  const weak = weakBlanks(broken)
+  const warns = verify(broken).warnings
+  const missing = weak.filter((w) => !warns.includes(weaknessWarning(w)))
+  if (!weak.length) {
+    failed = true
+    console.log('    ✗ 심었는데 약한 공란이 0 — **심기가 틀렸다**')
+  } else if (missing.length) {
+    failed = true
+    console.log(`    ✗ 약한 공란 ${weak.length}개 중 ${missing.length}개를 검증기가 안 말한다 — 배선이 끊겼다`)
+  } else console.log(`    ✓ 심은 ${weak.length}개를 검증기가 그대로 경고한다 (문안 단일 출처)`)
+}
 
 console.log('')
 if (failed) process.exit(1)
