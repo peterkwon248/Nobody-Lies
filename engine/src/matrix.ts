@@ -248,10 +248,19 @@ const CELLS: Cell[] = [
   { channel: 'plan', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
   // ── 관계도 · 인터루드 · 결말 — 아직 아무도 안 읽는다 ──
-  { channel: 'graph', invariant: 'leak', status: 'open',
-    note: '★ MEMORY §오케스트레이터가 「관계 그래프가 답을 그림」을 미해결로 적어뒀다' },
-  { channel: 'graph', invariant: 'contradiction', status: 'open', note: '' },
-  { channel: 'graph', invariant: 'wiring', status: 'open', note: '' },
+  { channel: 'graph', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-13. **관계 도식이 범인을 처음부터 그린다**' },
+    note: '처음부터 보이는 danger 간선이 범인만 가리키면 오류. ★ MEMORY §오케스트레이터의 「관계 그래프가 답을 그림」이 08-01에 닫혔다 — 산장은 이미 지키고 있었고(전부 게이트) 규칙이 못박히지 않았을 뿐이다' },
+  { channel: 'graph', invariant: 'contradiction', status: 'open',
+    note: '간선 라벨이 사실·격자와 어긋나는지 안 본다. ⚠ 다만 생성 사건은 간선이 0개라 지금은 잴 것이 없다' },
+  /**
+   * ★ 08-01에 정정 ★ 처음엔 `open` 으로 적었는데 **§9-5 가 이미 덮고 있었다** —
+   * 노드가 없는 인물을 가리키나 · 인물이 도식에서 빠졌나 · 간선 끝점이 실재하나.
+   * **표가 자기를 틀리게 말한 네 번째**다. 적기 전에 소스를 봐야 한다.
+   */
+  { channel: 'graph', invariant: 'wiring', status: 'covered',
+    marker: { file: V, text: '9-5. 관계 도식 ↔ 인물·조사 정합' },
+    note: '노드·간선 끝점이 실재하는가 · 인물이 하나라도 빠지면 그게 곧 표시다' },
   { channel: 'graph', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
   { channel: 'interlude', invariant: 'contradiction', status: 'open', note: '' },

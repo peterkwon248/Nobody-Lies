@@ -1592,6 +1592,57 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-13. **관계 도식이 범인을 처음부터 그린다** (2026-08-01 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ★ 왜 있나 ★ `MEMORY.md` §오케스트레이터가 *"관계 그래프가 답을 그림"* 을
+   * **미해결**로 적어둔 지 오래인데 검사가 없었다. 오늘 불변식 행렬에서
+   * `관계도 × 누설` 이 빈칸인 것을 보고 재봤다.
+   *
+   * 산장을 재니 **danger 간선이 닿는 사람이 범인 하나**였다:
+   * ```
+   * 문세라(범인)  간선 3  danger 3
+   * 서지안        간선 0  danger 0
+   * 한유빈        간선 0  danger 0
+   * ```
+   * **그런데 결함이 아니었다** — 넷 다 게이트돼 있다(`revealedAfter: 4·5` 또는
+   * 조사 `a_annex`·`a_sakura`). **벌어서 본다.** 첫 판단이 틀렸고 재서 정정했다.
+   *
+   * ⚠ **그러니 이 검사는 「산장이 이미 지키는 규칙」을 못박는 것**이다. 지금은
+   * 아무것도 강제하지 않아서, 누가 `revealedAfter` 없는 danger 간선을 하나 그으면
+   * **관계도 탭을 여는 순간 범인이 보인다.** §절대 규칙의 「유용도 시각 구분 금지」가
+   * 도식 층에서 재발하는 형태다.
+   *
+   * ## 판정
+   *
+   * **처음부터 보이는**(`revealedAfter` 없음) danger 간선이 닿는 인물이
+   * **범인 하나뿐**이면 오류. `discoveries` 는 조사로만 열리므로 언제나 벌어서 본다 —
+   * 여기서 안 센다.
+   *
+   * 등급이 **오류**인 것은 §9-1·§9-9 와 같다 — 정답 누설이 이 저장소에서 가장 비싸다.
+   * 그리고 §9-10 처럼 골든 케이스에 걸리지도 않는다(산장이 이미 지킨다).
+   */
+  if (c.relationGraph) {
+    const open = c.relationGraph.edges.filter((e) => e.danger && e.revealedAfter == null)
+    if (open.length) {
+      const personIds = new Set(c.people.map((p) => p.id))
+      const touched = new Set<string>()
+      for (const e of open) {
+        if (personIds.has(e.from)) touched.add(e.from)
+        if (personIds.has(e.to)) touched.add(e.to)
+      }
+      if (touched.size === 1 && touched.has(c.culprit)) {
+        const nm = c.people.find((p) => p.id === c.culprit)?.name
+        errors.push(
+          `관계 도식의 **처음부터 보이는** danger 간선이 '${nm}' 한 사람만 가리킨다 — ` +
+            `도식 탭을 여는 것만으로 범인이 드러난다. revealedAfter 를 주거나 discoveries 로 옮겨라`,
+        )
+      }
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
