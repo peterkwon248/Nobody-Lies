@@ -420,6 +420,12 @@ export default class App extends React.Component {
         // 생성 사건은 영문 제목이 없다 — 한국어를 그대로 쓴다(빈 칸보다 낫다)
         titleKo: e.title, titleEn: e.title,
         diff: e.diff, estKo: ko, estEn: en,
+        /**
+         * ★ 장 수와 공란 총수를 남긴다 ★ (2026-08-01) — 전에는 `chapters` 로 `est` 를
+         * 계산하고 **버렸다.** 그래서 홈이 「이 사건을 끝냈나」를 물을 수 없었고,
+         * 저장 키만 보고 전부 **「진행 중」**으로 찍었다(§otherStatus).
+         */
+        chapters: e.chapters, blanks: e.blanks,
       }
     })
   }
@@ -2470,7 +2476,13 @@ export default class App extends React.Component {
   statusChip(st) { const t = this.T(); const m = { clear: t.cleared, inProgress: t.inProgress, unplayed: t.unplayed, locked: t.locked }[st] || ''; const c = st === 'clear' ? 'var(--g-lock-mark)' : st === 'inProgress' ? 'var(--status-progress)' : 'var(--fg-3)'; const bg = st === 'clear' ? 'var(--g-lock-bg)' : st === 'inProgress' ? 'rgba(242,201,76,.14)' : 'var(--bg-elevated-2)'; return { label: m, style: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', color: c, background: bg } }; }
   buildHome() {
     const t = this.T(), ln = this.state.lang, status = this.caseStatus();
-    const solved = (this.state.solved.s1 ? 1 : 0) + (this.state.solved.s2 ? 1 : 0) + (this.state.solved.s3 ? 1 : 0);
+    /**
+     * ⚠ **`s1·s2·s3` 만 세고 있었다** (2026-08-01 수정). 아래 §이어하기가 이 값을
+     * `solved + '/' + this.SECTIONS.length` 로 찍는데, 5장 사건에서 4장을 봉해도
+     * **「3/5」에서 멈춘다.** 장 수가 3으로 굳어 있던 시절의 잔재다 —
+     * `SECTIONS` 는 사건마다 길이가 달라진다(§보고서를 엔진 chapters 에서 다시 만든다).
+     */
+    const solved = this.SECTIONS.filter(x => this.state.solved[x.id]).length;
     /**
      * ★ 다른 사건의 진행 상태 ★ (2026-07-31)
      *
@@ -2478,16 +2490,42 @@ export default class App extends React.Component {
      * `SECTIONS` 를 세기 때문에 다른 사건에는 못 쓴다. 그래서 목록의 나머지는
      * **저장 키가 있나**로만 가른다.
      *
-     * ⚠ **끝낸 사건도 「진행 중」으로 보인다** — 완료 여부는 그 사건을 열어야 안다.
-     * 「미플레이」로 보이는 것보다는 낫다(그건 거짓이다). 정확히 하려면 저장에
-     * 완료 표시를 넣어야 하고, 그건 저장 형식 변경이라 따로 정한다.
+     * ✅ **~~끝낸 사건도 「진행 중」으로 보인다~~ — 닫혔다** (2026-08-01).
+     *
+     * *"정확히 하려면 저장에 완료 표시를 넣어야 하고, 그건 저장 형식 변경"* 이라고
+     * 적어뒀는데 **형식을 안 바꿔도 됐다.** 저장에 이미 `blanks`(채운 공란)가 있고,
+     * 사건의 공란 **총수**는 `cases/index.json` 이 실어 보낸다.
+     *
+     * ★ **`solved` 가 아니라 `blanks` 로 센다** ★ 둘은 다른 값이다:
+     * ```
+     * solved[sid]   computeReveals 가 장을 봉할 때 켜고 **끄지 않는다**  「한 번 봉했나」
+     * blanks        clearBlank 가 지운다                              「지금 채워져 있나」
+     * ```
+     * 지금 열려 있는 사건의 `caseStatus()` 는 `allSealed()`, 곧 **공란**을 본다.
+     * `solved` 로 세면 다 채우고 하나를 지운 사람에게 홈은 「클리어」인데 열어보면
+     * 「작성 중」이 된다 — **한 화면이 두 말을 한다.** 같은 것을 세게 맞춘다.
+     *
+     * ⚠ **판(version)을 `loadSave` 와 같은 눈으로 본다.** 못 읽는 판이면 그 사건은
+     * 열 때 **처음부터** 시작되므로(그쪽이 `null` 을 돌려준다) 여기서도 「미플레이」다.
+     * 안 맞추면 홈은 「진행 중」인데 눌러보면 프롤로그가 뜬다.
+     *
+     * ⛳ 공란 총수를 모르는 경우(내장 폴백 목록)는 **예전대로 「진행 중」**이다 —
+     * 셀 수가 없을 때 「클리어」라고 말하는 것이 「진행 중」보다 나쁘다.
      */
-    const otherStatus = (id) => {
-      try { return localStorage.getItem('nobody-lies:' + id) ? 'inProgress' : 'unplayed' } catch (e) { return 'unplayed' }
+    const otherStatus = (c) => {
+      try {
+        const raw = localStorage.getItem('nobody-lies:' + c.id)
+        if (!raw) return 'unplayed'
+        const d = JSON.parse(raw)
+        if (!d || !(d.v === 1 || d.v === this.SAVE_VERSION)) return 'unplayed'
+        if (!c.blanks) return 'inProgress'
+        const filled = Object.keys(d.blanks || {}).length
+        return filled >= c.blanks ? 'clear' : 'inProgress'
+      } catch (e) { return 'unplayed' }
     }
     const cases = this.CASES.map(c => {
       const mine = c.id && c.id === this.CASE_ID;
-      const st = !c.real ? 'soon' : mine ? status : c.id ? otherStatus(c.id) : status;
+      const st = !c.real ? 'soon' : mine ? status : c.id ? otherStatus(c) : status;
       const chip = this.statusChip(st === 'soon' ? 'unplayed' : st);
       return { num: ('0' + c.n).slice(-2), title: ln === 'ko' ? c.titleKo : (c.titleEn || c.titleKo), diff: c.diff, est: ln === 'ko' ? c.estKo : c.estEn,
         chipLabel: st === 'soon' ? t.soonPrep : chip.label, chipStyle: chip.style,

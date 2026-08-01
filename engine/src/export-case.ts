@@ -39,8 +39,16 @@ const jobs = argIn
       .sort()
       .map((f) => ({ input: join(CASE_DIR, f), output: outFor(f) }))
 
-/** 홈 목록이 읽을 목록. 전건 방출일 때만 쓴다 */
-type CatalogEntry = { id: string; title: string; diff: string; chapters: number; oracle: number }
+/**
+ * 홈 목록이 읽을 목록. 전건 방출일 때만 쓴다.
+ *
+ * `blanks` 는 **그 사건의 공란 총수**다 (2026-08-01). 홈이 「이 사건을 끝냈나」를
+ * 물으려면 대조할 수가 있어야 하는데, 앱의 `allSealed()` 가 세는 것이 정확히
+ * 이것이다 — 저장의 `blanks` 는 **채운 것만** 담으므로 둘이 같으면 다 채운 것이다.
+ * `chapters` 로는 못 센다. 저장의 `solved` 는 「한 번 봉했나」라 공란을 지워도
+ * 안 꺼져서 `allSealed()` 와 어긋난다.
+ */
+type CatalogEntry = { id: string; title: string; diff: string; chapters: number; blanks: number; oracle: number }
 const catalog: CatalogEntry[] = []
 
 let failed = 0
@@ -92,6 +100,7 @@ for (const { input, output } of jobs) {
     title: c.title,
     diff: r.difficulty,
     chapters: c.chapters?.length ?? 0,
+    blanks: (c.chapters ?? []).reduce((n, ch) => n + (ch.blanks?.length ?? 0), 0),
     oracle: r.minActions,
   })
 
