@@ -10,7 +10,8 @@
     "export-case": "tsx src/export-case.ts",
     "prop-check": "tsx src/prop-check.ts",
     "plan-check": "tsx src/plan-check.ts",
-    "gen-baseline": "tsx src/gen-baseline.ts"
+    "gen-baseline": "tsx src/gen-baseline.ts",
+    "proof-check": "tsx src/proof-check.ts"
   },
   "devDependencies": {
     "@types/d3-hierarchy": "^3.1.7",

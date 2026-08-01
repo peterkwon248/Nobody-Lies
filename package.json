@@ -24,7 +24,8 @@
     "voice-check": "node scripts/voice-check.mjs",
     "world-check": "node scripts/world-check.mjs",
     "plan-check": "npm run plan-check -w engine --",
-    "lock-fix": "node scripts/lock-peer-restore.mjs"
+    "lock-fix": "node scripts/lock-peer-restore.mjs",
+    "proof-check": "npm run proof-check -w engine --"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6"
