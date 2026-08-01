@@ -27,7 +27,8 @@
  *   npm run voice-check -- <경로> [<경로>…]   특정 파일 (YAML · JSON 둘 다)
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
-import { join, basename } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { join, basename, resolve } from 'node:path'
 import { load } from 'js-yaml'
 
 const CASES = 'engine/cases'
@@ -73,7 +74,12 @@ const HONOR = /(언니|오빠|형|누나|씨|님|선생|아저씨|아주머니|�
 const text = (x) => (typeof x === 'string' ? x : x?.ko ?? '')
 const nameOf = (p) => text(p?.name) || p?.name || p?.id
 
-function measure(c) {
+/**
+ * ★ 내보낸다 ★ (2026-08-01) — `brief-check` 가 **같은 함수로** 산장을 다시 재서
+ * `voice-ref.json` 이 아직 참인지 문다. 재는 로직이 두 벌이 되면 갈라지고,
+ * 그러면 「단일 출처」가 이름만 남는다.
+ */
+export function measure(c) {
   const people = c.people ?? []
   const victim = text(c.victim?.name) || text(c.incident?.victim_name) || c.victimProfile?.name
   const names = people.map(nameOf).filter(Boolean)
@@ -111,6 +117,8 @@ function measure(c) {
     rows,
     ratio: +(lens.at(-1) / lens[0]).toFixed(2),
     median: lens[Math.floor(lens.length / 2)],
+    /** 인물당 글자의 양 끝. 서식이 「209~514자」로 손에 들고 있던 값이다 */
+    charLo: lens[0], charHi: lens.at(-1),
     paraLo: Math.min(...paras), paraHi: Math.max(...paras),
     callers: rows.filter((r) => r.남언급 > 0).length,
     honor: rows.reduce((a, r) => a + r.호칭, 0),
@@ -120,61 +128,74 @@ function measure(c) {
   }
 }
 
-const argv = process.argv.slice(2)
-const files = argv.length
-  ? argv
-  : existsSync(CASES)
-    ? readdirSync(CASES).filter((f) => /\.(ya?ml|json)$/.test(f)).map((f) => join(CASES, f))
-    : []
-
-if (!files.length) {
-  console.error(`\n  잴 사건이 없다. ${CASES}/ 가 비었거나 경로를 안 줬다.\n`)
-  process.exit(1)
+/** 사건 하나 읽기. `brief-check` 도 같은 길로 산장을 읽는다 */
+export function loadCase(f) {
+  return f.endsWith('.json') ? JSON.parse(readFileSync(f, 'utf8')) : load(readFileSync(f, 'utf8'))
 }
 
-console.log('')
-const marks = []
-for (const f of files) {
-  let c
-  try {
-    c = f.endsWith('.json') ? JSON.parse(readFileSync(f, 'utf8')) : load(readFileSync(f, 'utf8'))
-  } catch (e) {
-    console.log(`  ⚠ ${basename(f)} — 읽을 수 없다: ${e.message}\n`)
-    continue
+function cli() {
+  const argv = process.argv.slice(2)
+  const files = argv.length
+    ? argv
+    : existsSync(CASES)
+      ? readdirSync(CASES).filter((f) => /\.(ya?ml|json)$/.test(f)).map((f) => join(CASES, f))
+      : []
+
+  if (!files.length) {
+    console.error(`\n  잴 사건이 없다. ${CASES}/ 가 비었거나 경로를 안 줬다.\n`)
+    process.exit(1)
   }
-  const m = measure(c)
-  if (!m) { console.log(`  ⏭ ${basename(f)} — 진술이 없다 (논리만 있는 사건)\n`); continue }
-  console.log(`  ═══ ${basename(f)} ═══  (${m.total}명)`)
-  console.table(m.rows.map(({ _mix, ...r }) => r))
-  const cmp = (v, ref, hi = true) => {
-    const ok = hi ? v >= ref * 0.75 : v <= ref
-    return `${String(v).padStart(7)}  ${ok ? '✔' : '✘'} (산장 ${ref})`
-  }
-  console.log(`    최장/최단      ${cmp(m.ratio, REF.ratio)}`)
-  console.log(`    문단당 글자    ${String(`${m.paraLo}~${m.paraHi}`).padStart(7)}     (산장 ${REF.paraLo}~${REF.paraHi})`)
-  console.log(`    서로를 부름    ${cmp(m.callers, REF.callers)}`)
-  console.log(`    호칭           ${cmp(m.honor, REF.honor)}`)
-  console.log(`    물음표         ${cmp(m.question, REF.question)}`)
-  console.log(`    끝맺음 종류    ${cmp(m.endings, REF.endings)}  ← ${ENDING_MAX}종 중`)
-  console.log(`    중앙값         ${String(m.median).padStart(7)}자`)
+
   console.log('')
-  marks.push({ f: basename(f), ...m })
+  const marks = []
+  for (const f of files) {
+    let c
+    try {
+      c = loadCase(f)
+    } catch (e) {
+      console.log(`  ⚠ ${basename(f)} — 읽을 수 없다: ${e.message}\n`)
+      continue
+    }
+    const m = measure(c)
+    if (!m) { console.log(`  ⏭ ${basename(f)} — 진술이 없다 (논리만 있는 사건)\n`); continue }
+    console.log(`  ═══ ${basename(f)} ═══  (${m.total}명)`)
+    console.table(m.rows.map(({ _mix, ...r }) => r))
+    const cmp = (v, ref, hi = true) => {
+      const ok = hi ? v >= ref * 0.75 : v <= ref
+      return `${String(v).padStart(7)}  ${ok ? '✔' : '✘'} (산장 ${ref})`
+    }
+    console.log(`    최장/최단      ${cmp(m.ratio, REF.ratio)}`)
+    console.log(`    문단당 글자    ${String(`${m.paraLo}~${m.paraHi}`).padStart(7)}     (산장 ${REF.paraLo}~${REF.paraHi})`)
+    console.log(`    서로를 부름    ${cmp(m.callers, REF.callers)}`)
+    console.log(`    호칭           ${cmp(m.honor, REF.honor)}`)
+    console.log(`    물음표         ${cmp(m.question, REF.question)}`)
+    console.log(`    끝맺음 종류    ${cmp(m.endings, REF.endings)}  ← ${ENDING_MAX}종 중`)
+    console.log(`    중앙값         ${String(m.median).padStart(7)}자`)
+    console.log('')
+    marks.push({ f: basename(f), ...m })
+  }
+
+  /**
+   * ✔/✘ 는 **판정이 아니라 눈길을 끄는 표시**다. 기준선의 75% 를 넘으면 ✔ —
+   * 산장을 정확히 흉내 내라는 뜻이 아니라 **0 에서 올라왔는가**를 보는 것이다.
+   * 격식체 세계는 호칭이 적을 수 있다. **재미는 사람이 읽어야 답한다.**
+   */
+  if (marks.length > 1) {
+    console.log('  ─── 한눈에 ───')
+    console.log('  사건'.padEnd(30) + '최장/최단  부름  호칭  물음표  끝맺음')
+    for (const m of marks) {
+      console.log('  ' + m.f.padEnd(28) +
+        String(m.ratio).padStart(7) + String(`${m.callers}/${m.total}`).padStart(7) +
+        String(m.honor).padStart(6) + String(m.question).padStart(8) + String(m.endings).padStart(8))
+    }
+    console.log('')
+  }
+  console.log('  ⚠ 이 숫자는 합격/불합격이 아니다 — 말투의 자연스러움은 사람이 읽어야 한다.')
+  console.log('    그래서 빌드 게이트에 걸지 않는다 (조립본은 정상적으로 균일하다).\n')
 }
 
 /**
- * ✔/✘ 는 **판정이 아니라 눈길을 끄는 표시**다. 기준선의 75% 를 넘으면 ✔ —
- * 산장을 정확히 흉내 내라는 뜻이 아니라 **0 에서 올라왔는가**를 보는 것이다.
- * 격식체 세계는 호칭이 적을 수 있다. **재미는 사람이 읽어야 답한다.**
+ * ★ 직접 부를 때만 인쇄한다 ★ (2026-08-01) — `brief-check` 가 `measure` 를
+ * 가져다 쓰므로, 위 CLI 가 import 만으로 돌면 게이트 출력에 표가 끼어든다.
  */
-if (marks.length > 1) {
-  console.log('  ─── 한눈에 ───')
-  console.log('  사건'.padEnd(30) + '최장/최단  부름  호칭  물음표  끝맺음')
-  for (const m of marks) {
-    console.log('  ' + m.f.padEnd(28) +
-      String(m.ratio).padStart(7) + String(`${m.callers}/${m.total}`).padStart(7) +
-      String(m.honor).padStart(6) + String(m.question).padStart(8) + String(m.endings).padStart(8))
-  }
-  console.log('')
-}
-console.log('  ⚠ 이 숫자는 합격/불합격이 아니다 — 말투의 자연스러움은 사람이 읽어야 한다.')
-console.log('    그래서 빌드 게이트에 걸지 않는다 (조립본은 정상적으로 균일하다).\n')
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli()

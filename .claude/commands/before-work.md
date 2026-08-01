@@ -71,13 +71,16 @@ npm install
 npm run build
 ```
 
-**9단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · tmpl-check ·
-port-check · build` (2026-07-31에 `lint`·`prop-check` 가 늘었다).
+**10단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · tmpl-check ·
+brief-check · port-check · build` (2026-07-31에 `lint`·`prop-check`, 08-01에 `brief-check`).
 **초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 옵션 공간 속성 통과 + YAML 왕복 동일 +
-저작 서식 통과 + 이식 회귀 없음 + 린트 오류 0.
+저작 서식 통과 + **서식이 든 숫자가 산장 실측과 같음** + 이식 회귀 없음 + 린트 오류 0.
 
 > ⚠ `gen-check`(생성기) 와 `tmpl-check`(**손저작 서식**) 는 **별개 단**이다 —
 > 사건이 생기는 길이 둘이라서다. `MANIFESTO.md` §사건이 생기는 길은 셋이다.
+>
+> ⚠ `tmpl-check`(`case-template.yaml` = **저작 서식**) 와 `brief-check`(`*-BRIEF.md` =
+> **의뢰 서식**) 도 별개다. 앞은 사람이 베끼는 YAML 이고, 뒤는 **챗봇에 붙는 프롬프트**다.
 
 **실패면 그것이 이번 세션의 첫 일이다.** 내가 아무것도 안 했는데 빨간 것은 직전
 세션이 남긴 것이다. 단수가 늘어날 수 있으니 **`package.json` 의 `build` 를 믿는다** —

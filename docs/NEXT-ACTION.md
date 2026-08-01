@@ -255,10 +255,14 @@
   > **같은 날짜 문자열이 두 뜻으로 섞여 있다** — 「오기인 07-29(=07-28)」와
   > 「진짜 07-29」. 앞으로 07-29 절을 읽을 때는 **git 커밋 날짜로 갈라 읽는다.**
 - **브랜치**: `main` — 이 저장소는 **직접 main 푸시**다 (feature 브랜치·PR 없음)
-- **빌드 게이트가 9단이다** (2026-07-31에 `lint`·`prop-check` 추가) —
-  `typecheck · lint · yaml-check · verify · gen-check · prop-check · tmpl-check · port-check · build`.
+- **빌드 게이트가 10단이다** (07-31에 `lint`·`prop-check`, **08-01에 `brief-check`** 추가) —
+  `typecheck · lint · yaml-check · verify · gen-check · prop-check · tmpl-check · brief-check · port-check · build`.
   `npm run build` 하나로 다 돈다. **초록의 뜻**: 골든 케이스 통과 + 생성기 100% +
-  **옵션 공간 속성 통과 + YAML 왕복 동일** + 저작 서식 통과 + 이식 회귀 없음 + **린트 오류 0**.
+  **옵션 공간 속성 통과 + YAML 왕복 동일** + 저작 서식 통과 + **의뢰 서식의 숫자가
+  산장 실측과 같음** + 이식 회귀 없음 + **린트 오류 0**.
+  > `brief-check` 는 두 단이다 — ① 산장을 **다시 재서** `voice-ref.json` 이 아직 참인지
+  > 묻고, ② 서식 **복사 구간**의 손으로 적은 숫자를 ref 와 대조한다. ①이 없으면
+  > 서식과 ref 가 **사이좋게 같이 낡는다.**
   > **단수가 또 늘 수 있으니 `package.json` 의 `build` 를 믿는다** — 이 문장이 아니라.
 - **게이트에 **안 건** 도구 넷** — 손으로 부른다:
   `npm run world-check`(세계를 안 타는 값) · `npm run voice-check`(말투) ·
