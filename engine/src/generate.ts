@@ -522,6 +522,41 @@ const TRICKS: Record<string, () => TrickBuild> = {
     opportunity: { content: '새벽에 현장에 있었다', revealedBy: ['e_shards', 'e_pried'] },
   }),
 
+  /**
+   * 사고로 죽었다 — 넘어진 자리와 다친 자리가 안 맞는다.
+   *
+   * ⛳ **`staged_suicide` 와 나란히 놓고 읽는다** — 인상 종류는 둘 다 `death` 인데
+   * 주장이 다르다(*"스스로 그랬다"* ↔ *"아무도 그러지 않았다"*). 부품도 다르다:
+   * 위장 자살은 **쪽지 + 이탈 방법**이 필요하고, 사고는 닫힌 현장을 주장하지
+   * 않으므로 **`exit` 이 없다.** 계약이 그것을 강제한다.
+   *
+   * ⚠ **자리에 매인 이름을 안 쓴다** — 조사 배치가 팔레트 방으로 다시 흩는다.
+   */
+  staged_accident: () => ({
+    types: ['staged_accident'],
+    illusion: {
+      id: 'il_mishap', kind: 'death', impression: '넘어져서 그렇게 된 것이다',
+      madeBy: ['e_spill'], brokenBy: ['e_angle'],
+    },
+    props: ['e_tool'], staging: ['e_spill'],
+    flaw: '넘어져서 그렇게 됐다면 왜 손을 짚은 자국이 어디에도 없는가',
+    evidence: [
+      { id: 'e_spill', description: '엎질러진 자리', record: '바닥에 엎질러진 자국이 넓게 번져 있었다.', isStaging: true },
+      { id: 'e_angle', description: '맞지 않는 각도', record: '다친 자리가 넘어진 방향과 반대쪽이었다.' },
+    ],
+    actions: [
+      { id: 'a_spill', label: '엎질러진 자리 확인', cost: 1, gives: ['e_spill'], salience: 0.45, yield: 'solution',
+        verb: 'search', target: { kind: 'location', id: 'room' },
+        result: res('번진 자국', '바닥에 엎질러진 자국이 넓게 번져 있었다.') },
+      { id: 'a_angle', label: '상처 각도 대조', cost: 1, gives: ['e_angle'], salience: 0.3, yield: 'solution',
+        verb: 'fixture', target: { kind: 'fixture', id: 'body' },
+        result: res('반대쪽의 상처', '다친 자리가 넘어진 방향과 반대쪽이었다.') },
+    ],
+    presence: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'room' }, { slot: 't2', location: 'hall' }],
+    claim: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'hall' }, { slot: 't2', location: 'hall' }],
+    opportunity: { content: '새벽에 현장에 있었다', revealedBy: ['e_angle', 'e_spill'] },
+  }),
+
   // 발견된 곳에서 죽었다 — 옮겨진 자국이 남는다
   body_moved: () => ({
     types: ['body_moved'],

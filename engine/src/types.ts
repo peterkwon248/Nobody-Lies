@@ -415,7 +415,7 @@ export type Action = {
 export type TrickType =
   | 'staged_suicide' | 'locked_room' | 'alibi_fabrication'
   | 'body_moved' | 'identity_swap' | 'delayed_mechanism'
-  | 'staged_intrusion'
+  | 'staged_intrusion' | 'staged_accident'
 
 /**
  * 인상의 종류. 아키타입이 "이 종류의 인상이 반드시 있어야 한다"고 요구한다.
@@ -493,6 +493,23 @@ export const ARCHETYPES: Record<TrickType, ArchetypeContract> = {
     asserts: '바깥에서 누군가 들어왔다',
     requiresExit: false,
     requiresIllusion: ['absence'],
+  },
+  /**
+   * 사고사 위장 (2026-08-01 밤 신설 — 일곱째)
+   *
+   * ⛳ **`staged_suicide` 와 인상 종류는 같고(`death`) 주장이 다르다** — 그쪽은
+   * *"스스로 그랬다"*, 이쪽은 *"아무도 그러지 않았다"*. 추리물에서 다른 원형이고
+   * **부품도 다르다**: 위장 자살은 남겨진 쪽지와 **이탈 방법**이 필요한데
+   * (`requiresExit: true`) 사고는 닫힌 현장을 주장하지 않으므로 이탈이 필요 없다.
+   *
+   * ⚠ **기반 층을 안 건드린다** — 「흉기 바꿔치기」는 현장의 `e_tool` 자체를
+   * 가짜로 만들어야 해서 빌더 하나로 안 끝난다. 이쪽은 **자국을 더할 뿐**이다.
+   */
+  staged_accident: {
+    label: '사고사 위장',
+    asserts: '사고로 죽었다',
+    requiresExit: false,
+    requiresIllusion: ['death'],
   },
   identity_swap: {
     label: '정체 뒤바꾸기',
