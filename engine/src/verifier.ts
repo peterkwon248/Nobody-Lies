@@ -1799,6 +1799,85 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-16. **인물별 수량이 범인을 혼자 세운다** (2026-08-02 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * §9-3h 의 명제(**고립이 문제다**)를 **플레이어가 화면에서 셀 수 있는 수량**으로
+   * 넓힌다. §9-3h 는 「빈손이냐 아니냐」만 봤는데, 용의자 카드와 조사 목록에는
+   * **세어볼 수 있는 것이 더 있다**:
+   *
+   * ```
+   * 프로필에 찬 칸 수     용의자 카드의 동기·수단·기회 (App.jsx §per[p.id].slots)
+   * 그 사람을 겨누는 조사 수   조사 목록에서 그냥 보인다
+   * 그 조사들의 비용 합       비용도 목록에 찍힌다
+   * ```
+   *
+   * `MEMORY §절대 규칙` 이 **이름으로 금지한 자리**다 — *"프로필의 유죄 판정 금지.
+   * 사실만. `기회 있음 ✓` 금지"* · *"유용도 시각 구분 금지"*. **그런데 검사가 없었다.**
+   * 그 규칙은 개발 중 **일곱 차례 다른 형태로 재발**했다고 같은 절이 적어뒀다.
+   *
+   * ## ⛳ salience 는 일부러 뺐다 — **화면에 안 나온다**
+   *
+   * `matrix.ts` 의 옛 노트가 *"salience·비용·조사 개수·빈손 여부"* 를 누설 축으로
+   * 적어뒀는데, **`salience` 는 `App.jsx` 어디에도 렌더되지 않는다**(전수 grep 0건).
+   * 보이지 않는 값은 누설할 수 없다. 재보니 범인의 고립률이 **무고한 자보다 낮았다**
+   * (34% 대 41% · 배율 0.82x) — **기준선 없이 34% 만 봤으면 없는 누설을 잡으러 갔다.**
+   *
+   * ## 실측 (2026-08-02 · 44건 = 생성 40 + 저작 4)
+   *
+   * ```
+   * 프로필 칸 수 고립    범인 0/44   무고 0/176
+   * 조사 개수 고립       범인 0/44   무고 0/176
+   * 비용 합 고립         범인 0/44   무고 0/176
+   * ```
+   *
+   * **전부 0 이다 — 즉 이것은 회귀 감시다.** §9-13(관계 도식)을 지을 때와 같은 자리다:
+   * 산장이 이미 지키고 있었고 **규칙이 못박히지 않았을 뿐**이었다. 등급이 **오류**인
+   * 것은 §9-3h 와 같은 명제라서다(정답 누설이 이 저장소에서 가장 비싸다).
+   */
+  {
+    const suspectsOnly = c.people.filter((p) => p.id !== c.victim)
+    if (suspectsOnly.length >= 3) {
+      const zero = () => new Map(suspectsOnly.map((p) => [p.id, 0]))
+      const slotsFilled = zero(), actionCount = zero(), costSum = zero()
+
+      const seenSlot = new Set<string>()
+      for (const a of c.actions) {
+        for (const cl of a.clues ?? []) {
+          const k = `${cl.person}|${cl.slot}`
+          if (seenSlot.has(k) || !slotsFilled.has(cl.person)) continue
+          seenSlot.add(k)
+          slotsFilled.set(cl.person, slotsFilled.get(cl.person)! + 1)
+        }
+        if (a.target?.kind !== 'person' || !actionCount.has(a.target.id)) continue
+        actionCount.set(a.target.id, actionCount.get(a.target.id)! + 1)
+        costSum.set(a.target.id, costSum.get(a.target.id)! + a.cost)
+      }
+
+      const AXES = [
+        { label: '프로필에 찬 칸', of: slotsFilled },
+        { label: '겨누는 조사 개수', of: actionCount },
+        { label: '조사 비용 합', of: costSum },
+      ]
+      for (const { label, of } of AXES) {
+        const vals = [...of.values()]
+        // 전원이 0 이면 그 축은 화면에 아무것도 안 만든다 — 고립이 뜻을 갖지 않는다
+        if (!vals.some((v) => v > 0)) continue
+        for (const [extreme, word] of [[Math.max(...vals), '최다'], [Math.min(...vals), '최소']] as const) {
+          const who = [...of].filter(([, v]) => v === extreme).map(([id]) => id)
+          if (who.length !== 1 || who[0] !== c.culprit) continue
+          const nm = c.people.find((p) => p.id === c.culprit)?.name ?? c.culprit
+          errors.push(
+            `'${label}'에서 범인 '${nm}'만 혼자 ${word}다 (${extreme} · 용의자 ${suspectsOnly.length}명) — ` +
+              '용의자 카드를 세어보면 답이 나온다',
+          )
+        }
+      }
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 

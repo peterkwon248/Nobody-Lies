@@ -271,18 +271,18 @@ const CELLS: Cell[] = [
   { channel: 'profile', invariant: 'derivable', status: 'covered',
     marker: { file: V, text: '1. 유일성' },
     note: '유죄 요건 셋이 정확히 한 사람에게만 선다' },
-  { channel: 'profile', invariant: 'leak', status: 'open',
-    note: '프로필이 조사 전에 유죄 요건을 보여주는지 안 본다 (§절대 규칙의 「프로필의 유죄 판정 금지」)' },
+  { channel: 'profile', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-16. **인물별 수량이 범인을 혼자 세운다**' },
+    note: '§절대 규칙이 **이름으로 금지**한 자리인데(*"프로필의 유죄 판정 금지 · 기회 있음 ✓ 금지"*) 검사가 없었다. §9-16 이 **프로필에 찬 칸 수**로 범인이 혼자 최다/최소인지 문다. ⛔ **다만 지금은 발화할 수가 없다 — 채널이 비어 있다.** `action.clues` 를 가진 사건은 **산장 하나뿐**(12개)이고 생성 40건 + 저작 3건이 **전부 0** 이다. 즉 이 축은 **채워지는 순간부터 무는 회귀 감시**이고, 지금 「누설 없음」은 **내용이 없어서**다. ★ 채널이 빈 것 자체는 누설이 아니라 **결손**이라 여기 안 센다 — `NEXT-ACTION` §프로필 채널이 비어 있다 참조' },
   { channel: 'profile', invariant: 'contradiction', status: 'open', note: '' },
   { channel: 'profile', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '2. 트릭' },
     note: '트릭 계약이 사실·물증과 맞물리는가' },
 
   // ── 조사 목록 — 08-01에 여기가 인물 식별의 유일한 자리였다 ──
-  { channel: 'actionList', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '9-3h. **사람을 겨누는 조사에서 범인만 혼자 다르다**' },
-    missing: '**빈손 여부**(§9-3h)와 **이름의 모양**(§9-3e)만 본다 — 빈손 쪽은 그것도 `target.kind === person` 이고 `verb` 가 있는 조사에 한해서다. **salience · 비용 · 사람마다 조사 개수**는 여전히 무검사다',
-    note: '⚠ **2026-08-02 정정 — 이 칸은 `open` 이 아니었다.** 노트가 *"빈손 여부를 안 본다"* 고 적어뒀는데 §9-3h 가 **오류 등급으로** 바로 그것을 본다(소지품 150/150 을 잡고 만들어진 검사다). 어느 칸도 §9-3h 를 표식으로 안 쓰고 있어서 **행렬이 자기 코드를 모르고 있었다** — 다음 세션이 이미 있는 검사를 지으러 갈 자리였다' },
+  { channel: 'actionList', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-16. **인물별 수량이 범인을 혼자 세운다**' },
+    note: '빈손 여부(§9-3h) · 이름의 모양(§9-3e) · **세어볼 수 있는 수량**(§9-16 — 조사 개수·비용 합)까지 본다. ⛳ **`salience` 는 일부러 뺐다** — `App.jsx` 어디에도 렌더되지 않아(전수 grep 0건) 보이지 않는 값이다. 재보니 범인의 고립률이 무고한 자보다 **낮았다**(34% 대 41% · 배율 0.82x) — 기준선 없이 34%만 봤으면 없는 누설을 잡으러 갔다. ⚠ 2026-08-02 정정: 이 칸은 원래 `open` 으로 적혀 있었는데 §9-3h 가 이미 오류 등급으로 빈손을 보고 있었다 — **행렬이 자기 코드를 모르던 다섯 번째**' },
   { channel: 'actionList', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.6 필수 조사' },
     note: '답을 한 조사로만 얻으면 그 조사는 건너뛸 수 없다' },
@@ -294,8 +294,25 @@ const CELLS: Cell[] = [
   { channel: 'plan', invariant: 'contradiction', status: 'covered',
     marker: { file: V, text: '9-3' },
     note: '평면도가 격자·트릭과 좌표로 맞는가 — §9-3b(트릭이 말한 창이 현장에 있나) · §9-3i(도면의 기하 여섯 갈래)' },
-  { channel: 'plan', invariant: 'leak', status: 'open',
-    note: '방 크기·위치가 현장을 지목하는지 안 본다 (plan-check 이 세지만 게이트 밖)' },
+  /**
+   * ★ 2026-08-02 재분류 — **`open` 이 틀린 전제 위에 서 있었다** ★
+   *
+   * 옛 노트: *"방 크기·위치가 **현장을 지목하는지** 안 본다."* 재보니 **현장이 가장 큰
+   * 방인 사건이 40/44(91%)** 였다 — 숫자는 컸는데 **누설이 아니다.**
+   * `proof.ts` §R5 가 못박아뒀다: *"시신이 어디서 나왔는지는 **전제이지 답이 아니다**"*
+   * — 사건 개요가 처음부터 현장을 말한다. **공개된 것을 가리키는 것은 누설이 아니다.**
+   *
+   * 그래서 「전제가 아닌 것」을 흘리는 벡터를 셋 더 재봤고 **전부 0**이었다:
+   * ```
+   * 트릭의 이탈 방법   창으로 나갔다는 4건 중 「현장에만 창」 0건 (창 있는 방이 87%라 지목이 안 된다)
+   * 공개 전 고정물     데이터엔 42건 있으나 App.jsx:3276 이 revealedLocs 로 거른다
+   * 방 크기·자리       현장 말고 가리킬 것이 없다 — 범인·트릭과 무관하다
+   * ```
+   * **평면도가 보여주는 것은 전부 전제이거나 공개 시점으로 걸러진다.**
+   * ⚠ 벡터가 새로 생기면(도면이 전제 아닌 것을 그리게 되면) 되살린다.
+   */
+  { channel: 'plan', invariant: 'leak', status: 'na',
+    note: '도면이 말하는 것은 **전부 전제**(현장 — proof.ts §R5)이거나 **앱이 공개 시점으로 거른다**(고정물 — App.jsx:3276). 실측 44건: 「현장에만 창」 0 · 창 있는 방 87%라 지목 불가. ⛳ 다양성(방 크기 쏠림)은 누설이 아니라 **품질**이고 `plan-check` 이 따로 센다' },
   { channel: 'plan', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '9-3' },
     note: '장소 id 가 실재하는가 — §9-3c(고정물이 도면 위에 있나) · §9-3d(보행선의 장소 쌍) · §9-3j(장소가 있는데 평면도가 없다)' },
