@@ -505,6 +505,21 @@ const MUTATORS: { id: string; hit: (c: Case) => void }[] = [
     } },
 
   /** ★ 누설 (§9-7b · §9-12 · §9-13) — 산문에 심는다 */
+  /** §9-18 셋 — 프롤로그가 범인을 부르거나 사실과 어긋난다 */
+  { id: '프롤로그가 범인 이름만 부른다', hit: (c) => {
+      const nm = c.people.find((p) => p.id === c.culprit)?.name
+      if (!nm) return
+      c.prologue = [...(c.prologue ?? []), { ko: `${nm}은 그날 유난히 말이 없었다.` }]
+    } },
+  { id: '피해자 이름을 딴 사람으로', hit: (c) => {
+      if (c.victimProfile) c.victimProfile.name = '없는사람'
+    } },
+  { id: '프롤로그의 인원수를 틀리게', hit: (c) => {
+      const ko = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+      c.prologue = (c.prologue ?? []).map((p) => ({
+        ko: ko(p).replace(/(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)( ?사람이 (?:더|답했다))/, '열$2'),
+      }))
+    } },
   { id: '프롤로그가 조사 단어를 흘린다', hit: (c) => {
       const seeded = new Set(c.seedTerms ?? [])
       const leak = (c.terms ?? []).map((t) => t.word).find((w) => !seeded.has(w))

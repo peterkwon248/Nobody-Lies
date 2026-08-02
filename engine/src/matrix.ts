@@ -261,12 +261,12 @@ const CELLS: Cell[] = [
   { channel: 'revealNarration', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
   // ── 프롤로그·개요 ──
-  { channel: 'prologue', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '9-7' },
-    missing: '**확보 단어**만 본다. 프롤로그가 범인·트릭을 가리키는지는 안 본다',
-    note: '프롤로그가 확보 단어를 먼저 말하는가' },
-  { channel: 'prologue', invariant: 'contradiction', status: 'open',
-    note: 'closing-theater 에 **일부러 남긴 재현 테스트**가 여기 있다' },
+  { channel: 'prologue', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-18. **프롤로그가 범인을 부르거나 사실과 어긋난다**' },
+    note: '확보 단어(§9-7b · 오류)에 더해 **§9-18 이 「용의자 중 범인만 이름이 나오나」**를 문다 — §9-13(도식이 범인만 가리킨다)과 같은 명제다. 실측 44건: 용의자를 부르는 프롤로그가 1건(2%)이고 **범인만 부르는 것은 0**' },
+  { channel: 'prologue', invariant: 'contradiction', status: 'covered',
+    marker: { file: V, text: '9-18. **프롤로그가 범인을 부르거나 사실과 어긋난다**' },
+    note: '§9-18 이 둘을 문다 — ⓐ「죽었다」고 한 사람이 **피해자**인가(`victimProfile.name` 이 정본이다. `people` 에는 피해자가 없다) · ⓑ **인원수를 글자로** 말하는데 실제와 같은가(*"다섯 사람이 더"* — MANIFESTO ❌C 부류로, 세계가 바뀌어도 문장이 안 따라오는 자리다). ⛳ `closing-theater` 의 **일부러 남긴 재현 테스트**는 이 둘이 아니라 프롤로그↔데이터 불일치라 ⑤검열관 몫으로 남는다' },
   { channel: 'prologue', invariant: 'derivable', status: 'na', note: '전제를 말하는 자리다' },
   { channel: 'prologue', invariant: 'wiring', status: 'na', note: '가리키는 것이 없다' },
 
