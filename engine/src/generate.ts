@@ -478,6 +478,50 @@ const TRICKS: Record<string, () => TrickBuild> = {
     opportunity: { content: '새벽에 현장에 있었다', revealedBy: ['e_gap', 'e_seal'] },
   }),
 
+  /**
+   * 바깥에서 누군가 들어왔다 — 그런데 부순 자국이 안쪽에서 생겼다.
+   *
+   * ★ **속이는 축이 다른 다섯과 다르다** ★ 나머지는 **사인·시각·장소**를 속이는데
+   * 이것은 **용의자 집합**을 속인다: *"범인은 이 다섯 중에 없다"*.
+   *
+   * ⛳ **`identity_swap` 과 다르다** — 그쪽은 용의자 목록이 **거짓**이 되어 닫힘 후보가
+   * 무너진다(그래서 `unsupported`). 이쪽은 **목록이 참인 채로** 바깥을 가리키는
+   * 인상만 만들고 답은 여전히 다섯 중 하나다. **공란 체계를 안 건드린다.**
+   *
+   * ⚠ **`approach` 를 겨눈다** — 부지 안의 실외이고 `PLACE_KEYS` 가 언제나 낸다.
+   * 바깥으로 난 문의 이야기라 `hall`·`room` 으로는 말이 안 된다.
+   */
+  staged_intrusion: () => ({
+    types: ['staged_intrusion'],
+    illusion: {
+      id: 'il_outsider', kind: 'absence', impression: '바깥에서 누군가 들어와 벌인 일이다',
+      madeBy: ['e_pried'], brokenBy: ['e_shards'],
+    },
+    props: ['e_tool'], staging: ['e_pried'],
+    flaw: '바깥에서 비틀었다면 왜 부스러기가 안쪽 바닥에만 떨어져 있는가',
+    evidence: [
+      { id: 'e_pried', description: '비틀린 잠금장치', record: '바깥으로 난 문의 잠금장치에 비튼 자국이 있었다.', isStaging: true },
+      { id: 'e_shards', description: '떨어진 부스러기', record: '부스러기가 문 안쪽 바닥에만 떨어져 있었다.' },
+    ],
+    actions: [
+      { id: 'a_outer', label: '바깥문 조사', cost: 1, gives: ['e_pried'], salience: 0.5, yield: 'solution',
+        verb: 'search', target: { kind: 'location', id: 'approach' },
+        result: res('비틀린 자국', '바깥으로 난 문의 잠금장치에 비튼 자국이 남아 있었다.') },
+      /**
+       * ⚠ **자리에 매인 이름을 쓰지 마라** — 겨냥한 `location` 은 아래 §조사 배치가
+       * 팔레트 방으로 **다시 흩는다**(실측: `a_desk`·`a_frame`·`a_hall` 도 전부 옮겨진다).
+       * 그래서 「문턱 조사」로 두면 서재에서 문턱을 조사하는 꼴이 된다.
+       * **물건 이름으로 부르면 어디로 옮겨져도 말이 된다.**
+       */
+      { id: 'a_threshold', label: '바닥 부스러기 확인', cost: 1, gives: ['e_shards'], salience: 0.25, yield: 'solution',
+        verb: 'search', target: { kind: 'location', id: 'hall' },
+        result: res('안쪽의 부스러기', '부스러기가 문 안쪽 바닥에만 떨어져 있었다.') },
+    ],
+    presence: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'room' }, { slot: 't2', location: 'hall' }],
+    claim: [{ slot: 't0', location: 'hall' }, { slot: 't1', location: 'hall' }, { slot: 't2', location: 'hall' }],
+    opportunity: { content: '새벽에 현장에 있었다', revealedBy: ['e_shards', 'e_pried'] },
+  }),
+
   // 발견된 곳에서 죽었다 — 옮겨진 자국이 남는다
   body_moved: () => ({
     types: ['body_moved'],

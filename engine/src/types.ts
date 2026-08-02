@@ -415,6 +415,7 @@ export type Action = {
 export type TrickType =
   | 'staged_suicide' | 'locked_room' | 'alibi_fabrication'
   | 'body_moved' | 'identity_swap' | 'delayed_mechanism'
+  | 'staged_intrusion'
 
 /**
  * 인상의 종류. 아키타입이 "이 종류의 인상이 반드시 있어야 한다"고 요구한다.
@@ -473,6 +474,25 @@ export const ARCHETYPES: Record<TrickType, ArchetypeContract> = {
     asserts: '범인이 있을 때 벌어졌다',
     requiresExit: false,
     requiresIllusion: ['time'],
+  },
+  /**
+   * 외부인 위장 (2026-08-01 밤 신설 — 여섯째)
+   *
+   * ★ **다른 다섯과 속이는 축이 다르다** ★ 나머지는 전부 **사인·시각·장소**를 속인다.
+   * 이것은 **용의자 집합 자체**를 속인다 — *"범인은 이 다섯 중에 없다"*.
+   *
+   * ⛳ **`identity_swap` 과 헷갈리면 안 된다.** 그쪽은 **용의자 목록이 거짓**이 되어
+   * 닫힘 후보가 무너진다(그래서 `unsupported`). 이쪽은 **목록이 참인 채로** 바깥을
+   * 가리키는 인상만 만든다 — 답은 여전히 다섯 중 하나라 공란 체계가 그대로 산다.
+   *
+   * `absence` 를 쓰는 이유: 인상이 *"범인이 이 안에 없었다"* 라 「그 자리에 없었다」의
+   * 한 판본이다. `locked_room` 도 같은 종류를 *"아무도 드나들 수 없었다"* 로 쓴다.
+   */
+  staged_intrusion: {
+    label: '외부인 위장',
+    asserts: '바깥에서 누군가 들어왔다',
+    requiresExit: false,
+    requiresIllusion: ['absence'],
   },
   identity_swap: {
     label: '정체 뒤바꾸기',

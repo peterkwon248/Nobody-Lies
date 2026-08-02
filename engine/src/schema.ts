@@ -1,4 +1,4 @@
-import { DOMAIN_OF } from './types.js'
+import { DOMAIN_OF, ARCHETYPES } from './types.js'
 import type {
   Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person, RelationGraph,
   PresenceCell, Particle, Reveal, Slot, Text,
@@ -514,10 +514,13 @@ export function parseCase(raw: unknown, source: string): Case {
   })
 
   const trick = (c.trick ?? {}) as Raw
-  const TRICK_TYPES = new Set([
-    'staged_suicide', 'locked_room', 'alibi_fabrication',
-    'body_moved', 'identity_swap', 'delayed_mechanism',
-  ])
+  /**
+   * ⛳ **손으로 베끼지 않는다** — 여기 여섯 문자열이 `types.ts` 의 `TrickType` 을
+   * 그대로 다시 쓴 복사본이었다. 아키타입을 하나 늘릴 때 **한쪽만 고치면 조용히
+   * 어긋난다**(이 저장소 최다 재발 부류 — 07-30에 여섯 번). `ARCHETYPES` 가
+   * `Record<TrickType, …>` 이므로 그 키가 곧 허용목록이다.
+   */
+  const TRICK_TYPES = new Set(Object.keys(ARCHETYPES))
   const types = arr(trick.types)
   if (!types.length) p.add('trick.types', '아키타입이 없다')
   for (const t of types)
