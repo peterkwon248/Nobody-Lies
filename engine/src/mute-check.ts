@@ -207,16 +207,146 @@ const MUTATORS: { id: string; hit: (c: Case) => void }[] = [
   { id: '확보 단어를 주지 않게', hit: (c) => c.evidence.forEach((e) => { e.yieldsTerms = [] }) },
   { id: '현장을 없는 장소로', hit: (c) => { c.incident.scene = 'no_such_place' as never } },
   { id: '범인을 없는 사람으로', hit: (c) => { c.culprit = 'no_such_person' as never } },
-  { id: '공개 대상을 없는 id 로', hit: (c) => c.reveals.forEach((r) => { r.addClaims = [{ person: 'no_such', slot: 'no_such', location: 'no_such' } as never] }) },
+  /**
+   * ⚠ **2026-08-02 정정 — 필드 이름이 셋 다 틀려 있었다.** `person`·`location` 은
+   * `addClaims` 에 없는 이름이고(정본은 `speaker`·`content`·`target`), `as never` 가
+   * 그것을 가려서 타입 검사도 안 걸렸다. **그런데도 울리긴 했다** — `speaker` 가
+   * `undefined` 라 「화자가 인물 목록에 없다」가 떴을 뿐, 이름표가 말하는
+   * 「없는 id 를 가리킨다」를 재고 있지 않았다. **뮤테이션도 심기라서 틀리면 거짓말이 된다.**
+   */
+  { id: '공개 화자를 없는 인물로', hit: (c) => c.reveals.forEach((r) => {
+      r.addClaims = [{ speaker: 'no_such_person', content: '한마디', target: 'statement' }]
+    }) },
   { id: '레드헤링을 전부 뗀다', hit: (c) => { c.facts = c.facts.filter((f) => f.kind !== 'context') } },
   { id: '결정적 물증을 하나로', hit: (c) => c.facts.forEach((f) => { f.revealedBy = f.revealedBy.slice(0, 1) }) },
+
+  /**
+   * ★★ 2026-08-02 — **평면도 국소 파손** ★★
+   *
+   * 여기 있던 평면도 뮤테이션은 「통째로 지운다」·「방을 전부 지운다」 둘뿐이라
+   * **너무 거칠었다.** 도면을 없애면 §9-3a(`평면도가 없다`) 하나만 울리고 그 아래
+   * 기하 검사 열두 자리는 **애초에 실행되지 않는다**(`if (c.floorPlan)` 안에 있다).
+   * 그래서 침묵 목록에 평면도가 무리로 뭉쳐 있었다 — 검사가 죽어서가 아니라
+   * **도구가 그 자리까지 못 갔던 것**이다.
+   *
+   * 아래는 전부 **도면을 살려둔 채 한 군데씩** 망가뜨린다.
+   */
+  { id: '방을 없는 장소로', hit: (c) => { if (c.floorPlan?.rooms[0]) c.floorPlan.rooms[0].loc = 'no_such_loc' } },
+  { id: '방을 없는 건물로', hit: (c) => { if (c.floorPlan?.rooms[0]) c.floorPlan.rooms[0].building = 'no_such_building' } },
+  { id: '방을 건물 밖으로', hit: (c) => { if (c.floorPlan?.rooms[0]) c.floorPlan.rooms[0].x = -9999 } },
+  { id: '방 둘을 겹친다', hit: (c) => {
+      const rs = c.floorPlan?.rooms
+      if (!rs || rs.length < 2) return
+      // 같은 건물 안에서 겹쳐야 §9-3i ⓐ 가 본다 — 건물이 다르면 무리가 갈린다
+      rs[1]!.building = rs[0]!.building
+      rs[1]!.x = rs[0]!.x; rs[1]!.y = rs[0]!.y
+      rs[1]!.w = rs[0]!.w; rs[1]!.h = rs[0]!.h
+    } },
+  { id: '문을 전부 뺀다', hit: (c) => { if (c.floorPlan) c.floorPlan.doors = [] } },
+  { id: '창을 전부 뺀다 (창으로 나갔다는 트릭)', hit: (c) => {
+      if (!c.floorPlan) return
+      // 「창이 없다」는 **트릭이 창을 말할 때만** 결함이다 — 그래서 이탈 문구도 같이 세운다
+      if (c.trick.exit) c.trick.exit.method = '창을 넘어 나갔다'
+      c.floorPlan.windows = []
+    } },
+  { id: '창을 바깥벽에서 뗀다', hit: (c) => {
+      const ws = c.floorPlan?.windows
+      if (!ws?.length) return
+      ws.forEach((w) => { w.x1 = -500; w.y1 = -500; w.x2 = -400; w.y2 = -500 })
+    } },
+  { id: '현장의 scene 표식을 뗀다', hit: (c) => c.floorPlan?.rooms.forEach((r) => { r.scene = undefined }) },
+  { id: '고정물 목록을 비운다', hit: (c) => { if (c.floorPlan) c.floorPlan.fixtures = {} } },
+  { id: '고정물을 자기 장소 밖으로', hit: (c) =>
+      Object.values(c.floorPlan?.fixtures ?? {}).forEach((f) => { f.x = -9999; f.y = -9999 }) },
+  { id: '보행선을 없는 장소로', hit: (c) => c.floorPlan?.walks.forEach((w) => { w.from = 'no_such_loc' }) },
+  { id: '보행선에 분만 남긴다', hit: (c) => {
+      if (!c.floorPlan) return
+      // 보행선이 없는 사건이 있다 — 없으면 하나 세워야 이 자리를 건드릴 수 있다
+      if (!c.floorPlan.walks.length) c.floorPlan.walks.push({ x1: 0, y1: 0, x2: 1, y2: 1 })
+      c.floorPlan.walks.forEach((w) => { w.min = 7; w.from = undefined; w.to = undefined })
+    } },
+
+  /**
+   * ★★ 2026-08-02 — **레지스트리 참조** ★★
+   *
+   * ⛳ 이 넷은 `schema.ts` **도 본다.** 그래도 죽은 자리가 아니다 —
+   * **생성 사건은 `parseCase` 를 안 거친다**(`cli.ts` 의 `--generate` 는
+   * `run()` 만 부르고 스키마를 안 탄다). 손저작 YAML 은 스키마가 먼저 막지만
+   * **생성기 쪽에서는 이 검사들이 유일한 문지기다.**
+   */
+  { id: '격자 공개에 slot 을 안 준다', hit: (c) => c.reveals.forEach((r) => {
+      r.addClaims = [{ speaker: c.people[0]!.id, content: '한마디', target: 'grid' }]
+    }) },
+  { id: '격자 공개를 없는 slot 으로', hit: (c) => c.reveals.forEach((r) => {
+      r.addClaims = [{ speaker: c.people[0]!.id, content: '한마디', target: 'grid', slot: 'no_such_slot' }]
+    }) },
+  { id: '공개 트리거를 없는 조사로', hit: (c) => c.reveals.forEach((r) => {
+      r.trigger = { on: 'action', actionId: 'no_such_action' }
+    }) },
+  { id: '동선 슬롯을 없는 것으로', hit: (c) => c.people.forEach((p) =>
+      p.presence.forEach((x) => { x.slot = 'no_such_slot' })) },
+
+  /**
+   * ★★ 2026-08-02 — **관계 도식 국소 파손** ★★
+   *
+   * 평면도와 **똑같은 모양의 구멍**이었다. `관계도를 지운다` 하나뿐이라
+   * §9-5 열 자리가 `if (c.relationGraph)` 안에서 통째로 안 돌았고, 그래서
+   * 그 뮤테이션은 「아무것도 새로 못 깨운 17종」에 이름을 올리고 있었다.
+   * **도식을 살려둔 채** 한 군데씩 망가뜨린다.
+   */
+  { id: '도식 인물 노드를 없는 인물로', hit: (c) => c.relationGraph?.nodes
+      .forEach((n) => { if (n.kind === 'person') n.id = 'no_such_person' }) },
+  { id: '도식 비인물 노드의 이름을 뗀다', hit: (c) => c.relationGraph?.nodes
+      .forEach((n) => { if (n.kind !== 'person') n.label = undefined }) },
+  { id: '도식에서 인물 노드를 뺀다', hit: (c) => {
+      if (c.relationGraph) c.relationGraph.nodes = c.relationGraph.nodes.filter((n) => n.kind !== 'person')
+    } },
+  { id: '도식 간선의 끝점을 없는 노드로', hit: (c) => c.relationGraph?.edges
+      .forEach((e) => { e.from = 'no_such_node'; e.to = 'no_such_node2' }) },
+  { id: '도식 발견을 없는 조사로', hit: (c) => c.relationGraph?.discoveries
+      .forEach((d) => { d.action = 'no_such_action' }) },
+
+  /** ★ 짝 조사 (§9-6) — 지금껏 `pair` 를 건드리는 뮤테이션이 하나도 없었다 */
+  { id: '짝 조사를 없는 인물로', hit: (c) => c.actions
+      .forEach((a) => { a.pair = ['no_such_a', 'no_such_b'] }) },
+  { id: '짝 조사를 같은 사람 둘로', hit: (c) => {
+      const p = c.people[0]; if (!p) return
+      c.actions.forEach((a) => { a.pair = [p.id, p.id] })
+    } },
+  { id: '짝과 대상을 둘 다 준다', hit: (c) => {
+      const [p, q] = c.people; if (!p || !q) return
+      c.actions.forEach((a) => { if (a.target) a.pair = [p.id, q.id] })
+    } },
+  { id: '조사에서 지목 지점을 뗀다', hit: (c) => c.actions
+      .forEach((a) => { a.target = undefined; a.pair = undefined }) },
+
+  /** ★ 허점이 심긴 자리를 **얻을 수 없게** 만든다 (§9-4 끝) */
+  { id: '허점을 못 얻는 물증에 심는다', hit: (c) => {
+      const ev = c.evidence[0]
+      if (!ev || !c.trick.flaw) return
+      c.trick.flaw.plantedIn = [ev.id]
+      c.actions.forEach((a) => { a.gives = a.gives.filter((g) => g !== ev.id) })
+    } },
 ]
 
 const clone = (c: Case): Case => JSON.parse(JSON.stringify(c)) as Case
+
+/**
+ * ⚠ **2026-08-02 — 망가뜨릴 표본이 생성 사건뿐이었다.**
+ *
+ * `healthy` 는 [생성 N건 · 저작 YAML 4건 · 서식 1건] 순인데 `slice(0, 8)` 이라
+ * **앞의 생성분만 잘라 쓰고 있었다.** 손저작에만 걸리는 검사(산문 층·§5-b 부류)는
+ * 그래서 **영영 심어볼 수 없었다** — 침묵이 「검사가 죽었다」가 아니라
+ * 「표본에 그런 사건이 없다」였던 자리가 섞여 있었다는 뜻이다.
+ *
+ * 생성 4 + 저작 전부로 바꾼다. 갈래마다 하나씩은 들어간다.
+ */
+const sample = [...healthy.slice(0, 4), ...healthy.slice(N)]
+
 const byMutator = new Map<string, number>()
 for (const m of MUTATORS) {
   const before = heard.size
-  for (const c of healthy.slice(0, Math.min(healthy.length, 8))) {
+  for (const c of sample) {
     const x = clone(c)
     try {
       m.hit(x)
@@ -243,9 +373,10 @@ console.log(`  안 울렸다   ${String(silent.length).padStart(4)}        ← �
 const sErr = silent.filter((s) => s.kind === 'error')
 const sWarn = silent.filter((s) => s.kind === 'warn')
 console.log(`  ── 안 울린 자리 (오류 ${sErr.length} · 경고 ${sWarn.length}) ──`)
-for (const s of silent.slice(0, 30))
+// ⚠ 자르지 않는다 — **이 목록이 곧 다음에 할 일**이다. 30개에서 끊으면
+//    「그 밖 23개」가 영영 안 보여서 도구가 자기 산출물을 숨긴다 (2026-08-02).
+for (const s of silent)
   console.log(`    ${s.kind === 'error' ? '⛔' : '  '} verifier.ts:${String(s.line).padStart(4)}  ${s.anchor.slice(0, 46)}`)
-if (silent.length > 30) console.log(`    … 그 밖 ${silent.length - 30}개`)
 
 console.log(`\n  ── 뮤테이션이 새로 깨운 문장 수 (${MUTATORS.length}종) ──`)
 for (const [id, n] of [...byMutator].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 12))
