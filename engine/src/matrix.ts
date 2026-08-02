@@ -99,6 +99,55 @@ type Cell = {
   note: string
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  ★★ 상용화 게이트 — **출시에 필요한 칸** (2026-08-02 · 사용자 확정) ★★
+ * ─────────────────────────────────────────────────────────────
+ *
+ * ## 왜 필요한가 — **행렬 % 는 출시 기준이 아니다**
+ *
+ * 행렬 전체 비율은 *"검사할 수 있는 표면 중 얼마나 검사하나"* 지 *"팔 수 있나"* 가
+ * 아니다. **그걸 100% 로 끌고 가려는 것이 「작업이 끝없이 늘어나는」 느낌의 원인이었다.**
+ *
+ * 축별로 갈라 세니 41% 가 무엇을 감추는지 드러났다:
+ *
+ * ```
+ * 배선  11/13  85%   가리키는 게 실재하나        ← 거의 끝났다
+ * 도출   2/ 4  50%   답에 도달 경로가 있나       ← proof-check 320/320 이 실측으로 받친다
+ * 모순   3/14  21%   화면이 데이터와 다른 말을 하나
+ * 누설   2/13  15%   조사 없이 답이 나오나       ← 상품을 죽이는 축인데 제일 낮다
+ * ```
+ *
+ * **41% 가 낮은 게 문제가 아니라, 낮은 자리가 하필 상품 그 자체인 게 문제다.**
+ * `MEMORY §절대 규칙` 첫 줄이 그렇게 정의한다 — *"이 게임의 상품은 「내가 알아냈다」는
+ * 감각이다. 아래를 위반하면 상품이 사라진다."* 그 「아래」가 전부 **누설**이다.
+ *
+ * ## 무엇이 드나
+ *
+ * ```
+ * ✅ 누설 축 전부              살아있는 칸 전부   이게 상품이다
+ * ✅ 모순 축 중 산문 채널만      아래 PROSE       산문은 데이터와 따로 놀아서
+ *                                              어긋나도 아무도 모른다
+ * ⏭ 도출                      0               생성 320/320 실측이 이미 받친다
+ * ⏭ 배선                      0               85%. 남은 둘은 결말 화면 — 채점 뒤라 늦어도 된다
+ * ```
+ *
+ * **여기 안 드는 칸은 출시 후에 해도 된다. 100% 는 상용화 조건이 아니다.**
+ *
+ * ## ⚠ 태그가 아니라 **규칙**이다
+ *
+ * 칸마다 `ship: true` 를 손으로 붙이면 **채널을 새로 만들 때 조용히 빠진다** — 이
+ * 저장소가 다섯 번 밟은 함정이 정확히 그것이다(`b9f49b4` · `PORT-AUDIT` 표 ·
+ * 08-02의 §9-3h). 규칙으로 두면 **새 채널의 누설 칸이 자동으로 게이트에 든다.**
+ * 그리고 문서에는 숫자를 안 적는다 — `npm run matrix` 가 센다.
+ */
+const PROSE_CHANNELS = new Set<ChannelId>([
+  'statement', 'addClaims', 'report', 'revealNarration', 'prologue', 'interlude',
+])
+const inShipGate = (c: Cell) =>
+  c.status !== 'na' &&
+  (c.invariant === 'leak' || (c.invariant === 'contradiction' && PROSE_CHANNELS.has(c.channel)))
+
 const V = 'src/verifier.ts'
 
 /**
@@ -348,6 +397,19 @@ for (const ch of CHANNELS) {
   rows.push(row)
 }
 
+/** ─── 상용화 게이트 셈 (위 §상용화 게이트 참조) ────────────────── */
+const shipAll: Cell[] = []
+for (const ch of CHANNELS)
+  for (const inv of INVARIANTS) {
+    const cell = byKey.get(`${ch.id}|${inv.id}`)
+      ?? { channel: ch.id, invariant: inv.id, status: 'open' as const, note: '' }
+    if (inShipGate(cell)) shipAll.push(cell)
+  }
+const shipDone = shipAll.filter((c) => c.status === 'covered')
+const shipLeft = shipAll.filter((c) => c.status !== 'covered')
+const label = (c: Cell) =>
+  `${CHANNELS.find((x) => x.id === c.channel)!.label} × ${INVARIANTS.find((x) => x.id === c.invariant)!.label}`
+
 /**
  * ─────────────────────────────────────────────────────────────
  *  ★ 진짜 역방향 — **검증기의 절이 표 어딘가에 놓였는가** (2026-08-02 신설)
@@ -397,6 +459,11 @@ if (brief) {
   console.log(
     `\n  불변식 행렬 — 완전 ${covered}/${live} (${((covered / live) * 100).toFixed(0)}%) · 부분 ${half} · 빈칸 ${open}`,
   )
+  // ★ 출시에 필요한 것은 이 줄이다 — 위 전체 비율이 아니다
+  console.log(
+    `  ★ 상용화 게이트 — ${shipDone.length}/${shipAll.length} ` +
+      `(${((shipDone.length / shipAll.length) * 100).toFixed(0)}%) · 남은 ${shipLeft.length}칸`,
+  )
   if (stale.length) {
     console.log(`\n  ✗ 표식이 소스에 없다 (${stale.length})`)
     for (const s of stale) console.log(`    ${s}`)
@@ -443,6 +510,17 @@ if (openList.length) {
   console.log('  ── 빈칸 목록 ──')
   for (const o of openList)
     console.log(`    ${o.ch} × ${o.inv}${o.note ? `\n        ${o.note}` : ''}`)
+}
+
+console.log(
+  `\n  ★★ 상용화 게이트 — ${shipDone.length} / ${shipAll.length} ` +
+    `(${((shipDone.length / shipAll.length) * 100).toFixed(0)}%) · 남은 ${shipLeft.length}칸 ★★`,
+)
+console.log('     (누설 축 전부 + 산문 채널의 모순. 여기 없는 칸은 출시 후에 해도 된다)')
+if (shipLeft.length) {
+  console.log('\n  ── 출시까지 남은 칸 ──')
+  for (const c of shipLeft)
+    console.log(`    ${c.status === 'partial' ? '◐' : '·'} ${label(c)}`)
 }
 
 console.log('\n  ── 이 표 밖 (플레이에서 나온 규칙 — 테스터 몫) ──')
