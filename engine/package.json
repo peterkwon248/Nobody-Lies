@@ -15,7 +15,9 @@
     "clue-check": "tsx src/clue-check.ts",
     "mute-check": "tsx src/mute-check.ts",
     "matrix": "tsx src/matrix.ts",
-    "prose-lock": "tsx src/prose-lock.ts"
+    "prose-lock": "tsx src/prose-lock.ts",
+    "censor": "tsx src/censor.ts",
+    "censor-check": "tsx src/censor-check.ts"
   },
   "devDependencies": {
     "@types/d3-hierarchy": "^3.1.7",

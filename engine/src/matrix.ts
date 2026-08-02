@@ -90,7 +90,13 @@ type Cell = {
    * 조합 수를 정확히 계산하면서 틀린 명제를 재던 것과 같은 부류를, **이 표가 자기에게
    * 저지르고 있었다.** 그래서 머리 숫자는 **완전히 덮인 칸만** 센다.
    */
-  status: 'covered' | 'partial' | 'open' | 'na'
+  /**
+   * ★ `brief` 는 2026-08-02에 늘렸다 ★ **사람의 왕복이 필요한 반자동**이다 —
+   * 코드가 검열 브리프를 만들고, 사용자가 챗봇에 붙이고, 코드가 응답을 판정한다
+   * (`censor.ts`). 게이트가 매번 자동으로 무는 `covered` 와 **같은 ✓ 로 세면 안 된다** —
+   * 그러면 이 표가 자기를 틀리게 말하는 여덟 번째가 된다. 머리 숫자에서 갈라 센다.
+   */
+  status: 'covered' | 'brief' | 'partial' | 'open' | 'na'
   /** covered·partial 이면 검사 표식. 소스에 없으면 실패한다 */
   marker?: { file: string; text: string }
   /** partial 이면 **안 보는 것**을 여기 적는다. 이게 곧 남은 일이다 */
@@ -150,6 +156,7 @@ const inShipGate = (c: Cell) =>
 
 const V = 'src/verifier.ts'
 const PL = 'src/prose-lock.ts'
+const CS = 'src/censor.ts'
 
 /**
  * ★ 표 본체 ★ **적지 않은 칸은 자동으로 `open`** 이다 — 빠뜨려도 조용히 넘어가지
@@ -204,10 +211,9 @@ const CELLS: Cell[] = [
   { channel: 'report', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.75 보고서 서술문' },
     note: '공란과 참조가 정확히 1:1' },
-  { channel: 'report', invariant: 'contradiction', status: 'partial',
-    marker: { file: PL, text: '서술 잠금' },
-    missing: '생성 경로만 본다 — **서술 잠금**(`npm run prose-lock`)이 생성기가 쥔 서술 문장 틀 **21종**을 잠그고 늘거나 바뀌면 사람이 읽는다. **손저작·산문 왕복 경로는 여전히 무검사**이고 그쪽이 ⑤검열관 몫이다',
-    note: '★ 08-02 ★ 「서술문이 격자와 어긋나나」는 **닻이 없어 결정론적으로 못 잰다**(글자가 시각·장소 이름표를 말하는 비율 **0/1037** · 문장 단위로 인물+시각+장소가 함께 오는 것도 0/487). 남는 벡터는 *"그날 아침 도착했다"* 같은 자연어 사건 주장뿐이다. **생성 경로는 문장이 21종뿐이라 잠글 수 있다**' },
+    { channel: 'report', invariant: 'contradiction', status: 'brief',
+    marker: { file: CS, text: '⑤검열관' },
+    note: '★ 08-02 ⑤검열관 ★ 결정론적으로는 못 잰다 — 이 채널은 시각·장소를 **공란/데이터로만** 말하고 글자에는 안 쓴다(실측). 그래서 둘로 나눠 덮는다: **생성 경로**는 `prose-lock` 이 문장 틀 21종을 잠그고, **손저작·산문 왕복 경로**는 `npm run censor` 가 검열 브리프를 만들어 챗봇에 묻는다. ⚠ **LLM 은 경고만 내고 판정은 코드가 한다**(§14) — 인용이 실물에 없으면 기각한다(환각 차단). 그 배선은 `censor-check` 이 게이트에서 문다. ⛔ **자동이 아니다** — 사람 왕복이 필요하므로 `covered` 와 같은 ✓ 로 세지 않는다' },
   /**
    * ★ 2026-08-02 정정 — **이 칸도 이미 덮여 있었다** ★
    *
@@ -289,14 +295,12 @@ const CELLS: Cell[] = [
     note: '추가 진술은 답이 아니라 단서다' },
 
   // ── 장 전환 서사 ──
-  { channel: 'revealNarration', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '6.7 서사 조각의 균일성' },
-    missing: '**유무의 균일성**(§6.7)과 **확보 단어**(§9-7d)와 **생성 경로의 문장 틀**(서술 잠금 · 21종)까지 본다. 서사 **내용**이 답을 흘리는지는 손저작 경로에서 여전히 무검사 — ⑤검열관 몫이다',
-    note: '서사의 유무가 유용도를 노출한다' },
-  { channel: 'revealNarration', invariant: 'contradiction', status: 'partial',
-    marker: { file: PL, text: '서술 잠금' },
-    missing: '생성 경로만 본다 — **서술 잠금**(`npm run prose-lock`)이 생성기가 쥔 서술 문장 틀 **21종**을 잠그고 늘거나 바뀌면 사람이 읽는다(07-30의 「그날 아침 …도착했다」를 심어서 exit 1 확인). **손저작·산문 왕복 경로는 여전히 무검사**이고 그쪽이 ⑤검열관 몫이다',
-    note: '★ 08-02 ★ 이 채널은 시각·장소를 **전부 공란/데이터로만** 말하고 글자에는 안 써서 **대조할 닻이 없다**(실측: 장 전환 서사 1/176 · 장 인터루드 0/218). 결정론적으로는 못 잰다 — 남는 벡터는 자연어 사건 주장뿐이다. ⚠ 08-01에 이 채널이 §6.8 을 속였다 — 「…가 한마디를 보탰다」가 증거로 셈해졌다' },
+    { channel: 'revealNarration', invariant: 'leak', status: 'brief',
+    marker: { file: CS, text: '⑤검열관' },
+    note: '★ 08-02 ⑤검열관 ★ 결정론적으로는 못 잰다 — 이 채널은 시각·장소를 **공란/데이터로만** 말하고 글자에는 안 쓴다(실측). 그래서 둘로 나눠 덮는다: **생성 경로**는 `prose-lock` 이 문장 틀 21종을 잠그고, **손저작·산문 왕복 경로**는 `npm run censor` 가 검열 브리프를 만들어 챗봇에 묻는다. ⚠ **LLM 은 경고만 내고 판정은 코드가 한다**(§14) — 인용이 실물에 없으면 기각한다(환각 차단). 그 배선은 `censor-check` 이 게이트에서 문다. ⛔ **자동이 아니다** — 사람 왕복이 필요하므로 `covered` 와 같은 ✓ 로 세지 않는다' },
+    { channel: 'revealNarration', invariant: 'contradiction', status: 'brief',
+    marker: { file: CS, text: '⑤검열관' },
+    note: '★ 08-02 ⑤검열관 ★ 결정론적으로는 못 잰다 — 이 채널은 시각·장소를 **공란/데이터로만** 말하고 글자에는 안 쓴다(실측). 그래서 둘로 나눠 덮는다: **생성 경로**는 `prose-lock` 이 문장 틀 21종을 잠그고, **손저작·산문 왕복 경로**는 `npm run censor` 가 검열 브리프를 만들어 챗봇에 묻는다. ⚠ **LLM 은 경고만 내고 판정은 코드가 한다**(§14) — 인용이 실물에 없으면 기각한다(환각 차단). 그 배선은 `censor-check` 이 게이트에서 문다. ⛔ **자동이 아니다** — 사람 왕복이 필요하므로 `covered` 와 같은 ✓ 로 세지 않는다' },
   { channel: 'revealNarration', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '영영 열리지 않는다' },
     note: '트리거 조사·장이 실재하는가' },
@@ -379,14 +383,12 @@ const CELLS: Cell[] = [
     note: '노드·간선 끝점이 실재하는가 · 인물이 하나라도 빠지면 그게 곧 표시다' },
   { channel: 'graph', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
-  { channel: 'interlude', invariant: 'contradiction', status: 'partial',
-    marker: { file: PL, text: '서술 잠금' },
-    missing: '생성 경로만 본다 — **서술 잠금**(`npm run prose-lock`)이 생성기가 쥔 서술 문장 틀 **21종**을 잠그고 늘거나 바뀌면 사람이 읽는다(07-30의 「그날 아침 …도착했다」를 심어서 exit 1 확인). **손저작·산문 왕복 경로는 여전히 무검사**이고 그쪽이 ⑤검열관 몫이다',
-    note: '★ 08-02 ★ 이 채널은 시각·장소를 **전부 공란/데이터로만** 말하고 글자에는 안 써서 **대조할 닻이 없다**(실측: 장 전환 서사 1/176 · 장 인터루드 0/218). 결정론적으로는 못 잰다 — 남는 벡터는 자연어 사건 주장뿐이다' },
-  { channel: 'interlude', invariant: 'leak', status: 'partial',
-    marker: { file: PL, text: '서술 잠금' },
-    missing: '생성 경로만 본다 — **서술 잠금**(`npm run prose-lock`)이 생성기가 쥔 서술 문장 틀 **21종**을 잠그고 늘거나 바뀌면 사람이 읽는다(07-30의 「그날 아침 …도착했다」를 심어서 exit 1 확인). **손저작·산문 왕복 경로는 여전히 무검사**이고 그쪽이 ⑤검열관 몫이다',
-    note: '인터루드가 조사로 얻을 것을 먼저 말하는지는 생성 경로만 잠겨 있다' },
+    { channel: 'interlude', invariant: 'contradiction', status: 'brief',
+    marker: { file: CS, text: '⑤검열관' },
+    note: '★ 08-02 ⑤검열관 ★ 결정론적으로는 못 잰다 — 이 채널은 시각·장소를 **공란/데이터로만** 말하고 글자에는 안 쓴다(실측). 그래서 둘로 나눠 덮는다: **생성 경로**는 `prose-lock` 이 문장 틀 21종을 잠그고, **손저작·산문 왕복 경로**는 `npm run censor` 가 검열 브리프를 만들어 챗봇에 묻는다. ⚠ **LLM 은 경고만 내고 판정은 코드가 한다**(§14) — 인용이 실물에 없으면 기각한다(환각 차단). 그 배선은 `censor-check` 이 게이트에서 문다. ⛔ **자동이 아니다** — 사람 왕복이 필요하므로 `covered` 와 같은 ✓ 로 세지 않는다' },
+    { channel: 'interlude', invariant: 'leak', status: 'brief',
+    marker: { file: CS, text: '⑤검열관' },
+    note: '★ 08-02 ⑤검열관 ★ 결정론적으로는 못 잰다 — 이 채널은 시각·장소를 **공란/데이터로만** 말하고 글자에는 안 쓴다(실측). 그래서 둘로 나눠 덮는다: **생성 경로**는 `prose-lock` 이 문장 틀 21종을 잠그고, **손저작·산문 왕복 경로**는 `npm run censor` 가 검열 브리프를 만들어 챗봇에 묻는다. ⚠ **LLM 은 경고만 내고 판정은 코드가 한다**(§14) — 인용이 실물에 없으면 기각한다(환각 차단). 그 배선은 `censor-check` 이 게이트에서 문다. ⛔ **자동이 아니다** — 사람 왕복이 필요하므로 `covered` 와 같은 ✓ 로 세지 않는다' },
   { channel: 'interlude', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.9 **공개가 가리키는 것이 실재하는가**' },
     note: '인터루드는 reveal 위에 산다' },
@@ -431,6 +433,7 @@ let covered = 0
 let half = 0
 let open = 0
 let na = 0
+let briefed = 0
 const stale: string[] = []
 const openList: { ch: string; inv: string; note: string }[] = []
 const halfList: { ch: string; inv: string; missing: string }[] = []
@@ -447,6 +450,10 @@ for (const ch of CHANNELS) {
       continue
     }
     if (cell.status === 'na') { na++; row.push('—'); continue }
+    if (cell.status === 'brief') { briefed++; row.push('◑'); 
+      if (cell.marker && !read(cell.marker.file).includes(cell.marker.text))
+        stale.push(`${ch.label} × ${inv.label} → '${cell.marker.text}' 가 ${cell.marker.file} 에 없다`)
+      continue }
     if (cell.status === 'partial') {
       half++
       row.push('◐')
@@ -474,7 +481,8 @@ for (const ch of CHANNELS)
     if (inShipGate(cell)) shipAll.push(cell)
   }
 const shipDone = shipAll.filter((c) => c.status === 'covered')
-const shipLeft = shipAll.filter((c) => c.status !== 'covered')
+const shipBrief = shipAll.filter((c) => c.status === 'brief')
+const shipLeft = shipAll.filter((c) => c.status !== 'covered' && c.status !== 'brief')
 const label = (c: Cell) =>
   `${CHANNELS.find((x) => x.id === c.channel)!.label} × ${INVARIANTS.find((x) => x.id === c.invariant)!.label}`
 
@@ -529,8 +537,8 @@ if (brief) {
   )
   // ★ 출시에 필요한 것은 이 줄이다 — 위 전체 비율이 아니다
   console.log(
-    `  ★ 상용화 게이트 — ${shipDone.length}/${shipAll.length} ` +
-      `(${((shipDone.length / shipAll.length) * 100).toFixed(0)}%) · 남은 ${shipLeft.length}칸`,
+    `  ★ 상용화 게이트 — 자동 ${shipDone.length} + 브리프 ${shipBrief.length} / ${shipAll.length} ` +
+      `· 남은 ${shipLeft.length}칸`,
   )
   if (stale.length) {
     console.log(`\n  ✗ 표식이 소스에 없다 (${stale.length})`)
@@ -564,6 +572,7 @@ console.log('  ' + '─'.repeat(52))
 for (const r of rows) console.log(line(r))
 
 console.log(`\n  ✓ 완전히 덮임 ${covered} / ${live}   (${((covered / live) * 100).toFixed(0)}%)`)
+console.log(`  ◑ 브리프    ${String(briefed).padStart(2)}       ← 사람 왕복. 자동이 아니다`)
 console.log(`  ◐ 부분만     ${half}        ← 검사는 있는데 일부만 본다. **✓ 로 세지 않는다**`)
 console.log(`  · 빈 칸      ${open}        ← 검사가 없다`)
 console.log(`  — 해당없음   ${na}\n`)
@@ -581,9 +590,12 @@ if (openList.length) {
 }
 
 console.log(
-  `\n  ★★ 상용화 게이트 — ${shipDone.length} / ${shipAll.length} ` +
-    `(${((shipDone.length / shipAll.length) * 100).toFixed(0)}%) · 남은 ${shipLeft.length}칸 ★★`,
+  `\n  ★★ 상용화 게이트 — ${shipDone.length + shipBrief.length} / ${shipAll.length} ★★`,
 )
+console.log(`     ✓ 자동    ${String(shipDone.length).padStart(2)}   게이트가 매번 문다`)
+console.log(`     ◑ 브리프  ${String(shipBrief.length).padStart(2)}   사람 왕복이 필요하다 (npm run censor)`)
+console.log(`     · 남은    ${String(shipLeft.length).padStart(2)}`)
+console.log('     ⚠ 브리프는 자동과 **같은 ✓ 로 세지 않는다** — 세면 이 표가 자기를 틀리게 말한다')
 console.log('     (누설 축 전부 + 산문 채널의 모순. 여기 없는 칸은 출시 후에 해도 된다)')
 if (shipLeft.length) {
   console.log('\n  ── 출시까지 남은 칸 ──')

@@ -8,7 +8,7 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run censor-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "lint": "biome lint",
     "prop-check": "npm run prop-check -w engine",
@@ -30,7 +30,9 @@
     "clue-check": "npm run clue-check -w engine -- 40",
     "mute-check": "npm run mute-check -w engine --",
     "matrix": "npm run matrix -w engine",
-    "matrix-check": "npm run matrix -w engine -- --brief"
+    "matrix-check": "npm run matrix -w engine -- --brief",
+    "censor-check": "npm run censor-check -w engine",
+    "censor": "npm run censor -w engine --"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6"
