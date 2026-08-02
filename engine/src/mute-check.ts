@@ -67,6 +67,59 @@ type Site = { line: number; kind: 'error' | 'warn'; anchor: string }
  * ⚠ **닻이 짧으면 남의 메시지에 우연히 들어간다.** 6자 미만은 버리고 `?` 로 센다 —
  * **셀 수 없는 것을 「울렸다」로 세면 이 도구가 그 자체로 거짓말이 된다.**
  */
+/**
+ * `{` 에서 시작해 **짝이 맞는 `}` 다음**으로 간다. 안의 문자열은 통째로 건너뛴다.
+ * `skipString` 과 서로를 부른다 — `${}` 안에 또 백틱이 오는 중첩 때문이다.
+ */
+function skipBraces(s: string, i: number): number {
+  let depth = 0
+  let j = i
+  while (j < s.length) {
+    const ch = s[j]!
+    if (ch === '`' || ch === "'" || ch === '"') { j = skipString(s, j); continue }
+    if (ch === '{') depth++
+    else if (ch === '}') { depth--; if (depth === 0) return j + 1 }
+    j++
+  }
+  return j
+}
+
+/** 따옴표 구간 하나를 건너뛴다. 백틱이면 안쪽 `${}` 까지 함께 넘는다. */
+function skipString(s: string, i: number): number {
+  const q = s[i]!
+  let j = i + 1
+  while (j < s.length) {
+    const ch = s[j]!
+    if (ch === '\\') { j += 2; continue }
+    if (ch === q) return j + 1
+    if (q === '`' && ch === '$' && s[j + 1] === '{') { j = skipBraces(s, j + 1); continue }
+    j++
+  }
+  return j
+}
+
+/** 문자열 리터럴 하나에서 **보간을 뺀 정적 토막들**을 뽑는다 */
+function staticParts(s: string, i: number): { parts: string[]; end: number } {
+  const q = s[i]!
+  const parts: string[] = []
+  let buf = ''
+  let j = i + 1
+  while (j < s.length) {
+    const ch = s[j]!
+    if (ch === '\\') { buf += s[j + 1] ?? ''; j += 2; continue }
+    if (ch === q) { parts.push(buf); return { parts, end: j + 1 } }
+    if (q === '`' && ch === '$' && s[j + 1] === '{') {
+      parts.push(buf); buf = ''
+      j = skipBraces(s, j + 1)
+      continue
+    }
+    buf += ch
+    j++
+  }
+  parts.push(buf)
+  return { parts, end: j }
+}
+
 function sites(src: string): { found: Site[]; unanchored: number } {
   const found: Site[] = []
   let unanchored = 0
@@ -83,10 +136,32 @@ function sites(src: string): { found: Site[]; unanchored: number } {
       i++
     }
     const arg = src.slice(re.lastIndex, i - 1)
-    // 문자열 리터럴 안의 정적 토막만 남긴다
+    /**
+     * 문자열 리터럴 안의 정적 토막만 남긴다.
+     *
+     * ⚠ **2026-08-02 — 정규식으로는 안 된다.** 전에는 `` /`[^`]*`/ `` 로 리터럴을
+     * 찾고 `${...}` 를 `split` 했는데, **`${}` 안에 백틱이 또 오면** 앞의 정규식이
+     * 안쪽 백틱에서 리터럴이 끝난 줄 알고 잘라버린다. 그러면 닻이 **메시지 글자가
+     * 아니라 코드 조각**이 된다:
+     * ```
+     * §9-9 진술 길이 쏠림의 닻   ").join(' · ')}) — 길이가 곧 유용도 표시가 된다"
+     *                            ^^^^^^^^^^^^^^^^ 어떤 메시지에도 없는 글자
+     * ```
+     * **그 자리는 무슨 짓을 해도 「안 울렸다」로 셌다** — 검사가 아니라 도구가
+     * 못 알아본 것이다. 이제 중괄호·중첩 백틱을 세면서 걷는다.
+     */
     const chunks: string[] = []
-    for (const lit of arg.match(/`[^`]*`|'[^']*'|"[^"]*"/g) ?? [])
-      for (const part of lit.slice(1, -1).split(/\$\{[^}]*\}/g)) chunks.push(part.trim())
+    let k = 0
+    while (k < arg.length) {
+      const ch = arg[k]!
+      if (ch === '`' || ch === "'" || ch === '"') {
+        const { parts, end } = staticParts(arg, k)
+        for (const p of parts) chunks.push(p.trim())
+        k = end
+        continue
+      }
+      k++
+    }
     const anchor = chunks.sort((a, b) => b.length - a.length)[0] ?? ''
     const line = src.slice(0, m.index).split('\n').length
     if (anchor.length < 6) {
@@ -326,6 +401,124 @@ const MUTATORS: { id: string; hit: (c: Case) => void }[] = [
       if (!ev || !c.trick.flaw) return
       c.trick.flaw.plantedIn = [ev.id]
       c.actions.forEach((a) => { a.gives = a.gives.filter((g) => g !== ev.id) })
+    } },
+
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  ★★ 2026-08-02 (2차) — **「전부」로는 안 울리는 자리들** ★★
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 남은 침묵을 하나씩 읽어보니 **뚜렷한 부류 하나**가 있었다: 검사가 무는 것이
+   * **「섞여 있음」**인데 뮤테이션은 **「전부」**를 하고 있었다.
+   *
+   * ```
+   * §9-14  기록이 「섞여」 있으면 유무가 유용도 표시다   ←  물증 기록을 「전부」 비웠다 → 안 문다
+   * §6.56  설명 없는 단어가 「섞여」 있으면 경고         ←  확보 단어를 「전부」 지웠다 → 안 문다
+   * §6.7   서사가 「일부」 장에만 있으면 신호            ←  이미 「한 장만」 판이 있어서 울고 있었다
+   * ```
+   *
+   * **전부 지우면 균일해져서 「유무가 갈린다」 부류는 오히려 조용해진다.**
+   * §절대 규칙(유용도 비노출)을 지키는 검사들이 통째로 이 모양이라 무리로 묶였다.
+   */
+  { id: '단어 주는 물증의 기록을 절반만 비운다', hit: (c) => {
+      const giving = c.evidence.filter((e) => (e.yieldsTerms?.length ?? 0) > 0)
+      if (giving.length < 2) return
+      giving.slice(0, Math.floor(giving.length / 2)).forEach((e) => { e.record = undefined })
+    } },
+  { id: '확보 단어 설명을 하나만 남긴다', hit: (c) => {
+      if ((c.terms?.length ?? 0) > 1) c.terms = c.terms!.slice(0, 1)
+    } },
+  { id: '진술 길이를 쏠리게 한다', hit: (c) => {
+      const [p, q] = c.people
+      if (!p?.statement?.paragraphs?.length || !q?.statement?.paragraphs?.length) return
+      const one = p.statement.paragraphs[0]!
+      p.statement.paragraphs = [one, one, one, one, one, one]
+      q.statement.paragraphs = [q.statement.paragraphs[0]!]
+    } },
+
+  /** ★ 유일성 — 무고한 한 명에게 동기·기회·수단을 통째로 붙인다 */
+  { id: '무고한 자에게 유죄 삼요소를 준다', hit: (c) => {
+      const inn = c.people.find((p) => p.id !== c.culprit)
+      if (!inn) return
+      c.facts = c.facts.filter((f) => !(f.subject === inn.id && f.kind === 'no_opportunity'))
+      for (const k of ['motive', 'opportunity', 'means'] as const) {
+        const src = c.facts.find((f) => f.kind === k && f.subject === c.culprit)
+        if (src) c.facts.push({ ...src, id: `${src.id}_dup`, subject: inn.id })
+      }
+    } },
+
+  /** ★ 찍기 — 지목 장이 조사 없이 닫히게 만든다 */
+  { id: '장을 조사 없이 닫히게 만든다', hit: (c) => c.chapters.forEach((ch) => {
+      ch.requiresFacts = []
+      ch.blanks.forEach((b) => { b.candidates = 'closed' })
+    }) },
+
+  /** ★ decoy 가 필수 경로에 개입한다 */
+  { id: 'decoy 공개가 사실·조사를 연다', hit: (c) => {
+      const f = c.facts[0], a = c.actions[0]
+      if (!f || !a) return
+      c.reveals.forEach((r) => { r.yield = 'decoy'; r.facts = [f.id]; r.actions = [a.id] })
+    } },
+
+  /** ★ 서술문 ↔ 공란 1:1 (§6.75) — 참조를 없애거나 겹치게 한다 */
+  { id: '서술문에서 공란 참조를 뗀다', hit: (c) => c.chapters.forEach((ch) => {
+      if (ch.report?.length) ch.report = ch.report.map((r) => ('blank' in r ? { text: '…' } : r))
+    }) },
+  { id: '서술문이 같은 공란을 두 번 묻는다', hit: (c) => c.chapters.forEach((ch) => {
+      if (ch.report?.length && ch.blanks.length) ch.report = [...ch.report, { blank: 0 }]
+    }) },
+
+  /** ★ 사망 구간·알리바이의 전제 (§7.5) */
+  { id: '범인의 알리바이 거짓말을 뗀다', hit: (c) => {
+      const cu = c.people.find((p) => p.id === c.culprit)
+      if (cu) cu.claim = undefined
+    } },
+  { id: '범인의 진술을 진실과 같게', hit: (c) => {
+      const cu = c.people.find((p) => p.id === c.culprit)
+      if (cu) cu.claim = cu.presence.map((x) => ({ ...x }))
+    } },
+  { id: '사망 시간대 표식을 뗀다', hit: (c) => c.slots.forEach((s) => { s.isWindow = undefined }) },
+  { id: '현장을 비운다', hit: (c) => { c.incident.scene = undefined } },
+  { id: '사망 구간 이름표를 기계 것으로', hit: (c) => c.slots.forEach((s, i) => {
+      if (i < 2) { s.isWindow = true; s.label = `${typeof s.label === 'string' ? s.label : ''} (전반)` }
+    }) },
+
+  /** ★ 사망 구간 축소 (§9-3g) — 뒤집기와 「한 칸도 안 덮음」 */
+  { id: '축소 범위를 뒤집는다', hit: (c) => {
+      const first = c.slots[0], last = c.slots[c.slots.length - 1]
+      if (!first || !last || first === last) return
+      c.reveals.forEach((r) => { r.narrowsWindow = [last.id, first.id] })
+    } },
+  { id: '축소가 사망 구간을 안 덮게', hit: (c) => {
+      const off = c.slots.find((s) => !s.isWindow)
+      if (!off) return
+      c.reveals.forEach((r) => { r.narrowsWindow = [off.id, off.id] })
+    } },
+
+  /** ★ 누설 (§9-7b · §9-12 · §9-13) — 산문에 심는다 */
+  { id: '프롤로그가 조사 단어를 흘린다', hit: (c) => {
+      const seeded = new Set(c.seedTerms ?? [])
+      const leak = (c.terms ?? []).map((t) => t.word).find((w) => !seeded.has(w))
+      if (!leak) return
+      c.prologue = [...(c.prologue ?? []), { ko: `그날 밤, ${leak} 이 거기 있었다` }]
+    } },
+  { id: '진술이 남의 사망구간 위치를 말한다', hit: (c) => {
+      const ko = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+      const win = c.slots.find((s) => s.isWindow)
+      const loc = c.locations[0]
+      const [p, q] = c.people
+      if (!p?.statement || !q || !win || !loc) return
+      // 성을 뗀 꼴로 찾으므로(§9-12) 이름을 그대로 넣으면 뒤 두 글자가 걸린다
+      p.statement.paragraphs = [
+        ...(p.statement.paragraphs ?? []),
+        { ko: `${ko(q.name)}는 ${ko(win.label)}에 ${ko(loc.label)}에 있었다` },
+      ]
+    } },
+  { id: '도식이 범인만 가리키는 danger 간선을 연다', hit: (c) => {
+      const g = c.relationGraph
+      if (!g) return
+      // 피해자는 people 밖이라(schema §victim) 끝점으로 써도 「닿은 인물」이 늘지 않는다
+      g.edges = [{ from: c.culprit, to: c.victim, label: { ko: '의심' }, danger: true }]
     } },
 ]
 
