@@ -112,7 +112,7 @@ const CELLS: Cell[] = [
     note: '무고한 자의 claim ≠ presence 면 오류. 범인이 사망 구간에 거짓이 없어도 오류. **완전하다**' },
   { channel: 'grid', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '레지스트리에 없다' },
-    note: 'presence·claim 의 slot·location 이 레지스트리에 있는가' },
+    note: 'presence·claim 의 slot·location 이 레지스트리에 있는가 · §9-3g(사망 구간 축소 범위가 뒤집혔거나 격자의 창을 한 칸도 안 덮는가)' },
   { channel: 'grid', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '사망 시간대에 현장' },
     missing: '모양 누설 검사(§동선 모양)는 **`prose.source === \'template\'` 일 때만** 돈다. 산문을 입히면 꺼진다 — 손저작은 모양이 같아도 문장이 달라서 걸면 틀리기 때문이고 이유가 적혀 있다. 다만 **누설이 없어지는 게 아니라 볼 수 없어지는 것**이다',
@@ -149,7 +149,7 @@ const CELLS: Cell[] = [
   { channel: 'actionResult', invariant: 'contradiction', status: 'partial',
     marker: { file: V, text: '6.55 조사 결과문과 실제 산출이 어긋나는가' },
     missing: '**산출**과만 대조한다. 결과문이 **격자·트릭**과 어긋나는지는 안 본다',
-    note: '결과문이 말하는 것과 실제로 주는 것' },
+    note: '결과문이 말하는 것과 실제로 주는 것. 거울상인 §9-8(데이터를 주는데 산문이 침묵한다)도 여기 산다' },
   { channel: 'actionResult', invariant: 'leak', status: 'partial',
     marker: { file: V, text: '9-7' },
     missing: '**확보 단어**만 본다. 결과문이 범인을 가리키는 다른 방식은 안 본다',
@@ -230,8 +230,10 @@ const CELLS: Cell[] = [
     note: '트릭 계약이 사실·물증과 맞물리는가' },
 
   // ── 조사 목록 — 08-01에 여기가 인물 식별의 유일한 자리였다 ──
-  { channel: 'actionList', invariant: 'leak', status: 'open',
-    note: '★ 목록의 모양이 범인을 지목하는지 안 본다 — salience·비용·조사 개수·빈손 여부' },
+  { channel: 'actionList', invariant: 'leak', status: 'partial',
+    marker: { file: V, text: '9-3h. **사람을 겨누는 조사에서 범인만 혼자 다르다**' },
+    missing: '**빈손 여부**(§9-3h)와 **이름의 모양**(§9-3e)만 본다 — 빈손 쪽은 그것도 `target.kind === person` 이고 `verb` 가 있는 조사에 한해서다. **salience · 비용 · 사람마다 조사 개수**는 여전히 무검사다',
+    note: '⚠ **2026-08-02 정정 — 이 칸은 `open` 이 아니었다.** 노트가 *"빈손 여부를 안 본다"* 고 적어뒀는데 §9-3h 가 **오류 등급으로** 바로 그것을 본다(소지품 150/150 을 잡고 만들어진 검사다). 어느 칸도 §9-3h 를 표식으로 안 쓰고 있어서 **행렬이 자기 코드를 모르고 있었다** — 다음 세션이 이미 있는 검사를 지으러 갈 자리였다' },
   { channel: 'actionList', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.6 필수 조사' },
     note: '답을 한 조사로만 얻으면 그 조사는 건너뛸 수 없다' },
@@ -242,12 +244,12 @@ const CELLS: Cell[] = [
   // ── 평면도 ──
   { channel: 'plan', invariant: 'contradiction', status: 'covered',
     marker: { file: V, text: '9-3' },
-    note: '평면도가 격자·트릭과 좌표로 맞는가' },
+    note: '평면도가 격자·트릭과 좌표로 맞는가 — §9-3b(트릭이 말한 창이 현장에 있나) · §9-3i(도면의 기하 여섯 갈래)' },
   { channel: 'plan', invariant: 'leak', status: 'open',
     note: '방 크기·위치가 현장을 지목하는지 안 본다 (plan-check 이 세지만 게이트 밖)' },
   { channel: 'plan', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '9-3' },
-    note: '장소 id 가 실재하는가' },
+    note: '장소 id 가 실재하는가 — §9-3c(고정물이 도면 위에 있나) · §9-3d(보행선의 장소 쌍) · §9-3j(장소가 있는데 평면도가 없다)' },
   { channel: 'plan', invariant: 'derivable', status: 'na', note: '답을 묻지 않는다' },
 
   // ── 관계도 · 인터루드 · 결말 — 아직 아무도 안 읽는다 ──
@@ -291,6 +293,7 @@ export const OUTSIDE = [
   { check: '§6 레드 헤링 밀도', why: '함정이 적으면 심심하다 — 난이도 감각' },
   { check: '§8 예산 대비 조사 비율', why: '좌절 위험 — 체감' },
   { check: '§9-9 진술 길이 쏠림', why: '산문 품질 — 기준에서 뺐다' },
+  { check: '§9-3f 사망 구간 이름표', why: '어휘 품질 — 「(전반)」이 기계 것이라 진술이 반복 인용하기에 나쁘다. 관측면×불변식이 아니라 팔레트 품질이다' },
   { check: '§7 부문 분포', why: '채점 구성 — 게임 설계지 정합성이 아니다' },
   { check: '§5 단계별 교착', why: '난이도 사다리' },
 ]
@@ -345,6 +348,41 @@ for (const ch of CHANNELS) {
   rows.push(row)
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  ★ 진짜 역방향 — **검증기의 절이 표 어딘가에 놓였는가** (2026-08-02 신설)
+ * ─────────────────────────────────────────────────────────────
+ *
+ * 위 §양방향은 **한 방향만** 물고 있었다: *"적어놨는데 소스에 없으면 실패."*
+ * 반대쪽 — **소스에 있는데 표가 모르는 검사** — 은 아무도 안 봤다.
+ *
+ * 그래서 값을 치렀다. `§9-3h`(사람을 겨누는 조사에서 범인만 혼자 다르다)는
+ * **오류 등급**이고 소지품 150/150 누설을 잡고 만들어진 검사인데, **어느 칸도
+ * 표식으로 안 쓰고 있었고** `조사 목록 × 누설` 노트는 *"빈손 여부를 안 본다"* 라고
+ * 적어놨다. **이미 있는 검사를 지으러 갈 자리였다.**
+ *
+ * 이 부류는 **다섯 번째**다 (위 `graph × wiring` 주석의 「네 번째」에 이어서).
+ * 네 번을 *"적기 전에 소스를 봐야 한다"* 로 넘겼는데 다섯 번째가 또 나왔으므로
+ * **주의가 아니라 기계로 막는다** — `clue-check ③ 배선`과 같은 판단이다.
+ *
+ * 놓였다고 보는 조건: 절 번호가 **표식·노트·missing·OUTSIDE 어디든** 적혀 있다.
+ * 칸에 넣기 애매한 것은 `OUTSIDE` 에 이름을 올리면 된다 — **어디에도 안 적는 것만**
+ * 실패다. 「분류할 자리가 없다」가 아니라 **「분류를 안 했다」를 막는 검사다.**
+ */
+const SECTION_RE = /(?:^|[ */])([0-9]+(?:-[0-9]+[a-z]?)?(?:\.[0-9]+)?)\. \*\*([^*]+)\*\*/gm
+const claimedText = [
+  ...CELLS.map((c) => [c.marker?.text ?? '', c.note ?? '', c.missing ?? ''].join(' ')),
+  ...OUTSIDE.map((o) => `${o.check} ${o.why}`),
+].join('\n')
+
+const unplaced: string[] = []
+for (const m of read(V).matchAll(SECTION_RE)) {
+  const id = m[1]!
+  // 정확한 번호로 찾는다 — 접두(9-3)로 느슨하게 맞추면 9-3f 가 9-3b 에 묻어간다
+  const token = new RegExp(`(?:^|[^0-9.a-z-])${id.replace(/[.]/g, '\\.')}(?![0-9a-z-])`)
+  if (!token.test(claimedText)) unplaced.push(`${id}. ${m[2]!.trim()}`)
+}
+
 const total = CHANNELS.length * INVARIANTS.length
 const live = total - na
 
@@ -363,6 +401,14 @@ if (brief) {
     console.log(`\n  ✗ 표식이 소스에 없다 (${stale.length})`)
     for (const s of stale) console.log(`    ${s}`)
     console.log('    → 적어만 두고 안 지었거나, 검사 주석이 바뀌었다\n')
+    process.exit(1)
+  }
+  // ⚠ 이 줄이 없으면 **역방향은 게이트에서 안 돈다** — 손으로 부를 때만 물었다.
+  //   드리프트를 막자고 만든 검사가 드리프트하는 자리라 여기가 핵심이다 (2026-08-02)
+  if (unplaced.length) {
+    console.log(`\n  ✗ 검증기에 있는데 표가 모르는 검사 (${unplaced.length})`)
+    for (const s of unplaced) console.log(`    ${s}`)
+    console.log('    → 칸의 note·missing 에 절 번호를 적거나, OUTSIDE 에 이름을 올린다\n')
     process.exit(1)
   }
   console.log('    (전체 표는 npm run matrix)\n')
@@ -408,4 +454,13 @@ if (stale.length) {
   console.log('    → 적어만 두고 안 지었거나, 검사 주석이 바뀌었다\n')
   process.exit(1)
 }
-console.log('\n  ✓ 찬 칸의 표식이 전부 소스에 있다\n')
+if (unplaced.length) {
+  console.log(`\n  ✗ 검증기에 있는데 표가 모르는 검사 (${unplaced.length})`)
+  for (const s of unplaced) console.log(`    ${s}`)
+  console.log('    → 칸의 note·missing 에 절 번호를 적거나, OUTSIDE 에 이름을 올린다.')
+  console.log('      ⚠ 「분류할 자리가 없다」가 아니라 **분류를 안 했다**를 막는 검사다 —')
+  console.log('        §9-3h 가 이미 있는데 표는 「안 본다」고 적어두고 있었다\n')
+  process.exit(1)
+}
+console.log('\n  ✓ 찬 칸의 표식이 전부 소스에 있다')
+console.log('  ✓ 검증기의 절이 전부 표 어딘가에 놓였다\n')
