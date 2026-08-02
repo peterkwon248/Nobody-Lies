@@ -237,10 +237,12 @@ evidence:
 
   - id: e_memo
     description: 접힌 메모
+    record: 같은 이름이 여러 번 적혀 있었다. 뒷장에는 지운 자국 위에 다시 쓴 문장이 몇 줄 남았다.
     yields_terms: [쌓인 반감]
 
   - id: e_chat
     description: 남아 있던 대화
+    record: 주고받은 말이 두 달치 남아 있었다. 뒤로 갈수록 답이 짧아졌고, 마지막 며칠은 한쪽만 말했다.
     yields_terms: [쌓인 반감]
 
   - id: e_herring1

@@ -463,10 +463,12 @@ evidence:
 
   - id: e_wy_text
     description: 리원 문자 — 가명의 정체
+    record: ‘김선생’이라는 이름과 번호가 적혀 있었다. 유통 얘기가 오갔고, 곧 터진다는 말이 마지막이었다.
     yields_terms: [김선생, 마약, 폭로 임박]
 
   - id: e_yuri_threat
     description: 나경 문자 — 협박
+    record: 받은 쪽만 남아 있는 문자였다. 약을 대준 값을 갚으라는 말과, 관계를 알리겠다는 말이 섞여 있었다.
     yields_terms: [마약, 치정]
 
   - id: e_yena_info
@@ -509,6 +511,8 @@ evidence:
 
   - id: e_time
     description: 정밀 사망 시각
+    # il_time(「발견 직전에 죽었다」)을 깨는 물증이다 — 시각 차이를 말하는 것이 이 카드의 역할
+    record: 혈중 일산화탄소 농도가 치사 범위였다. 사망은 발견보다 여러 시간 앞섰다.
     yields_terms: [일산화탄소 중독]
 
   - id: e_yuri_call
