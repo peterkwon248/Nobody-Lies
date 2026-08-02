@@ -13,6 +13,7 @@
     "gen-baseline": "tsx src/gen-baseline.ts",
     "proof-check": "tsx src/proof-check.ts",
     "clue-check": "tsx src/clue-check.ts",
+    "mute-check": "tsx src/mute-check.ts",
     "matrix": "tsx src/matrix.ts"
   },
   "devDependencies": {

@@ -27,6 +27,7 @@
     "lock-fix": "node scripts/lock-peer-restore.mjs",
     "proof-check": "npm run proof-check -w engine --",
     "clue-check": "npm run clue-check -w engine -- 40",
+    "mute-check": "npm run mute-check -w engine --",
     "matrix": "npm run matrix -w engine",
     "matrix-check": "npm run matrix -w engine -- --brief"
   },
