@@ -7,6 +7,10 @@ incident:
   subject: victim
   description: 분장실에서의 사망
   scene: room
+  # 발견 시각(마지막 칸)은 사건이 열릴 때 이미 적혀 있어야 하는 전제다 —
+  # 시신이 발견되면서 수사가 시작되므로 조사로 알아낼 것이 아니다(proof.ts R7).
+  # 이 줄이 없어서 1장 시각 공란이 3분의 1 찍기였다 (2026-08-01 밤).
+  scene_state: 자정을 조금 넘긴 무렵, 분장실에서 발견됐다.
 prose:
   source: authored
 floor_plan:
@@ -557,7 +561,7 @@ evidence:
     record: 문과 틀 사이의 틈. 안쪽 페인트가 한 뼘 길이로 한쪽 방향으로 벗겨져 있었다.
   - id: e_rec1
     description: 근무 교대표
-    record: 그날 밤 남기로 돼 있던 사람과 실제로 남은 사람이 적힌 표. 한 칸이 고쳐 쓰여 있었다.
+    record: 그날 밤 남기로 돼 있던 사람과 실제로 남은 사람이 적힌 표. 한 칸이 고쳐 쓰여 있었다. 고쳐 쓴 칸은 밤 열 시부터 열한 시 사이였다.
     yields_terms:
       - 근무 교대표
   - id: e_rec2
@@ -567,7 +571,7 @@ evidence:
       - 열쇠 반납 장부
   - id: e_rec3
     description: 당일 입장권 내역
-    record: 그날 판매된 표의 수와 회차가 적힌 내역. 몇 장은 판매 시각이 공연 시작 뒤로 찍혀 있었다.
+    record: 그날 판매된 표의 수와 회차가 적힌 내역. 몇 장은 판매 시각이 공연 시작 뒤로 찍혀 있었다. 마지막 취소 처리는 밤 열 시부터 열한 시 사이에 찍혀 있었다.
     yields_terms:
       - 당일 입장권 내역
 facts:
@@ -770,7 +774,9 @@ actions:
       kind: person
       id: p1
     result:
-      title: 하경석의 소지품
+      # 제목이 「X의 소지품」이면 다섯이 전부 같은 꼴이라 아무도 구별하지 않는다.
+      # 물건 이름으로 바꾸면 소지품 검사가 사람을 1:1 로 짚는다(식별 고리 · proof.ts R1).
+      title: 개인적인 편지
       body: >-
         수첩과 열쇠 꾸러미, 접힌 안경집이 나왔다. 수첩 뒤쪽에 부치지 않은 편지가 끼워져 있었다. 가족에게 쓴 것이었고 극장 일을 진작 그만둔 것처럼 적혀 있었다. 날짜는 적혀 있지
         않았다.
@@ -786,7 +792,7 @@ actions:
       kind: person
       id: p2
     result:
-      title: 문선호의 소지품
+      title: 오래된 사진
       body: >-
         담뱃갑과 손전등, 얇은 수건이 나왔다. 지갑 안쪽에서 오래된 사진 한 장이 나왔다. 무대 위에 선 젊은 사람이 찍혀 있었고 뒷면에 오디션 날짜로 보이는 글씨가 지워져 있었다. 사진
         모서리는 여러 번 접힌 자국이 있었다.
@@ -802,7 +808,7 @@ actions:
       kind: person
       id: p3
     result:
-      title: 조태식의 소지품
+      title: 접힌 영수증
       body: >-
         실패와 가위, 옷핀이 든 주머니가 나왔다. 그 안에 접힌 영수증이 하나 있었다. 값이 적지 않은 장비를 산 것이었고 결제일이 지난해였다. 포장을 뜯은 흔적에 대한 언급은 어디에도
         없었다.
@@ -818,7 +824,7 @@ actions:
       kind: person
       id: p4
     result:
-      title: 표미숙의 소지품
+      title: 지워진 기록
       body: 손거울과 잔돈 지갑, 여벌 스타킹이 나왔다. 가방 바닥에 이력서 사본이 접힌 채로 있었다. 학력란의 한 줄이 지워지고 그 위에 다시 적혀 있었다. 종이는 여러 해 지난 것이었다.
   - id: a_h5
     label: 소지품 검사 · 서준기
@@ -832,7 +838,7 @@ actions:
       kind: person
       id: p5
     result:
-      title: 서준기의 소지품
+      title: 낡은 명함
       body: >-
         공구 주머니와 마른 걸레, 필터 몇 장이 나왔다. 주머니 안쪽에서 낡은 명함이 한 장 나왔다. 이 극장이 아닌 다른 곳의 이름이 찍혀 있었고 모서리가 닳아 있었다. 뒷면에는 아무것도
         적혀 있지 않았다.
@@ -1157,7 +1163,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p1
-        particle: 이/가
       - label: 장소
         candidates: closed
         answer: room
@@ -1171,12 +1176,12 @@ chapters:
     report:
       - blank: 2
       - ', '
-      - blank: 0
-      - ' 가장 먼저 일어났다. '
       - blank: 1
       - '에서 '
       - blank: 3
-      - ' 발견됐다.'
+      - ' 발견됐다. 소지품에서 개인적인 편지가 나온 것은 '
+      - blank: 0
+      - '.'
     epilogue_order: 1
   - order: 2
     title: 근무 교대표
@@ -1187,7 +1192,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p1
-        particle: 이/가
       - label: 물품
         candidates: discovered
         answer: 근무 교대표
@@ -1197,9 +1201,9 @@ chapters:
         answer: t1
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 개인적인 편지가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2
@@ -1214,7 +1218,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p2
-        particle: 이/가
       - label: 접촉수단
         candidates: discovered
         answer: 열쇠 반납 장부
@@ -1224,9 +1227,9 @@ chapters:
         answer: hall
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 오래된 사진가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2
@@ -1241,7 +1244,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p3
-        particle: 이/가
       - label: 은닉처
         candidates: discovered
         answer: 당일 입장권 내역
@@ -1251,9 +1253,9 @@ chapters:
         answer: t1
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 접힌 영수증가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2

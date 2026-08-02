@@ -7,6 +7,10 @@ incident:
   subject: victim
   description: 조율실에서의 사망
   scene: room
+  # 발견 시각(마지막 칸)은 사건이 열릴 때 이미 적혀 있어야 하는 전제다 —
+  # 시신이 발견되면서 수사가 시작되므로 조사로 알아낼 것이 아니다(proof.ts R7).
+  # 이 줄이 없어서 1장 시각 공란이 3분의 1 찍기였다 (2026-08-01 밤).
+  scene_state: 다음 날 아침 공방 문을 열었을 때, 조율실에서 발견됐다.
 prose:
   source: authored
 floor_plan:
@@ -544,7 +548,7 @@ evidence:
       - 출입 명부
   - id: e_rec2
     description: 자재 반출 전표
-    record: 자재 반출 전표 묶음. 그날 자로 끊긴 전표가 한 장 섞여 있다.
+    record: 자재 반출 전표 묶음. 그날 자로 끊긴 전표가 한 장 섞여 있다. 끊은 자리는 공방 식당으로 적혀 있었다.
     yields_terms:
       - 자재 반출 전표
   - id: e_rec3
@@ -1119,7 +1123,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p1
-        particle: 이/가
       - label: 장소
         candidates: closed
         answer: room
@@ -1131,15 +1134,14 @@ chapters:
         answer: 보온병
         particle: 이/가
     report:
-      - '그날 아침 '
-      - blank: 0
-      - ' 가장 먼저 도착했다. '
       - blank: 2
       - ', '
       - blank: 1
       - '에서 '
       - blank: 3
-      - ' 발견됐다.'
+      - ' 발견됐다. 소지품에서 부치지 않은 편지가 나온 것은 '
+      - blank: 0
+      - '.'
     epilogue_order: 1
   - order: 2
     title: 출입 명부
@@ -1150,7 +1152,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p1
-        particle: 이/가
       - label: 물품
         candidates: discovered
         answer: 출입 명부
@@ -1160,9 +1161,9 @@ chapters:
         answer: t1
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 부치지 않은 편지가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2
@@ -1177,7 +1178,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p2
-        particle: 이/가
       - label: 접촉수단
         candidates: discovered
         answer: 자재 반출 전표
@@ -1187,9 +1187,9 @@ chapters:
         answer: hall
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 지갑 사이의 사진가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2
@@ -1204,7 +1204,6 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p4
-        particle: 이/가
       - label: 은닉처
         candidates: discovered
         answer: 공정 일지
@@ -1214,9 +1213,9 @@ chapters:
         answer: t1
         particle: 을/를
     report:
-      - '기록을 확인한 것은 '
+      - '기록이 남아 있던 자리의 주인은 소지품에서 지워진 수첩 한 장가 나온 '
       - blank: 0
-      - ' 있던 자리였다. '
+      - '. '
       - blank: 1
       - ' 남아 있었고, '
       - blank: 2

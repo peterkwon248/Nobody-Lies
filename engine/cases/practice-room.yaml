@@ -229,11 +229,11 @@ evidence:
 
   - id: e_cctv
     description: 입구 기록
-    record: 네 시 정각에 둘이 나갔고 네 시 십분에 하나가 들어왔다가 십삼분에 다시 나갔다. 네 시 오십분에 하나가 들어왔다.
+    record: 네 시 정각에 둘이 나갔고 네 시 십분에 하나가 들어왔다가 십삼분에 다시 나갔다. 마지막으로 들어온 것은 네 시 반 이후였다.
 
   - id: e_mutual
     description: 두 사람의 왕복 시간
-    record: 한쪽은 왕복 사십 분, 다른 쪽은 편도 이십 분 거리라고 말했다.
+    record: 한쪽은 왕복 사십 분, 다른 쪽은 편도 이십 분 거리라고 말했다. 사십 분 쪽이 편의점이었다.
 
   - id: e_memo
     description: 접힌 메모
@@ -356,18 +356,17 @@ chapters:
     blanks:
       - { label: 시각, candidates: closed,     answer: t2 }
       - { label: 장소, candidates: closed,     answer: piano }
-      - { label: 인물, candidates: closed,     answer: p2, particle: 이/가 }
+      - { label: 인물, candidates: closed,     answer: p2 }
       - { label: 도구, candidates: discovered, answer: 과도, particle: (으)로 }
     report:
-      - ""
       - { blank: 0 }
       - ", "
       - { blank: 1 }
-      - "에서 "
-      - { blank: 2 }
-      - " 피해자를 발견했다. 복부에 꽂힌 "
+      - "에서 피해자가 발견됐다. 복부에 꽂힌 "
       - { blank: 3 }
-      - " 인한 과다출혈이 사인이었다."
+      - " 인한 과다출혈이 사인이었다. 처음 문을 연 것은 소지품에서 지워진 목록이 나온 "
+      - { blank: 2 }
+      - "."
     epilogue_order: 1
     epilogue: 신년의 빈 사옥에서 한 사람이 죽었다.
 
@@ -376,15 +375,15 @@ chapters:
     opening: 남은 것은 누가 어디에 있었는가다.
     requires_facts: [f_no_p4_ok, f_no_p5_ok]
     blanks:
-      - { label: 인물, candidates: closed, answer: p4, particle: 과/와 }
-      - { label: 인물, candidates: closed, answer: p5, particle: 은/는 }
+      - { label: 인물, candidates: closed, answer: p4 }
+      - { label: 인물, candidates: closed, answer: p5 }
       - { label: 장소, candidates: closed, answer: cvs, particle: (으)로 }
     report:
-      - "네 시 정각, "
+      - "네 시 정각, 두 사람이 함께 건물을 나섰다. 소지품에서 접힌 영수증이 나온 "
       - { blank: 0 }
-      - " "
+      - ", 그리고 낡은 사진이 나온 "
       - { blank: 1 }
-      - " 함께 건물을 나섰다. 한 사람은 "
+      - ". 한 사람은 "
       - { blank: 2 }
       - " 향했고 왕복 사십 분이 걸린다."
     epilogue_order: 2
