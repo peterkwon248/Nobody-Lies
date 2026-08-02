@@ -1878,6 +1878,84 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-17. **추가 진술이 자기 격자와 어긋나거나 단어를 흘린다** (2026-08-02 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * `addClaims` 는 장을 완성하거나 조사를 하면 **진술에 문단이 하나 붙는** 보상이다.
+   * 그런데 그 문장을 아무도 안 봤다 — §6.9 는 **화자 id·slot 이 실재하는지**만 보고
+   * (*"⚠ 내용은 안 본다"* 라고 그 자리에 적혀 있다), §9-7 은 **조사 결과문과 장 전환
+   * 서사**까지만 본다. **추가 진술의 내용은 두 검사 사이로 빠져 있었다.**
+   *
+   * 두 가지를 §9-15·§9-7 과 **같은 자로** 잰다:
+   *
+   * ```
+   * ⓐ 모순   문장이 말한 (시각, 장소)가 화자의 **주장 격자**와 맞는가
+   * ⓑ 누설   씨앗이 아닌 확보 단어를 문장이 먼저 말하는가
+   * ```
+   *
+   * ## ⓐ 는 §9-15 와 **같은 명제**다 — 진실이 아니라 「그 사람이 하는 말」과 맞춘다
+   *
+   * 범인은 격자에서도 거짓말하고(`claim`) 추가 진술이 **그 거짓말과 일치하는 것이
+   * 정상**이다. 실물로 확인했다 — `gen-1` 의 범인은 진실이 `t1=room` 인데 주장이
+   * `t1=hall` 이고 추가 진술도 「홀」이라고 말한다. **진실과 대조하면 범인이 빨개진다.**
+   *
+   * ## 실측 (2026-08-02 · 44건 · 추가 진술 132조각)
+   *
+   * ```
+   * ⓐ 시각 1 · 장소 1 인 조각   84 (64%)   ← 이 검사가 보는 것. §9-15 의 62% 와 같은 자리
+   *      격자와 맞는다           84
+   *      어긋난다                0
+   * ⓑ 씨앗 아닌 단어를 말한다     0
+   * ```
+   *
+   * ⚠ **둘 다 경고다** — 어휘 동시 출현이라 §9-15·§9-7(c)(d) 와 같은 등급이다.
+   */
+  {
+    const ko17 = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+    const slotLb = c.slots.map((s) => ({ id: s.id, L: ko17(s.label) })).filter((x) => x.L)
+    const locLb = c.locations.map((l) => ({ id: l.id, L: ko17(l.label) })).filter((x) => x.L)
+    const seeded17 = new Set(c.seedTerms ?? [])
+    const allWords = (c.terms ?? []).map((t) => t.word).sort((a, b) => b.length - a.length)
+
+    for (const r of c.reveals) {
+      const tr = r.trigger
+      const where = tr.on === 'chapterComplete' ? `${tr.chapterOrder}장 완성` : `조사 '${tr.actionId}'`
+      for (const a of r.addClaims ?? []) {
+        const t = ko17(a.content)
+        if (!t) continue
+        const p = c.people.find((x) => x.id === a.speaker)
+
+        // ⓐ 모순 — 화자의 주장 격자(진실을 claim 이 칸별로 덮어쓴 것)와 대조
+        if (p) {
+          const asserted = new Map(p.presence.map((x) => [x.slot, x.location]))
+          for (const x of p.claim ?? []) asserted.set(x.slot, x.location)
+          const hs = slotLb.filter((x) => t.includes(x.L))
+          const hl = locLb.filter((x) => t.includes(x.L))
+          if (hs.length === 1 && hl.length === 1) {
+            const grid = asserted.get(hs[0]!.id)
+            if (grid !== undefined && grid !== hl[0]!.id) {
+              const gl = locLb.find((x) => x.id === grid)?.L ?? grid
+              warnings.push(
+                `${where} 추가 진술이 '${ko17(p.name)}'의 격자와 어긋난다 — ` +
+                  `문장은 「${hs[0]!.L}」에 「${hl[0]!.L}」이라 하는데 격자의 그 칸은 '${gl}' 다`,
+              )
+            }
+          }
+        }
+
+        // ⓑ 누설 — 씨앗이 아닌 확보 단어를 먼저 말한다 (§9-7 과 같은 자)
+        const spilled = allWords.filter((w) => !seeded17.has(w) && t.includes(w))
+        if (spilled.length)
+          warnings.push(
+            `${where} 추가 진술이 조사로 얻어야 할 단어를 말한다: ${spilled.join('·')} — ` +
+              '문장에서는 보이는데 확보 단어 은행에는 안 들어온다',
+          )
+      }
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 

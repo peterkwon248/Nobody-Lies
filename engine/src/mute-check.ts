@@ -358,6 +358,15 @@ const MUTATORS: { id: string; hit: (c: Case) => void }[] = [
   { id: '공개 트리거를 없는 조사로', hit: (c) => c.reveals.forEach((r) => {
       r.trigger = { on: 'action', actionId: 'no_such_action' }
     }) },
+  /** §9-17 ⓑ — 추가 진술이 씨앗 아닌 확보 단어를 먼저 말하게 만든다 */
+  { id: '추가 진술이 조사 단어를 흘린다', hit: (c) => {
+      const seeded = new Set(c.seedTerms ?? [])
+      const w = (c.terms ?? []).map((t) => t.word).find((x) => !seeded.has(x))
+      if (!w) return
+      // ⚠ `addClaims[].content` 는 `Text` 가 아니라 **`string`** 이다 (types.ts:290)
+      for (const r of c.reveals)
+        for (const cl of r.addClaims ?? []) cl.content = `${cl.content} 그리고 ${w} 말입니다.`
+    } },
   { id: '동선 슬롯을 없는 것으로', hit: (c) => c.people.forEach((p) =>
       p.presence.forEach((x) => { x.slot = 'no_such_slot' })) },
 
