@@ -30,6 +30,19 @@
  *
  * ⛔ **게이트에 걸지 않는다** — 기준치가 없다. 뮤테이션을 늘리면 숫자가 움직이므로
  * 「몇 개 이하」로 물면 검사가 거짓말이 된다(`world-check`·`proof-check` 과 같은 자리).
+ *
+ * ## ⚠ 사거리 — 이 도구가 **못 보는 것**
+ *
+ * ```
+ * verifier.ts 의 errors/warnings.push   ✅ 본다. 이것이 세는 대상이다
+ * schema.ts 의 p.add(...)               ❌ 못 본다 — 파싱된 뒤 망가뜨리므로 스키마를 안 탄다
+ * 게이트의 다른 단                        ❌ 못 본다 (clue-check·brief-check·port-check…)
+ * 「검사가 옳은가」                        ❌ 못 본다 — 우는지만 본다
+ * ```
+ *
+ * 첫 판에 그것 때문에 한 번 헛짚었다 — `trick.props` 를 없는 id 로 망가뜨렸는데
+ * 안 울려서 「죽은 검사」인 줄 알았다. 재보니 **`schema.ts:528` 이 보고 있었고**
+ * 검증기에는 원래 없는 검사였다. **안 울린 자리를 볼 때 스키마 쪽을 먼저 의심한다.**
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -172,7 +185,12 @@ const MUTATORS: { id: string; hit: (c: Case) => void }[] = [
   { id: '아키타입을 지운다', hit: (c) => { c.trick.types = [] } },
   { id: '이탈 칸을 없는 것으로', hit: (c) => { if (c.trick.exit) c.trick.exit.slot = 'no_such_slot' as never } },
   { id: '이탈을 드러낼 물증을 뗀다', hit: (c) => { if (c.trick.exit) c.trick.exit.brokenBy = [] } },
+  /**
+   * ⛳ **이건 검증기가 아니라 `schema.ts:528` 이 본다** — 그래서 이 도구로는 안 깨어난다.
+   * 아래 §사거리 참조. 그래도 남겨둔다: 나중에 검증기 쪽으로 옮기면 그때 울린다.
+   */
   { id: '트릭 도구를 없는 id 로', hit: (c) => { c.trick.props = ['e_no_such'] } },
+  { id: '허점 심은 자리를 없는 id 로', hit: (c) => { if (c.trick.flaw) c.trick.flaw.plantedIn = ['no_such'] } },
   { id: '사실 경로를 없는 id 로', hit: (c) => c.facts.forEach((f) => { f.revealedBy = ['e_no_such'] }) },
   { id: '조사가 없는 물증을 준다', hit: (c) => c.actions.forEach((a) => { a.gives = ['e_no_such'] }) },
   { id: '조사를 빈손으로 선언', hit: (c) => c.actions.forEach((a) => { a.yield = 'empty' }) },

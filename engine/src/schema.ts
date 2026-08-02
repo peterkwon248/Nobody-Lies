@@ -1,4 +1,4 @@
-import { DOMAIN_OF, ARCHETYPES } from './types.js'
+import { DOMAIN_OF, ARCHETYPES, ILLUSION_KINDS } from './types.js'
 import type {
   Action, Blank, BlankLabel, Case, Chapter, Evidence, Fact, FloorPlan, Location, Person, RelationGraph,
   PresenceCell, Particle, Reveal, Slot, Text,
@@ -532,8 +532,9 @@ export function parseCase(raw: unknown, source: string): Case {
     const at = `trick.illusions[${i}]`
     if (!il?.id) p.add(at, 'id 가 없다')
     if (!il?.impression) p.add(at, 'impression 이 없다')
-    if (!['death','time','place','absence','identity'].includes(il?.kind))
-      p.add(at, `kind 가 death·time·place·absence·identity 중 하나여야 한다 (받은 값: ${il?.kind})`)
+    // 손으로 베끼지 않는다 — `types.ts` 의 `ILLUSION_KINDS` 가 정본이다
+    if (!(ILLUSION_KINDS as readonly string[]).includes(il?.kind))
+      p.add(at, `kind 가 ${ILLUSION_KINDS.join('·')} 중 하나여야 한다 (받은 값: ${il?.kind})`)
     for (const e of [...arr(il?.made_by), ...arr(il?.broken_by)])
       if (!evidenceIds.has(e)) p.add(at, `물증 '${e}' 가 없다`)
     return {

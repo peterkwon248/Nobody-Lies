@@ -420,7 +420,13 @@ export type TrickType =
 /**
  * 인상의 종류. 아키타입이 "이 종류의 인상이 반드시 있어야 한다"고 요구한다.
  */
-export type IllusionKind = 'death' | 'time' | 'place' | 'absence' | 'identity'
+export const ILLUSION_KINDS = ['death', 'time', 'place', 'absence', 'identity'] as const
+/**
+ * ⛳ **값에서 타입을 뽑는다 — 반대가 아니다.** 예전에는 타입만 있어서 `schema.ts` 가
+ * 같은 다섯 문자열을 **손으로 다시 적고** 있었다. 종류를 하나 늘릴 때 한쪽만 고치면
+ * 조용히 어긋난다(`TRICK_TYPES` 와 같은 부류 · 이 저장소 최다 재발).
+ */
+export type IllusionKind = (typeof ILLUSION_KINDS)[number]
 
 /**
  * 아키타입 계약.
