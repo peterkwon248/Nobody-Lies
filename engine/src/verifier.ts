@@ -1726,6 +1726,79 @@ export function verify(c: Case): VerifyResult {
       )
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-15. **진술 산문이 자기 주장 격자와 어긋난다** (2026-08-02 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * `matrix.ts` 가 **「가장 큰 빈칸」**으로 찍어두고 있던 자리다 —
+   * *"「무고한 사람은 진실만 말한다」가 **격자에서만** 강제된다. 산문은 무검사다."*
+   *
+   * §7.5 는 `presence` ↔ `claim` 을 **구조로** 대조한다. 그런데 플레이어가 실제로
+   * 읽는 것은 **산문**이고, 산문은 격자와 따로 논다 — 산문 왕복에서 LLM 이
+   * 「새벽에 홀에 있었다」고 쓰는데 격자는 별채를 가리켜도 **아무도 안 본다.**
+   * 그러면 격자와 진술이 서로 다른 말을 하고, 플레이어의 배제 추론이 무너진다.
+   *
+   * ## 무엇과 대조하나 — **진실이 아니라 「그 사람이 하는 말」이다**
+   *
+   * ```
+   * 주장 격자 = presence 를 claim 이 칸별로 덮어쓴 것
+   * ```
+   *
+   * 범인은 격자에서도 거짓말한다(`claim`). 그 거짓말과 산문이 **일치하는 것이 정상**이다 —
+   * 범인은 일관된 이야기를 해야 잡을 맛이 난다. 그래서 진실(`presence`)과 대조하면
+   * **범인 전건이 빨개진다.** 실측으로 걸렸다: 진실과 대조하는 판을 심어보니
+   * 「안 물림」 11건이 전부 `claim` 이 있는 사람이었고, **그건 miss 가 아니라 정답**이었다.
+   *
+   * ## 어휘 대조인데 왜 쓸 만한가 — **닻이 셋이다**
+   *
+   * §9-12 가 *"순진한 낱말 대조는 20/20 거짓 양성"* 이라고 적어둔 그 부류인데,
+   * 이쪽은 셋으로 좁혀서 다르다:
+   *   ① **말하는 사람 자신의** 칸만 본다 (남의 위치가 아니다 — 그건 §9-12)
+   *   ② 문단이 **시각 하나 · 장소 하나**만 말할 때만 본다.
+   *      여럿이면 **어느 쌍이 짝인지 알 수 없으므로 안 본다** — 찍지 않는다
+   *   ③ 그 칸이 격자에 **있을 때만** 본다 (없는 것은 §7.5·스키마 몫이다)
+   *
+   * ## 실측 (2026-08-02 · 짓기 전에 쟀다)
+   *
+   * ```
+   * 진술 문단             241
+   *   시각·장소를 둘 다 말한다   169
+   *   시각 1 · 장소 1           149   ← 이 검사가 보는 것 (62%)
+   * 거짓 양성 (성한 16건)         0
+   * 심어서 물림                70 / 70 = 100%   (주장 칸을 옮기고 산문은 그대로 뒀다)
+   * ```
+   *
+   * ⚠ **경고다.** 어휘 동시 출현이라 §9-10·§9-12 와 같은 등급이다. 산문이 더 풍부해지면
+   * 새 표현이 걸릴 수 있고, **오류로 걸면 산문 왕복 중간 상태가 통째로 빨개진다.**
+   * 16건에서 0 을 유지하면 그때 오류로 올린다 — 지금 올리면 근거가 16건뿐이다.
+   */
+  {
+    const ko15 = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+    const slotLabels = c.slots.map((s) => ({ id: s.id, L: ko15(s.label) })).filter((x) => x.L)
+    const locLabels = c.locations.map((l) => ({ id: l.id, L: ko15(l.label) })).filter((x) => x.L)
+    for (const p of c.people) {
+      const asserted = new Map(p.presence.map((x) => [x.slot, x.location]))
+      for (const x of p.claim ?? []) asserted.set(x.slot, x.location)
+      for (const raw of p.statement?.paragraphs ?? []) {
+        const t = ko15(raw)
+        if (!t) continue
+        const hitSlots = slotLabels.filter((x) => t.includes(x.L))
+        const hitLocs = locLabels.filter((x) => t.includes(x.L))
+        if (hitSlots.length !== 1 || hitLocs.length !== 1) continue
+        const slot = hitSlots[0]!, loc = hitLocs[0]!
+        const gridLoc = asserted.get(slot.id)
+        if (gridLoc === undefined || gridLoc === loc.id) continue
+        const gridLabel = locLabels.find((x) => x.id === gridLoc)?.L ?? gridLoc
+        warnings.push(
+          `'${ko15(p.name)}'의 진술이 자기 격자와 어긋난다 — 문단은 「${slot.L}」에 ` +
+            `「${loc.L}」이라 말하는데 격자의 그 칸은 '${gridLabel}' 다. ` +
+            '격자와 진술이 다른 말을 하면 플레이어의 배제 추론이 무너진다',
+        )
+      }
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 
