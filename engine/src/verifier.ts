@@ -2039,6 +2039,87 @@ export function verify(c: Case): VerifyResult {
     }
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  9-19. **조사 결과문·물증 기록이 범인만 부른다** (2026-08-02 신설)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ## 이 검사의 값은 「경계를 못 박는 것」이다
+   *
+   * `matrix.ts` 의 두 칸이 *"결과문이 범인을 가리키는 **다른 방식**은 안 본다"* ·
+   * *"기록의 **내용**이 범인을 가리키는지는 안 본다"* 로 **끝이 열린 채** 있었다.
+   * **「다른 방식」은 끝이 없어서 그 칸은 영영 ✓ 가 안 된다** — 무슨 검사를 넣어도
+   * *"아직 이것도 안 본다"* 가 남는다.
+   *
+   * 그래서 **가리키는 방식을 둘로 못 박는다**:
+   *
+   * ```
+   * ① 확보 단어를 먼저 말한다        §9-7(c)(d)  ← 이미 있었다
+   * ② 용의자 중 범인만 이름이 나온다   §9-19       ← 여기
+   * ```
+   *
+   * ②는 새로 지어낸 명제가 아니다 — §9-13(도식이 범인만 가리킨다)·§9-18(프롤로그)이
+   * **이미 같은 자를 대고 있다.** 채널만 다르다.
+   *
+   * ## ⚠ 자기 대상은 빼고 센다 — 안 그러면 전부 거짓 양성이다
+   *
+   * `소지품 검사 · 문세라` 의 결과문이 「문세라」를 말하는 것은 **당연하다**.
+   * 처음 재봤을 때 걸린 5건이 **전부 그것**이었다. 그래서:
+   *   - 조사 결과문 → 그 조사가 겨누는 인물을 뺀다
+   *   - 물증 기록   → 그 물증을 **주는 조사**들이 겨누는 인물을 뺀다
+   *
+   * ## 실측 (2026-08-02 · 44건)
+   *
+   * ```
+   * 조사 결과 본문  657조각 · 범인만 부른다  0
+   * 물증 기록      701조각 · 범인만 부른다  0
+   * ```
+   *
+   * ⚠ **등급은 오류다** — §9-13·§9-18 과 같다. 실측이 0 이라 회귀 감시다.
+   */
+  {
+    const ko19 = (x: unknown) => (typeof x === 'string' ? x : (x as { ko?: string })?.ko ?? '')
+    const suspects19 = c.people.filter((p) => p.id !== c.victim)
+    /**
+     * ⚠ **여기서는 별명꼴(성 뗀 이름)을 안 쓴다** — §9-12 는 쓰는데 이유가 다르다.
+     * 그쪽은 **진술**(1인칭)이라 「한유빈」을 「유빈 언니」로 부르지만, **조사 결과문과
+     * 물증 기록은 서술자의 글**이라 전체 이름으로 쓴다.
+     *
+     * 그리고 별명꼴을 쓰면 **합성명사에 걸린다** — 저작 서식의 인물이 `인물 하나`
+     * 라서 뒤 두 글자가 `하나` 고, 결과문 *"물건 **하나**가 떨어져 있었다"* 가
+     * 범인을 부르는 것으로 잡혔다(실제로 게이트가 그렇게 떨어졌다).
+     * §9-12 가 적어둔 *"순진한 낱말 대조는 20/20 거짓 양성"* 의 실물이다.
+     */
+    const namesIn = (text: string, skip: Set<string>) =>
+      suspects19.filter((p) => !skip.has(p.id) && text.includes(p.name))
+    const onlyCulprit = (hits: { id: string }[]) => hits.length === 1 && hits[0]!.id === c.culprit
+
+    for (const a of c.actions) {
+      const body = ko19(a.result?.body)
+      if (!body.trim()) continue
+      const own = new Set(a.target?.kind === 'person' ? [a.target.id] : [])
+      if (onlyCulprit(namesIn(body, own)))
+        errors.push(
+          `조사 '${a.label}' 의 결과문이 용의자 중 범인 한 사람만 부른다 — ` +
+            '그 조사를 한 번 하면 답이 드러난다',
+        )
+    }
+    for (const e of c.evidence) {
+      const rec = ko19(e.record)
+      if (!rec.trim()) continue
+      // 그 물증을 주는 조사가 겨누는 사람은 당연히 나온다 — 뺀다
+      const own = new Set(
+        c.actions.filter((a) => a.gives.includes(e.id))
+          .map((a) => (a.target?.kind === 'person' ? a.target.id : ''))
+          .filter(Boolean),
+      )
+      if (onlyCulprit(namesIn(rec, own)))
+        errors.push(
+          `물증 '${e.id}' 의 기록이 용의자 중 범인 한 사람만 부른다 — 카드를 열면 답이 드러난다`,
+        )
+    }
+  }
+
   const min = findMinPath(c)
   if (min.size === Infinity) errors.push('모든 조사를 써도 클리어 불가')
 

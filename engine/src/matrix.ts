@@ -170,17 +170,43 @@ const CELLS: Cell[] = [
     note: '격자는 답을 묻지 않는다 — 주장을 보여주는 표면이다' },
 
   // ── 보고서 서술문 — 08-01에 한 칸이 비어 48개가 빠져나갔다 ──
-  { channel: 'report', invariant: 'derivable', status: 'partial',
-    marker: { file: V, text: '6.8 페어플레이' },
-    missing: '**인물 공란만** 본다. 시각·장소·discovered 는 안 문다(proof-check 이 재기만 한다: 시각 0/60)',
-    note: '인물 공란의 답을 집어낼 근거가 있나(경고). 정밀 판본은 proof.ts' },
+  /**
+   * ★ 2026-08-02 정정 — **죽은 검사를 표식으로 쓰고 있었다** ★
+   *
+   * 표식이 `6.8 페어플레이` 였는데 **§6.8 은 08-01에 접혔다.** 지금 그 자리에는
+   * `// (실행부 없음 — 위 §5-b 가 proof.ts 의 R1·R3 로 같은 자리를 본다.)` 만 있다.
+   * **표식 검사는 「그 글자가 소스에 있나」만 보므로 주석만 남아도 통과한다.**
+   *
+   * `missing` 도 낡아 있었다 — *"인물 공란만 본다. 시각·장소는 안 문다(시각 0/60)"*.
+   * §5-b 는 **모든 장의 모든 공란**을 보고 `proof-check` 실측은 **시각 60/60**이다.
+   *
+   * ⚠ **역방향 검사(§검증기의 절이 표에 놓였는가)로는 이걸 못 잡는다** — §6.8 은
+   * 표에 놓여 **있었고** 글자도 소스에 **있었다.** 못 잡는 것은 *"표식이 가리키는
+   * 자리에 실행부가 있나"* 다. 도구의 사거리로 적어둔다.
+   */
+  { channel: 'report', invariant: 'derivable', status: 'covered',
+    marker: { file: V, text: '5-b 페어플레이' },
+    note: '§5-b 가 `weakBlanks` 로 **모든 장의 모든 공란**에 사슬이 서는지 묻는다(경고). 실측: 생성 320/320 · 손저작 55/61. ⚠ 경고인 이유는 *"사슬이 없다"* 와 *"근거가 없다"* 를 구분 못 하기 때문이다 — 손저작 26개는 `proof.ts` 의 규칙이 사람이 쓴 산문에 안 닿는 것이지 결함이 아니다' },
   { channel: 'report', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.75 보고서 서술문' },
     note: '공란과 참조가 정확히 1:1' },
   { channel: 'report', invariant: 'contradiction', status: 'open',
     note: '서술문이 격자·물증과 어긋나는지 아무도 안 본다. 「가장 먼저 일어났다」가 그렇게 살았다' },
-  { channel: 'report', invariant: 'leak', status: 'open',
-    note: '서술문이 조사 없이 답을 흘리는지 안 본다. proof.ts 의 cost 0 이 그 자리다' },
+  /**
+   * ★ 2026-08-02 정정 — **이 칸도 이미 덮여 있었다** ★
+   *
+   * 옛 노트: *"서술문이 조사 없이 답을 흘리는지 안 본다. **proof.ts 의 cost 0 이
+   * 그 자리다**."* 그 자리를 **`weakBlanks` 가 이미 보고 있다** —
+   * `kind: 'free'`(조사 없이 풀린다)가 정확히 그것이고, 「선언된 전제」
+   * (§R5 현장·§R7 발견 시각·§R8 씨앗)는 `isDeclaredPremise` 로 빼고 센다.
+   * §5-b 가 그것을 경고로 낸다.
+   *
+   * **노트가 자기 답을 적어놓고 「안 본다」고 말하고 있었다** — §9-3h 와 같은 부류의
+   * **여섯 번째**다.
+   */
+  { channel: 'report', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '5-b 페어플레이' },
+    note: '§5-b 의 `weakBlanks` 가 `kind: \'free\'` 로 문다 — **비용 0 인데 선언된 전제가 아닌** 공란. 전제(§R5 현장·§R7 발견 시각·§R8 씨앗)는 `isDeclaredPremise` 가 갈라낸다. ★ 이 판정은 `clue-check` 의 **종료 조건 그 자체**이기도 하다 — 검증기와 게이트가 같은 함수를 부르므로 갈릴 수 없다' },
 
   // ── 확보 단어 ──
   { channel: 'terms', invariant: 'derivable', status: 'covered',
@@ -199,10 +225,9 @@ const CELLS: Cell[] = [
     marker: { file: V, text: '6.55 조사 결과문과 실제 산출이 어긋나는가' },
     missing: '**산출**과만 대조한다. 결과문이 **격자·트릭**과 어긋나는지는 안 본다',
     note: '결과문이 말하는 것과 실제로 주는 것. 거울상인 §9-8(데이터를 주는데 산문이 침묵한다)도 여기 산다' },
-  { channel: 'actionResult', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '9-7' },
-    missing: '**확보 단어**만 본다. 결과문이 범인을 가리키는 다른 방식은 안 본다',
-    note: '결과문이 그 조사가 주지 않는 확보 단어를 말하는가' },
+  { channel: 'actionResult', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-19. **조사 결과문·물증 기록이 범인만 부른다**' },
+    note: '★ 08-02에 **경계를 못 박아서** ◐ → ✓ 가 됐다 ★ 옛 `missing` 이 *"범인을 가리키는 **다른 방식**은 안 본다"* 로 **끝이 열려** 있어서 무슨 검사를 넣어도 ✓ 가 될 수 없었다. 가리키는 방식을 **둘로 못 박는다** — ① 확보 단어 선점(§9-7 c·d) · ② 용의자 중 **범인만 이름이 나온다**(§9-19). ②는 §9-13·§9-18 이 이미 대는 자와 같고 채널만 다르다. ⚠ 그 조사가 겨누는 인물은 빼고 센다(안 그러면 「소지품 검사 · 문세라」가 전부 걸린다 — 실제로 첫 판에서 5건이 그랬다). 실측 657조각 · 0건' },
   { channel: 'actionResult', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.4 decoy' },
     note: 'decoy 가 필수 경로에 개입하지 않는가' },
@@ -216,10 +241,9 @@ const CELLS: Cell[] = [
     note: '심어놓고 닫지 않은 물증' },
   { channel: 'evidence', invariant: 'contradiction', status: 'open',
     note: '물증 기록이 격자·트릭과 어긋나는지 안 본다' },
-  { channel: 'evidence', invariant: 'leak', status: 'partial',
-    marker: { file: V, text: '9-14. **확보 단어를 주는 물증의 기록이 비어 있다**' },
-    missing: '**기록의 유무가 갈리는 것**만 본다(§6.7 과 같은 부류). 기록의 **내용**이 범인을 가리키는지는 안 본다 — 소지품 150/150 이 그 부류였고, 그건 관측면 자료구조가 서야 잰다',
-    note: '확보 단어를 주는 물증인데 카드가 비면 그 유무가 곧 유용도 표시다' },
+  { channel: 'evidence', invariant: 'leak', status: 'covered',
+    marker: { file: V, text: '9-19. **조사 결과문·물증 기록이 범인만 부른다**' },
+    note: '★ 08-02에 **경계를 못 박아서** ◐ → ✓ 가 됐다 ★ 둘로 나눠 본다 — ① **유무가 갈리는가**(§9-14 · 기록이 섞여 있으면 그 유무가 곧 유용도 표시다) · ② **내용이 범인만 부르는가**(§9-19). 옛 `missing` 은 *"내용이 범인을 가리키는지 안 본다 — 관측면 자료구조가 서야 잰다"* 로 미뤄뒀는데, **자료구조 없이 이름 대조로 된다**(그 물증을 주는 조사가 겨누는 인물만 빼면 된다). 실측 701조각 · 0건' },
   { channel: 'evidence', invariant: 'derivable', status: 'na',
     note: '물증은 답이 아니라 단서다' },
 
