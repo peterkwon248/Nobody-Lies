@@ -2049,13 +2049,35 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
   const REC_TOOL = '바닥에 떨어져 있었다.'
   const REC_MUTUAL = `네 사람이 말한 ${places.hall} 자리가 서로 맞물렸다.`
 
+  /**
+   * ★ 확보 단어를 주는 물증 셋의 기록 ★ (2026-08-01 밤 · 검증기 §9-14)
+   *
+   * **이 셋만 `record` 가 비어 있었다** — 생성 **40/40건**에서 게이트가 매번 경고를
+   * 냈고 저작 서식도 **같은 id 셋**에서 울었다. 카드에 글이 있고 없고가 갈리면
+   * **그 유무가 곧 유용도 표시**다(`MEMORY.md` §절대 규칙 — 유용도 시각 구분 금지).
+   *
+   * ⚠ **산문 왕복을 거친 사건 둘만 0 이었다**(`closing-theater`·`pipe-organ`).
+   * 즉 이 구멍은 **산문가가 메우고 있었고** 왕복을 안 거치면 빈 채로 나갔다.
+   *
+   * ⛳ **「… — 「X」.」 꼴을 쓴다.** `alias`·`motive` 는 팔레트에서 오므로
+   * 「라는/이라는」·「였다/이었다」가 **받침에 갈린다.** 여기서 세면 조사 규칙이
+   * **여섯 벌째**가 된다(`es-hangul` 이관이 밀려 있다). 「」는 조사를 안 타서 안 깨진다.
+   *
+   * ⚠ **`terms[].note` 와 하나로 묶지 않는다** — `alias` 는 물증이 **둘**인데
+   * 단어 노트는 하나다. 1:1 인 위 `REC_STRAND` 와 달리 단일 출처가 성립하지 않고,
+   * 역할도 다르다(카드는 **그 물증 하나**, 노트는 **단어의 출처 전체**).
+   */
+  const REC_ALIAS = `여러 장에 같은 이름이 적혀 있었다 — 「${alias}」.`
+  const REC_ALIAS2 = `장부에도 같은 이름이 있었다 — 「${alias}」.`
+  const REC_MOTIVE = `금액과 날짜가 반복해 적혀 있었다 — 「${motive}」.`
+
   const baseEvidence: Ev[] = [
     { id: 'e_tool', description: tool, foundAt: places.room, record: REC_TOOL, yieldsTerms: [tool] },
     // 핵심 사실은 획득 경로가 둘 이상이어야 한다 — 비평가가 강제한다
     { id: 'e_toolmark', description: '도구가 남긴 자국', record: '같은 폭의 자국이 남아 있었다.', yieldsTerms: [tool] },
-    { id: 'e_alias', description: `'${alias}' 라는 이름의 기록`, yieldsTerms: [alias] },
-    { id: 'e_alias2', description: `'${alias}' 가 적힌 두 번째 기록`, yieldsTerms: [alias] },
-    { id: 'e_motive', description: '금전 기록', yieldsTerms: [motive] },
+    { id: 'e_alias', description: `'${alias}' 라는 이름의 기록`, record: REC_ALIAS, yieldsTerms: [alias] },
+    { id: 'e_alias2', description: `'${alias}' 가 적힌 두 번째 기록`, record: REC_ALIAS2, yieldsTerms: [alias] },
+    { id: 'e_motive', description: '금전 기록', record: REC_MOTIVE, yieldsTerms: [motive] },
     { id: 'e_mutual', description: '넷의 상호 보증', record: REC_MUTUAL },
     ...HERRING.map((h, i) => ({ id: `e_herring${i + 1}`, description: h.ev, record: h.rec })),
   ]
