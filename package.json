@@ -8,13 +8,14 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "lint": "biome lint",
     "prop-check": "npm run prop-check -w engine",
     "verify": "npm run verify -w engine",
     "gen-check": "npm run verify -w engine -- --generate 40 --min-pass 100",
     "tmpl-check": "npm run verify -w engine -- --case templates/case-template.yaml",
+    "prose-lock": "npm run prose-lock -w engine",
     "case": "npm run export-case -w nobody-lies-engine",
     "tester": "npm run build:single -w nobody-lies-app && node scripts/bundle-single.mjs",
     "dev": "npm run dev -w nobody-lies-app",

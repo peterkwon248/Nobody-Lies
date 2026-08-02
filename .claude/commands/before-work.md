@@ -71,9 +71,10 @@ npm install
 npm run build
 ```
 
-**12단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
-tmpl-check · brief-check · matrix-check · port-check · build`
-(07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`, **08-02에 `clue-check`**).
+**13단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
+tmpl-check · brief-check · prose-lock · matrix-check · port-check · build`
+(07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
+**08-02에 `clue-check`·`prose-lock`**).
 **초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 옵션 공간 속성 통과 + YAML 왕복 동일 +
 **모든 공란이 조사로 갈림** + 저작 서식 통과 + **서식이 든 숫자가 산장 실측과 같음** +
 **행렬이 가리키는 검사가 실재함** + 이식 회귀 없음 + 린트 오류 0.

@@ -356,9 +356,14 @@
   > **같은 날짜 문자열이 두 뜻으로 섞여 있다** — 「오기인 07-29(=07-28)」와
   > 「진짜 07-29」. 앞으로 07-29 절을 읽을 때는 **git 커밋 날짜로 갈라 읽는다.**
 - **브랜치**: `main` — 이 저장소는 **직접 main 푸시**다 (feature 브랜치·PR 없음)
-- **빌드 게이트가 12단이다** (07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
-  **08-02에 `clue-check`**) — `typecheck · lint · yaml-check · verify · gen-check ·
-  prop-check · clue-check · tmpl-check · brief-check · matrix-check · port-check · build`.
+- **빌드 게이트가 13단이다** (07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
+  **08-02에 `clue-check`·`prose-lock`**) — `typecheck · lint · yaml-check · verify · gen-check ·
+  prop-check · clue-check · tmpl-check · brief-check · prose-lock · matrix-check · port-check · build`.
+  > `prose-lock` 은 **생성기가 쥔 서술 문장 틀 21종을 잠근다**(2026-08-02 신설).
+  > 늘거나 바뀌면 exit 1 이고 **사람이 한 번 읽는다** — 07-30의 「그날 아침 [인물]이
+  > 가장 먼저 도착했다」 부류가 다시 들어오는 것을 막는 자리다. 심어서 확인했다.
+  > ⛳ **자동 갱신하지 않는다** — 정당한 새 문장은 `APPROVED` 에 **손으로** 넣는다.
+  > 그 한 번의 읽기가 이 검사의 전부다.
   `npm run build` 하나로 다 돈다. **초록의 뜻**: 골든 케이스 통과 + 생성기 100% +
   **옵션 공간 속성 통과 + YAML 왕복 동일** + **모든 공란이 조사로 갈림** + 저작 서식 통과 +
   **의뢰 서식의 숫자가 산장 실측과 같음** + 이식 회귀 없음 + **린트 오류 0**.
