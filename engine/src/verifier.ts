@@ -1544,28 +1544,62 @@ export function verify(c: Case): VerifyResult {
    * **걸릴 조건 자체를 좁힐 수 있어서** 생성분에는 오류로 남긴다 — 생성기가
    * 깨진 것은 언제나 결함이고, 경고로 두면 §「초록불의 뜻」이 또 반복된다.
    */
-  if (c.prose?.source === 'template' && c.people.length > 1) {
+  /**
+   * ★★ 2026-08-02 — **두 검사의 성격이 다른데 한 조건에 묶여 있었다** ★★
+   *
+   * 위 「`template` 일 때만」이라는 이유는 **①에만 참이다.**
+   *
+   * ```
+   * ① 무고한 둘의 동선이 같다   조립 진술이 글자까지 같아진다   ← 산문 문제. template 이 맞다
+   * ② 범인의 동선이 유일하다     격자 표에 그대로 보인다        ← 격자 문제. 산문과 무관하다
+   * ```
+   *
+   * **격자는 표다.** 산문을 아무리 다르게 써도 「누가 어느 칸에 있었다고 말했나」의
+   * 모양은 화면에 그대로 뜬다(앱 §격자 — *"셀을 눌러 확인·의심·모순을 표시하세요"*).
+   * 그러니 ②를 `template` 에 묶어두면 **누설이 없어지는 게 아니라 볼 수 없어질 뿐**이다
+   * (`matrix.ts` 의 옛 `missing` 이 정확히 그렇게 적어두고 있었다).
+   *
+   * ## 실측 — 풀어보니 셋이 걸린다 (2026-08-02 · 45건)
+   *
+   * ```
+   * mountain-lodge   main/annex/annex/annex   ← 골든 레퍼런스
+   * practice-room    dance/dance/dance/wc
+   * case-template    hall/hall/hall           ← 사람이 베끼는 서식
+   * ```
+   *
+   * ⚠ **저작분은 경고다.** 오류로 걸면 커밋된 저작물 셋이 통째로 빨개져 **검사가
+   * 거짓말이 된다** — §5-b(손저작 26개) · §9-14 · §9-10 을 경고로 둔 것과 같은 판단이다.
+   * **생성분은 오류로 남긴다** — 생성기가 깨진 것은 언제나 결함이다.
+   */
+  if (c.people.length > 1) {
     const shape = (p: (typeof c.people)[number]) =>
       c.slots
         .map((s) => (p.claim ?? p.presence).find((x) => x.slot === s.id)?.location ?? '—')
         .join('/')
-
+    const assembled = c.prose?.source === 'template'
     const innocentShapes = c.people.filter((p) => p.id !== c.culprit).map(shape)
-    const dup = innocentShapes.filter((s, i) => innocentShapes.indexOf(s) !== i)
-    if (dup.length)
-      errors.push(
-        `무고한 사람 여럿의 동선이 같다 (${[...new Set(dup)].join(' · ')}) — ` +
-          `조립 진술에서는 동선이 곧 문장이라 진술 정독이 인원수만큼 읽히지 않는다`,
-      )
 
+    // ① 조립 진술에서만 뜻이 있다 — 손으로 쓰면 같은 모양도 다른 글이 된다
+    if (assembled) {
+      const dup = innocentShapes.filter((s, i) => innocentShapes.indexOf(s) !== i)
+      if (dup.length)
+        errors.push(
+          `무고한 사람 여럿의 동선이 같다 (${[...new Set(dup)].join(' · ')}) — ` +
+            `조립 진술에서는 동선이 곧 문장이라 진술 정독이 인원수만큼 읽히지 않는다`,
+        )
+    }
+
+    // ② 격자 표는 산문과 무관하게 모양을 보여준다 — 전건에서 본다
     const culpritP2 = c.people.find((p) => p.id === c.culprit)
     if (culpritP2) {
       const cs = shape(culpritP2)
-      if (!innocentShapes.includes(cs))
-        errors.push(
+      if (!innocentShapes.includes(cs)) {
+        const msg =
           `범인 '${culpritP2.name}'의 동선이 다섯 중 유일하다 (${cs}) — ` +
-            `물증 없이 진술 모양만으로 지목된다. 무고한 한 사람이 같은 동선이어야 한다`,
-        )
+          `격자 표에서 혼자 다른 줄이 되어 물증 없이 지목된다. 무고한 한 사람이 같은 동선이어야 한다`
+        if (assembled) errors.push(msg)
+        else warnings.push(msg)
+      }
     }
   }
 
