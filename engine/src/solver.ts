@@ -44,7 +44,7 @@
  * 규칙이 없으면 10¹³~10²¹ 이라 열거가 불가능해진다. **핵심 명제가 곧 솔버의 전제다.**
  */
 import type { Asks, Case, LocationId, PersonId, PresenceCell, SlotId } from './types.js'
-import { deriveFacts, guiltTable } from './verifier.js'
+import { deriveFacts, guiltTable, simulate } from './verifier.js'
 
 /** 가설 하나. 범인이 누구이고, 그 사람이 어디 있었고, 언제 죽였나 */
 export type World = {
@@ -140,7 +140,8 @@ function canReachScene(c: Case, loc: LocationId): boolean {
 export function consistent(
   c: Case,
   w: World,
-  ctx: SolveContext = buildContext(c),
+  ctx: SolveContext,
+  observed: Observation,
 ): { ok: boolean; broke: Clause | null } {
   const win = ctx.window
   const truth = new Map(w.culpritTruth.map((cell) => [cell.slot, cell.location]))
@@ -158,9 +159,25 @@ export function consistent(
   const at = truth.get(w.murderCell)
   if (at === undefined || !canReachScene(c, at)) return { ok: false, broke: 'C2' }
 
-  // C3·C4 — 전체 정보에서 유죄가 서는 사람. `ctx.guilty` 가 이미 계산해뒀다
-  if (!ctx.guilty.includes(w.culprit)) return { ok: false, broke: 'C3' }
-  if (ctx.guilty.length > 1) return { ok: false, broke: 'C4' }
+  // ── 여기부터 지식 조항 — **드러난 사실 위에서만** 묻는다 (§조항 재분류) ──
+  //
+  // ⚠ **위 C1·C2 는 세계 물리라 관측과 무관하다** — 세계의 내적 일관성이다.
+  //   C3·C4 만 관측에 걸린다. 안 가르면 `curve` 가 0회 시점부터 세계 1이 된다.
+  const facts = deriveFacts(c, observed.evidence, observed.confirmed)
+
+  // C3 — **드러난 사실이 이 세계에서 참인가.** 「유죄가 서는가」가 아니다.
+  //
+  // ⛔ 「w.culprit 의 유죄 셋이 이미 섰나」로 쓰면 **k=0 에서 세계가 몰살한다** —
+  //    아무것도 안 드러난 시점에는 누구의 유죄도 안 서기 때문이다. 수렴 방향이
+  //    거꾸로다. 물어야 할 것은 **모순되나**이지 **증명됐나**가 아니다.
+  if (c.facts.some((f) => f.kind === 'no_opportunity' && f.subject === w.culprit && facts.has(f.id)))
+    return { ok: false, broke: 'C3' }
+
+  // C4 — 드러난 사실이 **다른 사람**을 유죄로 확정했다면 이 가설은 죽는다.
+  //      이것이 곡선을 내려가게 하는 기계다: 물증이 쌓이며 유죄가 한 사람으로
+  //      좁혀지고, 그 사람이 아닌 범인 가설이 그때 지워진다.
+  const guilty = guiltTable(c, facts).filter((g) => g.guilty).map((g) => g.person)
+  if (guilty.length > 0 && !guilty.includes(w.culprit)) return { ok: false, broke: 'C4' }
 
   return { ok: true, broke: null }
 }
@@ -182,20 +199,53 @@ export function consistent(
  */
 export type SolveContext = {
   window: SlotId[]
-  /** 전체 정보에서 유죄 셋이 다 서는 사람 */
-  guilty: PersonId[]
-  /** 사람마다 **하는 말** */
+  /** 사람마다 **하는 말**. 진술 정독은 무료이므로 k=0 부터 손에 있다 */
   stated: Map<PersonId, Map<SlotId, LocationId>>
 }
 
+/**
+ * ⛳ **`guilty` 가 여기서 빠졌다** (2026-08-04). 전에는 이 캐시가 **전체 사실 위에서**
+ * 유죄를 계산해 들고 있었는데, 그것을 `curve` 경로에서 그대로 쓰면 **0회 시점부터
+ * 범인이 상수**가 되어 곡선이 평평한 거짓말이 된다. 유죄는 이제 `Observation` 이
+ * 정한다(§지식 조항).
+ */
 export function buildContext(c: Case): SolveContext {
-  const full = deriveFacts(c, new Set(c.evidence.map((e) => e.id)), c.chapters.length)
   return {
     window: windowSlots(c),
-    guilty: guiltTable(c, full).filter((g) => g.guilty).map((g) => g.person),
     stated: new Map(c.people.map((p) => [p.id, statedGrid(c, p.id)])),
   }
 }
+
+/**
+ * **그 시점에 플레이어가 손에 쥔 것.**
+ *
+ * ⛔ `consistent` 의 **필수 인자**다. 옵션으로 두면 빼먹은 호출이 조용히 「전체 정보」가
+ * 되고, 그것이 §조항 재분류의 함정이 **타입 시스템을 통과해 돌아오는 경로**다.
+ */
+export type Observation = {
+  /** 그 시점까지 확보한 물증 */
+  evidence: Set<string>
+  /** 확인한 장 수 — `availableAfter` 게이트가 이것을 본다 */
+  confirmed: number
+}
+
+/** 전체 정보. **명시적으로 만들어 넘긴다** — 기본값으로 숨기지 않는다 */
+export function fullObservation(c: Case): Observation {
+  return { evidence: new Set(c.evidence.map((e) => e.id)), confirmed: c.chapters.length }
+}
+
+/** 조사 0회 시점. 진술 정독 · 브리핑 · 씨앗 단어는 무료다(`atScene` 물증 포함) */
+export function zeroObservation(): Observation {
+  return { evidence: new Set(), confirmed: 0 }
+}
+
+/**
+ * ⛳ `guiltyUnder` 헬퍼는 두지 않는다 — `consistent` 안에서 직접 편다.
+ *
+ * ★ **`deriveFacts` 를 반드시 `observed` 위에서 돌린다** ★ 전체 `c.facts` 를 읽으면
+ * 조항만 가두고 파생을 안 가둔 것이라 **누수가 한 층 아래로 숨는다.** 그래서
+ * `SolveContext` 캐시에 유죄를 넣지 않는다(위 주석 참조).
+ */
 
 /**
  * ─────────────────────────────────────────────────────────────
@@ -301,6 +351,40 @@ export function answerOf(c: Case, w: World, asks: Asks | undefined): string | nu
   }
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  4단계 — `curve` · **솔버 값의 전부가 여기 있다**
+ * ─────────────────────────────────────────────────────────────
+ *
+ * 전체 정보 `unique` 는 실측으로 **자동 충족**이었다(`discriminated` 0/702).
+ * 그래서 그것은 출시 조건이 아니라 **건전성 전제조건**이고, 출시 조건은 이쪽이다:
+ *
+ * ```
+ * 예산 내 오라클 경로에서 답안 벡터 1 에 도달하는가
+ * ```
+ *
+ * `simulate` 의 `trace`(0단계에서 붙여둔 것)를 따라 관측을 누적하며 세계 수를 찍는다.
+ */
+export type CurvePoint = { step: number; action: string; cost: number; worlds: number; culprits: number }
+
+export function curve(c: Case): CurvePoint[] {
+  const sim = simulate(c, 1)
+  const pts: CurvePoint[] = []
+
+  const at = (step: number, action: string, cost: number, o: Observation) => {
+    const ws = consistentWorlds(c, o)
+    pts.push({ step, action, cost, worlds: ws.length, culprits: new Set(ws.map((w) => w.culprit)).size })
+  }
+
+  at(0, '(진술 정독 · 브리핑)', 0, zeroObservation())
+  sim.trace.forEach((t, i) => {
+    // ⛳ `confirmed` 는 그 시점 확인한 장 수다. `simulate` 는 가능해지는 즉시 장을
+    //    확인하므로 보수적으로 **누적 조사 수 기준의 하한**을 쓴다 — 덜 지우는 쪽이다
+    at(i + 1, t.action, t.cost, { evidence: new Set(t.evidence), confirmed: c.chapters.length })
+  })
+  return pts
+}
+
 /** 데카르트 곱 — 슬롯마다 장소 하나. `L^S` 개를 낸다 */
 function* gridAssignments(slots: SlotId[], locs: LocationId[]): Generator<PresenceCell[]> {
   const n = slots.length
@@ -350,6 +434,8 @@ export function solveGrid(c: Case): GridResult {
   const slots = c.slots.map((s) => s.id)
   const locs = c.locations.map((l) => l.id)
   const ctx = buildContext(c)
+  // ★ 전체 정보를 **명시적으로** 만들어 넘긴다 — 기본값으로 숨기지 않는다
+  const full = fullObservation(c)
   const killedBy: Record<Clause, number> = { C1: 0, C2: 0, C3: 0, C4: 0 }
   const culprits = new Set<PersonId>()
   let enumerated = 0
@@ -359,7 +445,7 @@ export function solveGrid(c: Case): GridResult {
     for (const grid of gridAssignments(slots, locs)) {
       for (const murderCell of ctx.window) {
         enumerated++
-        const r = consistent(c, { culprit: person.id, culpritTruth: grid, murderCell }, ctx)
+        const r = consistent(c, { culprit: person.id, culpritTruth: grid, murderCell }, ctx, full)
         if (r.ok) {
           surviving++
           culprits.add(person.id)
@@ -376,7 +462,7 @@ export function solveGrid(c: Case): GridResult {
   //   적지 않는다. 그래서 창 칸 중 **하나라도** 일관이면 자기 검사를 통과로 본다.
   //   ★ 이것이 murderCell 이 진짜 변수라는 증거다 ★ 데이터에 있었으면 읽었을 것이다.
   const self = ctx.window
-    .map((murderCell) => consistent(c, { culprit: c.culprit, culpritTruth: trueGrid, murderCell }, ctx))
+    .map((murderCell) => consistent(c, { culprit: c.culprit, culpritTruth: trueGrid, murderCell }, ctx, full))
     .reduce((best, r) => (best.ok ? best : r), { ok: false, broke: null } as ReturnType<typeof consistent>)
 
   return {
@@ -389,8 +475,12 @@ export function solveGrid(c: Case): GridResult {
   }
 }
 
-/** 일관 세계를 실제로 모아서 돌려준다. `solveGrid` 는 세기만 한다 */
-export function consistentWorlds(c: Case): World[] {
+/**
+ * 그 관측 아래의 일관 세계를 모은다. `solveGrid` 는 세기만 한다.
+ *
+ * ⛔ `observed` 는 **필수**다 — 전체 정보를 원하면 `fullObservation(c)` 를 만들어 넘긴다.
+ */
+export function consistentWorlds(c: Case, observed: Observation): World[] {
   const slots = c.slots.map((s) => s.id)
   const locs = c.locations.map((l) => l.id)
   const ctx = buildContext(c)
@@ -399,7 +489,7 @@ export function consistentWorlds(c: Case): World[] {
     for (const grid of gridAssignments(slots, locs))
       for (const murderCell of ctx.window) {
         const w = { culprit: person.id, culpritTruth: grid, murderCell }
-        if (consistent(c, w, ctx).ok) out.push(w)
+        if (consistent(c, w, ctx, observed).ok) out.push(w)
       }
   return out
 }
@@ -445,7 +535,7 @@ export type SolveResult = {
  * §6 교차표가 그것을 `exit 1` 로 센다. 그 배선은 6단계에서 붙는다.
  */
 export function solve(c: Case): SolveResult {
-  const worlds = consistentWorlds(c)
+  const worlds = consistentWorlds(c, fullObservation(c))
   const blanks: BlankReport[] = []
 
   if (worlds.length === 0)
