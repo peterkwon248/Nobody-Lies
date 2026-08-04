@@ -8,7 +8,7 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run censor-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run censor-check && npm run solve-check && npm run matrix-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "lint": "biome lint",
     "prop-check": "npm run prop-check -w engine",
@@ -32,6 +32,7 @@
     "matrix": "npm run matrix -w engine",
     "matrix-check": "npm run matrix -w engine -- --brief",
     "censor-check": "npm run censor-check -w engine",
+    "solve-check": "npm run solve-check -w engine -- 40",
     "censor": "npm run censor -w engine --",
     "space-audit": "npm run space-audit -w engine"
   },

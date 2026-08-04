@@ -155,8 +155,22 @@ const inShipGate = (c: Cell) =>
   (c.invariant === 'leak' || (c.invariant === 'contradiction' && PROSE_CHANNELS.has(c.channel)))
 
 const V = 'src/verifier.ts'
-const PL = 'src/prose-lock.ts'
 const CS = 'src/censor.ts'
+const SC = 'src/solve-check.ts'
+
+/**
+ * ⛳ **`prose-lock` 은 여기에 상수를 두지 않는다** (2026-08-05 정리).
+ *
+ * `PL = 'src/prose-lock.ts'` 가 **어느 칸도 안 가리킨 채** 살아 있었고 린트 경고 1건의
+ * 정체가 그것이었다. 지우면서 「행렬이 게이트 한 단을 안 센다」가 결함인지 다시 봤는데
+ * **아니다** — 이 표가 세는 것은 **불변식 덮개**지 게이트 단수가 아니다.
+ * `prose-lock` 은 **잠금(회귀 감시)**이지 불변식 검사가 아니다: *"생성기가 쥔 서술
+ * 문장이 승인 목록과 같은가"* 는 「이 채널이 답을 흘리나」류의 명제가 아니라
+ * **「어제와 같은가」**다. 그 기여는 `report`·`revealNarration`·`interlude` 의
+ * ⑤검열관 칸 note 에 *"생성 경로는 prose-lock 이 잠근다"* 로 이미 적혀 있다.
+ *
+ * **안 쓰는 상수는 거짓말이다** — 「덮고 있다」는 인상만 남기고 아무것도 안 가리킨다.
+ */
 
 /**
  * ★ 표 본체 ★ **적지 않은 칸은 자동으로 `open`** 이다 — 빠뜨려도 조용히 넘어가지
@@ -206,8 +220,8 @@ const CELLS: Cell[] = [
    * 자리에 실행부가 있나"* 다. 도구의 사거리로 적어둔다.
    */
   { channel: 'report', invariant: 'derivable', status: 'covered',
-    marker: { file: V, text: '5-b 페어플레이' },
-    note: '§5-b 가 `weakBlanks` 로 **모든 장의 모든 공란**에 사슬이 서는지 묻는다(경고). 실측: 생성 320/320 · 손저작 55/61. ⚠ 경고인 이유는 *"사슬이 없다"* 와 *"근거가 없다"* 를 구분 못 하기 때문이다 — 손저작 26개는 `proof.ts` 의 규칙이 사람이 쓴 산문에 안 닿는 것이지 결함이 아니다' },
+    marker: { file: SC, text: '§6 교차표 다섯째 줄' },
+    note: '**두 층이다.** ① `verifier §5-b` 가 `weakBlanks` 로 모든 공란에 사슬이 서는지 묻는다 — **경고**다(*"사슬이 없다"* 와 *"근거가 없다"* 를 구분 못 하므로). ② **2026-08-05에 `solve-check` 이 게이트에 들어오면서 오류 층이 생겼다** — §6 교차표 다섯째 줄이 **솔버도 proof 도 안 무는 공란**을 세고 1개라도 있으면 exit 1 이다. 경고만 있을 때는 사람이 안 읽으면 그만이었다. ⚠ **경고가 없는 것과 안 본 것이 다르다** — 같은 날 `poolFor` 가 모르는 라벨(`협박대상`)을 조용히 버려 그 공란을 **아예 안 보고** 있었고, ②가 그것을 잡았다' },
   { channel: 'report', invariant: 'wiring', status: 'covered',
     marker: { file: V, text: '6.75 보고서 서술문' },
     note: '공란과 참조가 정확히 1:1' },

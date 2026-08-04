@@ -62,6 +62,15 @@ for (let s = 1; s <= N; s++) cases.push([`gen-${s}`, generateCase(s)])
 // ── ① 건전성 삼종 ──────────────────────────────────────────────
 let unchecked = 0
 const uncheckedRows: string[] = []
+/**
+ * 후보 어휘를 **라벨 폴백**으로 고른 공란 수. 오류가 아니라 **인쇄**다.
+ *
+ * ⛳ 조용한 폴백은 조용한 버림과 같은 병이다 — 2026-08-05에 `poolFor` 가 모르는
+ * 라벨(`협박대상`)을 빈 배열로 돌려 그 공란을 **아예 안 보고** 있었고, 화면에서는
+ * 「경고 없음」과 구별되지 않았다. 폴백이 몇 개인지 보이면 새 라벨이 들어올 때
+ * 사람이 먼저 안다. **0 으로 가는 것이 목표다**(`asks` 를 다 채우면 0 이 된다).
+ */
+let labelFallback = 0
 for (const [name, c] of cases) {
   const r = solve(c)
   if (r.verdict === 'unsat') errors.push(`${name}: unsat — 사건 데이터가 규칙과 모순이다`)
@@ -72,6 +81,7 @@ for (const [name, c] of cases) {
 
   // §6 교차표 다섯째 줄 — vacuous 인데 proof 도 안 물면 **무검사 공란**이다
   const proofs = proveBlanks(c)
+  labelFallback += proofs.filter((x) => x.poolSource === 'label').length
   const used = new Set<number>()
   for (const b of r.blanks) {
     if (b.verdict === 'discriminated') continue
@@ -93,6 +103,10 @@ if (unchecked) {
   note(`    ✗ 무검사 공란 ${unchecked}개`)
   for (const s of uncheckedRows) note(`        ${s}`)
 } else note(`    ✓ 무검사 공란 0`)
+note(
+  `    · 후보 어휘를 라벨 폴백으로 고른 공란 ${labelFallback}개` +
+    ` (asks 를 채우면 0 이 된다 — 폴백은 새 라벨을 조용히 버릴 수 있다)`,
+)
 
 // ── ② 계약 뮤테이션 ────────────────────────────────────────────
 note(`\n  ② 계약 뮤테이션 — f_no_* 하나의 무료성 제거`)
