@@ -588,6 +588,11 @@ export function parseCase(raw: unknown, source: string): Case {
     locations: locationList,
     people,
     victim: c.victim,
+    // 피해자 동선 — 세계 변수가 아니라 상수다. `asks: lastSeenBy` 가 읽는다.
+    // 없으면 lastSeenBy 가 계산될 수 없어 솔버가 undecidable 을 낸다(삼키지 않는다).
+    ...(c.victim_presence
+      ? { victimPresence: cells(c.victim_presence, p, 'victim_presence', slots, locations) }
+      : {}),
     ...(c.victim_profile ? { victimProfile: {
       name: c.victim_profile.name,
       ...(c.victim_profile.age !== undefined ? { age: c.victim_profile.age } : {}),

@@ -135,6 +135,8 @@ export function caseToRaw(c: Case): Raw {
     victim_profile: c.victimProfile
       ? tidy({ name: c.victimProfile.name, age: c.victimProfile.age, job: c.victimProfile.job })
       : undefined,
+    // 피해자 동선. `asks: lastSeenBy` 가 읽는 상수 — 왕복에서 빠지면 그 어휘가 죽는다
+    victim_presence: c.victimPresence?.map((e) => ({ slot: e.slot, at: e.location })),
     culprit: c.culprit,
 
     trick: tidy({

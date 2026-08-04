@@ -39,7 +39,7 @@
  * 그래서 `npm run proof-check` 가 **덮인 비율**을 인쇄한다. 그 비율이 곧
  * 「검사되지 않는 축이 얼마나 남았나」다.
  */
-import type { Case, PersonId } from './types.js'
+import type { Blank, Case, Fact, PersonId } from './types.js'
 
 const ko = (x: unknown): string =>
   typeof x === 'string' ? x : ((x as { ko?: string } | undefined)?.ko ?? '')
@@ -67,6 +67,20 @@ export type BlankProof = {
   unique: boolean
   /** 증명에 필요한 조사 횟수의 합. 0 이면 조사 없이 풀린다 = 누설 */
   cost: number
+  /**
+   * 후보 어휘를 **무엇으로** 골랐나 — `asks`(선언된 물음) 인가 `label`(폴백) 인가.
+   *
+   * ⛳ **조용한 폴백은 조용한 버림과 같은 병의 다른 증상이다** (2026-08-05).
+   * 라벨 폴백은 사건마다 자유로운 문자열에 기대므로, 새 라벨이 들어오면 **아무 말 없이
+   * 빈 후보 → 공란 통째로 건너뜀**이 된다(`협박대상` 이 그랬다). 그래서 폴백을 쓴
+   * 사실을 **세어서 인쇄한다** — 지우지 않고 보이게 두는 쪽을 골랐다.
+   *
+   * ⚠ `terms` 는 폴백이 아니다 — `candidates: 'discovered'` 는 후보가 **확보 단어
+   * 목록**으로 정해져 있어 라벨도 `asks` 도 안 본다. 처음에 이 셋을 둘로 뭉뚱그려
+   * **discovered 공란 전부를 「라벨 폴백」으로 세고 있었다**(293개 중 대부분).
+   * 세는 것이 틀리면 인쇄가 거짓말이 된다.
+   */
+  poolSource: 'asks' | 'label' | 'terms'
 }
 
 /** 규칙 하나. 후보 집합을 줄이는 한 걸음을 낸다 */
@@ -89,6 +103,14 @@ type Ctx = {
   report: string
   /** 사람 id → 표시 이름 */
   nameOf: (id: string) => string
+  /**
+   * 이 공란이 **무엇을 묻는가**(`types.ts` §Asks).
+   *
+   * ⛳ 2026-08-05에 들어왔다. 그전까지 이 모듈은 **산문만 읽어서** 증명했고
+   * (R1·R3·R6·R7), 그래서 서술문이 물건 이름을 안 말하는 손저작 공란은
+   * **구조적으로 증명 불가**였다 — 근거가 없어서가 아니라 **읽을 채널이 없어서**다.
+   */
+  asks: Blank['asks']
 }
 
 /** 그 조사 결과 제목을 주는 사람이 유일하면 그 사람. 둘 이상이면 null */
@@ -107,6 +129,59 @@ function soleOwners(c: Case): Map<string, PersonId | null> {
 function costOfTitle(c: Case, title: string): number {
   const a = c.actions.find((x) => ko(x.result?.title) === title)
   return a?.cost ?? 1
+}
+
+/**
+ * 그 사실을 알게 되는 데 드는 **최소** 조사 비용. `revealedBy` 가 비면 0(진술에서 무료).
+ *
+ * ⚠ 0 과 양수를 **다른 규칙 id 로** 내보낸다 — `clues.ts` 의 `isDeclaredPremise` 가
+ * **규칙 id 로** 전제 여부를 가르기 때문이다. 한 id 로 뭉뚱그리면 「진술이라서 0」과
+ * 「조사해서 양수」가 같은 이름을 달게 되고, 전제 판정이 둘을 못 가른다.
+ */
+function costOfFact(c: Case, f: Fact): number {
+  if (!f.revealedBy.length) return 0
+  const costs = c.actions
+    .filter((a) => a.gives.some((eid) => f.revealedBy.includes(eid)))
+    .map((a) => a.cost)
+  return costs.length ? Math.min(...costs) : 0
+}
+
+/**
+ * **플레이어가 읽을 수 있는 것만으로** 마지막 목격을 짚는다.
+ *
+ * `solver.ts` 의 `lastSighting` 과 **다른 데이터 경로다** — 저쪽은 반사실 세계의
+ * `culpritTruth` 를 쓰고, 이쪽은 **진술(claim)** 과 **선언된 사망 구간**을 쓴다.
+ * 플레이어는 범인의 진실 격자를 모르니 그것이 맞다.
+ *
+ * ⛳ `SOLVER-SPEC §9`(*"검산은 다른 데이터 경로"*)와 같은 이유로 일부러 따로 짰다 —
+ * 같은 함수를 부르면 한쪽이 틀렸을 때 둘이 사이좋게 틀린다.
+ */
+function statedLastSighting(c: Case): { who: PersonId; at: string } | null {
+  if (!c.victimPresence?.length) return null
+  const order = c.slots.map((s) => s.id)
+  // 사망 구간은 사건이 선언한다 — 플레이어도 브리핑에서 본다
+  const windowAt = c.slots.findIndex((s) => s.isWindow)
+  const from = windowAt >= 0 ? windowAt : order.length
+  for (let i = from - 1; i >= 0; i--) {
+    const slot = order[i]!
+    const vAt = c.victimPresence.find((v) => v.slot === slot)?.location
+    if (!vAt) continue
+    const together = c.people
+      .filter((p) => (p.claim ?? p.presence).some((x) => x.slot === slot && x.location === vAt))
+      .map((p) => p.id)
+    if (together.length === 1) return { who: together[0]!, at: vAt }
+    if (together.length > 1) return null
+  }
+  return null
+}
+
+/** `asks: factSubject` 가 가리키는 사실 — 실재하고 주어가 답과 같을 때만 */
+function subjectFact(x: Ctx): Fact | null {
+  const asks = x.asks
+  if (asks?.kind !== 'factSubject') return null
+  const f = x.c.facts.find((y) => y.id === asks.fact)
+  if (!f || f.subject !== x.answer) return null
+  return f
 }
 
 /**
@@ -337,11 +412,138 @@ const RULES: Rule[] = [
       }
     },
   },
+
+  /**
+   * R9 · R10 **사실의 주어** — 공란이 선언한 물음(`asks: factSubject`)을 그대로 읽는다.
+   *
+   * ## 왜 산문을 안 읽나
+   *
+   * R1·R3·R6·R7 은 전부 **서술문 문자열**을 뒤진다. 그래서 손저작 산장의 다섯 공란은
+   * **구조적으로 증명 불가**였다 — 문장이 「요리를 돕기로 한 사람」이라 말하는데
+   * 소지품 물건 이름(「파스」)이 글자로 없으니 R1 의 `report.includes` 가 영영 거짓이다.
+   * 근거가 없어서가 아니라 **읽을 채널이 없어서** 못 낸 것이었다(2026-08-05 정독).
+   *
+   * `MANIFESTO §정보 이중화 원칙` 이 그 자리다 — **결정적 정보는 구조에 있고 산문은
+   * 그것을 다시 말할 뿐**이어야 한다. 이 규칙이 구조 쪽을 읽는다.
+   *
+   * ## 왜 둘로 나눠 놓았나
+   *
+   * `clues.ts` 의 `isDeclaredPremise` 가 **규칙 id 로** 전제를 가른다. 「진술에서 무료」와
+   * 「조사해서 얻음」을 한 id 로 내면 그 판정이 둘을 못 가르고, **전제를 넓히는 순간
+   * 누설 검사에 구멍이 뚫린다.** 그래서 비용의 출처를 id 에 적는다.
+   *
+   * ⛔ **R9 를 `PREMISE` 에 넣지 않았다** — 자유 사실을 하나 더 쓰고 공란이 그것을
+   * 가리키기만 하면 무엇이든 「정당하게 무료」가 되어 §5-b 의 누설 축이 죽는다.
+   * 무료인 것이 정당한지는 **사건 설계의 판단**이라 사람이 본다.
+   */
+  {
+    id: 'R9 사실의 주어 · 진술',
+    applies: (x) => {
+      const f = subjectFact(x)
+      return Boolean(f) && costOfFact(x.c, f!) === 0
+    },
+    step: (x) => {
+      const f = subjectFact(x)!
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `진술이 말한다 — 「${f.content}」`,
+        cost: 0,
+        rule: 'R9 사실의 주어 · 진술',
+        eliminates: gone.map(x.nameOf),
+      }
+    },
+  },
+  {
+    id: 'R10 사실의 주어 · 조사',
+    applies: (x) => {
+      const f = subjectFact(x)
+      return Boolean(f) && costOfFact(x.c, f!) > 0
+    },
+    step: (x) => {
+      const f = subjectFact(x)!
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `조사가 밝힌다 — 「${f.content}」`,
+        cost: costOfFact(x.c, f),
+        rule: 'R10 사실의 주어 · 조사',
+        eliminates: gone.map(x.nameOf),
+      }
+    },
+  },
+
+  /**
+   * R11 **마지막 목격** — `asks: lastSeenBy`·`lastSeenLoc` 을 진술 격자로 짚는다.
+   *
+   * 솔버 쪽 `lastSeenBy` 는 **세계의 함수**라 반사실 세계마다 갈리는데, 산장에서는
+   * 갈린 값이 `{sakura, null}` 이라 `seen.size === 1` 이 되어 **`vacuous` 로 떨어진다**
+   * (`solve()` 는 `null` 을 `seen` 에 안 넣는다). 그러면 관할이 proof 로 넘어오는데
+   * 이쪽에 규칙이 없어서 **아무도 안 무는 공란**이 됐다 — 2026-08-05 `solve-check` 실측.
+   */
+  {
+    id: 'R11 마지막 목격',
+    applies: (x) => x.asks?.kind === 'lastSeenBy' || x.asks?.kind === 'lastSeenLoc',
+    step: (x) => {
+      const s = statedLastSighting(x.c)
+      if (!s) return null
+      const want = x.asks?.kind === 'lastSeenBy' ? s.who : s.at
+      if (want !== x.answer) return null
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `진술 격자 — 사망 구간 이전에 피해자와 같은 칸에 있던 사람은 ${x.nameOf(s.who)} 하나다`,
+        cost: 0,
+        rule: 'R11 마지막 목격',
+        eliminates: gone.map(x.nameOf),
+      }
+    },
+  },
 ]
 
-/** 그 라벨의 후보 어휘 */
-function poolFor(c: Case, label: string, candidates: 'closed' | 'discovered'): string[] {
+/**
+ * 그 라벨의 후보 어휘.
+ *
+ * ⚠ **모르는 라벨은 빈 배열이고, 빈 배열이면 `proveBlanks` 가 그 공란을 통째로
+ * 건너뛴다.** 그래서 「경고가 없다」와 「아예 안 봤다」가 화면에서 똑같이 보였다 —
+ * 산장의 `협박대상` 공란이 그 상태로 살아 있었고, 2026-08-05에 `solve-check` 이
+ * *"솔버도 proof 도 안 문다"* 로 잡아냈다. **안 보는 검사는 없는 검사다.**
+ *
+ * 그래서 **선언된 물음(`asks`)이 있으면 그것이 답의 영역을 정한다** — 라벨 어휘는
+ * 사건마다 자유롭게 늘어나지만 `Asks` 는 닫힌 열 몇 가지라 여기가 훨씬 안전하다.
+ * 라벨 판정은 `asks` 가 없는 공란(손저작 미기입)을 위한 폴백으로만 남는다.
+ */
+function poolFor(
+  c: Case,
+  label: string,
+  candidates: 'closed' | 'discovered',
+  asks?: Blank['asks'],
+): string[] {
   if (candidates === 'discovered') return (c.terms ?? []).map((t) => t.word)
+  return byAsks(c, asks) ?? byLabel(c, label)
+}
+
+/** 선언된 물음이 정하는 영역. 물음이 없거나 영역이 없는 종류면 `null` */
+function byAsks(c: Case, asks?: Blank['asks']): string[] | null {
+  switch (asks?.kind) {
+    case 'culprit':
+    case 'belongingsOwner':
+    case 'factSubject':
+    case 'lastSeenBy':
+      return c.people.map((p) => p.id)
+    case 'scene':
+    case 'recordPlace':
+    case 'lastSeenLoc':
+      return c.locations.map((l) => l.id)
+    case 'murderCell':
+    case 'discoveryTime':
+      return c.slots.map((s) => s.id)
+  }
+  return null
+}
+
+/** 폴백 — `asks` 가 없는 공란(손저작 미기입)용. **쓰이면 세어서 인쇄한다** */
+function byLabel(c: Case, label: string): string[] {
   if (label === '인물' || label === '마지막목격자') return c.people.map((p) => p.id)
   if (label === '장소') return c.locations.map((l) => l.id)
   if (label === '시각') return c.slots.map((s) => s.id)
@@ -356,7 +558,7 @@ export function proveBlanks(c: Case): BlankProof[] {
   for (const ch of c.chapters) {
     const report = (ch.report ?? []).map((r) => ('text' in r ? r.text : '')).join('')
     for (const b of ch.blanks) {
-      let pool = poolFor(c, b.label, b.candidates)
+      let pool = poolFor(c, b.label, b.candidates, b.asks)
       if (!pool.length) continue
       const steps: ProofStep[] = []
 
@@ -367,7 +569,10 @@ export function proveBlanks(c: Case): BlankProof[] {
       for (let guard = 0; guard < RULES.length + 2 && pool.length > 1; guard++) {
         let moved = false
         for (const rule of RULES) {
-          const ctx: Ctx = { c, chapter: ch.order, label: b.label, answer: b.answer, pool, report, nameOf }
+          const ctx: Ctx = {
+            c, chapter: ch.order, label: b.label, answer: b.answer, pool, report, nameOf,
+            asks: b.asks,
+          }
           if (!rule.applies(ctx)) continue
           const s = rule.step(ctx)
           if (!s) continue
@@ -384,10 +589,12 @@ export function proveBlanks(c: Case): BlankProof[] {
         label: b.label,
         answer: b.answer,
         answerLabel: nameOf(b.answer),
-        candidates: poolFor(c, b.label, b.candidates),
+        candidates: poolFor(c, b.label, b.candidates, b.asks),
         steps,
         unique: pool.length === 1,
         cost: steps.reduce((s, x) => s + x.cost, 0),
+        poolSource:
+          b.candidates === 'discovered' ? 'terms' : byAsks(c, b.asks) ? 'asks' : 'label',
       })
     }
   }

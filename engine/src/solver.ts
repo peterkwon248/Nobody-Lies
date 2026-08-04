@@ -348,7 +348,50 @@ export function answerOf(c: Case, w: World, asks: Asks | undefined): string | nu
       const e = c.evidence.find((x) => x.id === asks.evidence)
       return e?.pointsAt?.location ?? null
     }
+
+    // 그 사실의 주어. 사실이 없으면 null — 삼키지 않는다
+    case 'factSubject': {
+      const f = c.facts.find((x) => x.id === asks.fact)
+      return f?.subject ?? null
+    }
+
+    // ── 세계의 함수 (범인의 진실 격자에 의존한다) ──
+    case 'lastSeenBy':
+      return lastSighting(c, w)?.who ?? null
+    case 'lastSeenLoc':
+      return lastSighting(c, w)?.at ?? null
   }
+}
+
+/**
+ * `murderCell` **이전** 슬롯 중 마지막으로 피해자와 같은 칸에 있던 사람과 그 장소.
+ *
+ * 「있던」은 세계 `w` 기준이다 — **범인만 `w.culpritTruth`**, 나머지 넷은 자기 격자다
+ * (무고한 자는 거짓말하지 않으므로 `claim` 과 진실이 같다 · `types.ts` Person.claim).
+ *
+ * ⚠ **둘 이상이면 `null`** — 답이 세계의 함수가 아니다. C9 가 `undecidable` 로 올린다.
+ */
+function lastSighting(c: Case, w: World): { who: PersonId; at: LocationId } | null {
+  if (!c.victimPresence?.length) return null
+  const order = c.slots.map((s) => s.id)
+  const murderAt = order.indexOf(w.murderCell)
+  if (murderAt < 0) return null
+
+  // 범인의 진실 격자는 세계가 준다. 나머지는 사건 데이터 그대로.
+  const cellOf = (pid: PersonId): PresenceCell[] =>
+    pid === w.culprit ? w.culpritTruth : (c.people.find((p) => p.id === pid)?.presence ?? [])
+
+  for (let i = murderAt - 1; i >= 0; i--) {
+    const slot = order[i]!
+    const vAt = c.victimPresence.find((v) => v.slot === slot)?.location
+    if (!vAt) continue
+    const together = c.people
+      .filter((p) => cellOf(p.id).some((cell) => cell.slot === slot && cell.location === vAt))
+      .map((p) => p.id)
+    if (together.length === 1) return { who: together[0]!, at: vAt }
+    if (together.length > 1) return null // 모호 — 정직하게 뱉는다
+  }
+  return null
 }
 
 /**
