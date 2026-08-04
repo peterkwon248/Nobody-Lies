@@ -69,7 +69,7 @@ export type Weakness = {
   /** 화면에 뜨는 이름 */
   answerLabel: string
   /** `guess` 후보가 안 좁혀진다 · `free` 조사 없이 풀린다 */
-  kind: 'guess' | 'free'
+  kind: 'guess' | 'free' | 'freeDeclared'
   why: string
 }
 
@@ -95,7 +95,20 @@ export function weakBlanks(c: Case): Weakness[] {
     if (p.cost > 0) continue
     if (isDeclaredPremise(p)) continue
     const by = p.steps.map((s) => s.rule).join('·') || '걸음 없음'
-    out.push({ ...at, kind: 'free', why: `조사 없이 풀린다 (${by})` })
+    /**
+     * **선언된 장이면 문안만 바꾼다 — 경고를 끄지 않는다** (2026-08-05 · 사용자 조건).
+     *
+     * 끄면 「선언해서 조용한 것」과 「아무도 안 본 것」이 화면에서 같아진다. 같은 날
+     * `poolFor` 가 정확히 그 모양으로 공란 하나를 통째로 숨기고 있었다.
+     * 선언은 **장 단위 하나뿐**이다(`types.ts` §Chapter.freeChapter) — 사실 단위로 열면
+     * 누설 축 구멍이 선언의 모습으로 부활한다.
+     */
+    const declared = c.chapters.find((ch) => ch.order === p.chapter)?.freeChapter
+    out.push({
+      ...at,
+      kind: declared ? 'freeDeclared' : 'free',
+      why: `조사 없이 풀린다 (${by})`,
+    })
   }
   return out
 }

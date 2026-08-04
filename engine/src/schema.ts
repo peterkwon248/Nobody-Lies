@@ -452,6 +452,8 @@ export function parseCase(raw: unknown, source: string): Case {
     return {
       order, title: ch?.title,
       ...(ch?.opening ? { opening: ch.opening } : {}),
+      // 「이 장은 조사 없이 확정되도록 설계됐다」. **장 단위만** — 사실 단위 선언은 없다
+      ...(ch?.free_chapter ? { freeChapter: true } : {}),
       blanks,
       ...(report.length ? { report } : {}),
       requiresFacts: arr(ch?.requires_facts),

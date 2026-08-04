@@ -9,11 +9,16 @@ import { weakBlanks, type Weakness } from './clues.js'
  * (07-31 `REC_TOOL`·`REC_MUTUAL`).
  */
 export function weaknessWarning(w: Weakness): string {
-  return w.kind === 'guess'
-    ? `${w.chapter}장 '${w.label}' 공란의 답(${w.answerLabel})에 증명 사슬이 안 선다 — ` +
-        `${w.why}. 플레이어에게는 찍기다 (규칙이 안 닿는 자리일 수도 있다)`
-    : `${w.chapter}장 '${w.label}' 공란의 답(${w.answerLabel})이 ${w.why} — ` +
-        `전제로 선언된 것이 아니면 누설이다`
+  const at = `${w.chapter}장 '${w.label}' 공란의 답(${w.answerLabel})`
+  if (w.kind === 'guess')
+    return (
+      `${at}에 증명 사슬이 안 선다 — ` +
+      `${w.why}. 플레이어에게는 찍기다 (규칙이 안 닿는 자리일 수도 있다)`
+    )
+  // 선언된 장 — **경고를 끄지 않고 문안만 바꾼다.** 침묵과 선언이 구별돼야 한다
+  if (w.kind === 'freeDeclared')
+    return `${at}이 ${w.why} — 무료(설계 선언됨 · free_chapter)`
+  return `${at}이 ${w.why} — 전제로 선언된 것이 아니면 누설이다`
 }
 
 /**

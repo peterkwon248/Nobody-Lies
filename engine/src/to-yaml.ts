@@ -182,6 +182,7 @@ export function caseToRaw(c: Case): Raw {
 
     chapters: c.chapters.map((ch) => tidy({
       order: ch.order, title: ch.title, opening: ch.opening,
+      free_chapter: ch.freeChapter,
       requires_facts: ch.requiresFacts,
       blanks: ch.blanks.map((b) => tidy({
         label: b.label, candidates: b.candidates, answer: b.answer, particle: b.particle,
