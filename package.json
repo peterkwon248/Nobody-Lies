@@ -32,7 +32,8 @@
     "matrix": "npm run matrix -w engine",
     "matrix-check": "npm run matrix -w engine -- --brief",
     "censor-check": "npm run censor-check -w engine",
-    "censor": "npm run censor -w engine --"
+    "censor": "npm run censor -w engine --",
+    "space-audit": "npm run space-audit -w engine"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6"

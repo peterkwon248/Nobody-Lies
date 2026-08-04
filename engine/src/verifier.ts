@@ -50,7 +50,14 @@ export function guiltTable(c: Case, facts: Set<FactId>): GuiltCheck[] {
   })
 }
 
-function availableActions(c: Case, confirmed: number, used: Set<string>): Action[] {
+/**
+ * 그 시점에 열려 있는 조사.
+ *
+ * ⚠ **export 인 이유는 `solver.ts` 다** — 적대적 솔버가 「인상·허점이 조사로
+ * 도달 가능한가」(C5·C6·C8)를 물을 때 **같은 가용성 판정**을 써야 한다.
+ * 두 벌이 되면 반드시 갈라진다(`case-id.js` 의 교훈).
+ */
+export function availableActions(c: Case, confirmed: number, used: Set<string>): Action[] {
   return c.actions.filter((a) => !used.has(a.id) && (a.availableAfter ?? 0) <= confirmed)
 }
 
@@ -146,15 +153,32 @@ function findMinPath(c: Case): { size: number; path: string[] } {
   return best
 }
 
-/** 플레이어 시뮬레이션. salience 내림차순, 장 확인은 가능해지는 즉시 */
-function simulate(
+/**
+ * 플레이어 시뮬레이션. salience 내림차순, 장 확인은 가능해지는 즉시.
+ *
+ * ⚠ **export 인 이유는 `solver.ts` 다** — 「예산 안에서 유일해에 닿는가」(§5 curve)를
+ * 재려면 **플레이어가 실제로 밟는 순서**를 따라가야 한다. 최단 경로(오라클)가 아니라
+ * 이쪽이다.
+ *
+ * ⛳ `path` 는 **사람이 읽는 라벨**이다 — 물증 id 가 아니다. curve 를 붙일 때는
+ * 누적 물증이 필요하므로 `trace` 를 쓴다(라벨과 달리 기계가 읽는 자리다).
+ */
+export function simulate(
   c: Case,
   boost: number,
-): { cost: number; path: string[]; confirmed: number; deadlock: number | null } {
+): {
+  cost: number
+  path: string[]
+  confirmed: number
+  deadlock: number | null
+  /** 조사를 하나 실행할 때마다의 누적 물증 스냅샷. 장 확인만 한 걸음은 안 찍는다 */
+  trace: { action: string; cost: number; evidence: string[] }[]
+} {
   const used = new Set<string>()
   const evidence = new Set<string>()
   const done = new Set<number>()
   const path: string[] = []
+  const trace: { action: string; cost: number; evidence: string[] }[] = []
   let cost = 0
   let guard = 0
 
@@ -167,7 +191,8 @@ function simulate(
       continue
     }
     const avail = availableActions(c, done.size, used)
-    if (avail.length === 0) return { cost, path, confirmed: done.size, deadlock: done.size + 1 }
+    if (avail.length === 0)
+      return { cost, path, confirmed: done.size, deadlock: done.size + 1, trace }
 
     let bestA: Action | null = null
     let bestScore = -1
@@ -183,8 +208,9 @@ function simulate(
     bestA!.gives.forEach((e) => evidence.add(e))
     path.push(bestA!.label)
     cost += bestA!.cost
+    trace.push({ action: bestA!.id, cost, evidence: [...evidence] })
   }
-  return { cost, path, confirmed: done.size, deadlock: null }
+  return { cost, path, confirmed: done.size, deadlock: null, trace }
 }
 
 function keyFactRoutes(c: Case) {
