@@ -356,7 +356,9 @@ chapters:
     blanks:
       - { label: 시각, candidates: closed,     answer: t2 }
       - { label: 장소, candidates: closed,     answer: piano, asks: { kind: scene } }
-      - { label: 인물, candidates: closed,     answer: p2 }
+      # 서술문이 물건을 말하고 사람을 묻는다 — 식별 고리가 산문에 살아 있다
+      - { label: 인물, candidates: closed,     answer: p2,
+          asks: { kind: belongingsOwner, item: 지워진 목록 } }
       - { label: 도구, candidates: discovered, answer: 과도, particle: (으)로,
           asks: { kind: murderWeapon, evidence: e_knife } }
     report:
@@ -376,8 +378,10 @@ chapters:
     opening: 남은 것은 누가 어디에 있었는가다.
     requires_facts: [f_no_p4_ok, f_no_p5_ok]
     blanks:
-      - { label: 인물, candidates: closed, answer: p4 }
-      - { label: 인물, candidates: closed, answer: p5 }
+      - { label: 인물, candidates: closed, answer: p4,
+          asks: { kind: belongingsOwner, item: 접힌 영수증 } }
+      - { label: 인물, candidates: closed, answer: p5,
+          asks: { kind: belongingsOwner, item: 낡은 사진 } }
       - { label: 장소, candidates: closed, answer: cvs, particle: (으)로 }
     report:
       - "네 시 정각, 두 사람이 함께 건물을 나섰다. 소지품에서 접힌 영수증이 나온 "
