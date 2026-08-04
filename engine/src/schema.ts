@@ -339,6 +339,8 @@ export function parseCase(raw: unknown, source: string): Case {
       ...(e?.is_staging ? { isStaging: true } : {}),
       ...(e?.at_scene ? { atScene: true } : {}),
       ...(e?.yields_terms ? { yieldsTerms: e.yields_terms } : {}),
+      // 「가리키는 곳」 — `found_at`(발견된 곳 · 표시 문구)과 **다르다**
+      ...(e?.points_at ? { pointsAt: e.points_at } : {}),
     }
   })
   uniqueIds(p, 'evidence', evidence.map((e) => e.id))
@@ -428,6 +430,9 @@ export function parseCase(raw: unknown, source: string): Case {
         ...(b?.particle ? { particle: b.particle as Particle } : {}),
         ...(b?.candidate_pool !== undefined ? { candidatePool: b.candidate_pool } : {}),
         ...(b?.is_accusation ? { isAccusation: true } : {}),
+        // 「무엇을 묻는가」(types.ts §Asks). **선택 항목이다** — 손저작 4건이 아직
+        // 안 채웠고, 없으면 솔버가 그 공란에 `undecidable` 을 낸다(삼키지 않는다)
+        ...(b?.asks ? { asks: b.asks as Blank['asks'] } : {}),
       }
     })
 

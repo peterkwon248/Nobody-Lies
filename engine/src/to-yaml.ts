@@ -157,6 +157,8 @@ export function caseToRaw(c: Case): Raw {
     evidence: c.evidence.map((e) => tidy({
       id: e.id, description: e.description, found_at: e.foundAt, record: e.record,
       extra: e.extra, is_staging: e.isStaging || undefined, at_scene: e.atScene || undefined,
+      // 「가리키는 곳」— `found_at`(발견된 곳 · 표시 문구)과 다르다. types.ts 주석 참조
+      points_at: e.pointsAt,
       yields_terms: e.yieldsTerms,
     })),
 
@@ -182,6 +184,8 @@ export function caseToRaw(c: Case): Raw {
       blanks: ch.blanks.map((b) => tidy({
         label: b.label, candidates: b.candidates, answer: b.answer, particle: b.particle,
         candidate_pool: b.candidatePool, is_accusation: b.isAccusation || undefined,
+        // 「무엇을 묻는가」— 없으면 솔버가 undecidable 을 낸다. types.ts §Asks 참조
+        asks: b.asks,
       })),
       // ★ 서술문의 텍스트 조각은 **문자열 그대로** 쓴다 ★
       // 파싱된 `Case` 는 `{ text }` 로 감싸고 있지만 YAML 원형은 맨 문자열이다
