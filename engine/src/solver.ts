@@ -162,6 +162,115 @@ export function buildContext(c: Case): SolveContext {
   }
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  3단계 — `answerOf` · 공란별 관할 판정
+ * ─────────────────────────────────────────────────────────────
+ *
+ * ## 난제 — **공란에 「무엇을 묻는가」가 없다**
+ *
+ * `Blank` 이 갖는 것은 `label`(범주)과 `answer`(정답)뿐이고, **질문은 서술문에
+ * 있다.** 그런데 솔버는 산문을 안 읽는다(§3 정보 이중화). `proof.ts` 는 이 문제를
+ * **산문을 읽어서** 풀었다(R1·R3 가 `report`·진술을 훑는다) — 솔버는 그 길이 막혀 있다.
+ *
+ * ## 그래서 **역할**을 구조로 찾는다
+ *
+ * 「이 답이 진짜 세계에서 **무슨 역할**을 하나」를 구조만으로 알아낸 뒤, **같은
+ * 역할을 반사실 세계에서 다시 계산**한다. 그것이 `answerOf` 다.
+ *
+ * ```
+ * culprit         label 인물 · answer 가 범인            → answerOf(w) = w.culprit
+ * culpritLoc(s)   label 장소 · answer 가 범인의 s 칸 위치  → answerOf(w) = w 의 s 칸
+ * culpritScene    label 시각 · answer 가 범인이 현장에 있던 칸
+ * none            역할을 못 찾았다                       → vacuous
+ * ```
+ *
+ * ## ⚠ 오차의 방향 — **거짓 초록이 구조적으로 불가능하다**
+ *
+ * ```
+ * 역할을 잘못 붙인다      → answerOf 가 헛되이 갈린다 → ambiguous(거짓 빨강) → 사람이 본다
+ * 역할을 못 찾는다        → vacuous → proof 관할로 넘어간다
+ *                          → proof 도 안 물면 §6 교차표 다섯째 줄이 exit 1
+ * ```
+ *
+ * **`none` 은 「괜찮다」가 아니라 「솔버는 할 말이 없다」다.** 그 구별이 무너지면
+ * 이 모듈 전체가 「초록인데 아무것도 안 물고 있다」가 된다.
+ *
+ * ⛳ **후보 칸이 여럿이면 역할을 안 붙인다** — 범인이 `room` 에 두 칸 있는데 답이
+ * `room` 이면 어느 칸을 묻는지 알 수 없다. 찍지 않고 `proof` 로 넘긴다.
+ */
+export type BlankRole =
+  | { kind: 'culprit' }
+  | { kind: 'culpritLoc'; slot: SlotId }
+  | { kind: 'culpritScene' }
+  | { kind: 'none' }
+
+/** 공란 하나를 사건 안에서 가리키는 열쇠. 장·순서로 짓는다 (id 필드가 없다) */
+export const blankKey = (chapterOrder: number, i: number, label: string) =>
+  `${chapterOrder}장·${i}·${label}`
+
+/**
+ * 답이 진짜 세계에서 하는 역할을 **구조로** 찾는다. 산문은 안 읽는다.
+ */
+export function roleOf(c: Case, label: string, answer: string): BlankRole {
+  const truth = new Map(
+    (c.people.find((p) => p.id === c.culprit)?.presence ?? []).map((x) => [x.slot, x.location]),
+  )
+
+  // ⚠ **라벨로 먼저 가른다** — 안 그러면 「범인이 어느 칸에 있던 장소」와 우연히
+  // 같은 값을 가진 물증 위치 공란에 엉뚱한 역할이 붙는다. 역할 오배정은
+  // 거짓 빨강이라 안전한 쪽이지만, **셈을 부풀려 「솔버가 넓게 본다」로 읽힌다.**
+  switch (label) {
+    case '인물':
+      return answer === c.culprit ? { kind: 'culprit' } : { kind: 'none' }
+
+    case '장소': {
+      // 범인이 그 장소에 있던 칸. **하나뿐일 때만** 붙인다 — 여럿이면 어느 칸을
+      // 묻는지 알 수 없다. 찍지 않고 proof 로 넘긴다
+      const at = [...truth].filter(([, loc]) => loc === answer).map(([s]) => s)
+      return at.length === 1 ? { kind: 'culpritLoc', slot: at[0] } : { kind: 'none' }
+    }
+
+    case '시각': {
+      if (!c.incident.scene) return { kind: 'none' }
+      const sceneSlots = [...truth].filter(([, l]) => l === c.incident.scene).map(([s]) => s)
+      return sceneSlots.length === 1 && sceneSlots[0] === answer
+        ? { kind: 'culpritScene' }
+        : { kind: 'none' }
+    }
+
+    default:
+      // 확보 단어류(도구·동기·물품·은닉처·정체·접촉수단…)는 세계가 안 정한다.
+      // **그래서 vacuous 이고, 그것이 proof.ts 를 강등하면 안 되는 이유다**(§6)
+      return { kind: 'none' }
+  }
+}
+
+/**
+ * 그 역할을 세계 `w` 에서 다시 계산한다.
+ *
+ * `null` 은 **C9 실패**다 — 이 세계가 그 공란의 답을 결정하지 못한다.
+ * 삼키지 않고 `undecidable` 로 올린다.
+ */
+export function answerOf(c: Case, w: World, role: BlankRole): string | null {
+  switch (role.kind) {
+    case 'culprit':
+      return w.culprit
+    case 'culpritLoc': {
+      const cell = w.culpritTruth.find((x) => x.slot === role.slot)
+      return cell ? cell.location : null
+    }
+    case 'culpritScene': {
+      if (!c.incident.scene) return null
+      const hit = w.culpritTruth.filter((x) => x.location === c.incident.scene)
+      // 현장에 있던 칸이 없거나 여럿이면 이 세계는 「언제」를 결정하지 못한다
+      return hit.length === 1 ? hit[0].slot : null
+    }
+    default:
+      return null
+  }
+}
+
 /** 데카르트 곱 — 슬롯마다 장소 하나. `L^S` 개를 낸다 */
 function* gridAssignments(slots: SlotId[], locs: LocationId[]): Generator<PresenceCell[]> {
   const n = slots.length
@@ -243,5 +352,113 @@ export function solveGrid(c: Case): GridResult {
     culprits: [...culprits],
     trueWorldSurvives: self.ok,
     trueWorldBroke: self.broke,
+  }
+}
+
+/** 일관 세계를 실제로 모아서 돌려준다. `solveGrid` 는 세기만 한다 */
+export function consistentWorlds(c: Case): World[] {
+  const slots = c.slots.map((s) => s.id)
+  const locs = c.locations.map((l) => l.id)
+  const ctx = buildContext(c)
+  const out: World[] = []
+  for (const person of c.people)
+    for (const grid of gridAssignments(slots, locs)) {
+      const w = { culprit: person.id, culpritTruth: grid }
+      if (consistent(c, w, ctx).ok) out.push(w)
+    }
+  return out
+}
+
+export type BlankReport = {
+  key: string
+  label: string
+  answer: string
+  role: BlankRole['kind']
+  verdict: 'discriminated' | 'vacuous'
+  /** 일관 세계들이 낸 서로 다른 답의 수. vacuous 면 1(또는 역할 없음) */
+  distinct: number
+  /** 답이 갈릴 때 실제로 나온 값들 (최대 6개만 인쇄용) */
+  values: string[]
+  /** 진짜 답이 그 집합에 있나. 없으면 역할 배정이 틀린 것이다 */
+  containsTrue: boolean
+}
+
+export type SolveResult = {
+  worlds: number
+  verdict: 'unique' | 'ambiguous' | 'unsat' | 'undecidable'
+  /** discriminated 공란만으로 만든 답안 벡터의 가짓수 */
+  answerVectors: number
+  blanks: BlankReport[]
+  /** C9 실패 — 세계가 답을 결정 못 한 (공란, 세계) 쌍의 수 */
+  undecided: number
+  /**
+   * ★ C5~C8 이 아직 없다 ★ 그래서 `ambiguous` 는 **잠정**이다.
+   *
+   * 단조성 때문에 방향이 한쪽이다 — 지금 세계 집합은 덜 지워진 상태이고,
+   * 조항을 더하면 집합은 **줄기만** 한다. 큰 집합에서 답안 벡터가 1이면 작은
+   * 집합에서도 1이다. **즉 `unique` 는 최종이고 `ambiguous` 만 잠정이다.**
+   */
+  provisional: true
+}
+
+/**
+ * 3단계 판정.
+ *
+ * ⛔ **`vacuous` 는 「검사됐다」가 아니다** — 솔버가 **할 말이 없다**는 뜻이고
+ * 관할이 `proof`/`weakBlanks` 로 넘어간다. 둘 다 안 물면 그 공란은 **무검사**이고
+ * §6 교차표가 그것을 `exit 1` 로 센다. 그 배선은 6단계에서 붙는다.
+ */
+export function solve(c: Case): SolveResult {
+  const worlds = consistentWorlds(c)
+  const blanks: BlankReport[] = []
+
+  if (worlds.length === 0)
+    return { worlds: 0, verdict: 'unsat', answerVectors: 0, blanks, undecided: 0, provisional: true }
+
+  let undecided = 0
+  const vectors = new Set<string>()
+  const perWorld: string[][] = worlds.map(() => [])
+
+  for (const ch of c.chapters)
+    ch.blanks.forEach((b, i) => {
+      const role = roleOf(c, b.label, b.answer)
+      const seen = new Set<string>()
+      const col: (string | null)[] = worlds.map((w) => {
+        const v = answerOf(c, w, role)
+        if (v === null) {
+          if (role.kind !== 'none') undecided++
+          return null
+        }
+        seen.add(v)
+        return v
+      })
+
+      const discriminated = role.kind !== 'none' && seen.size > 1
+      if (discriminated) col.forEach((v, wi) => perWorld[wi].push(v ?? '∅'))
+
+      blanks.push({
+        key: blankKey(ch.order, i, b.label),
+        label: b.label,
+        answer: b.answer,
+        role: role.kind,
+        verdict: discriminated ? 'discriminated' : 'vacuous',
+        distinct: seen.size,
+        values: [...seen].slice(0, 6),
+        containsTrue: seen.size === 0 || seen.has(b.answer),
+      })
+    })
+
+  for (const v of perWorld) vectors.add(v.join('|'))
+
+  const verdict: SolveResult['verdict'] =
+    undecided > 0 ? 'undecidable' : vectors.size <= 1 ? 'unique' : 'ambiguous'
+
+  return {
+    worlds: worlds.length,
+    verdict,
+    answerVectors: vectors.size,
+    blanks,
+    undecided,
+    provisional: true,
   }
 }
