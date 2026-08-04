@@ -260,6 +260,17 @@ export function roleOf(c: Case, label: string, answer: string): BlankRole {
       return answer === c.culprit ? { kind: 'culprit' } : { kind: 'none' }
 
     case '장소': {
+      // ★ 답이 현장이면 「어디서 일어났나」를 묻는 것이고 그건 **전제**다 ★
+      //
+      // 사건 개요가 처음부터 말한다(`proof.ts` R5 현장 전제 · 비용 0). 추리가
+      // 아니므로 세계가 정하지 않는다 — 관할은 proof 로 간다.
+      //
+      // ⛳ **`murderCell` 때와 같은 오배정을 여기서도 했다** (2026-08-04 역추적에서
+      // 발견). 현장이 하필 범인이 한 칸에만 있던 장소라 `culpritLoc` 이 붙었고,
+      // **37개 중 22개가 그렇게 가짜 모호로 세어지고 있었다.** 역추적이 아니었으면
+      // 「C5~C8 이 28개를 못 묶는다」는 틀린 결론으로 스키마를 고칠 뻔했다.
+      if (answer === c.incident.scene) return { kind: 'none' }
+
       // 범인이 그 장소에 있던 칸. **하나뿐일 때만** 붙인다 — 여럿이면 어느 칸을
       // 묻는지 알 수 없다. 찍지 않고 proof 로 넘긴다
       const at = [...truth].filter(([, loc]) => loc === answer).map(([s]) => s)
