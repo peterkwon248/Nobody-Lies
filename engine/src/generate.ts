@@ -905,6 +905,9 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
       evidence: {
         id: `e_rec${n}`, description: word, record: '기록에 그대로 남아 있었다.',
         yieldsTerms: [word],
+        // ★ 「가리키는 곳」을 구조로 적는다 — 아래 action.target 과 같은 값이지만
+        //   **뜻이 다르다**(발견된 곳 ≠ 가리키는 곳). `Evidence.pointsAt` 주석 참조
+        pointsAt: { location: 'hall' },
       } as Ev,
       action: {
         id: `a_rec${n}`, label: `${word} 확인`, cost: 1, gives: [`e_rec${n}`],
@@ -2893,11 +2896,14 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
         requiresFacts: innocents.map((id) => `f_no_${id}`),
         blanks: [
           // ⚠ 조사(particle)를 안 붙인다 — 서술문 끝에서 문장이 닫힌다(§식별 고리)
-          { label: '인물', candidates: 'closed', answer: innocents[0] },
-          { label: '장소', candidates: 'closed', answer: 'room' },
+          // ★ `asks` — 만드는 순간 아는 물음을 버리지 않고 적는다 (2026-08-04)
+          { label: '인물', candidates: 'closed', answer: innocents[0],
+            asks: { kind: 'belongingsOwner', item: carried(innocents[0]!) } },
+          { label: '장소', candidates: 'closed', answer: 'room', asks: { kind: 'scene' } },
           // 발견 시각 = **다시 모인 칸**. 창을 쪼개면 `t2` 가 창 라벨이 된다
-          { label: '시각', candidates: 'closed', answer: LAST },
-          { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가' },
+          { label: '시각', candidates: 'closed', answer: LAST, asks: { kind: 'discoveryTime' } },
+          { label: '도구', candidates: 'discovered', answer: tool, particle: '이/가',
+            asks: { kind: 'murderWeapon', evidence: 'e_tool' } },
         ],
         /**
          * ⚠ **「[인물]이 가장 먼저 일어났다」였다** (2026-08-01에 걷어냈다).
@@ -2923,9 +2929,12 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
            * ★ 넷을 고르게 쓴다 ★ 전에는 `innocents[i % 4]` 라 1장(`innocents[0]`)과
            * 2장이 **같은 사람**을 물었다. `i + 1` 로 밀어 1~4장이 넷을 하나씩 맡는다.
            */
-          { label: '인물', candidates: 'closed', answer: innocents[(i + 1) % innocents.length] },
-          { label: s.label, candidates: 'discovered', answer: s.word, particle: '이/가' },
-          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? WIN[0]! : 'hall', particle: '을/를' },
+          { label: '인물', candidates: 'closed', answer: innocents[(i + 1) % innocents.length],
+            asks: { kind: 'belongingsOwner', item: carried(innocents[(i + 1) % innocents.length]!) } },
+          { label: s.label, candidates: 'discovered', answer: s.word, particle: '이/가',
+            asks: { kind: 'strandTerm', evidence: s.evidence.id } },
+          { label: i % 2 === 0 ? '시각' : '장소', candidates: 'closed', answer: i % 2 === 0 ? WIN[0]! : 'hall', particle: '을/를',
+            asks: i % 2 === 0 ? { kind: 'murderCell' } : { kind: 'recordPlace', evidence: s.evidence.id } },
         ] as Blank[],
         /**
          * ⚠ **「기록을 확인한 것은 [인물]이 있던 자리였다」였다** (2026-08-01에 걷어냈다).
@@ -2945,9 +2954,12 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
         opening: '남은 것은 이름과 이유다.',
         requiresFacts: ['f_motive', 'f_opp', 'f_means'],
         blanks: [
-          { label: '인물', candidates: 'closed', answer: culprit, isAccusation: true },
-          { label: '정체', candidates: 'discovered', answer: alias },
-          { label: '동기', candidates: 'discovered', answer: motive },
+          { label: '인물', candidates: 'closed', answer: culprit, isAccusation: true,
+            asks: { kind: 'culprit' } },
+          { label: '정체', candidates: 'discovered', answer: alias,
+            asks: { kind: 'culpritAlias', evidence: 'e_alias' } },
+          { label: '동기', candidates: 'discovered', answer: motive,
+            asks: { kind: 'culpritMotive', evidence: 'e_motive' } },
         ],
         report: [
           { text: '모든 정황이 한 사람을 가리켰다. 진범은 ' }, { blank: 0 },

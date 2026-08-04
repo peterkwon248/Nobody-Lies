@@ -43,7 +43,7 @@
  * 크기는 `npm run space-audit` 이 잰다 — 커밋 4건 1,715~12,005 · 최악 84,035.
  * 규칙이 없으면 10¹³~10²¹ 이라 열거가 불가능해진다. **핵심 명제가 곧 솔버의 전제다.**
  */
-import type { Case, LocationId, PersonId, PresenceCell, SlotId } from './types.js'
+import type { Asks, Case, LocationId, PersonId, PresenceCell, SlotId } from './types.js'
 import { deriveFacts, guiltTable } from './verifier.js'
 
 /** 가설 하나. 범인이 누구이고, 그 사람이 어디 있었고, 언제 죽였나 */
@@ -234,11 +234,17 @@ export function buildContext(c: Case): SolveContext {
  * ⛳ **후보 칸이 여럿이면 역할을 안 붙인다** — 범인이 `room` 에 두 칸 있는데 답이
  * `room` 이면 어느 칸을 묻는지 알 수 없다. 찍지 않고 `proof` 로 넘긴다.
  */
-export type BlankRole =
-  | { kind: 'culprit' }
-  | { kind: 'culpritLoc'; slot: SlotId }
-  | { kind: 'murderCell' }
-  | { kind: 'none' }
+/**
+ * ⛔ **`roleOf` 는 삭제했다 — 폴백으로도 안 남긴다** (2026-08-04)
+ *
+ * 답의 구조적 우연으로 질문을 역추정하던 휴리스틱이었다. **하루에 두 번 틀렸다**:
+ * ① 현장이 하필 범인이 한 칸에만 있던 장소라 36개가 가짜 모호가 됐고
+ * ② 「언제」를 계산하려다 30건이 `undecidable` 이 됐다.
+ * 두 번 다 실측이 잡았지 코드가 잡은 게 아니다.
+ *
+ * **같은 판정이 두 벌 있으면 갈라진다** — 그래서 안전망으로도 안 남긴다.
+ * `asks` 가 없으면 `undecidable` 이다. C9 가 원래 그러라고 있다.
+ */
 
 /** 공란 하나를 사건 안에서 가리키는 열쇠. 장·순서로 짓는다 (id 필드가 없다) */
 export const blankKey = (chapterOrder: number, i: number, label: string) =>
@@ -247,73 +253,51 @@ export const blankKey = (chapterOrder: number, i: number, label: string) =>
 /**
  * 답이 진짜 세계에서 하는 역할을 **구조로** 찾는다. 산문은 안 읽는다.
  */
-export function roleOf(c: Case, label: string, answer: string): BlankRole {
-  const truth = new Map(
-    (c.people.find((p) => p.id === c.culprit)?.presence ?? []).map((x) => [x.slot, x.location]),
-  )
-
-  // ⚠ **라벨로 먼저 가른다** — 안 그러면 「범인이 어느 칸에 있던 장소」와 우연히
-  // 같은 값을 가진 물증 위치 공란에 엉뚱한 역할이 붙는다. 역할 오배정은
-  // 거짓 빨강이라 안전한 쪽이지만, **셈을 부풀려 「솔버가 넓게 본다」로 읽힌다.**
-  switch (label) {
-    case '인물':
-      return answer === c.culprit ? { kind: 'culprit' } : { kind: 'none' }
-
-    case '장소': {
-      // ★ 답이 현장이면 「어디서 일어났나」를 묻는 것이고 그건 **전제**다 ★
-      //
-      // 사건 개요가 처음부터 말한다(`proof.ts` R5 현장 전제 · 비용 0). 추리가
-      // 아니므로 세계가 정하지 않는다 — 관할은 proof 로 간다.
-      //
-      // ⛳ **`murderCell` 때와 같은 오배정을 여기서도 했다** (2026-08-04 역추적에서
-      // 발견). 현장이 하필 범인이 한 칸에만 있던 장소라 `culpritLoc` 이 붙었고,
-      // **37개 중 22개가 그렇게 가짜 모호로 세어지고 있었다.** 역추적이 아니었으면
-      // 「C5~C8 이 28개를 못 묶는다」는 틀린 결론으로 스키마를 고칠 뻔했다.
-      if (answer === c.incident.scene) return { kind: 'none' }
-
-      // 범인이 그 장소에 있던 칸. **하나뿐일 때만** 붙인다 — 여럿이면 어느 칸을
-      // 묻는지 알 수 없다. 찍지 않고 proof 로 넘긴다
-      const at = [...truth].filter(([, loc]) => loc === answer).map(([s]) => s)
-      return at.length === 1 ? { kind: 'culpritLoc', slot: at[0] } : { kind: 'none' }
-    }
-
-    case '시각': {
-      // 답이 사망 구간 칸이면 「언제 죽였나」를 묻는 것이다 → 세계에서 **읽는다**
-      //
-      // ⛳ 창이 1칸인 사건에서는 murderCell 의 값이 하나뿐이라 이 공란이 자동으로
-      // **vacuous** 가 된다. 그것이 옳은 의미론이다 — **칸이 하나면 「언제」는
-      // 추리가 아니라 데이터**이고, 관할은 proof 로 간다.
-      if (c.slots.some((s) => s.isWindow && s.id === answer)) return { kind: 'murderCell' }
-      // 비-사망구간 칸을 묻는 시각 공란(실측 43개)은 역할을 못 찾는다 — proof 관할
-      return { kind: 'none' }
-    }
-
-    default:
-      // 확보 단어류(도구·동기·물품·은닉처·정체·접촉수단…)는 세계가 안 정한다.
-      // **그래서 vacuous 이고, 그것이 proof.ts 를 강등하면 안 되는 이유다**(§6)
-      return { kind: 'none' }
-  }
-}
-
 /**
- * 그 역할을 세계 `w` 에서 다시 계산한다.
+ * 공란이 묻는 것을 세계 `w` 에서 답한다.
  *
- * `null` 은 **C9 실패**다 — 이 세계가 그 공란의 답을 결정하지 못한다.
- * 삼키지 않고 `undecidable` 로 올린다.
+ * `null` 은 **C9 실패**다 — `asks` 가 없거나(손저작 미기입) 가리키는 것이 실재하지
+ * 않는다. 삼키지 않고 `undecidable` 로 올린다.
+ *
+ * ⛳ **대부분은 세계와 무관하다** — 그래서 `vacuous` 로 떨어지고 관할이 `proof` 로
+ * 간다(§6). 세계의 변수는 `culprit` 과 `murderCell` **둘뿐**이다.
  */
-export function answerOf(w: World, role: BlankRole): string | null {
-  switch (role.kind) {
+export function answerOf(c: Case, w: World, asks: Asks | undefined): string | null {
+  if (!asks) return null
+  switch (asks.kind) {
+    // ── 세계의 변수 ──
     case 'culprit':
       return w.culprit
-    case 'culpritLoc': {
-      const cell = w.culpritTruth.find((x) => x.slot === role.slot)
-      return cell ? cell.location : null
-    }
-    // ★ 계산이 아니라 읽기다 — 그래서 null 이 구조적으로 불가능하다 ★
     case 'murderCell':
       return w.murderCell
-    default:
-      return null
+
+    // ── 전제 · 구조 상수 ──
+    case 'scene':
+      return c.incident.scene ?? null
+    case 'discoveryTime':
+      return c.slots.length ? c.slots[c.slots.length - 1]!.id : null
+    // 확보 단어 넷 — 전부 「그 물증이 주는 단어」다. 한 자리에서 푼다
+    case 'murderWeapon':
+    case 'culpritAlias':
+    case 'culpritMotive':
+    case 'strandTerm': {
+      const e = c.evidence.find((x) => x.id === asks.evidence)
+      return e?.yieldsTerms?.length === 1 ? e.yieldsTerms[0]! : null
+    }
+
+    case 'belongingsOwner': {
+      // 그 물건을 주는 소지품 조사가 겨눈 사람. **1:1 이라야 답이 선다**(§식별 고리)
+      const giving = c.actions.filter((a) =>
+        a.gives.some((eid) => c.evidence.find((e) => e.id === eid)?.description === asks.item),
+      )
+      const who = [...new Set(giving.map((a) => (a.target?.kind === 'person' ? a.target.id : null)))]
+      return who.length === 1 && who[0] ? who[0] : null
+    }
+
+    case 'recordPlace': {
+      const e = c.evidence.find((x) => x.id === asks.evidence)
+      return e?.pointsAt?.location ?? null
+    }
   }
 }
 
@@ -424,9 +408,10 @@ export type BlankReport = {
   key: string
   label: string
   answer: string
-  role: BlankRole['kind']
+  /** 이 공란이 묻는 것. `'none'` 은 `asks` 가 없다는 뜻이다 (손저작 미기입) */
+  role: Asks['kind'] | 'none'
   verdict: 'discriminated' | 'vacuous'
-  /** 일관 세계들이 낸 서로 다른 답의 수. vacuous 면 1(또는 역할 없음) */
+  /** 일관 세계들이 낸 서로 다른 답의 수. vacuous 면 1(또는 asks 없음) */
   distinct: number
   /** 답이 갈릴 때 실제로 나온 값들 (최대 6개만 인쇄용) */
   values: string[]
@@ -472,26 +457,25 @@ export function solve(c: Case): SolveResult {
 
   for (const ch of c.chapters)
     ch.blanks.forEach((b, i) => {
-      const role = roleOf(c, b.label, b.answer)
       const seen = new Set<string>()
       const col: (string | null)[] = worlds.map((w) => {
-        const v = answerOf(w, role)
+        const v = answerOf(c, w, b.asks)
         if (v === null) {
-          if (role.kind !== 'none') undecided++
+          undecided++
           return null
         }
         seen.add(v)
         return v
       })
 
-      const discriminated = role.kind !== 'none' && seen.size > 1
+      const discriminated = seen.size > 1
       if (discriminated) col.forEach((v, wi) => perWorld[wi].push(v ?? '∅'))
 
       blanks.push({
         key: blankKey(ch.order, i, b.label),
         label: b.label,
         answer: b.answer,
-        role: role.kind,
+        role: b.asks?.kind ?? 'none',
         verdict: discriminated ? 'discriminated' : 'vacuous',
         distinct: seen.size,
         values: [...seen].slice(0, 6),

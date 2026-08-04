@@ -315,6 +315,21 @@ export type Evidence = {
     kind: 'messages' | 'document' | 'transcript'
     lines: { side?: 'in' | 'out'; at?: string; text: string }[]
   }
+  /**
+   * ★ 이 기록이 **가리키는** 장소·시각 ★ (2026-08-04 신설)
+   *
+   * `record` 산문이 *"…홀을 가리켰다"* 라고 말할 때 그 사실이 **글자에만** 살고
+   * 있었다. `proof.ts` R6 가 `record` 텍스트에서 장소 이름표를 부분 문자열로 찾아
+   * 우회하고 있었고(`Asks` 주석의 364개 중 40개가 이 자리), 솔버는 아무 말도 못 했다.
+   *
+   * ⚠ **`foundAt` 과 다르다.** `foundAt` 은 **발견된 곳**이고 사람이 읽는 문구다
+   * (전수 44건에서 location id 인 것 0/51 — 그래서 옛 C7 조항이 폐기됐다).
+   * 이쪽은 **가리키는 곳**이고 레지스트리 참조다. **둘을 같은 것으로 쓰면 안 된다.**
+   *
+   * ⛳ 생성기는 이 값을 이미 알고 쓴다(가닥의 조사가 `target: location 'hall'`).
+   * 새 정보가 아니라 **파기 중단**이다 — `Blank.asks` 와 같은 부류.
+   */
+  pointsAt?: { location?: LocationId; slot?: SlotId }
   isStaging?: boolean
   /**
    * 현장 자유 물증. 조사 없이 처음부터 열람 가능하다 (진술·현장에서 무료).
@@ -604,10 +619,66 @@ export const DOMAIN_OF: Record<BlankLabel, ScoreDomain> = {
  */
 export type Particle = '이/가' | '을/를' | '은/는' | '과/와' | '(으)로'
 
+/**
+ * ★ 이 공란이 **무엇을 묻는가** ★ (2026-08-04 신설)
+ *
+ * ## 왜 필요한가 — **질문이 산문에만 살고 있었다**
+ *
+ * `Blank` 이 갖는 것은 `label`(범주)과 `answer`(정답)뿐이었다. **무엇을 묻는지는
+ * 서술문에만 있었다.** 그래서 적대적 솔버(`solver.ts`)가 답을 반사실 세계에서 다시
+ * 계산할 수 없었고, `proof.ts` 는 **산문을 읽어서**(R1·R3·R6·R7) 우회하고 있었다.
+ *
+ * 실측(2026-08-04): 공란 702개 중 **364개(51.9%)가 산문을 읽는 규칙으로만** 검사된다.
+ * 라벨로는 인물 171 · 시각 128 · 장소 65.
+ *
+ * ## 새 정보가 아니다 — **파기를 멈추는 것이다**
+ *
+ * 생성기는 공란을 만드는 순간 무엇을 묻는지 **알고 있다**(`generate.ts` 의 세 자리).
+ * 방출할 때 버리고 있었을 뿐이다. 그래서 생성분 커버리지는 구조적으로 100% 다.
+ *
+ * ## ⛔ 추정하지 않는다
+ *
+ * 솔버가 답의 구조적 우연으로 질문을 **역추정**하던 휴리스틱(`roleOf`)은
+ * **삭제했다.** 08-04 하루에 두 번 틀렸고(현장 전제 36개 · 사망 칸) 두 번 다
+ * 실측이 잡았다. **같은 판정이 두 벌 있으면 갈라진다** — 폴백으로도 안 남긴다.
+ * `asks` 가 없는 공란은 솔버가 `undecidable` 로 **정직하게 뱉는다**(C9 가 그러라고 있다).
+ */
+export type Asks =
+  /** 범인은 누구인가 */
+  | { kind: 'culprit' }
+  /**
+   * 확보 단어를 묻는 자리 셋. **어느 물증이 그 단어를 주는지**가 답의 채널이다.
+   * ⛳ 처음에는 `evidence` 없이 뒀다가 80개가 틀린 답을 냈다 — 사실 id 를 돌려주고
+   *    있었다. **「무엇을 묻나」만으로는 부족하고 「어디서 답이 나오나」가 함께 있어야
+   *    한다**(2026-08-04 실측에서 잡았다).
+   */
+  | { kind: 'culpritAlias'; evidence: EvidenceId }
+  | { kind: 'culpritMotive'; evidence: EvidenceId }
+  | { kind: 'murderWeapon'; evidence: EvidenceId }
+  /** 언제 죽였나 — 사망 구간 칸. **세계의 변수다**(`solver.ts` World.murderCell) */
+  | { kind: 'murderCell' }
+  /** 시신이 발견된 장소 — 사건 개요가 말하는 **전제** */
+  | { kind: 'scene' }
+  /** 발견 시각 — 다시 모인 칸. **전제** */
+  | { kind: 'discoveryTime' }
+  /** 소지품에서 그 물건이 나온 사람은 누구인가 (§식별 고리) */
+  | { kind: 'belongingsOwner'; item: string }
+  /** 그 기록이 말하는 확보 단어 */
+  | { kind: 'strandTerm'; evidence: EvidenceId }
+  /** 그 기록이 **가리키는** 장소. 답의 채널은 `Evidence.pointsAt` 이다 */
+  | { kind: 'recordPlace'; evidence: EvidenceId }
+
 export type Blank = {
   label: BlankLabel
   candidates: 'closed' | 'discovered'
   answer: string
+  /**
+   * 이 공란이 무엇을 묻는가. 위 `Asks` 참조.
+   *
+   * ⛳ **선택 항목이다** — 손저작 4건이 아직 안 채웠다. 없으면 솔버가 그 공란에
+   * 대해 `undecidable` 을 낸다(삼키지 않는다).
+   */
+  asks?: Asks
   /** 서술문에서 이 공란 뒤에 붙는 조사 */
   particle?: Particle
   /**
