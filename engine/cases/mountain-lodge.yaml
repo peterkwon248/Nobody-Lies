@@ -963,7 +963,8 @@ chapters:
       - { label: 인물,   candidates: closed,     answer: yena,  particle: 과/와,
           asks: { kind: factSubject, fact: f_yena_found } }
       - { label: 장소,   candidates: closed,     answer: room, asks: { kind: scene } }
-      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로" }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로",
+          asks: { kind: strandTerm, evidence: e_tape } }
     # 서술문 — 공란은 문장 안에 박힌다. 문자열은 텍스트, { blank: n } 은 위 blanks 의 n번째
     report:
       - "사건 당일 아침, 요리를 돕기로 한 "
@@ -1014,10 +1015,14 @@ chapters:
     opening: 그날 밤의 자리는 채워졌다. 그러나 죽음이 어떻게 왔는지는 아직 한 줄도 적히지 않았다.
     requires_facts: [f_cause, f_sakura_means]
     blanks:
-      - { label: 사인,     candidates: discovered, answer: 일산화탄소 중독 }
-      - { label: 도구,     candidates: discovered, answer: 연탄,   particle: 을/를 }
-      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로" }
-      - { label: 위장물,   candidates: discovered, answer: 유서,   particle: 을/를 }
+      - { label: 사인,     candidates: discovered, answer: 일산화탄소 중독,
+          asks: { kind: strandTerm, evidence: e_time } }
+      - { label: 도구,     candidates: discovered, answer: 연탄,   particle: 을/를,
+          asks: { kind: murderWeapon, evidence: e_briquette } }
+      - { label: 은폐수단, candidates: discovered, answer: 테이프, particle: "(으)로",
+          asks: { kind: strandTerm, evidence: e_tape } }
+      - { label: 위장물,   candidates: discovered, answer: 유서,   particle: 을/를,
+          asks: { kind: strandTerm, evidence: e_note } }
     report:
       - "부검 결과 직접 사인은 "
       - { blank: 0 }
@@ -1071,7 +1076,8 @@ chapters:
     opening: 이제 이름을 적는다. 그리고 그 이름이 왜 그래야 했는지도.
     requires_facts: [f_sakura_motive, f_sakura_opp]
     blanks:
-      - { label: 인물,   candidates: closed,     answer: sakura, is_accusation: true }
+      - { label: 인물,   candidates: closed,     answer: sakura, is_accusation: true,
+          asks: { kind: culprit } }
       - { label: 동기,   candidates: discovered, answer: 폭로 임박, particle: "(으)로" }
       - { label: 은닉처, candidates: discovered, answer: 별채 대포폰 }
     report:

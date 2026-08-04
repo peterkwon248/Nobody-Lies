@@ -1160,19 +1160,26 @@ chapters:
       - f_no_p3
       - f_no_p5
     blanks:
+      # asks — 이 사건은 생성기를 거쳤다. 생성기가 만드는 순간 알고 있던 물음을
+      # 그대로 복원한 것이지 추정이 아니다(`generate.ts` 세 자리). 서술문이 받친다:
+      # *"소지품에서 개인적인 편지가 나온 것은 [인물]"* — 식별 고리가 산문에 살아 있다.
       - label: 인물
         candidates: closed
         answer: p1
+        asks: { kind: belongingsOwner, item: 개인적인 편지 }
       - label: 장소
         candidates: closed
         answer: room
+        asks: { kind: scene }
       - label: 시각
         candidates: closed
         answer: t2
+        asks: { kind: discoveryTime }
       - label: 도구
         candidates: discovered
         answer: 청테이프
         particle: 이/가
+        asks: { kind: murderWeapon, evidence: e_tool }
     report:
       - blank: 2
       - ', '
@@ -1192,14 +1199,18 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p1
+        asks: { kind: belongingsOwner, item: 개인적인 편지 }
       - label: 물품
         candidates: discovered
         answer: 근무 교대표
         particle: 이/가
+        asks: { kind: strandTerm, evidence: e_rec1 }
+      # 「…가리켰다」의 대상. t1 이 사망 구간 칸이다 (슬롯 t0 · t1* · t2)
       - label: 시각
         candidates: closed
         answer: t1
         particle: 을/를
+        asks: { kind: murderCell }
     report:
       - '기록이 남아 있던 자리의 주인은 소지품에서 개인적인 편지가 나온 '
       - blank: 0
@@ -1218,14 +1229,18 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p2
+        asks: { kind: belongingsOwner, item: 오래된 사진 }
       - label: 접촉수단
         candidates: discovered
         answer: 열쇠 반납 장부
         particle: 이/가
+        asks: { kind: strandTerm, evidence: e_rec2 }
+      # 「…가리켰다」의 대상이 장소인 판본. 그 기록이 가리키는 곳 = Evidence.pointsAt
       - label: 장소
         candidates: closed
         answer: hall
         particle: 을/를
+        asks: { kind: recordPlace, evidence: e_rec2 }
     report:
       - '기록이 남아 있던 자리의 주인은 소지품에서 오래된 사진가 나온 '
       - blank: 0
@@ -1244,14 +1259,17 @@ chapters:
       - label: 인물
         candidates: closed
         answer: p3
+        asks: { kind: belongingsOwner, item: 접힌 영수증 }
       - label: 은닉처
         candidates: discovered
         answer: 당일 입장권 내역
         particle: 이/가
+        asks: { kind: strandTerm, evidence: e_rec3 }
       - label: 시각
         candidates: closed
         answer: t1
         particle: 을/를
+        asks: { kind: murderCell }
     report:
       - '기록이 남아 있던 자리의 주인은 소지품에서 접힌 영수증가 나온 '
       - blank: 0
@@ -1273,12 +1291,15 @@ chapters:
         candidates: closed
         answer: p4
         is_accusation: true
+        asks: { kind: culprit }
       - label: 정체
         candidates: discovered
         answer: 윤다래
+        asks: { kind: culpritAlias, evidence: e_alias }
       - label: 동기
         candidates: discovered
         answer: 퍼진 소문
+        asks: { kind: culpritMotive, evidence: e_motive }
     report:
       - '모든 정황이 한 사람을 가리켰다. 진범은 '
       - blank: 0

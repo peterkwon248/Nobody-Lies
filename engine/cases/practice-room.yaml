@@ -355,9 +355,10 @@ chapters:
     requires_facts: [f_no_p2, f_no_p3, f_no_p4, f_no_p5]
     blanks:
       - { label: 시각, candidates: closed,     answer: t2 }
-      - { label: 장소, candidates: closed,     answer: piano }
+      - { label: 장소, candidates: closed,     answer: piano, asks: { kind: scene } }
       - { label: 인물, candidates: closed,     answer: p2 }
-      - { label: 도구, candidates: discovered, answer: 과도, particle: (으)로 }
+      - { label: 도구, candidates: discovered, answer: 과도, particle: (으)로,
+          asks: { kind: murderWeapon, evidence: e_knife } }
     report:
       - { blank: 0 }
       - ", "
@@ -396,9 +397,12 @@ chapters:
     # ★검증기가 요구해서 늘렸다★ 인물 5 × 동기 4 = 20 이라 「찍기가 가능하다」로
     # 떨어졌다. 장소를 더해 5×4×7 = 140. 원문에 없던 요구다
     blanks:
-      - { label: 인물, candidates: closed,     answer: p1, is_accusation: true }
-      - { label: 장소, candidates: closed,     answer: piano, particle: (으)로 }
-      - { label: 동기, candidates: discovered, answer: 쌓인 반감 }
+      - { label: 인물, candidates: closed,     answer: p1, is_accusation: true,
+          asks: { kind: culprit } }
+      - { label: 장소, candidates: closed,     answer: piano, particle: (으)로,
+          asks: { kind: scene } }
+      - { label: 동기, candidates: discovered, answer: 쌓인 반감,
+          asks: { kind: culpritMotive, evidence: e_memo } }
     report:
       - "모든 정황이 한 사람을 가리켰다. 진범은 "
       - { blank: 0 }
