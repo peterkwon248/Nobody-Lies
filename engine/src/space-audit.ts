@@ -47,11 +47,17 @@ function audit(c: Case, name: string) {
   const B = blanks.length
 
   // ── 세계 공간 ──
-  // 범인 후보 5 × 범인의 진실 격자 L^S
+  // 범인 후보 P × 범인의 진실 격자 L^S × **죽인 칸** W
+  //
+  // ⛳ `W` 는 2026-08-04에 붙었다 — `World.murderCell` 신설. 「언제 죽였나」는
+  //    계산될 값이 아니라 추리 대상이라 세계의 변수다. **창이 1칸이면 ×1 이라
+  //    커밋 4건·생성 40건의 세계 수는 안 변한다**(전건 창 1칸). 손잡이를
+  //    `deathCells 3` 으로 올린 사건에서만 ×3 이 된다.
+  const W = Math.max(1, c.slots.filter((s) => s.isWindow).length)
   const culpritGrid = Math.pow(L, S)
-  const worlds = P * culpritGrid
+  const worlds = P * culpritGrid * W
   // 대조용 — 규칙 없이 다섯 명 전부의 격자를 미지수로 두면
-  const naive = Math.pow(culpritGrid, P)
+  const naive = Math.pow(culpritGrid, P) * W
 
   // ── 제출 공간 ──
   // schema 기본값: 인물 = 용의자 수, 그 외 = 4 (candidatePool 이 있으면 그 값)

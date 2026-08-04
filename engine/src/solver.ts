@@ -46,11 +46,42 @@
 import type { Case, LocationId, PersonId, PresenceCell, SlotId } from './types.js'
 import { deriveFacts, guiltTable } from './verifier.js'
 
-/** 가설 하나. 범인이 누구이고 그 사람이 실제로 어디 있었나 */
+/** 가설 하나. 범인이 누구이고, 그 사람이 어디 있었고, 언제 죽였나 */
 export type World = {
   culprit: PersonId
   /** 범인의 **진실** 격자. 슬롯 순서는 `c.slots` 와 같다 */
   culpritTruth: PresenceCell[]
+  /**
+   * ★ 언제 죽였나 — 사망 구간 칸 중 하나 ★ (2026-08-04 신설)
+   *
+   * ## 왜 계산이 아니라 변수인가
+   *
+   * 처음에는 `answerOf(시각)` 을 **계산**했다 — *"범인이 현장에 있던 칸"*.
+   * 그런데 반사실 세계에서는 그 칸이 **0개이거나 2개 이상**이라 함수가 `null` 을
+   * 냈고, 44건 중 **30건이 `undecidable`** 로 떨어졌다.
+   *
+   * 뿌리는 역할 함수의 의미론이 아니라 **세계 정의의 누락**이었다.
+   * 「언제 죽였나」가 플레이어의 진짜 추리 대상이라면 그것은 세계에서 **읽는 값**이지
+   * 세계로부터 **계산하는 값**이 아니다.
+   *
+   * ```
+   * 전   answerOf(시각) = 범인이 현장에 있던 칸을 찾는다   → 유일하지 않으면 null
+   * 후   answerOf(시각) = w.murderCell                    → ★ 읽기 · null 이 구조적으로 불가능
+   * ```
+   *
+   * 범인이 현장에 두 번 있는 세계는 **`murderCell` 이 다른 두 세계로 갈라진다** —
+   * `undecidable` 이 정직한 `ambiguous` 로 바뀐다. 그리고 그 모호를 해소하는 것이
+   * 정확히 C5~C8(`exit.slot` · `brokenBy` 시점 · `walks.min`)이다.
+   *
+   * ## 오차 방향
+   *
+   * 변수 추가는 세계를 **늘리는** 쪽이라 **가짜 모호는 낳아도 거짓 유일은 못 낳는다.**
+   * §4 의 「의심스러우면 덜 지운다」와 같은 방향이다.
+   *
+   * ⛔ **비용은 ×|사망 구간 칸| 이다** — `deathCells ≤ 3` 이므로 최대 ×3.
+   * 커밋 4건과 생성 40건은 전부 창이 **1칸**이라 세계 수가 **안 변한다**.
+   */
+  murderCell: SlotId
   /** 트릭이 exit 을 가지면 언제 떠났나. 2단계(C5)에서 쓴다 */
   exitSlot?: SlotId
 }
@@ -119,9 +150,13 @@ export function consistent(
   //      (verifier §7.5(iv) 의 뒤집기)
   if (!win.some((s) => truth.get(s) !== stated.get(s))) return { ok: false, broke: 'C1' }
 
-  // C2 — 사망 구간 중 한 칸이라도 현장에 닿는 자리여야 기회가 성립한다
-  if (!win.some((s) => { const l = truth.get(s); return l !== undefined && canReachScene(c, l) }))
-    return { ok: false, broke: 'C2' }
+  // C2 — **죽인 칸에서** 현장에 닿아야 기회가 성립한다.
+  //
+  // ⛳ murderCell 신설 전에는 「사망 구간 중 **한 칸이라도**」였다. 그건 느슨하다 —
+  // 범인이 창의 다른 칸에 있었어도 통과했다. 이제 죽인 칸이 세계의 변수이므로
+  // **그 칸 하나**를 묻는다. 조인 것이 아니라 **물음이 정확해진 것**이다.
+  const at = truth.get(w.murderCell)
+  if (at === undefined || !canReachScene(c, at)) return { ok: false, broke: 'C2' }
 
   // C3·C4 — 전체 정보에서 유죄가 서는 사람. `ctx.guilty` 가 이미 계산해뒀다
   if (!ctx.guilty.includes(w.culprit)) return { ok: false, broke: 'C3' }
@@ -202,7 +237,7 @@ export function buildContext(c: Case): SolveContext {
 export type BlankRole =
   | { kind: 'culprit' }
   | { kind: 'culpritLoc'; slot: SlotId }
-  | { kind: 'culpritScene' }
+  | { kind: 'murderCell' }
   | { kind: 'none' }
 
 /** 공란 하나를 사건 안에서 가리키는 열쇠. 장·순서로 짓는다 (id 필드가 없다) */
@@ -232,11 +267,14 @@ export function roleOf(c: Case, label: string, answer: string): BlankRole {
     }
 
     case '시각': {
-      if (!c.incident.scene) return { kind: 'none' }
-      const sceneSlots = [...truth].filter(([, l]) => l === c.incident.scene).map(([s]) => s)
-      return sceneSlots.length === 1 && sceneSlots[0] === answer
-        ? { kind: 'culpritScene' }
-        : { kind: 'none' }
+      // 답이 사망 구간 칸이면 「언제 죽였나」를 묻는 것이다 → 세계에서 **읽는다**
+      //
+      // ⛳ 창이 1칸인 사건에서는 murderCell 의 값이 하나뿐이라 이 공란이 자동으로
+      // **vacuous** 가 된다. 그것이 옳은 의미론이다 — **칸이 하나면 「언제」는
+      // 추리가 아니라 데이터**이고, 관할은 proof 로 간다.
+      if (c.slots.some((s) => s.isWindow && s.id === answer)) return { kind: 'murderCell' }
+      // 비-사망구간 칸을 묻는 시각 공란(실측 43개)은 역할을 못 찾는다 — proof 관할
+      return { kind: 'none' }
     }
 
     default:
@@ -260,12 +298,9 @@ export function answerOf(c: Case, w: World, role: BlankRole): string | null {
       const cell = w.culpritTruth.find((x) => x.slot === role.slot)
       return cell ? cell.location : null
     }
-    case 'culpritScene': {
-      if (!c.incident.scene) return null
-      const hit = w.culpritTruth.filter((x) => x.location === c.incident.scene)
-      // 현장에 있던 칸이 없거나 여럿이면 이 세계는 「언제」를 결정하지 못한다
-      return hit.length === 1 ? hit[0].slot : null
-    }
+    // ★ 계산이 아니라 읽기다 — 그래서 null 이 구조적으로 불가능하다 ★
+    case 'murderCell':
+      return w.murderCell
     default:
       return null
   }
@@ -327,23 +362,27 @@ export function solveGrid(c: Case): GridResult {
 
   for (const person of c.people) {
     for (const grid of gridAssignments(slots, locs)) {
-      enumerated++
-      const r = consistent(c, { culprit: person.id, culpritTruth: grid }, ctx)
-      if (r.ok) {
-        surviving++
-        culprits.add(person.id)
-      } else if (r.broke) killedBy[r.broke]++
+      for (const murderCell of ctx.window) {
+        enumerated++
+        const r = consistent(c, { culprit: person.id, culpritTruth: grid, murderCell }, ctx)
+        if (r.ok) {
+          surviving++
+          culprits.add(person.id)
+        } else if (r.broke) killedBy[r.broke]++
+      }
     }
   }
 
   // ★ 자기 검사 1호 ★ — 사건 데이터가 말하는 진짜 세계는 반드시 살아남아야 한다.
   // 안 남으면 일관성 함수가 고장난 것이지 사건이 틀린 것이 아니다.
   const trueTruth = truthGrid(c, c.culprit)
-  const trueWorld: World = {
-    culprit: c.culprit,
-    culpritTruth: slots.map((s) => ({ slot: s, location: trueTruth.get(s) as LocationId })),
-  }
-  const self = consistent(c, trueWorld, ctx)
+  const trueGrid = slots.map((s) => ({ slot: s, location: trueTruth.get(s) as LocationId }))
+  // ⛳ 진짜 세계의 murderCell 은 데이터에 **없다** — 사건 파일이 「언제 죽였나」를
+  //   적지 않는다. 그래서 창 칸 중 **하나라도** 일관이면 자기 검사를 통과로 본다.
+  //   ★ 이것이 murderCell 이 진짜 변수라는 증거다 ★ 데이터에 있었으면 읽었을 것이다.
+  const self = ctx.window
+    .map((murderCell) => consistent(c, { culprit: c.culprit, culpritTruth: trueGrid, murderCell }, ctx))
+    .reduce((best, r) => (best.ok ? best : r), { ok: false, broke: null } as ReturnType<typeof consistent>)
 
   return {
     enumerated,
@@ -362,10 +401,11 @@ export function consistentWorlds(c: Case): World[] {
   const ctx = buildContext(c)
   const out: World[] = []
   for (const person of c.people)
-    for (const grid of gridAssignments(slots, locs)) {
-      const w = { culprit: person.id, culpritTruth: grid }
-      if (consistent(c, w, ctx).ok) out.push(w)
-    }
+    for (const grid of gridAssignments(slots, locs))
+      for (const murderCell of ctx.window) {
+        const w = { culprit: person.id, culpritTruth: grid, murderCell }
+        if (consistent(c, w, ctx).ok) out.push(w)
+      }
   return out
 }
 
