@@ -290,7 +290,7 @@ export function roleOf(c: Case, label: string, answer: string): BlankRole {
  * `null` 은 **C9 실패**다 — 이 세계가 그 공란의 답을 결정하지 못한다.
  * 삼키지 않고 `undecidable` 로 올린다.
  */
-export function answerOf(c: Case, w: World, role: BlankRole): string | null {
+export function answerOf(w: World, role: BlankRole): string | null {
   switch (role.kind) {
     case 'culprit':
       return w.culprit
@@ -464,7 +464,7 @@ export function solve(c: Case): SolveResult {
       const role = roleOf(c, b.label, b.answer)
       const seen = new Set<string>()
       const col: (string | null)[] = worlds.map((w) => {
-        const v = answerOf(c, w, role)
+        const v = answerOf(w, role)
         if (v === null) {
           if (role.kind !== 'none') undecided++
           return null
