@@ -71,11 +71,14 @@ npm install
 npm run build
 ```
 
-**14단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
-tmpl-check · brief-check · prose-lock · censor-check · matrix-check · port-check · build`
+**15단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
+tmpl-check · brief-check · prose-lock · censor-check · solve-check · matrix-check ·
+port-check · build`
 (07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
-**08-02에 `clue-check`·`prose-lock`·`censor-check`**).
+08-02에 `clue-check`·`prose-lock`·`censor-check`, **08-05에 `solve-check`**).
 > ⚠ 이 줄이 08-04까지 **13단**으로 낡아 있었다 — `censor-check` 이 빠져 있었다.
+> **숫자만 고치고 목록을 안 고치면 같은 줄이 자기와 모순된다** — 08-05에 그 자리를
+> 한 번 더 지났다.
 **초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 옵션 공간 속성 통과 + YAML 왕복 동일 +
 **모든 공란이 조사로 갈림** + 저작 서식 통과 + **서식이 든 숫자가 산장 실측과 같음** +
 **행렬이 가리키는 검사가 실재함** + 이식 회귀 없음 + 린트 오류 0.
@@ -102,7 +105,10 @@ tmpl-check · brief-check · prose-lock · censor-check · matrix-check · port-
 
 ## 5. 보고한다
 
-- **어디까지 왔나** — ①산문을 스키마로 / ②산문가 / ③검열관 / ④campaign 작가 중 지금 위치
+- **어디까지 왔나** — `NEXT-ACTION.md` **머리말의 §마지막 갱신**을 읽는다.
+  > ⛔ **`NEXT-ACTION:2626` 의 4단계 표(①산문을 스키마로/②산문가/③검열관/④작가)를
+  > 보지 마라** — 2026-07-28 스냅샷이고 ③검열관이 08-02에 닫혔는데 ⬜ 로 남아 있다.
+  > 08-05에 ⏭ 배너를 달았다. **날짜 절 안의 표는 이력이지 현황이 아니다.**
 - **다음 하나** — NEXT-ACTION §다음 즉시 액션
 - **막힌 것** — 워크로그 Blockers
 - **게이트 상태** — exit 0 인지
