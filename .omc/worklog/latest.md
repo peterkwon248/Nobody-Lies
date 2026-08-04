@@ -7,7 +7,17 @@ machine: "KWONKYUNGHUN"
 
 ## Completed Work
 
-**게이트 14단 초록(exit 0) · 커밋 여덟 · 트리 깨끗(`solve-check.ts` 하나만 미추적 — 아래 ⚠).**
+**게이트 14단 초록(exit 0) · 커밋 여덟 · 트리 깨끗** (`solve-check.ts` 는 `6d2e660` 에
+포함됐다 · **게이트에는 여전히 미배선** — 아래 ⚠).
+
+> ⚠ **이 줄이 「`solve-check.ts` 하나만 미추적」이라고 적혀 있었다 — 적히는 순간
+> 거짓이 됐다** (2026-08-05 `before-work` 정정). **b9f49b4 부류(낡은 줄)가 아니라
+> 공정의 순서 문제다**: `after-work` 는 **워크로그를 쓴 뒤에 커밋**하므로, 그 커밋이
+> 쓸어 담을 파일은 **집필 시점에 언제나 미추적으로 보인다.** 그래서 진짜 수리는 이
+> 파일이 아니라 공정이었다 — `.claude/commands/after-work.md` §2 에
+> 「미추적이라 적지 말고 **「이 커밋에 포함됨」**으로 적어라」를 박았다.
+> **살아 있는 사실은 「게이트에 안 걸었다」쪽이고 그것은 지금도 참이다**
+> (`git grep solve-check -- package.json` → 0건).
 
 ### ★★ 오늘의 줄기 — 적대적 솔버를 지으려다 **계측기를 얻었다** ★★
 
@@ -95,7 +105,7 @@ curve 리트머스  기대값을 consistentWorlds(zero) 로 계산 — curve 0�
 
 ## In Progress
 
-**`engine/src/solve-check.ts` — 만들었고 게이트에 안 걸었다 (미추적 상태).**
+**`engine/src/solve-check.ts` — 만들었고 게이트에 안 걸었다** (`6d2e660` 에 포함 · **미배선**).
 
 > ⛔⛔ **이 미배선은 의도다.** 지금 `package.json` 에 걸면 **무검사 공란 7개 때문에
 > `npm run build` 가 빨개진다.** 계획은 **「초록이 된 뒤 한 배치」**다.
@@ -139,6 +149,15 @@ curve 리트머스  기대값을 consistentWorlds(zero) 로 계산 — curve 0�
       `pointsAt` 장소의 라벨이 실재하는지 검사 — **검열관 ⓐ(인용 실재)와 같은 모양**이라 싸다
 - [ ] **`solve-check` 배선 + `matrix.ts` 도출 축 등록** — 한 배치로. 배치가 닫히면
       **4단계 계획 1번(솔버)이 게이트까지 포함해 완결**이다
+- [ ] **📄 문서 — 4단계 표에 ⏭ 스냅샷 배너 (사용자 결정 2026-08-05 · `after-work` 에서 실행)**
+      `NEXT-ACTION.md:2626` 의 *"③ 검열관 … LLM 쪽은 아직 없다"* 가 ⬜ 로 남아 있다 —
+      검열관은 **08-02에 닫혔다**(`censor.ts`·`CENSOR-BRIEF.md`·게이트 `censor-check`).
+      ⛔ **표를 현재 상태로 갱신하는 쪽은 기각됐다** — 날짜 절(07-28) 안의 표를 계속
+      고쳐 쓰면 **「낡은 표가 살아 있는 척」을 상설화**한다. `PORT-AUDIT.md` 전례대로
+      **⏭ 배너**를 달고, **「지금 위치」의 정본은 `NEXT-ACTION` 머리말로 일원화**한다.
+      ★ **`.claude/commands/before-work.md` §5 의 「①산문을 스키마로/②산문가/③검열관/
+      ④campaign 작가」 지시문도 머리말을 가리키게 고치는 것까지가 이 수리의 완결이다** —
+      지시문을 안 고치면 다음 세션이 **또 저 표로 간다.**
 - [ ] 🔴 **테스터 피드백 0건** (사용자 결정으로 접어둠) · **용의자 프로필 채널 43/44 빔**
 - [ ] 동선 모양 경고 둘 · `prose-lock` 「아침의 정황」 · 여덟째 아키타입 · `es-hangul`
 - [ ] 별건 둘 — DS 번들 `createRoot` 충돌 · 사이드바 밖 클릭 요소 137곳
@@ -172,7 +191,7 @@ curve 리트머스  기대값을 consistentWorlds(zero) 로 계산 — curve 0�
 ```
 engine/src/solver.ts        ★신규★ 세계 열거 · C1~C4 · asks/answerOf · curve · 지식 조항
 engine/src/space-audit.ts   ★신규★ 산정 재현 (챗봇 인계분 · 게이트에 안 건다)
-engine/src/solve-check.ts   ★신규·미추적★ 게이트 15단 후보 — 초록 뒤 배선
+engine/src/solve-check.ts   ★신규★ 게이트 15단 후보 — 초록 뒤 배선 (미배선)
 engine/src/types.ts         Blank.asks · Evidence.pointsAt 신설
 engine/src/generate.ts      asks 를 세 자리에서 방출 · 가닥 물증에 pointsAt
 engine/src/verifier.ts      availableActions·simulate export · simulate 에 trace 추가
