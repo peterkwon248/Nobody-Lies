@@ -90,7 +90,7 @@ export default class App extends React.Component {
     blanks: {}, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, reopenActive: {}, reopenUsed: {}, secExpand: {},
     openPicker: null, openCell: null, openAids: false,
     evidence: {}, cellMarks: {},
-    stage: 'brief', readIdx: 0, readDone: false, readMemos: {}, readHi: {}, interludeQ: [],
+    stage: 'brief', readIdx: 0, readDone: false, readMemos: {}, readHi: {}, interludeQ: [], cardQ: [],
     invSel: { action: null, targets: [] }, invLog: [], pendingInv: null, invResult: null,
     route: 'home', started: false, confirmAbandon: false, confirmFinish: false, selectedCase: 1, resultFold: false, openTerm: null,
     // 홈 목록에서 지우려는 만든 사건의 id. 되돌릴 수 없어서 한 번 묻는다 (2026-07-29)
@@ -550,6 +550,12 @@ export default class App extends React.Component {
     if (typeof c.budget === 'number') this.BUDGET = c.budget
     // 난이도는 `verify` 가 계산해 `export-case` 가 실어 보낸다 — 앱은 받아 쓰기만 한다
     if (c._difficulty) this.DIFF = c._difficulty
+    /**
+     * 트릭 인상. **연출 판정에만 쓴다** — `illusionBeats` 가 `brokenBy` 로
+     * 첫 균열/후속을 가른다 (`DESIGN-NOTES.md` §확정 결정 3).
+     * ⛔ **게임 판정에는 안 쓴다** — 정답·배제는 여전히 격자와 공란이 정한다(§14).
+     */
+    if (c.trick) this.CASE_TRICK = c.trick
     if (c.prologue?.length) this.PROLOG = c.prologue.map(ko)
 
     /**
@@ -1729,7 +1735,7 @@ export default class App extends React.Component {
       'readDone', 'readIdx', 'started', 'stage', 'seenClaims', 'seenClues',
       // `stage` 와 **같이** 저장한다 — 인터루드 도중에 새로고침하면 stage 만 남아
       // 빈 인터루드에 갇힌다. 둘은 한 벌이다
-      'interludeQ'],
+      'interludeQ', 'cardQ'],
     annotations: ['memos', 'readMemos', 'hls', 'annMarks', 'cellMarks', 'verdicts', 'quotePins'],
     prefs: ['lang', 'theme', 'narrMode', 'stmtMode', 'viewOpts'],
   };
@@ -1962,9 +1968,45 @@ export default class App extends React.Component {
    * 내용은 각 화면(진술·현장·개요)에 영구히 남아 있고, 여기서는 어디를 보라는
    * 것만 알린다. 그래서 새 진술 문안·물증 기록을 여기로 가져오지 않는다.
    */
+  /**
+   * 인상 하나를 찾는다. 큐 항목이 `il:<id>` 꼴이면 트릭 붕괴 beat 다.
+   * ⛳ 접두어로 가른 이유 — `interludeQ` 는 원래 **장 id** 만 담았고, 그 줄을
+   * 그대로 쓰면서 두 종류를 섞으려면 **구별이 값 안에** 있어야 한다.
+   */
+  illusionOf(key) {
+    if (typeof key !== 'string' || key.indexOf('il:') !== 0) return null;
+    const id = key.slice(3);
+    return ((this.CASE_TRICK && this.CASE_TRICK.illusions) || []).find((x) => x.id === id) || null;
+  }
+  /**
+   * 트릭 붕괴 문안 — **잠정이다** (`DESIGN-NOTES.md` §확정 결정 3 §문안).
+   * `REVEALS[].narration` 은 장 완성 전용이라 이 자리에 쓸 저작 문안이 없다.
+   * `impression` 을 뒤집는 한 줄로 띄우고 **잠정임을 화면에 표기**한다.
+   * ⛔ 내용을 말하지 않는다 — 무엇이 깨졌는지만. 물증 자체는 조사 기록에 남는다.
+   */
+  illusionParas(il) {
+    const ln = this.state.lang;
+    return ln === 'ko'
+      ? [{ text: `「${il.impression}」 — 그렇게 보였다.` }, { text: '방금 나온 것이 그 인상과 맞지 않는다.' }]
+      : [{ text: `“${il.impression}” — so it seemed.` }, { text: 'What just surfaced does not fit that impression.' }];
+  }
   buildInterlude() {
     const sid = (this.state.interludeQ || [])[0];
     if (!sid) return { open: false };
+    const il = this.illusionOf(sid);
+    if (il) {
+      const ln = this.state.lang, t = this.T();
+      return {
+        open: true,
+        chapter: ln === 'ko' ? '인상이 깨졌다' : 'An impression breaks',
+        paras: this.illusionParas(il),
+        hasDest: true,
+        dest: (ln === 'ko' ? '자세한 것은 · ' : 'Details in · ') + t.invLogTitle,
+        provisional: ln === 'ko' ? '※ 이 문안은 잠정입니다' : '※ provisional copy',
+        isProvisional: true,
+        onNext: () => this.interludeNext(),
+      };
+    }
     const s = this.SECTIONS.find(x => x.id === sid);
     const r = this.REVEALS[sid] || {};
     const t = this.T(), ln = this.state.lang;
@@ -1979,7 +2021,59 @@ export default class App extends React.Component {
       // 「무엇이 어디에 도착했는가」만. 내용은 그 화면에 있다
       hasDest: dest.length > 0,
       dest: (ln === 'ko' ? '새 정보 · ' : 'New information · ') + dest.join(' · '),
+      provisional: '', isProvisional: false,
       onNext: () => this.interludeNext(),
+    };
+  }
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  중 — 반화면 카드 (2026-08-06 · `DESIGN-NOTES.md` §확정 결정 2)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * **자동 닫힘 타이머가 없다.** 순간을 플레이어가 소유한다(사용자 확정) —
+   * 토스트(소)와 갈리는 지점이 정확히 여기다. 토스트는 4.6초 뒤 사라지고
+   * 카드는 **누를 때까지 남는다.**
+   *
+   * ⛳ **스킵은 어디를 눌러도 된다** — 뒤 그림자까지 닫힘이다.
+   * ⛔ 내용은 말하지 않는다. **도착 사실만** — 물증 자체는 조사 기록에 산다
+   *    (§절대 규칙 부수 1. 그래서 스킵해도 잃는 것이 없다).
+   */
+  cardNext() {
+    const q = (this.state.cardQ || []).slice(1);
+    this.setState({ cardQ: q });
+  }
+  /**
+   * A/B — 중 카드의 시각 형태와 중↔대 경계를 **주소로** 가른다.
+   *
+   * ```
+   * (없음)          기본. 3단계 · 카드는 아래서 올라온다
+   * ?reveal=pop     시안 B. 카드가 중앙에서 뜬다
+   * ?reveal=heavy   중을 대로 승격 — 테스터 절반이 이걸로 돈다
+   * ```
+   * ⛳ **설정값 하나로 가른다** — 경계가 코드에 흩어지면 A/B 를 못 돌린다.
+   *   주소를 쓰는 이유는 테스터에게 **URL 만 다르게 보내면 되기 때문**이다.
+   */
+  revealVariant() {
+    try {
+      const p = new URLSearchParams((location.hash.split('?')[1] || '') + '&' + location.search.slice(1));
+      const v = p.get('reveal') || '';
+      return v === 'pop' || v === 'heavy' ? v : 'rise';
+    } catch (e) { return 'rise'; }
+  }
+  buildCard() {
+    const key = (this.state.cardQ || [])[0];
+    if (!key) return { open: false };
+    const il = this.illusionOf(key);
+    if (!il) return { open: false };
+    const ln = this.state.lang, t = this.T();
+    return {
+      open: true,
+      kicker: ln === 'ko' ? '인상에 금이 갔다' : 'The impression cracks',
+      title: il.impression,
+      body: ln === 'ko' ? '방금 확보한 것이 이 인상과 어긋난다.' : 'What you just found contradicts it.',
+      dest: (ln === 'ko' ? '자세한 것은 · ' : 'Details in · ') + t.invLogTitle,
+      cta: ln === 'ko' ? '확인' : 'Got it',
+      onClose: () => this.cardNext(),
     };
   }
   startRead() { this.setState({ stage: 'read', readIdx: 0 }); }
@@ -2126,8 +2220,79 @@ export default class App extends React.Component {
       title: r.tKo ? (ln === 'ko' ? r.tKo : r.tEn) : (ln === 'ko' ? '아무것도 없음' : 'Nothing found'),
       desc: r.dKo ? (ln === 'ko' ? r.dKo : r.dEn) : (ln === 'ko' ? '여기서는 새로운 단서가 나오지 않았다. 이 대상은 배제해도 좋다.' : 'No new clue here \u2014 this option can be ruled out.') };
     const ev = Object.assign({}, this.state.evidence); if (r.ev) ev[r.ev] = true;
-    this.setState({ invLog: (this.state.invLog || []).concat([entry]), evidence: ev, invSel: { action: null, targets: [] } });
+    const patch = { invLog: (this.state.invLog || []).concat([entry]), evidence: ev, invSel: { action: null, targets: [] } };
+    Object.assign(patch, this.illusionBeats(
+      this.engEvidence(this.state.invLog || []), this.engEvidence(patch.invLog)));
+    this.setState(patch);
     return entry;
+  }
+  /**
+   * 조사 기록에서 **엔진 물증 id** 를 다시 만든다.
+   *
+   * ⛔ **`state.evidence` 를 쓰면 안 된다** — 거기 키는 `annexPhone` 같은 **앱
+   * 로컬 이름**이고 두 자리에만 붙어 있다. 엔진 폴백(`resultFor`)은 `ev` 를
+   * 아예 안 준다. 반면 `illusion.brokenBy` 는 `e_note` 같은 **엔진 id** 다.
+   * 두 이름 공간이 달라서 그대로 비교하면 **영영 참이 안 된다**(2026-08-06에
+   * 그 배선으로 한 번 지었다가 잡았다).
+   *
+   * ⛳ 새 상태를 안 만든다 — `invLog` 가 이미 저장되므로 **거기서 도출**하면
+   * 새로고침·이어하기에도 저절로 맞는다. 저장 마이그레이션도 필요 없다.
+   */
+  engEvidence(log) {
+    const held = {};
+    for (const e of log || []) {
+      const eng = this.CASE_ACTIONS?.[e.action + ':' + e.key];
+      for (const g of eng?.gives || []) held[g] = true;
+    }
+    return held;
+  }
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  트릭 인상 붕괴 — **첫 균열은 대, 후속은 중** (2026-08-06 확정)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * `DESIGN-NOTES.md` §확정 결정 3. 목록이 아니라 **규칙**이라 새 사건에서
+   * 조용히 빠지지 않는다 — `trick.illusions[].brokenBy` 만 있으면 발화한다.
+   *
+   * ⛳ **any/all 을 안 정해도 된다** — 「몇 개를 모아야 진짜로 깨지나」는 논리의
+   * 문제고 그 `all` 전제는 **엔진이 이미 지킨다**(`verifier` C6 가 모든 brokenBy
+   * 의 도달성을 전수 검사한다). 연출은 **첫 균열만 알면 되므로** 첫/후속으로
+   * 가르면 물음 자체가 사라진다. 그래서 `breakOn` 필드를 안 지었다.
+   *
+   * ⚠ **한 조사가 두 인상을 깰 수 있다.** 지금 커밋된 네 사건에는 겹치는 물증이
+   * 없지만(실측), 규칙이 데이터를 앞서므로 **대는 1회로 합친다** — 전체 화면이
+   * 연달아 두 번 뜨는 것은 연출이 아니라 사고다.
+   */
+  illusionBeats(before, after) {
+    const ils = (this.CASE_TRICK && this.CASE_TRICK.illusions) || [];
+    if (!ils.length) return {};
+    const heavy = [], light = [];
+    for (const il of ils) {
+      const bb = il.brokenBy || []; if (!bb.length) continue;
+      const was = bb.filter((e) => before[e]).length;
+      const now = bb.filter((e) => after[e]).length;
+      if (now <= was) continue;
+      if (was === 0) heavy.push(il); else light.push(il);
+    }
+    if (!heavy.length && !light.length) return {};
+    const patch = {};
+    // 대 — 인상 하나만 (겹침이 생겨도 전체 화면은 한 번)
+    if (heavy.length) {
+      patch.interludeQ = (this.state.interludeQ || []).concat(['il:' + heavy[0].id]);
+      patch.stage = 'interlude';
+      // 합쳐진 나머지는 중으로 내린다 — 삼키지 않는다
+      for (const il of heavy.slice(1)) light.push(il);
+    }
+    if (light.length) {
+      // A/B — `?reveal=heavy` 면 중을 대로 승격한다 (경계가 설정값 하나다)
+      if (this.revealVariant() === 'heavy') {
+        patch.interludeQ = (patch.interludeQ || this.state.interludeQ || []).concat(light.map((il) => 'il:' + il.id));
+        patch.stage = 'interlude';
+      } else {
+        patch.cardQ = (this.state.cardQ || []).concat(light.map((il) => 'il:' + il.id));
+      }
+    }
+    return patch;
   }
   invStatusFor(actionId, targets) {
     const a = this.INV_ACTIONS.find(x => x.id === actionId); if (!a) return 'na';
@@ -3517,6 +3682,8 @@ export default class App extends React.Component {
       isHome: isHome, isDetail: isDetail, home: this.buildHome(), detail: this.buildDetail(),
       prologParas: this.PROLOG.map((p, pi) => ({ text: p })), onPrologContinue: () => this.setState({ stage: 'brief' }),
       interlude: this.buildInterlude(),
+      card: this.buildCard(),
+      cardVariant: this.revealVariant(),
       ovQuote: { onSelect: (ev) => this.onStmtSelect('__prolog', 0, ev), showTb: !!s.sel && s.sel.pid === '__prolog', tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {} },
       ovProse: this.PROLOG.map((par, pi) => ({ pi, segs: this.segsFor('__prolog', pi, par), onSelect: (ev) => this.onStmtSelect('__prolog', pi, ev), showTb: !!s.sel && s.sel.pid === '__prolog' && s.sel.pi === pi, tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {} })),
       confirmAbandon: s.confirmAbandon, onAbandon: () => this.abandon(), onCancelAbandon: () => this.setState({ confirmAbandon: false }), onGoHome: () => this.goHome(), onAbandonReq: () => this.setState({ confirmAbandon: true }),
@@ -4506,15 +4673,18 @@ export default class App extends React.Component {
                 </div>
               </>):null}
               {(V.stageInterlude && V.interlude.open)?(<>
-                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x)")}>
+                <div className="rv-interlude" onClick={V.interlude.onNext} style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x);cursor:pointer")}>
                   <div style={S("max-width:var(--read-measure);width:100%")}>
                     <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:28px;letter-spacing:.1em;text-transform:uppercase")}>{V.interlude.chapter}</div>
                     {arr(V.interlude.paras).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:var(--read-fs);line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
                     {(V.interlude.hasDest)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)")}>{V.interlude.dest}</div></>):null}
+                    {(V.interlude.isProvisional)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:12px;opacity:.75")}>{V.interlude.provisional}</div></>):null}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.interlude.onNext}>{V.ui.prologContinue}</Button></div>
                   </div>
                 </div>
               </>):null}
+
+
               {(V.stageBrief)?(<>
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto")}>
                   <div style={S("max-width:520px;width:100%")}>
@@ -4760,6 +4930,21 @@ export default class App extends React.Component {
               </div>
             </div></div>
           </>):null}
+          {/* 중 — 반화면 카드. 자동 닫힘 없음 · 어디를 눌러도 닫힌다
+              ⛔ **토스트 옆(최상위)에 둔다** — 처음에 인터루드 옆에 뒀더니
+                 `isIntro`(stage !== free) 안쪽이라 **자유 플레이 중엔 절대
+                 안 떴다.** 중이 뜨는 시점은 정확히 자유 플레이다. */}
+              {(V.card.open)?(<>
+                <div className={"rv-card-scrim rv-" + V.cardVariant} onClick={V.card.onClose}>
+                  <div className="rv-card" onClick={V.card.onClose}>
+                    <div className="v-caption rv-card-kicker">{V.card.kicker}</div>
+                    <div className="v-h3 rv-card-title">{V.card.title}</div>
+                    <div className="v-body rv-card-body">{V.card.body}</div>
+                    <div className="v-micro rv-card-dest">{V.card.dest}</div>
+                    <div className="rv-card-cta"><Button variant="primary" onClick={V.card.onClose}>{V.card.cta}</Button></div>
+                  </div>
+                </div>
+              </>):null}
           {(V.toast)?(<><div style={S("position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:120;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:8px 20px;display:flex;align-items:center;gap:8px;font:600 12.5px var(--font-sans);color:var(--fg)")}><span style={S("width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none")}></span>{V.toast}</div></>):null}
         </div>
 

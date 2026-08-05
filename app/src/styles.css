@@ -91,6 +91,52 @@
   z-index: 1;
 }
 
+/* ===== 중 — 반화면 카드 (2026-08-06 · DESIGN-NOTES §확정 결정 2) =====
+   시안 두 안. `?reveal=pop` 이 B 다 — 경훈이 고른다.
+     rise  아래서 올라온다 (기본). 하단 탭이 이미 아래라 시선 이동이 짧다
+     pop   중앙에서 뜬다. 무게는 더 실리고 흐름은 더 끊는다
+   ⛳ **자동 닫힘 타이머 없음** — 순간을 플레이어가 소유한다. 토스트(소)와
+      갈리는 지점이 정확히 여기다. */
+.rv-card-scrim {
+  position: fixed; inset: 0; z-index: 130; display: flex;
+  background: rgba(0,0,0,.5); cursor: pointer;
+}
+.rv-card {
+  width: 100%; box-sizing: border-box; cursor: pointer;
+  background: var(--bg-elevated); border: 1px solid var(--border-strong);
+  padding: 24px 24px 20px; box-shadow: var(--shadow-popover);
+}
+.rv-card-kicker { color: var(--accent); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+.rv-card-title { color: var(--fg); margin-bottom: 8px; text-wrap: pretty; }
+.rv-card-body { color: var(--fg-2); margin-bottom: 16px; text-wrap: pretty; }
+.rv-card-dest { color: var(--fg-4); padding-top: 12px; border-top: 1px solid var(--border); }
+.rv-card-cta { margin-top: 16px; }
+
+/* A — 아래서 올라온다 */
+.rv-rise { align-items: flex-end; }
+.rv-rise .rv-card { border-radius: 16px 16px 0 0; animation: rvRise .28s var(--ease, cubic-bezier(.22,.61,.36,1)) both; }
+@keyframes rvRise { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+
+/* B — 중앙에서 뜬다 */
+.rv-pop { align-items: center; justify-content: center; padding: 24px; }
+.rv-pop .rv-card { max-width: 460px; border-radius: var(--r-md); animation: rvPop .24s var(--ease, cubic-bezier(.22,.61,.36,1)) both; }
+@keyframes rvPop { from { transform: scale(.96); opacity: 0 } to { transform: none; opacity: 1 } }
+
+/* 대 — 전체 화면도 같은 문법으로 들어온다 */
+.rv-interlude { animation: rvFade .32s ease both; }
+@keyframes rvFade { from { opacity: 0 } to { opacity: 1 } }
+
+/* ===== 모션을 끈다 (2026-08-06 · 감사 #19) =====
+   ⛳ **모션이 이 저장소에 처음 생기는 자리라 여기서 같이 닫는다.**
+   감사 실측이 `prefers-reduced-motion` **0건**이었다 — 모션이 없어서 0 이었지
+   지켜서 0 이 아니었다. 애니메이션을 들이는 순간 이 규칙이 필요해진다. */
+@media (prefers-reduced-motion: reduce) {
+  .rv-rise .rv-card, .rv-pop .rv-card, .rv-interlude { animation: none !important; }
+  [data-surface="vector"] *, [data-surface="vector"] *::before, [data-surface="vector"] *::after {
+    transition-duration: .01ms !important;
+  }
+}
+
 .g-blank-trigger:hover { filter: brightness(1.12); }
 .g-word:hover { border-color: var(--accent) !important; }
 .g-cell:hover .g-cell-hoverable { color: var(--fg); }
