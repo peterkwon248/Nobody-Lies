@@ -1856,11 +1856,11 @@ export default class App extends React.Component {
       guide: '<rect x="2.5" y="2.5" width="11" height="4" rx="1"/><rect x="2.5" y="9.5" width="11" height="4" rx="1"/>',
       graph: '<circle cx="4" cy="5" r="2"/><circle cx="12" cy="4" r="1.6"/><circle cx="11" cy="12" r="2"/><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4"/>',
     };
-    return React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, dangerouslySetInnerHTML: { __html: I[name] || '' } });
+    return React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, dangerouslySetInnerHTML: { __html: I[name] || '' } });
   }
   bottomItem(view, cur, key, label, icon, onClick) {
     const active = view === cur;
-    return { label, icon: this.ICO(icon), onClick, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '7px 2px 8px', cursor: 'pointer', color: active ? 'var(--accent)' : 'var(--fg-3)', background: active ? 'var(--accent-soft)' : 'transparent' } };
+    return { label, icon: this.ICO(icon), onClick, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: active ? 'var(--accent)' : 'var(--fg-3)', background: active ? 'var(--accent-soft)' : 'transparent' } };
   }
   buildBottomNav(view) {
     const t = this.T();
@@ -1871,7 +1871,7 @@ export default class App extends React.Component {
       this.bottomItem(view, 'statements', 's', t.navStatements, 'depo', () => this.setView('statements')),
       this.bottomItem(view, 'map', 'm', t.navMap, 'map', () => this.setView('map')),
       this.bottomItem(view, 'profile', 'p', t.navProfile, 'suspect', () => this.setView('profile')),
-      { label: t.more || '더보기', icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '7px 2px 8px', cursor: 'pointer', color: inMore ? 'var(--accent)' : 'var(--fg-3)', background: inMore ? 'var(--accent-soft)' : 'transparent' } },
+      { label: t.more || '더보기', icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: inMore ? 'var(--accent)' : 'var(--fg-3)', background: inMore ? 'var(--accent-soft)' : 'transparent' } },
     ];
   }
   /**
@@ -1897,7 +1897,7 @@ export default class App extends React.Component {
     ];
   }
   buildMoreNav(view) {
-    return this.MORE_ITEMS().map((m) => ({ label: m.label, icon: this.ICO(m.icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(m.v)), style: { display: 'flex', alignItems: 'center', gap: '10px', minHeight: '44px', color: view === m.v ? 'var(--accent)' : 'var(--fg-2)' } }));
+    return this.MORE_ITEMS().map((m) => ({ label: m.label, icon: this.ICO(m.icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(m.v)), style: { display: 'flex', alignItems: 'center', gap: '12px', minHeight: '44px', color: view === m.v ? 'var(--accent)' : 'var(--fg-2)' } }));
   }
   markProfileSeen() { const seen = (this.state.seenClues || []).slice(); (this.state.invLog || []).forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; if (seen.indexOf(k) < 0) seen.push(k); }); }); this.setState({ seenClues: seen }); }
   openProfileDetail(pid) { this.setState({ openProfile: pid }); }
@@ -1933,14 +1933,14 @@ export default class App extends React.Component {
       memos: memos.map(m => ({ quote: m.quote, hasQuote: !!m.quote, content: m.content })), hasMemos: memos.length > 0, noMemos: memos.length === 0, memoCount: memos.length,
       onOpen: () => this.openProfileDetail(p.id), onAddMemo: () => this.addMemoForPerson(p.id),
       verdict: this.state.verdicts[p.id] || null, verdictLabel: this.verdictMeta(this.state.verdicts[p.id]).label, verdictColor: this.verdictMeta(this.state.verdicts[p.id]).color, hasVerdict: !!this.state.verdicts[p.id],
-      verdictOpts: ['cleared', 'watching', 'prime'].map(v => { const m = this.verdictMeta(v); const on = this.state.verdicts[p.id] === v; return { key: v, label: m.label, onPick: () => this.setVerdict(p.id, v), chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '5px', height: '26px', padding: '0 11px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (on ? m.color : 'var(--border-strong)'), background: on ? 'var(--bg-active)' : 'transparent', color: on ? m.color : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: on ? 600 : 500 }, dot: { width: '8px', height: '8px', borderRadius: '50%', background: m.color, flex: 'none' } }; }),
+      verdictOpts: ['cleared', 'watching', 'prime'].map(v => { const m = this.verdictMeta(v); const on = this.state.verdicts[p.id] === v; return { key: v, label: m.label, onPick: () => this.setVerdict(p.id, v), chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '4px', height: '26px', padding: '0 12px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (on ? m.color : 'var(--border-strong)'), background: on ? 'var(--bg-active)' : 'transparent', color: on ? m.color : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: on ? 600 : 500 }, dot: { width: '8px', height: '8px', borderRadius: '50%', background: m.color, flex: 'none' } }; }),
       avRingStyle: this.avStyle(p, 30, this.state.verdicts[p.id]),
       stopProp: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
       invActions: [{ id: 'belongings', k: 'actBelong' }, { id: 'phone', k: 'actPhone' }].map(act => { const st = this.invStatusFor(act.id, [p.id]); const a = this.INV_ACTIONS.find(x => x.id === act.id);
         return { label: t[act.k], cost: a.cost, status: st, disabled: st !== 'ok', done: st === 'used',
           hint: st === 'used' ? t.invDone : st === 'nobudget' ? t.reasonBudget : (t.cost + ' ' + a.cost),
           onRun: st === 'ok' ? (() => this.askInvestigate(act.id, [p.id])) : (() => {}),
-          style: { display: 'flex', alignItems: 'center', gap: '7px', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
+          style: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
       slots: sd.map(s => { const f = d.slots[s.k]; return { label: s.l, filled: !!f, empty: !f, text: f ? f.text : '', isNew: f ? f.isNew : false, onJump: f ? (() => this.goToLog(f.logKey)) : (() => {}) }; }) }; });
   }
   goToLog(logKey) { this.setState({ view: 'investigate', openProfile: null, hlLog: logKey || null }); if (logKey) { clearTimeout(this._hlT); this._hlT = setTimeout(() => { if (this.state.hlLog === logKey) this.setState({ hlLog: null }); }, 2200); } }
@@ -2013,7 +2013,7 @@ export default class App extends React.Component {
     if (!p || !this.STMT || !this.STMT[p.id]) return this.emptyReadCard();
     const t = this.T(), ln = this.state.lang;
     const paras = this.STMT[p.id].map((par, i) => { const key = p.id + '-' + i; const hi = !!this.state.readHi[key];
-      return { text: par, onClick: () => this.toggleHi(key), style: { margin: '0 -8px 10px', padding: '3px 8px', borderRadius: '6px', fontSize: '15px', lineHeight: '1.85', color: 'var(--fg-2)', cursor: 'pointer', background: hi ? 'var(--accent-soft)' : 'transparent', boxShadow: hi ? 'inset 3px 0 0 var(--accent)' : 'none', textWrap: 'pretty' } }; });
+      return { text: par, onClick: () => this.toggleHi(key), style: { margin: '0 -8px 12px', padding: '4px 8px', borderRadius: '6px', fontSize: '15px', lineHeight: '1.85', color: 'var(--fg-2)', cursor: 'pointer', background: hi ? 'var(--accent-soft)' : 'transparent', boxShadow: hi ? 'inset 3px 0 0 var(--accent)' : 'none', textWrap: 'pretty' } }; });
     const last = this.state.readIdx === this.PEOPLE.length - 1;
     const g = this.STMT_GESTURE[p.id] || {};
     return { idx: this.state.readIdx + 1, total: this.PEOPLE.length, name: p.name, ini: p.ini, avStyle: this.avStyle(p, 30),
@@ -2158,7 +2158,7 @@ export default class App extends React.Component {
   buildInvestigation() {
     const t = this.T(), ln = this.state.lang, s = this.state.invSel, spent = this.invSpent(), remaining = this.BUDGET - spent;
     const actions = this.INV_ACTIONS.map(a => ({ id: a.id, label: t[a.k], cost: a.cost, onSelect: () => this.selectAction(a.id),
-      style: { display: 'flex', alignItems: 'center', gap: '10px', height: '40px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (s.action === a.id ? 'var(--accent)' : 'var(--border-strong)'), background: s.action === a.id ? 'var(--accent-soft)' : 'transparent', color: s.action === a.id ? 'var(--fg)' : 'var(--fg-2)', cursor: 'pointer' } }));
+      style: { display: 'flex', alignItems: 'center', gap: '12px', height: '40px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (s.action === a.id ? 'var(--accent)' : 'var(--border-strong)'), background: s.action === a.id ? 'var(--accent-soft)' : 'transparent', color: s.action === a.id ? 'var(--fg)' : 'var(--fg-2)', cursor: 'pointer' } }));
     const a = s.action ? this.INV_ACTIONS.find(x => x.id === s.action) : null, mode = a ? a.mode : null;
     let targets = [];
     if (mode === 'person' || mode === 'pair') {
@@ -2183,7 +2183,7 @@ export default class App extends React.Component {
     const log = (this.state.invLog || []).slice().reverse().map(e => { const terms = this.TERM_MAP[e.action + ':' + e.key] || []; const hasTerm = terms.length > 0; return ({ title: e.title, desc: e.desc, actionLabel: e.actionLabel, targetLabel: e.targetLabel, hasTarget: !!e.targetLabel, hasTerm: hasTerm, onOpen: hasTerm ? (() => this.openTerm(terms[0])) : (() => {}), typeLabel: tm[e.type].lab, isEmpty: e.type === 'empty', emptyTag: t.resEmptyTag,
       badgeStyle: e.type === 'empty' ? { fontSize: '10px', fontWeight: 700, color: 'var(--fg-3)', background: 'var(--bg-elevated-2)', borderRadius: 'var(--r-pill)', padding: '2px 8px' } : { fontSize: '10px', fontWeight: 700, color: '#0A0A0B', background: tm[e.type].c, borderRadius: 'var(--r-pill)', padding: '2px 8px' },
       barStyle: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: tm[e.type].c, borderRadius: 'var(--r-md) 0 0 var(--r-md)' },
-      cardStyle: { position: 'relative', border: '1px solid ' + (this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent)' : 'var(--border)'), borderRadius: 'var(--r-md)', padding: '12px 14px 12px 16px', marginBottom: '8px', background: this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent-soft)' : 'transparent', cursor: hasTerm ? 'pointer' : 'default', transition: 'background .2s, border-color .2s' } }); });
+      cardStyle: { position: 'relative', border: '1px solid ' + (this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent)' : 'var(--border)'), borderRadius: 'var(--r-md)', padding: '12px 16px 12px 16px', marginBottom: '8px', background: this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent-soft)' : 'transparent', cursor: hasTerm ? 'pointer' : 'default', transition: 'background .2s, border-color .2s' } }); });
     return { remaining, budget: this.BUDGET, actions, mode, targets, showTargets: mode === 'person' || mode === 'place' || mode === 'pair', noneTarget: mode === 'none',
       targetLabelHead: mode === 'place' ? t.invPickPlace : mode === 'pair' ? t.invPickPair : t.invPickPerson,
       canExec: can, showReason: !can, execReason: reason, onExec: () => this.runInvestigation(),
@@ -2205,7 +2205,7 @@ export default class App extends React.Component {
   resumeCase() { this.setState({ route: 'play' }); }
   reviewCaseOLD() { this.setState({ route: 'play', stage: 'free' }); }
   abandon() { this.setState({ route: 'home', confirmAbandon: false, started: false, stage: 'brief', readDone: false, readIdx: 0, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, blanks: {}, invLog: [], invSel: { action: null, targets: [] }, evidence: {}, cellMarks: {}, msg: {}, view: 'narrative' }); }
-  statusChip(st) { const t = this.T(); const m = { clear: t.cleared, inProgress: t.inProgress, unplayed: t.unplayed, locked: t.locked }[st] || ''; const c = st === 'clear' ? 'var(--g-lock-mark)' : st === 'inProgress' ? 'var(--status-progress)' : 'var(--fg-3)'; const bg = st === 'clear' ? 'var(--g-lock-bg)' : st === 'inProgress' ? 'rgba(242,201,76,.14)' : 'var(--bg-elevated-2)'; return { label: m, style: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', color: c, background: bg } }; }
+  statusChip(st) { const t = this.T(); const m = { clear: t.cleared, inProgress: t.inProgress, unplayed: t.unplayed, locked: t.locked }[st] || ''; const c = st === 'clear' ? 'var(--g-lock-mark)' : st === 'inProgress' ? 'var(--status-progress)' : 'var(--fg-3)'; const bg = st === 'clear' ? 'var(--g-lock-bg)' : st === 'inProgress' ? 'rgba(242,201,76,.14)' : 'var(--bg-elevated-2)'; return { label: m, style: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', color: c, background: bg } }; }
   buildHome() {
     const t = this.T(), ln = this.state.lang, status = this.caseStatus();
     /**
@@ -2269,7 +2269,7 @@ export default class App extends React.Component {
          * 그 길로 열린다(§만든 사건들의 `goRoute`).
          */
         onClick: () => (mine || !c.id ? this.openDetail(c.n) : this.goRoute('case=' + encodeURIComponent(c.id))),
-        cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
+        cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
 
     /**
      * ─────────────────────────────────────────────────────────────
@@ -2282,7 +2282,7 @@ export default class App extends React.Component {
      *
      * 생성기 자체는 `Generator.jsx` 로 이 파일 밖에 있다.
      */
-    const card = { display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' };
+    const card = { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' };
     const dim = { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' };
 
     // 만든 사건들. 브라우저에 저장돼 있어서 이 기계에서만 보인다
@@ -2455,7 +2455,7 @@ export default class App extends React.Component {
   markClaimsSeen() { const seen = Object.assign({}, this.state.seenClaims || {}); this.SECTIONS.forEach(s => { if (this.state.solved[s.id]) { const arr = this.CLAIM_REVEALS[s.id]; if (arr) arr.forEach(c => { seen[s.id + ':' + c.pid + ':' + c.tid] = 1; }); } }); this.setState({ seenClaims: seen }); }
   addedStatements(pid) {
     const out = [], sel = this.state.sel;
-    this.SECTIONS.forEach(s => { if (this.state.solved[s.id]) { const r = this.REVEALS[s.id]; if (r && r.statements) r.statements.forEach((st, i) => { if (st.pid === pid) { const pi = 'a' + s.id + i; out.push({ text: st.text, secNum: s.num, secTitle: this.state.lang === 'ko' ? s.tKo : s.tEn, onSelect: (ev) => this.onStmtSelect(pid, pi, ev), showTb: !!sel && sel.pid === pid && sel.pi === pi, tbStyle: sel ? { position: 'absolute', left: sel.left + 'px', top: sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {} }); } }); } });
+    this.SECTIONS.forEach(s => { if (this.state.solved[s.id]) { const r = this.REVEALS[s.id]; if (r && r.statements) r.statements.forEach((st, i) => { if (st.pid === pid) { const pi = 'a' + s.id + i; out.push({ text: st.text, secNum: s.num, secTitle: this.state.lang === 'ko' ? s.tKo : s.tEn, onSelect: (ev) => this.onStmtSelect(pid, pi, ev), showTb: !!sel && sel.pid === pid && sel.pi === pi, tbStyle: sel ? { position: 'absolute', left: sel.left + 'px', top: sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {} }); } }); } });
     return out;
   }
   revealedTargets() {
@@ -2546,9 +2546,9 @@ export default class App extends React.Component {
     const isFilled = editable && val != null;
     const isLocked = !editable && val != null;
     const disp = val != null ? (val + this.particle(val, def.par)) : '';
-    const emptyStyle = { display: 'inline-block', minWidth: '58px', textAlign: 'center', borderBottom: '1.5px dashed var(--g-empty-line)', color: 'var(--fg-4)', padding: '0 9px 2px', margin: '0 1px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, borderRadius: '4px 4px 0 0' };
-    const fillStyle = { display: 'inline-block', background: 'var(--g-fill-bg)', color: 'var(--g-fill-fg)', fontWeight: 600, padding: '1px 9px', margin: '0 1px', borderRadius: 'var(--r-sm)', cursor: 'pointer', border: '1px solid transparent' };
-    const lockStyle = { display: 'inline-block', background: 'var(--bg-elevated-2)', color: 'var(--fg)', fontWeight: 600, padding: '1px 9px', margin: '0 1px', borderRadius: 'var(--r-sm)' };
+    const emptyStyle = { display: 'inline-block', minWidth: '58px', textAlign: 'center', borderBottom: '1.5px dashed var(--g-empty-line)', color: 'var(--fg-4)', padding: '0 8px 2px', margin: '0 1px', cursor: 'pointer', fontSize: '12px', fontWeight: 500, borderRadius: '4px 4px 0 0' };
+    const fillStyle = { display: 'inline-block', background: 'var(--g-fill-bg)', color: 'var(--g-fill-fg)', fontWeight: 600, padding: '1px 8px', margin: '0 1px', borderRadius: 'var(--r-sm)', cursor: 'pointer', border: '1px solid transparent' };
+    const lockStyle = { display: 'inline-block', background: 'var(--bg-elevated-2)', color: 'var(--fg)', fontWeight: 600, padding: '1px 8px', margin: '0 1px', borderRadius: 'var(--r-sm)' };
     let options = [], isWord = false, optionsEmpty = false, pickHead = t.pickList;
     if (def.src === 'collected') {
       isWord = true; pickHead = t.pickWord;
@@ -2576,8 +2576,8 @@ export default class App extends React.Component {
       const collapsed = complete && !expanded;
       const filled = this.SEC_BLANKS[sec.id].filter(id => s.blanks[id] != null).length;
       const total = this.SEC_BLANKS[sec.id].length;
-      const chipStyle = { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' };
-      const card = { border: '1px solid ' + (locked || complete ? 'var(--border)' : 'var(--border-strong)'), borderRadius: 'var(--r-md)', padding: (locked || collapsed) ? '13px 18px' : '18px 20px', marginBottom: '10px', background: 'transparent', opacity: locked ? 0.6 : 1, transition: 'background .3s var(--ease)' };
+      const chipStyle = { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' };
+      const card = { border: '1px solid ' + (locked || complete ? 'var(--border)' : 'var(--border-strong)'), borderRadius: 'var(--r-md)', padding: (locked || collapsed) ? '12px 20px' : '20px 20px', marginBottom: '12px', background: 'transparent', opacity: locked ? 0.6 : 1, transition: 'background .3s var(--ease)' };
       return {
         id: sec.id, locked: locked, notLocked: !locked, complete: complete, open: open, reopenActive: reopenActive,
         expanded: expanded, collapsed: collapsed, showChevron: complete, chevronDown: expanded,
@@ -2703,10 +2703,10 @@ export default class App extends React.Component {
         stroke: e.danger ? 'var(--g-contradict)' : 'var(--border-strong)', width: e.danger ? 0.5 : 0.35 };
     });
     let alibi = { show: false };
-    if (sel.length === 2) { const status = this.invStatusFor('alibi', sel); alibi = { show: true, names: sel.map(id => this.pname(id)).join(' · '), status: status, disabled: status !== 'ok', hint: status === 'used' ? t.invDone : status === 'nobudget' ? t.reasonBudget : '', onRun: () => this.askInvestigate('alibi', sel), onClear: () => this.setState({ graphSel: [] }), runStyle: { display: 'inline-flex', alignItems: 'center', height: '30px', padding: '0 14px', borderRadius: 'var(--r-sm)', border: 'none', cursor: status === 'ok' ? 'pointer' : 'not-allowed', font: '600 12px var(--font-sans)', background: status === 'ok' ? 'var(--accent)' : 'var(--bg-elevated-2)', color: status === 'ok' ? '#0A0A0B' : 'var(--fg-4)' } }; }
+    if (sel.length === 2) { const status = this.invStatusFor('alibi', sel); alibi = { show: true, names: sel.map(id => this.pname(id)).join(' · '), status: status, disabled: status !== 'ok', hint: status === 'used' ? t.invDone : status === 'nobudget' ? t.reasonBudget : '', onRun: () => this.askInvestigate('alibi', sel), onClear: () => this.setState({ graphSel: [] }), runStyle: { display: 'inline-flex', alignItems: 'center', height: '30px', padding: '0 16px', borderRadius: 'var(--r-sm)', border: 'none', cursor: status === 'ok' ? 'pointer' : 'not-allowed', font: '600 12px var(--font-sans)', background: status === 'ok' ? 'var(--accent)' : 'var(--bg-elevated-2)', color: status === 'ok' ? '#0A0A0B' : 'var(--fg-4)' } }; }
     return { nodes, edges, alibi, legendPerson: ln === 'ko' ? '용의자' : 'Suspects', legendSecret: ln === 'ko' ? '드러난 사건' : 'Revealed', legendEvidence: ln === 'ko' ? '확보 물증' : 'Evidence', hint: ln === 'ko' ? '두 용의자를 선택해 알리바이를 대조하세요. 조사·항 완성으로 관계가 드러납니다.' : 'Select two suspects to cross-check alibis. Relationships surface as you investigate.', selCount: sel.length };
   }
-  segTab(active) { return { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '12px', fontWeight: active ? 600 : 500, color: active ? 'var(--fg)' : 'var(--fg-3)', background: active ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' }; }
+  segTab(active) { return { flex: 1, textAlign: 'center', padding: '8px 4px', fontSize: '12px', fontWeight: active ? 600 : 500, color: active ? 'var(--fg)' : 'var(--fg-3)', background: active ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' }; }
   GEO = {
     vb: { w: 1000, h: 625 },
     scale: { x: 96, len: 90, y: 585 },
@@ -2939,9 +2939,9 @@ export default class App extends React.Component {
         onSearch: searchable ? (() => this.askInvestigate('search', [a.loc])) : (() => {}),
         isNew: !!gatedNew, revealNote: gatedNew ? (ln === 'ko' ? '1장 완성으로 공개' : 'Revealed · sec 1') : '',
         statusLabel: found ? (ln === 'ko' ? '물증' : 'Found') : searched ? (ln === 'ko' ? '빈손' : 'Empty') : (ln === 'ko' ? '미조사' : 'Unsearched'),
-        statusStyle: { fontSize: '9px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 5px' },
+        statusStyle: { fontSize: '9px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 4px' },
         clues: cluesByLoc[a.loc] || [], hasClues: (cluesByLoc[a.loc] || []).length > 0,
-        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: '8px 10px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
+        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
       };
     });
 
@@ -2970,7 +2970,7 @@ export default class App extends React.Component {
     });
 
     const times = this.TIMES.map(tm => ({ id: tm.id, label: ln === 'ko' ? tm.ko : tm.en, active: tm.id === tsel, onClick: () => this.setState({ mapTime: tm.id }),
-      style: { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '12px', fontWeight: tm.id === tsel ? 600 : 500, color: tm.id === tsel ? 'var(--fg)' : 'var(--fg-3)', background: tm.id === tsel ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' } }));
+      style: { flex: 1, textAlign: 'center', padding: '8px 4px', fontSize: '12px', fontWeight: tm.id === tsel ? 600 : 500, color: tm.id === tsel ? 'var(--fg)' : 'var(--fg-3)', background: tm.id === tsel ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' } }));
     const dotLegend = this.PEOPLE.map(p => ({ name: p.name, color: p.color }));
     const hasAnyClue = Object.keys(cluesByLoc).length > 0;
     const scrubHint = ln === 'ko' ? '시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.' : 'Scrub time to move each person to their claimed position. The map does not judge.';
@@ -2997,7 +2997,7 @@ export default class App extends React.Component {
     const base = { label: t[def.kind], candType };
     const b = this.buildBlank(bid), filled = val != null, disp = filled ? (val + this.particle(val, def.par)) : '';
     return Object.assign(base, { open: true, filled, triggerText: filled ? disp : t.listFill,
-      triggerStyle: { cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: filled ? 'var(--g-fill-fg)' : 'var(--fg-4)', background: filled ? 'var(--g-fill-bg)' : 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-sm)', padding: '3px 12px', minWidth: '84px', textAlign: 'center' },
+      triggerStyle: { cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: filled ? 'var(--g-fill-fg)' : 'var(--fg-4)', background: filled ? 'var(--g-fill-bg)' : 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-sm)', padding: '4px 12px', minWidth: '84px', textAlign: 'center' },
       onOpen: b.onOpen, pickerOpen: b.pickerOpen, options: b.options, optionsEmpty: b.optionsEmpty, pickHead: b.pickHead, canClear: b.canClear, onClear: b.onClear });
   }
   buildBank() {
@@ -3007,7 +3007,7 @@ export default class App extends React.Component {
     return {
       showEmpty: words.length === 0,
       words: words.map(w => ({ label: w, iconPath: this.termIconPath(w), onOpen: () => this.openTerm(w), style: {
-        display: 'inline-flex', alignItems: 'center', gap: '6px', height: '26px', padding: '0 11px', borderRadius: 'var(--r-pill)', cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', gap: '8px', height: '26px', padding: '0 12px', borderRadius: 'var(--r-pill)', cursor: 'pointer',
         border: '1px solid var(--border-strong)', fontSize: '12px', fontWeight: 500,
         background: used(w) ? 'var(--accent-soft)' : 'var(--bg-elevated)',
         color: used(w) ? 'var(--accent)' : 'var(--fg-2)',
@@ -3067,7 +3067,7 @@ export default class App extends React.Component {
       onClick: () => this.setState({ mapTime: tm.id }),
       labelStyle: { color: 'var(--fg-2)', fontWeight: 600 },
       // 빠진 칸은 강조도 같이 빠진다 — 산장은 창이 하나뿐이라 `stillWindow` = `tm.window`
-      headStyle: { flex: 1, minWidth: '130px', padding: '9px 12px', display: 'flex', flexDirection: 'column', gap: '2px', borderLeft: '1px solid var(--border)', background: stillWindow(tm) ? 'rgba(255,255,255,.02)' : 'transparent' },
+      headStyle: { flex: 1, minWidth: '130px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '2px', borderLeft: '1px solid var(--border)', background: stillWindow(tm) ? 'rgba(255,255,255,.02)' : 'transparent' },
     }); });
     const rows = this.PEOPLE.map(p => {
       const cells = this.TIMES.map((tm, ti) => {
@@ -3079,7 +3079,7 @@ export default class App extends React.Component {
         const isNew = rc ? rc.isNew : false;
         const mk = marks[key] || null;
         const autoShow = false;
-        const base = { position: 'relative', flex: 1, minWidth: '130px', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid var(--border)', minHeight: '46px', cursor: has ? 'pointer' : 'default' };
+        const base = { position: 'relative', flex: 1, minWidth: '130px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '1px solid var(--border)', minHeight: '46px', cursor: has ? 'pointer' : 'default' };
         if (tm.window) base.background = sort ? 'rgba(76,141,255,.06)' : 'var(--bg-subtle)';
         if (mk) { base.background = mk === 'confirm' ? 'rgba(76,183,130,.16)' : mk === 'suspect' ? 'rgba(242,201,76,.16)' : 'rgba(235,87,87,.16)'; }
         const stackStyle = Object.assign({}, base, { flex: 1, minWidth: 0, borderLeft: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', minHeight: '36px' });
@@ -3150,7 +3150,7 @@ export default class App extends React.Component {
     const marks = (this.state.hls || []).filter(h => h.pid === pid && h.pi === pi).sort((a, b) => a.start - b.start);
     if (!marks.length) return [{ text, style: {} }];
     const out = []; let cur = 0;
-    marks.forEach(m => { const s = Math.max(cur, m.start); if (s > cur) out.push({ text: text.slice(cur, s), style: {} }); if (m.end > s) out.push({ text: text.slice(s, m.end), style: { background: mbg[m.mark], boxShadow: 'inset 0 -2px 0 ' + mc[m.mark], borderRadius: '2px', padding: '0.5px 0' } }); cur = Math.max(cur, m.end); });
+    marks.forEach(m => { const s = Math.max(cur, m.start); if (s > cur) out.push({ text: text.slice(cur, s), style: {} }); if (m.end > s) out.push({ text: text.slice(s, m.end), style: { background: mbg[m.mark], boxShadow: 'inset 0 -2px 0 ' + mc[m.mark], borderRadius: '2px', padding: '0.4px 0' } }); cur = Math.max(cur, m.end); });
     if (cur < text.length) out.push({ text: text.slice(cur), style: {} });
     return out;
   }
@@ -3182,7 +3182,7 @@ export default class App extends React.Component {
    * 에러가 났다는 경고만 찍혀서 빈 화면 말고는 단서가 없다.
    */
   relChip(kind) {
-    const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:var(--r-pill);padding:5px 12px;flex:none;white-space:nowrap;';
+    const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:var(--r-pill);padding:4px 12px;flex:none;white-space:nowrap;';
     if (kind === 'onsite') return S(base + 'color:var(--label-orange);background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)');
     if (kind === 'absent') return S(base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)');
     return S(base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)');
@@ -3217,13 +3217,13 @@ export default class App extends React.Component {
         meta: (ln === 'ko' ? (p.age + '세') : ('' + p.age)) + (this.roleOrJob(p) ? ' · ' + this.roleOrJob(p) : ''),
         expanded, collapsed: !expanded, onToggle: () => this.toggleExpand(p.id), chevronRot: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
         railNameColor: expanded ? p.color : 'var(--fg)',
-        railRowStyle: { display: 'flex', gap: '10px', alignItems: 'center', padding: '10px 10px', borderRadius: 'var(--r-sm)', cursor: 'pointer', background: expanded ? 'var(--bg-active)' : 'transparent' },
+        railRowStyle: { display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 12px', borderRadius: 'var(--r-sm)', cursor: 'pointer', background: expanded ? 'var(--bg-active)' : 'transparent' },
         preview: firstSent.length > 42 ? firstSent.slice(0, 42) + '…' : firstSent,
         paras: this.STMT[p.id].map((par, pi) => ({
           pi, segs: this.segsFor(p.id, pi, par),
           onSelect: (ev) => this.onStmtSelect(p.id, pi, ev),
           showTb: !!sel && sel.pid === p.id && sel.pi === pi,
-          tbStyle: sel ? { position: 'absolute', left: sel.left + 'px', top: sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {},
+          tbStyle: sel ? { position: 'absolute', left: sel.left + 'px', top: sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {},
         })),
         added: this.addedStatements(p.id),
       };
@@ -3356,7 +3356,7 @@ export default class App extends React.Component {
   }
   buildRightPanel() {
     const t = this.T(), ln = this.state.lang, v = this.state.rightView;
-    const tab = (id) => ({ active: v === id, onClick: () => this.setRightView(id), style: { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '11px', fontWeight: v === id ? 600 : 500, color: v === id ? 'var(--fg)' : 'var(--fg-3)', borderBottom: '2px solid ' + (v === id ? 'var(--accent)' : 'transparent'), cursor: 'pointer' } });
+    const tab = (id) => ({ active: v === id, onClick: () => this.setRightView(id), style: { flex: 1, textAlign: 'center', padding: '8px 4px', fontSize: '11px', fontWeight: v === id ? 600 : 500, color: v === id ? 'var(--fg)' : 'var(--fg-3)', borderBottom: '2px solid ' + (v === id ? 'var(--accent)' : 'transparent'), cursor: 'pointer' } });
     const ro = this.state.rightStmtOpen || {};
     const mcMap = { flag: 'var(--accent)', confirm: 'var(--g-confirm)', suspect: 'var(--g-suspect)', contradict: 'var(--g-contradict)' };
     const marksOnly = this.state.rightMarksOnly !== false;
@@ -3365,7 +3365,7 @@ export default class App extends React.Component {
     return { statements: stmts, invLog: inv.log, invEmpty: inv.emptyLog, memoRows: memo.rows, memoEmpty: memo.empty, onAddMemo: () => this.newMemo(),
       marksOnly, fullText: !marksOnly, onToggleMarksOnly: () => this.setState({ rightMarksOnly: !marksOnly }),
       marksToggleLabel: marksOnly ? t.marksOnly : t.fullText,
-      marksToggleStyle: { display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: 'var(--r-pill)', cursor: 'pointer', color: marksOnly ? 'var(--accent)' : 'var(--fg-3)', background: marksOnly ? 'var(--accent-soft)' : 'transparent', border: '1px solid ' + (marksOnly ? 'transparent' : 'var(--border-strong)') },
+      marksToggleStyle: { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '4px 8px', borderRadius: 'var(--r-pill)', cursor: 'pointer', color: marksOnly ? 'var(--accent)' : 'var(--fg-3)', background: marksOnly ? 'var(--accent-soft)' : 'transparent', border: '1px solid ' + (marksOnly ? 'transparent' : 'var(--border-strong)') },
       tabs: { statements: tab('statements'), invlog: tab('invlog'), memo: tab('memo') },
       showStatements: v === 'statements', showInvlog: v === 'invlog', showMemo: v === 'memo',
       labels: { statements: t.segOriginal, invlog: t.invLogTitle, memo: t.navMemo } };
@@ -3374,7 +3374,7 @@ export default class App extends React.Component {
     const t = this.T(), f = this.state.memoFilter || 'all', all = this.state.memos || [];
     const tmeta = { none: t.tgtNone, person: t.tgtPerson, statement: t.tgtStatement, evidence: t.tgtEvidence };
     const tc = { none: 'var(--fg-4)', person: 'var(--accent)', statement: 'var(--status-progress)', evidence: 'var(--g-confirm)' };
-    const chip = (active, color) => ({ display: 'inline-flex', alignItems: 'center', gap: '5px', height: '26px', padding: '0 10px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (active ? (color || 'var(--accent)') : 'var(--border-strong)'), background: active ? 'var(--accent-soft)' : 'transparent', color: active ? (color || 'var(--accent)') : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 });
+    const chip = (active, color) => ({ display: 'inline-flex', alignItems: 'center', gap: '4px', height: '26px', padding: '0 12px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (active ? (color || 'var(--accent)') : 'var(--border-strong)'), background: active ? 'var(--accent-soft)' : 'transparent', color: active ? (color || 'var(--accent)') : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 });
     const numOf = {}; all.forEach((m, i) => { numOf[m.id] = i + 1; });
     const layerMeta = { claim: { label: t.layerClaimShort, color: 'var(--status-progress)' }, fact: { label: t.layerFactShort, color: 'var(--g-confirm)' } };
     const q = (this.state.memoQuery || '').trim().toLowerCase();
@@ -3386,16 +3386,16 @@ export default class App extends React.Component {
     const rows = base.map(m => {
       const who = m.quotePid ? this.PEOPLE.find(x => x.id === m.quotePid) : null;
       const editing = this.state.editMemoId === m.id;
-      const pchip = (active, color) => ({ display: 'inline-flex', alignItems: 'center', gap: '5px', height: '24px', padding: '0 9px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (active ? color : 'var(--border-strong)'), background: active ? 'var(--accent-soft)' : 'transparent', color: active ? 'var(--fg)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 });
+      const pchip = (active, color) => ({ display: 'inline-flex', alignItems: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (active ? color : 'var(--border-strong)'), background: active ? 'var(--accent-soft)' : 'transparent', color: active ? 'var(--fg)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 });
       return { id: m.id, num: numOf[m.id], numLabel: '#' + numOf[m.id], quote: m.quote, hasQuote: !!m.quote, quoteWho: who ? who.name : '', content: m.content, hasContent: !!(m.content && m.content.trim()),
         editing, readMode: !editing, onEdit: () => this.editMemo(m.id), onLock: () => this.lockMemo(m.id),
         onContent: (e) => this.setMemoContent(m.id, e.target.value), onDel: () => this.delMemo(m.id), accent: tc[m.targetType] || 'var(--fg-4)',
         isPerson: m.targetType === 'person', isStatement: m.targetType === 'statement', isEvidence: m.targetType === 'evidence',
         saved: !!(m.content && m.content.trim()), savedLabel: t.memoSaved,
-        hasLayer: !!layerMeta[m.layer], layerLabel: (layerMeta[m.layer] || {}).label, layerStyle: { fontSize: '10px', fontWeight: 600, padding: '1px 7px', borderRadius: 'var(--r-pill)', border: '1px solid ' + ((layerMeta[m.layer] || {}).color || 'var(--border-strong)'), color: (layerMeta[m.layer] || {}).color || 'var(--fg-4)' },
+        hasLayer: !!layerMeta[m.layer], layerLabel: (layerMeta[m.layer] || {}).label, layerStyle: { fontSize: '10px', fontWeight: 600, padding: '1px 8px', borderRadius: 'var(--r-pill)', border: '1px solid ' + ((layerMeta[m.layer] || {}).color || 'var(--border-strong)'), color: (layerMeta[m.layer] || {}).color || 'var(--fg-4)' },
         pinned: !!((this.state.quotePins || {})[m.id]), onPin: () => { const pp = Object.assign({}, this.state.quotePins || {}); if (pp[m.id]) delete pp[m.id]; else pp[m.id] = true; this.setState({ quotePins: pp }); },
         pinLabel: (this.state.quotePins || {})[m.id] ? t.memoPinOn : t.memoPin,
-        pinStyle: { color: (this.state.quotePins || {})[m.id] ? 'var(--accent)' : 'var(--fg-4)', fontSize: '12px', marginRight: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' },
+        pinStyle: { color: (this.state.quotePins || {})[m.id] ? 'var(--accent)' : 'var(--fg-4)', fontSize: '12px', marginRight: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' },
         hasMeta: !!(m.timeKo || m.ctx), showMetaOnly: !(m.content && m.content.trim()) && !!(m.timeKo || m.ctx), metaText: [this.memoWhen(m), m.ctx].filter(Boolean).join(' · '),
         personChips: this.PEOPLE.map(p => ({ label: p.name, dot: { width: '8px', height: '8px', borderRadius: '2px', background: p.color, flex: 'none' }, onClick: () => this.setMemoTarget(m.id, 'person', p.id), style: pchip(m.targetId === p.id, p.color) })),
         stmtChips: this.PEOPLE.map(p => ({ label: p.name, dot: { width: '8px', height: '8px', borderRadius: '2px', background: p.color, flex: 'none' }, onClick: () => this.setMemoTarget(m.id, 'statement', p.id), style: pchip(m.targetId === p.id, 'var(--status-progress)') })),
@@ -3410,20 +3410,20 @@ export default class App extends React.Component {
 
   buildRef() {
     const t = this.T(), ln = this.state.lang;
-    const empty = { display: 'inline-block', minWidth: '58px', textAlign: 'center', borderBottom: '1.5px dashed var(--g-empty-line)', color: 'var(--fg-4)', padding: '0 9px 2px', fontSize: '12px', fontWeight: 500 };
-    const fill = { display: 'inline-block', background: 'var(--g-fill-bg)', color: 'var(--g-fill-fg)', fontWeight: 600, padding: '1px 9px', borderRadius: 'var(--r-sm)' };
-    const lock = { display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'var(--g-lock-bg)', color: 'var(--g-lock-fg)', fontWeight: 600, padding: '1px 9px 1px 7px', borderRadius: 'var(--r-sm)' };
+    const empty = { display: 'inline-block', minWidth: '58px', textAlign: 'center', borderBottom: '1.5px dashed var(--g-empty-line)', color: 'var(--fg-4)', padding: '0 8px 2px', fontSize: '12px', fontWeight: 500 };
+    const fill = { display: 'inline-block', background: 'var(--g-fill-bg)', color: 'var(--g-fill-fg)', fontWeight: 600, padding: '1px 8px', borderRadius: 'var(--r-sm)' };
+    const lock = { display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--g-lock-bg)', color: 'var(--g-lock-fg)', fontWeight: 600, padding: '1px 8px 1px 8px', borderRadius: 'var(--r-sm)' };
     const mc = { confirm: 'var(--g-confirm)', suspect: 'var(--g-suspect)', contradict: 'var(--g-contradict)' };
-    const cellBase = (c) => ({ display: 'flex', alignItems: 'center', gap: '7px', padding: '10px 12px', background: c ? (c === 'confirm' ? 'rgba(76,183,130,.1)' : c === 'suspect' ? 'rgba(242,201,76,.1)' : 'rgba(235,87,87,.1)') : 'var(--bg-subtle)', boxShadow: c ? 'inset 3px 0 0 ' + mc[c] : 'none', borderBottom: '1px solid var(--border)' });
+    const cellBase = (c) => ({ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 12px', background: c ? (c === 'confirm' ? 'rgba(76,183,130,.1)' : c === 'suspect' ? 'rgba(242,201,76,.1)' : 'rgba(235,87,87,.1)') : 'var(--bg-subtle)', boxShadow: c ? 'inset 3px 0 0 ' + mc[c] : 'none', borderBottom: '1px solid var(--border)' });
     return {
       blanks: [
         { pre: '증인은 ', word: t.kindPlace, post: '에서', style: empty, check: false, title: t.bsEmptyT, desc: t.bsEmptyD },
         { pre: '함께 온 ', word: '증인 A와', post: '', style: fill, check: false, title: t.bsFillT, desc: t.bsFillD },
       ],
       sections: [
-        { statusKey: 'backlog', title: ln === 'ko' ? '잠김' : 'Locked', chipLabel: t.secLockedShort, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' }, desc: (ln === 'ko' ? '앞 항을 완성해야 열린다. 항 번호만 보이고 제목·공란 라벨·본문은 가려진다.' : 'Opens only after the previous section is completed. Only the number shows; title, blank labels and prose are hidden.'), card: { border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', opacity: 0.7 } },
-        { statusKey: 'progress', title: ln === 'ko' ? '열림' : 'Open', chipLabel: t.secTodo, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' }, desc: (ln === 'ko' ? '현재 채우는 항. 공란을 눌러 입력하며, 완성 전까지 자유롭게 수정한다.' : 'The section being filled. Click a blank to enter; freely editable until complete.'), card: { border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '16px' } },
-        { statusKey: 'done', title: ln === 'ko' ? '완성' : 'Complete', chipLabel: t.secDone, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: 'var(--g-lock-bg)', color: 'var(--g-lock-mark)' }, desc: (ln === 'ko' ? '공란을 모두 채우면 자동으로 완성·잠기고 접힌다. 정답 여부는 알리지 않으며, 연동 정보가 공개된다. 항당 1회 재개봉해 다시 편집할 수 있고, 이미 공개된 정보는 회수되지 않는다.' : 'Auto-completes, locks and collapses when every blank is filled. Correctness is never revealed; linked info unlocks. Each section can be reopened once; revealed info is never taken back.'), card: { border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', background: 'rgba(76,183,130,.04)' } },
+        { statusKey: 'backlog', title: ln === 'ko' ? '잠김' : 'Locked', chipLabel: t.secLockedShort, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' }, desc: (ln === 'ko' ? '앞 항을 완성해야 열린다. 항 번호만 보이고 제목·공란 라벨·본문은 가려진다.' : 'Opens only after the previous section is completed. Only the number shows; title, blank labels and prose are hidden.'), card: { border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', opacity: 0.7 } },
+        { statusKey: 'progress', title: ln === 'ko' ? '열림' : 'Open', chipLabel: t.secTodo, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated-2)', color: 'var(--fg-4)' }, desc: (ln === 'ko' ? '현재 채우는 항. 공란을 눌러 입력하며, 완성 전까지 자유롭게 수정한다.' : 'The section being filled. Click a blank to enter; freely editable until complete.'), card: { border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', padding: '16px' } },
+        { statusKey: 'done', title: ln === 'ko' ? '완성' : 'Complete', chipLabel: t.secDone, chip: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: 'var(--g-lock-bg)', color: 'var(--g-lock-mark)' }, desc: (ln === 'ko' ? '공란을 모두 채우면 자동으로 완성·잠기고 접힌다. 정답 여부는 알리지 않으며, 연동 정보가 공개된다. 항당 1회 재개봉해 다시 편집할 수 있고, 이미 공개된 정보는 회수되지 않는다.' : 'Auto-completes, locks and collapses when every blank is filled. Correctness is never revealed; linked info unlocks. Each section can be reopened once; revealed info is never taken back.'), card: { border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', background: 'rgba(76,183,130,.04)' } },
       ],
       marks: [
         { icon: '\u2713', iconStyle: { color: mc.confirm, fontWeight: 700, fontSize: '13px' }, sample: ln === 'ko' ? '장소 갑 · 도착' : 'Place A · arrived', cell: cellBase('confirm'), title: t.markConfirm, desc: t.mkConfirmD, auto: false },
@@ -3498,8 +3498,8 @@ export default class App extends React.Component {
       isHome: isHome, isDetail: isDetail, home: this.buildHome(), detail: this.buildDetail(),
       prologParas: this.PROLOG.map((p, pi) => ({ text: p })), onPrologContinue: () => this.setState({ stage: 'brief' }),
       interlude: this.buildInterlude(),
-      ovQuote: { onSelect: (ev) => this.onStmtSelect('__prolog', 0, ev), showTb: !!s.sel && s.sel.pid === '__prolog', tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {} },
-      ovProse: this.PROLOG.map((par, pi) => ({ pi, segs: this.segsFor('__prolog', pi, par), onSelect: (ev) => this.onStmtSelect('__prolog', pi, ev), showTb: !!s.sel && s.sel.pid === '__prolog' && s.sel.pi === pi, tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-6px', zIndex: 41 } : {} })),
+      ovQuote: { onSelect: (ev) => this.onStmtSelect('__prolog', 0, ev), showTb: !!s.sel && s.sel.pid === '__prolog', tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {} },
+      ovProse: this.PROLOG.map((par, pi) => ({ pi, segs: this.segsFor('__prolog', pi, par), onSelect: (ev) => this.onStmtSelect('__prolog', pi, ev), showTb: !!s.sel && s.sel.pid === '__prolog' && s.sel.pi === pi, tbStyle: s.sel ? { position: 'absolute', left: s.sel.left + 'px', top: s.sel.top + 'px', transform: 'translate(-50%,-100%)', marginTop: '-8px', zIndex: 41 } : {} })),
       confirmAbandon: s.confirmAbandon, onAbandon: () => this.abandon(), onCancelAbandon: () => this.setState({ confirmAbandon: false }), onGoHome: () => this.goHome(), onAbandonReq: () => this.setState({ confirmAbandon: true }),
       dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 },
       roomBtnStyle: { flex: '0 0 auto', opacity: 0.4, pointerEvents: 'none' },
@@ -3537,7 +3537,7 @@ export default class App extends React.Component {
       moreOpen: s.moreOpen, onCloseMore: () => this.setState({ moreOpen: false }), stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
       stmt: { gridCls: segCls(s.stmtMode === 'grid'), origCls: segCls(s.stmtMode === 'original'), onGrid: () => this.setMode('grid'), onOriginal: () => this.setMode('original') },
       overview,
-      narrLayoutStyle: { display: 'flex', gap: '22px', padding: '22px 24px', flexDirection: s.isNarrow ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'center', maxWidth: '1120px', margin: '0 auto' },
+      narrLayoutStyle: { display: 'flex', gap: '24px', padding: '24px 24px', flexDirection: s.isNarrow ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'center', maxWidth: '1120px', margin: '0 auto' },
       bankStyle: { width: s.isNarrow ? '100%' : '292px', flex: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', position: s.isNarrow ? 'static' : 'sticky', top: '0', background: 'var(--bg-subtle)' },
       sections: this.buildSections(),
       narrProse: s.narrMode === 'prose', narrList: s.narrMode === 'list',
@@ -3548,7 +3548,7 @@ export default class App extends React.Component {
         author: ln === 'ko' ? '담당 수사관' : 'Lead investigator',
         statusLabel: solvedCount === this.SECTIONS.length ? (ln === 'ko' ? '작성 완료' : 'Complete') : (ln === 'ko' ? '작성 중' : 'In progress'),
         statusDone: solvedCount === this.SECTIONS.length,
-        statusChipStyle: { fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: 'var(--r-pill)', background: solvedCount === this.SECTIONS.length ? 'var(--g-lock-bg)' : 'var(--bg-elevated-2)', color: solvedCount === this.SECTIONS.length ? 'var(--g-lock-mark)' : 'var(--fg-3)' },
+        statusChipStyle: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: solvedCount === this.SECTIONS.length ? 'var(--g-lock-bg)' : 'var(--bg-elevated-2)', color: solvedCount === this.SECTIONS.length ? 'var(--g-lock-mark)' : 'var(--fg-3)' },
         fields: [
           { k: ln === 'ko' ? '사건번호' : 'Case no.', v: 'CASE-001' },
           { k: ln === 'ko' ? '대상' : 'Subject', v: this.VICTIM_LINE ? (ln === 'ko' ? this.VICTIM_LINE.ko : this.VICTIM_LINE.en) : (ln === 'ko' ? '윤다인 (30) · 소설가' : 'Kim Chae-won (30) · Novelist') },
@@ -3630,7 +3630,7 @@ export default class App extends React.Component {
       quotePickerOpen: !!s.quotePicker, quotePicker: (() => { const p = s.quotePins || {}; const ms = s.memos || []; const numOf = {}; ms.forEach((m, i) => { numOf[m.id] = i + 1; }); return ms.filter(m => p[m.id]).map(m => ({ num: '#' + numOf[m.id], excerpt: (((m.content || m.quote || '').split('\n')[0]) || ('메모 ' + numOf[m.id])).slice(0, 40), onPick: () => this.appendQuote(m.id, s.quotePicker) })); })(),
       onQuotePickNew: () => this.newMemoFromQuote(s.quotePicker), onQuotePickCancel: () => this.setState({ quotePicker: null }), stopModal: (e) => { try { e.stopPropagation(); } catch (x) {} },
       status: { budget: (this.BUDGET - this.invSpent()) + ' / ' + this.BUDGET, diff: this.DIFF },
-      gridSort: { on: false, onToggle: () => {}, chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '6px', height: '26px', padding: '0 10px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--border-strong)'), background: s.viewOpts.timelineSort ? 'var(--accent-soft)' : 'transparent', color: s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 } },
+      gridSort: { on: false, onToggle: () => {}, chipStyle: { display: 'inline-flex', alignItems: 'center', gap: '8px', height: '26px', padding: '0 12px', borderRadius: 'var(--r-pill)', border: '1px solid ' + (s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--border-strong)'), background: s.viewOpts.timelineSort ? 'var(--accent-soft)' : 'transparent', color: s.viewOpts.timelineSort ? 'var(--accent)' : 'var(--fg-3)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 } },
       langSeg: { koCls: 'seg' + (ln === 'ko' ? ' active' : ''), enCls: 'seg' + (ln === 'en' ? ' active' : ''), stKo: 'st' + (ln === 'ko' ? ' active' : ''), stEn: 'st' + (ln === 'en' ? ' active' : ''), onKo: () => this.setLang('ko'), onEn: () => this.setLang('en') },
       themeSeg: { stDark: 'st' + (s.theme === 'dark' ? ' active' : ''), stLight: 'st' + (s.theme === 'light' ? ' active' : ''), onDark: () => { if (s.theme !== 'dark') this.toggleTheme(); }, onLight: () => { if (s.theme !== 'light') this.toggleTheme(); } },
       onToggleTheme: () => this.toggleTheme(), themeGlyph: s.theme === 'dark' ? '\u25D1' : '\u25D0',
@@ -3673,15 +3673,15 @@ export default class App extends React.Component {
                     </svg>
                     {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${w.mx}%;top:${w.my}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px`)}>{w.label}</span></React.Fragment>))}
                     {arr(V.floor.locs).map((l,$index)=>(<React.Fragment key={$index}><div style={l.boxStyle} onClick={l.onSearch}>
-                      <div style={S("display:flex;align-items:center;gap:6px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
-                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:6px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
+                      <div style={S("display:flex;align-items:center;gap:8px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 4px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
+                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:6px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 8px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
                     </div></React.Fragment>))}
-                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
+                    {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
                     {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span style={f.labelStyle}>{f.name}</span></React.Fragment>))}
                     {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span title={pm.name} style={pm.style}></span></React.Fragment>))}
                     {arr(V.floor.personMarkers).map((pm,$index)=>(<React.Fragment key={$index}><span style={pm.labelStyle}>{pm.name}</span></React.Fragment>))}
-                    {arr(V.floor.doorLabels).map((dr,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${dr.left}%;top:${dr.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--fg-3);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{dr.label}</span></React.Fragment>))}
-                    {arr(V.floor.winLabels).map((wl,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${wl.left}%;top:${wl.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--accent);background:var(--bg-subtle);padding:0 3px;z-index:5`)}>{wl.label}</span></React.Fragment>))}
+                    {arr(V.floor.doorLabels).map((dr,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${dr.left}%;top:${dr.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--fg-3);background:var(--bg-subtle);padding:0 4px;z-index:5`)}>{dr.label}</span></React.Fragment>))}
+                    {arr(V.floor.winLabels).map((wl,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${wl.left}%;top:${wl.top}%;transform:translate(-50%,-50%);font-size:9px;font-weight:600;color:var(--accent);background:var(--bg-subtle);padding:0 4px;z-index:5`)}>{wl.label}</span></React.Fragment>))}
                     <span style={S(`position:absolute;left:${V.floor.scaleLabel.left}%;top:${V.floor.scaleLabel.top}%;font-size:10px;color:var(--fg-4);z-index:5`)}>{V.floor.scaleText}</span>
                   </div>
     )
@@ -3701,16 +3701,16 @@ export default class App extends React.Component {
     return (
                     <div style={S("overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-md)")}>
                       <div style={S("display:flex;min-width:720px;background:var(--bg-subtle);border-bottom:1px solid var(--border)")}>
-                        <div style={S("width:184px;flex:none;padding:9px 14px;position:sticky;left:0;background:var(--bg-subtle);z-index:3;border-right:1px solid var(--border)")}><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridPersonCol}</span></div>
+                        <div style={S("width:184px;flex:none;padding:8px 16px;position:sticky;left:0;background:var(--bg-subtle);z-index:3;border-right:1px solid var(--border)")}><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridPersonCol}</span></div>
                         {arr(V.grid.times).map((tm,$index)=>(<React.Fragment key={$index}><div style={tm.headStyle}><span className="v-ui" style={tm.labelStyle}>{tm.label}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{tm.sub}</span></div></React.Fragment>))}
                       </div>
                       {arr(V.grid.rows).map((row,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;min-width:720px;border-bottom:1px solid var(--border)")}>
-                        <div style={S("width:184px;flex:none;display:flex;align-items:center;gap:9px;padding:0 14px;position:sticky;left:0;background:var(--bg-app);z-index:2;border-right:1px solid var(--border)")}><span style={S(`width:3px;align-self:stretch;background:${row.p.color};flex:none`)}></span>
+                        <div style={S("width:184px;flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;position:sticky;left:0;background:var(--bg-app);z-index:2;border-right:1px solid var(--border)")}><span style={S(`width:3px;align-self:stretch;background:${row.p.color};flex:none`)}></span>
                           <span style={row.p.avStyle}>{row.p.ini}</span>
                           <span style={S("display:flex;flex-direction:column;min-width:0")}><span className="v-ui" style={S("color:var(--fg);white-space:nowrap")}>{row.p.name}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{row.p.meta}</span></span>
                         </div>
                         {arr(row.cells).map((cell,$index)=>(<React.Fragment key={$index}><div className="g-cell" style={cell.style} onClick={cell.onClick}>
-                          {(cell.hasClaim)?(<><span className="g-cell-hoverable" style={cell.labelStyle}>{cell.label}</span>{(cell.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 5px;margin-left:auto")}>{V.ui.newBadge}</span></>):null}{(cell.marked)?(<><span style={cell.markDotStyle}></span></>):null}</>):null}
+                          {(cell.hasClaim)?(<><span className="g-cell-hoverable" style={cell.labelStyle}>{cell.label}</span>{(cell.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 4px;margin-left:auto")}>{V.ui.newBadge}</span></>):null}{(cell.marked)?(<><span style={cell.markDotStyle}></span></>):null}</>):null}
                           {(cell.empty)?(<><span style={S("color:var(--fg-4)")}>{V.ui.noClaim}</span></>):null}
                           {(cell.pickerOpen)?(<><div className="g-picker" style={cell.pickerStyle}>{arr(cell.opts).map((mo,$index)=>(<React.Fragment key={$index}><span onClick={mo.onPick} title={mo.label} style={mo.chipStyle}><span style={mo.dot}></span></span></React.Fragment>))}</div></>):null}
                         </div></React.Fragment>))}
@@ -3777,44 +3777,44 @@ export default class App extends React.Component {
                 <button className="iconbtn" onClick={V.shell.onToggleLeft} title={V.ui.toggleLeft}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="7" y1="3.6" x2="7" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="2.8" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button>
               </div>
               <div className="nav">
-                <div className="nav-item" {...press(V.onGoHome, null, V.ui.goHome)}><svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 7l5-4 5 4v6H3z" /></svg><span>{V.ui.goHome}</span></div>
+                <div className="nav-item" {...press(V.onGoHome, null, V.ui.goHome)}><svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 7l5-4 5 4v6H3z" /></svg><span>{V.ui.goHome}</span></div>
                 <div className="nav-caption">{V.ui.navCase}</div>
                 <div className={V.nav.overviewCls} {...press(V.nav.onOverview, V.nav.overviewCls, V.ui.navOverview)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></svg>
                   <span>{V.ui.navOverview}</span>{(V.nav.overviewUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.narrCls} {...press(V.nav.onNarr, V.nav.narrCls, V.ui.navNarrative)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></svg>
                   <span>{V.ui.navNarrative}</span>{(V.nav.narrUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}<span className="count">{V.nav.narrProgress}</span>
                 </div>
                 <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navClue}</div>
                 <div className={V.nav.stmtCls} {...press(V.nav.onStmt, V.nav.stmtCls, V.ui.navStatements)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></svg>
                   <span>{V.ui.navStatements}</span>{(V.nav.stmtUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.profileCls} {...press(V.nav.onProfile, V.nav.profileCls, V.ui.navProfile)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></svg>
                   <span>{V.ui.navProfile}</span>
                 </div>
                 <div className={V.nav.mapCls} {...press(V.nav.onMap, V.nav.mapCls, V.ui.navMap)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></svg>
                   <span>{V.ui.navMap}</span>{(V.nav.mapUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.graphCls} {...press(V.nav.onGraph, V.nav.graphCls, V.ui.navGraph)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" /><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" /><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4" /></svg>
                   <span>{V.ui.navGraph}</span>
                 </div>
                 <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navTool}</div>
                 <div className={V.nav.logCls} {...press(V.nav.onLog, V.nav.logCls, V.ui.invLogTitle)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                   <span>{V.ui.invLogTitle}</span><span className="count">{V.nav.logBadge}</span>
                 </div>
                 <div className={V.nav.memoCls} {...press(V.nav.onMemo, V.nav.memoCls, V.ui.navMemo)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
                   <span>{V.ui.navMemo}</span><span className="count">{V.nav.memoBadge}</span>
                 </div>
                 <div className={V.nav.refCls} {...press(V.nav.onRef, V.nav.refCls, V.ui.navReference)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="11" height="4" rx="1" /><rect x="2.5" y="9.5" width="11" height="4" rx="1" /></svg>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2.5" y="2.5" width="11" height="4" rx="1" /><rect x="2.5" y="9.5" width="11" height="4" rx="1" /></svg>
                   <span>{V.ui.navReference}</span>
                 </div>
               </div>
@@ -3831,7 +3831,7 @@ export default class App extends React.Component {
 
           <div className="main" style={S("position:relative")}>
             {(V.isNarrow)?(<>
-              <div className="tabbar" style={S("justify-content:space-between;padding:0 10px;gap:8px")}>
+              <div className="tabbar" style={S("justify-content:space-between;padding:0 12px;gap:8px")}>
                 <div style={S("display:flex;align-items:center;gap:4px;min-width:0")}>
                   <button className="iconbtn" onClick={V.shell.onBack} title={V.ui.navBack} style={S(`${V.shell.backStyle};flex:none`)}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg></button>
                   <span className="v-ui" style={S("color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{V.ui.viewTitle}</span>
@@ -3839,7 +3839,7 @@ export default class App extends React.Component {
                 <div style={S("display:flex;align-items:center;gap:4px;flex:none")}>
                   <span className="v-num" style={S("font-size:12px;color:var(--fg-3);margin-right:2px;white-space:nowrap")}>{V.status.budget}</span>
                   <button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /></svg></button>
-                  <span className="g-settings" style={S("position:relative")}><button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
+                  <span className="g-settings" style={S("position:relative")}><button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
                   {(V.shell.settingsOpen)?(<><div className="panel" style={S("position:absolute;right:0;top:36px;width:220px;z-index:60")}><div className="panel-caption">{V.ui.language}</div><div className="seg-toggle"><span className={V.langSeg.stKo} onClick={V.langSeg.onKo}>한국어</span><span className={V.langSeg.stEn} onClick={V.langSeg.onEn}>EN</span></div><div className="panel-sep"></div><div className="panel-caption">{V.ui.themeLabel}</div><div className="seg-toggle"><span className={V.themeSeg.stDark} onClick={V.themeSeg.onDark}>{V.ui.themeDark}</span><span className={V.themeSeg.stLight} onClick={V.themeSeg.onLight}>{V.ui.themeLight}</span></div><div className="panel-sep"></div><div className="v-menu-item" onClick={V.onGoHome}>{V.ui.goHome}</div><div className="v-menu-item" onClick={V.onAbandonReq} style={S("color:var(--label-red)")}>{V.ui.abandon}</div></div></>):null}</span>
                 </div>
               </div>
@@ -3851,7 +3851,7 @@ export default class App extends React.Component {
               <span className="spacer"></span>
               <span className="toolbar-icons g-settings" style={S("position:relative")}>
                 {(V.isWide)?(<><button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="11.2" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button></>):null}
-                <button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
+                <button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
                 {(V.shell.settingsOpen)?(<>
                   <div className="panel" style={S("position:absolute;right:0;top:36px;width:220px;z-index:60")}>
                     <div className="panel-caption">{V.ui.language}</div>
@@ -3871,15 +3871,15 @@ export default class App extends React.Component {
                 <div style={V.narrLayoutStyle}>
                   <div style={S("flex:1;min-width:0;max-width:780px")}>
                     <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:18px")}>
-                      <div style={S("display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)")}>
-                        <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3" /></svg>
+                      <div style={S("display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)")}>
+                        <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3" /></svg>
                         <span className="v-ui" style={S("color:var(--fg);letter-spacing:.02em")}>{V.ui.nTitle}</span>
                         <span className="v-num" style={S("color:var(--fg-4);font-size:12px")}>{V.reportHead.caseNo}</span>
                         <span style={S("flex:1")}></span>
                         <span style={V.reportHead.statusChipStyle}>{V.reportHead.statusLabel}</span>
                       </div>
                       <div style={S("display:flex;flex-wrap:wrap")}>
-                        {arr(V.reportHead.fields).map((f,$index)=>(<React.Fragment key={$index}><div style={S("flex:1 1 33%;min-width:150px;padding:9px 16px;border-right:1px solid var(--border)")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px")}>{f.k}</div><div className="v-meta" style={S("color:var(--fg-2)")}>{f.v}</div></div></React.Fragment>))}
+                        {arr(V.reportHead.fields).map((f,$index)=>(<React.Fragment key={$index}><div style={S("flex:1 1 33%;min-width:150px;padding:8px 16px;border-right:1px solid var(--border)")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px")}>{f.k}</div><div className="v-meta" style={S("color:var(--fg-2)")}>{f.v}</div></div></React.Fragment>))}
                       </div>
                     </div>
                     {(V.finishCTA.show)?(<><div style={S("margin-bottom:16px")}><Button variant="primary" onClick={V.finishCTA.onFinish}>{V.ui.finishReport}</Button></div></>):null}
@@ -3887,17 +3887,17 @@ export default class App extends React.Component {
                     {arr(V.sections).map((sec,$index)=>(<React.Fragment key={$index}>
                       <div style={sec.cardStyle}>
                         {(sec.locked)?(<>
-                          <div style={S("display:flex;align-items:center;gap:10px")}>
+                          <div style={S("display:flex;align-items:center;gap:12px")}>
                             <span className="v-meta" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums;min-width:30px")}>{sec.numLabel}</span>
                             <span className="v-meta" style={S("color:var(--fg-4)")}>{sec.lockedHint}</span>
                             <span style={S("flex:1")}></span>
-                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.4"><rect x="3.5" y="7" width="9" height="6" rx="1"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2"></path></svg>
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6"><rect x="3.5" y="7" width="9" height="6" rx="1"></rect><path d="M5.5 7V5a2.5 2.5 0 015 0v2"></path></svg>
                           </div>
                         </>):null}
                         {(sec.notLocked)?(<>
-                          <div onClick={sec.onToggle} style={S(`display:flex;align-items:center;gap:10px;cursor:${sec.headerCursor}`)}>
-                            {(sec.collapsed)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={S("flex:none")}><path d="M6 4l4 4-4 4"></path></svg></>):null}
-                            {(sec.expanded)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.5" style={S("flex:none")}><path d="M4 6l4 4 4-4"></path></svg></>):null}
+                          <div onClick={sec.onToggle} style={S(`display:flex;align-items:center;gap:12px;cursor:${sec.headerCursor}`)}>
+                            {(sec.collapsed)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S("flex:none")}><path d="M6 4l4 4-4 4"></path></svg></>):null}
+                            {(sec.expanded)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6" style={S("flex:none")}><path d="M4 6l4 4 4-4"></path></svg></>):null}
                             {(sec.showStatusIcon)?(<><StatusIcon status={sec.statusKey} size="16"></StatusIcon></>):null}
                             <span className="v-meta" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{sec.numLabel}</span>
                             <span className="v-h3">{sec.title}</span>
@@ -3914,7 +3914,7 @@ export default class App extends React.Component {
                                   {(part.blank.isFilled)?(<><span className="g-blank-trigger" onClick={part.blank.onOpen} style={part.blank.fillStyle}>{part.blank.disp}</span></>):null}
                                   {(part.blank.isEmpty)?(<><span className="g-blank-trigger" onClick={part.blank.onOpen} style={part.blank.emptyStyle}>{part.blank.hint}</span></>):null}
                                   {(part.blank.pickerOpen)?(<><div className="v-menu g-picker" style={S("position:absolute;left:0;top:calc(100% + 4px);z-index:41;min-width:170px;max-height:260px;overflow:auto")}>
-                                    <div className="v-caption" style={S("padding:4px 8px 6px;color:var(--fg-4)")}>{part.blank.pickHead}</div>
+                                    <div className="v-caption" style={S("padding:4px 8px 8px;color:var(--fg-4)")}>{part.blank.pickHead}</div>
                                     {arr(part.blank.options).map((opt,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={opt.onPick}>{opt.label}</div></React.Fragment>))}
                                     {(part.blank.optionsEmpty)?(<><div className="v-meta" style={S("padding:8px;color:var(--fg-4);line-height:1.5")}>{V.ui.bankEmpty}</div></>):null}
                                     {(part.blank.canClear)?(<><div className="v-menu-item" onClick={part.blank.onClear} style={S("color:var(--fg-4);border-top:1px solid var(--border);margin-top:2px")}>{V.ui.clearBlank}</div></>):null}
@@ -3928,8 +3928,8 @@ export default class App extends React.Component {
                                 <span className="v-meta">{V.ui.secFillHint}</span>
                               </div>
                             </>):null}
-                            {(sec.showReopenBtn)?(<><div style={S("margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap")}><span className="linklike" onClick={sec.onReopen} style={S("display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--fg-2);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:5px 11px;cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 8a5 5 0 11-1.5-3.5M13 2v3h-3"></path></svg>{sec.reopenLabel}</span><span className="v-micro" style={S("color:var(--fg-4);line-height:1.5")}>{sec.reopenWarn}</span></div></>):null}
-                            {(sec.showCloseReopen)?(<><div style={S("margin-top:16px")}><span className="linklike" onClick={sec.onCloseReopen} style={S("display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7"></path></svg>{sec.closeReopenLabel}</span></div></>):null}
+                            {(sec.showReopenBtn)?(<><div style={S("margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap")}><span className="linklike" onClick={sec.onReopen} style={S("display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--fg-2);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:4px 12px;cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M13 8a5 5 0 11-1.5-3.5M13 2v3h-3"></path></svg>{sec.reopenLabel}</span><span className="v-micro" style={S("color:var(--fg-4);line-height:1.5")}>{sec.reopenWarn}</span></div></>):null}
+                            {(sec.showCloseReopen)?(<><div style={S("margin-top:16px")}><span className="linklike" onClick={sec.onCloseReopen} style={S("display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7"></path></svg>{sec.closeReopenLabel}</span></div></>):null}
                           </>):null}
                         </>):null}
                       </div>
@@ -3938,22 +3938,22 @@ export default class App extends React.Component {
                     {(V.narrList)?(<>
                     {arr(V.sections).map((sec,$index)=>(<React.Fragment key={$index}>
                       <div style={sec.cardStyle}>
-                        <div style={S("display:flex;align-items:center;gap:10px")}>
+                        <div style={S("display:flex;align-items:center;gap:12px")}>
                           <StatusIcon status={sec.statusKey} size="16"></StatusIcon>
                           <span className="v-meta" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{sec.numLabel}</span>
                           <span className="v-h3">{sec.title}</span>
                           <span style={S("flex:1")}></span>
                           <span style={sec.stateChipStyle}>{sec.stateLabel}</span>
                         </div>
-                        <div style={S("display:flex;flex-direction:column;gap:6px;margin-top:14px")}>
+                        <div style={S("display:flex;flex-direction:column;gap:8px;margin-top:14px")}>
                           {arr(sec.listBlanks).map((lb,$index)=>(<React.Fragment key={$index}>
-                            <div style={S("display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);position:relative")}>
+                            <div style={S("display:flex;align-items:center;gap:12px;padding:12px 12px;border:1px solid var(--border);border-radius:var(--r-sm);position:relative")}>
                               <span className="v-title" style={S("color:var(--fg-2);flex:1;min-width:0")}>{lb.label}</span>
                               <span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{lb.candType}</span>
                               {(lb.locked)?(<><span style={S("display:inline-flex;align-items:center;gap:4px;color:var(--g-lock-mark);font-weight:600;font-size:13px")}><span>✓</span>{lb.disp}</span></>):null}
                               {(lb.open)?(<><span className="g-blank-trigger" onClick={lb.onOpen} style={lb.triggerStyle}>{lb.triggerText}</span></>):null}
                               {(lb.unrevealed)?(<><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.listUnrev}</span></>):null}
-                              {(lb.pickerOpen)?(<><div className="v-menu g-picker" style={S("position:absolute;right:8px;top:calc(100% - 2px);z-index:41;min-width:150px;max-height:240px;overflow:auto")}><div className="v-caption" style={S("padding:4px 8px 6px;color:var(--fg-4)")}>{lb.pickHead}</div>{arr(lb.options).map((opt,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={opt.onPick}>{opt.label}</div></React.Fragment>))}{(lb.optionsEmpty)?(<><div className="v-meta" style={S("padding:8px;color:var(--fg-4)")}>{V.ui.bankEmpty}</div></>):null}{(lb.canClear)?(<><div className="v-menu-item" onClick={lb.onClear} style={S("color:var(--fg-4);border-top:1px solid var(--border);margin-top:2px")}>{V.ui.clearBlank}</div></>):null}</div></>):null}
+                              {(lb.pickerOpen)?(<><div className="v-menu g-picker" style={S("position:absolute;right:8px;top:calc(100% - 2px);z-index:41;min-width:150px;max-height:240px;overflow:auto")}><div className="v-caption" style={S("padding:4px 8px 8px;color:var(--fg-4)")}>{lb.pickHead}</div>{arr(lb.options).map((opt,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={opt.onPick}>{opt.label}</div></React.Fragment>))}{(lb.optionsEmpty)?(<><div className="v-meta" style={S("padding:8px;color:var(--fg-4)")}>{V.ui.bankEmpty}</div></>):null}{(lb.canClear)?(<><div className="v-menu-item" onClick={lb.onClear} style={S("color:var(--fg-4);border-top:1px solid var(--border);margin-top:2px")}>{V.ui.clearBlank}</div></>):null}</div></>):null}
                             </div>
                           </React.Fragment>))}
                         </div>
@@ -3969,14 +3969,14 @@ export default class App extends React.Component {
                   </div>
 
                   {(V.narrShowBank)?(<><div style={V.bankStyle}>
-                    <div style={S("display:flex;align-items:center;gap:6px;margin-bottom:6px")}>
-                      <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="4" width="11" height="8.5" rx="1.2" /><path d="M2.5 6.5h11" /></svg>
+                    <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}>
+                      <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6"><rect x="2.5" y="4" width="11" height="8.5" rx="1.2" /><path d="M2.5 6.5h11" /></svg>
                       <span className="v-caption" style={S("color:var(--fg-2)")}>{V.ui.bankTitle}</span>
                     </div>
                     <div className="v-micro" style={S("margin-bottom:14px;line-height:1.55;color:var(--fg-4)")}>{V.ui.bankHint}</div>
                     {(V.bank.showEmpty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-sm);padding:16px;color:var(--fg-4);font-size:12px;line-height:1.6;text-align:center")}>{V.ui.bankEmpty}</div></>):null}
-                    <div style={S("display:flex;flex-wrap:wrap;gap:7px")}>
-                      {arr(V.bank.words).map((w,$index)=>(<React.Fragment key={$index}><span className="g-word" onClick={w.onOpen} style={w.style}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={S("flex:none;opacity:.7")}><path d={w.iconPath}></path></svg>{w.label}</span></React.Fragment>))}
+                    <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                      {arr(V.bank.words).map((w,$index)=>(<React.Fragment key={$index}><span className="g-word" onClick={w.onOpen} style={w.style}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none;opacity:.7")}><path d={w.iconPath}></path></svg>{w.label}</span></React.Fragment>))}
                     </div>
                   </div></>):null}
                 </div>
@@ -3992,45 +3992,45 @@ export default class App extends React.Component {
                       <div style={S("flex:1;min-width:0")}><div style={S(`font-size:14.5px;font-weight:600;color:${st.railNameColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`)}>{st.name}</div><div style={S("font-size:12px;color:var(--fg-4);margin-top:2px")}>{st.relation}</div></div>
                       {(st.expanded)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none")}></span></>):null}
                     </div></React.Fragment>))}
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:12px;padding:0 8px;display:flex;align-items:center;gap:6px;line-height:1.5")}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={S("flex:none")}><path d="M2.5 5h7M2.5 8h11M2.5 11h9" /></svg>{V.ui.selectHint}</div>
+                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:12px;padding:0 8px;display:flex;align-items:center;gap:8px;line-height:1.5")}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><path d="M2.5 5h7M2.5 8h11M2.5 11h9" /></svg>{V.ui.selectHint}</div>
                   </div>
                   <div style={S("flex:1;min-width:0")}>
                     {arr(V.statements).map((st,$index)=>(<React.Fragment key={$index}><div style={S("border-top:1px solid var(--border)")}>
-                      <div onClick={st.onToggle} style={S("display:flex;align-items:center;gap:13px;padding:15px 4px;cursor:pointer")}>
+                      <div onClick={st.onToggle} style={S("display:flex;align-items:center;gap:12px;padding:16px 4px;cursor:pointer")}>
                         <span style={S(`width:3px;height:34px;background:${st.color};border-radius:2px;flex:none`)}></span>
                         <span style={st.avStyle}>{st.ini}</span>
-                        <div style={S("display:flex;flex-direction:column;gap:3px;min-width:150px;flex:none")}><span style={S("font-size:15px;font-weight:600;color:var(--fg)")}>{st.name}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{st.sexAge} · {st.job}</span></div>
+                        <div style={S("display:flex;flex-direction:column;gap:4px;min-width:150px;flex:none")}><span style={S("font-size:15px;font-weight:600;color:var(--fg)")}>{st.name}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{st.sexAge} · {st.job}</span></div>
                         <span style={st.relStyle}>{st.relation}</span>
                         {(st.collapsed)?(<><span className="v-meta" style={S("color:var(--fg-4);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{st.preview}</span></>):null}
                         <span style={S("flex:1")}></span>
-                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={S(`flex:none;transform:${st.chevronRot}`)}><path d="M5 6.5L8 9.5l3-3" /></svg>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S(`flex:none;transform:${st.chevronRot}`)}><path d="M5 6.5L8 9.5l3-3" /></svg>
                       </div>
-                      {(st.expanded)?(<><div style={S("padding:0 4px 22px 42px;max-width:52ch")}>
+                      {(st.expanded)?(<><div style={S("padding:0 4px 24px 44px;max-width:52ch")}>
                         {arr(st.paras).map((para,$index)=>(<React.Fragment key={$index}><div style={S("position:relative")}>
                           <p className="g-stmt-para" onMouseUp={para.onSelect} style={S("margin:0 0 1.4em;font-size:16px;line-height:1.85;color:var(--fg-2);text-wrap:pretty;cursor:text")}>{arr(para.segs).map((seg,$index)=>(<React.Fragment key={$index}><span style={seg.style}>{seg.text}</span></React.Fragment>))}</p>
                           {(para.showTb)?(<><span className="g-seltoolbar" style={para.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-md);box-shadow:var(--shadow-popover);padding:4px;white-space:nowrap")}>
-                            <span onClick={V.selTb.onFlag} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--accent)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--accent)")}></span>{V.ui.markFlag}</span>
-                            <span onClick={V.selTb.onConfirm} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-confirm)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
-                            <span onClick={V.selTb.onSuspect} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-suspect)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
-                            <span onClick={V.selTb.onContradict} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-contradict)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
+                            <span onClick={V.selTb.onFlag} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--accent)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--accent)")}></span>{V.ui.markFlag}</span>
+                            <span onClick={V.selTb.onConfirm} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-confirm)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
+                            <span onClick={V.selTb.onSuspect} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-suspect)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
+                            <span onClick={V.selTb.onContradict} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-contradict)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
                             <span onClick={V.selTb.onClear} title={V.ui.markClear} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-4);font-size:12px")}>✕</span>
                             <span style={S("width:1px;height:18px;background:var(--border-strong);margin:0 2px")}></span>
-                            <span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span>
-                            <span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span>
+                            <span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span>
+                            <span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span>
                           </span></span></>):null}
                         </div></React.Fragment>))}
-                        {arr(st.added).map((ad,$index)=>(<React.Fragment key={$index}><div style={S("margin-top:6px;padding:12px 14px;border-left:2px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;position:relative")}>
-                          <div style={S("display:flex;align-items:center;gap:6px;margin-bottom:5px")}><span style={S("font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em")}>{V.ui.addedStmt}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{ad.secNum}{V.ui.navCase} {ad.secTitle} · {V.ui.revealedBy}</span></div>
+                        {arr(st.added).map((ad,$index)=>(<React.Fragment key={$index}><div style={S("margin-top:6px;padding:12px 16px;border-left:2px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;position:relative")}>
+                          <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:5px")}><span style={S("font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em")}>{V.ui.addedStmt}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{ad.secNum}{V.ui.navCase} {ad.secTitle} · {V.ui.revealedBy}</span></div>
                           <p className="g-stmt-para" onMouseUp={ad.onSelect} style={S("margin:0;font-size:16px;line-height:1.85;color:var(--fg-2);text-wrap:pretty;cursor:text")}>{ad.text}</p>
-                          {(ad.showTb)?(<><span className="g-seltoolbar" style={ad.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:3px;box-shadow:var(--shadow-popover)")}>
-                            <span onClick={V.selTb.onFlag} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--accent)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--accent)")}></span>{V.ui.markFlag}</span>
-                            <span onClick={V.selTb.onConfirm} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-confirm)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
-                            <span onClick={V.selTb.onSuspect} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-suspect)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
-                            <span onClick={V.selTb.onContradict} style={S("display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-contradict)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
+                          {(ad.showTb)?(<><span className="g-seltoolbar" style={ad.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:4px;box-shadow:var(--shadow-popover)")}>
+                            <span onClick={V.selTb.onFlag} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--accent)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--accent)")}></span>{V.ui.markFlag}</span>
+                            <span onClick={V.selTb.onConfirm} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-confirm)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
+                            <span onClick={V.selTb.onSuspect} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-suspect)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
+                            <span onClick={V.selTb.onContradict} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--g-contradict)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
                             <span onClick={V.selTb.onClear} title={V.ui.markClear} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-4);font-size:12px")}>✕</span>
                             <span style={S("width:1px;height:18px;background:var(--border-strong);margin:0 2px")}></span>
-                            <span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span>
-                            <span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span>
+                            <span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span>
+                            <span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span>
                           </span></span></>):null}
                         </div></React.Fragment>))}
                       </div></>):null}
@@ -4041,37 +4041,37 @@ export default class App extends React.Component {
 
               
               {(V.isMemo)?(<>
-                <div style={S("padding:18px 20px;max-width:960px;margin:0 auto")}>
+                <div style={S("padding:20px 20px;max-width:960px;margin:0 auto")}>
                   <div style={S("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px")}>
-                    <div style={S("display:flex;gap:6px;flex-wrap:wrap")}>{arr(V.memo.filters).map((fl,$index)=>(<React.Fragment key={$index}><span onClick={fl.onClick} style={fl.style}>{fl.label}</span></React.Fragment>))}</div>
+                    <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>{arr(V.memo.filters).map((fl,$index)=>(<React.Fragment key={$index}><span onClick={fl.onClick} style={fl.style}>{fl.label}</span></React.Fragment>))}</div>
                     <span style={S("flex:1")}></span>
-                    <div style={S("display:flex;gap:6px")}>{arr(V.memo.sortOpts).map((so,$index)=>(<React.Fragment key={$index}><span onClick={so.onClick} style={so.style}>{so.label}</span></React.Fragment>))}</div>
+                    <div style={S("display:flex;gap:8px")}>{arr(V.memo.sortOpts).map((so,$index)=>(<React.Fragment key={$index}><span onClick={so.onClick} style={so.style}>{so.label}</span></React.Fragment>))}</div>
                     <Button variant="ghost" onClick={V.memo.onNew}>＋ {V.ui.memoNew}</Button>
                   </div>
                   <div style={S("position:relative;margin-bottom:14px")}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.4" style={S("position:absolute;left:11px;top:50%;transform:translateY(-50%)")}><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5l3 3"></path></svg>
-                    <input value={V.memo.query} onInput={V.memo.onQuery} placeholder={V.ui.memoSearchPh} style={S("width:100%;box-sizing:border-box;height:34px;padding:0 12px 0 33px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--fg);font:400 13px var(--font-sans);outline:none")} />
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S("position:absolute;left:11px;top:50%;transform:translateY(-50%)")}><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5l3 3"></path></svg>
+                    <input value={V.memo.query} onInput={V.memo.onQuery} placeholder={V.ui.memoSearchPh} style={S("width:100%;box-sizing:border-box;height:34px;padding:0 12px 0 32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--fg);font:400 13px var(--font-sans);outline:none")} />
                   </div>
-                  {(V.memo.searchEmpty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:26px;text-align:center;color:var(--fg-4);font-size:12px")}>{V.ui.memoSearchEmpty}</div></>):null}
-                  {(V.memo.empty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:26px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.memoEmpty}</div></>):null}
+                  {(V.memo.searchEmpty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:28px;text-align:center;color:var(--fg-4);font-size:12px")}>{V.ui.memoSearchEmpty}</div></>):null}
+                  {(V.memo.empty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:28px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.memoEmpty}</div></>):null}
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start")}>
-                    {arr(V.memo.rows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;position:relative")}>
+                    {arr(V.memo.rows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px;position:relative")}>
                       <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${mo.accent}`)}></div>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span className="v-num" style={S("color:var(--fg-4);font-size:12px;font-weight:600")}>{mo.numLabel}</span>{(mo.hasLayer)?(<><span style={mo.layerStyle}>{mo.layerLabel}</span></>):null}<span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onPin} style={mo.pinStyle}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 2v6 M5 5l3-3 3 3 M4 13h8" /></svg>{mo.pinLabel}</span><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:12px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span className="v-num" style={S("color:var(--fg-4);font-size:12px;font-weight:600")}>{mo.numLabel}</span>{(mo.hasLayer)?(<><span style={mo.layerStyle}>{mo.layerLabel}</span></>):null}<span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onPin} style={mo.pinStyle}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 2v6 M5 5l3-3 3 3 M4 13h8" /></svg>{mo.pinLabel}</span><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:12px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
                       {(mo.hasQuote)?(<><div style={S("display:flex;gap:8px;margin-bottom:10px")}><span style={S("color:var(--fg-4);font-size:18px;line-height:1")}>“</span><div style={S("min-width:0")}><div className="v-meta" style={S("color:var(--fg-2);font-style:italic;line-height:1.6")}>{mo.quote}</div>{(mo.quoteWho)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:3px")}>— {mo.quoteWho} · {V.ui.quotedFrom}</div></>):null}</div></div></>):null}
                       {(mo.editing)?(<>
-                        <textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:46px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
-                        <div style={S("display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap")}>
+                        <textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:46px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
+                        <div style={S("display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap")}>
                           <span className="v-micro" style={S("color:var(--fg-4);margin-right:2px")}>{V.ui.memoTarget}</span>
                           {arr(mo.targets).map((tg,$index)=>(<React.Fragment key={$index}><span onClick={tg.onClick} style={tg.style}>{tg.label}</span></React.Fragment>))}
                         </div>
-                        {(mo.isPerson)?(<><div style={S("display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{arr(mo.personChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
-                        {(mo.isStatement)?(<><div style={S("display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{arr(mo.stmtChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
-                        {(mo.isEvidence)?(<><div style={S("display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{(mo.eviEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.bankEmpty}</span></>):null}{arr(mo.eviChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
+                        {(mo.isPerson)?(<><div style={S("display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{arr(mo.personChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
+                        {(mo.isStatement)?(<><div style={S("display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{arr(mo.stmtChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
+                        {(mo.isEvidence)?(<><div style={S("display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)")}>{(mo.eviEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.bankEmpty}</span></>):null}{arr(mo.eviChips).map((pc,$index)=>(<React.Fragment key={$index}><span onClick={pc.onClick} style={pc.style}><span style={pc.dot}></span>{pc.label}</span></React.Fragment>))}</div></>):null}
                       </>):null}
                       {(mo.readMode)?(<>
                         {(mo.hasContent)?(<><div className="v-body" style={S("color:var(--fg-2);line-height:1.6;white-space:pre-wrap")}>{mo.content}</div></>):null}
-                        <div style={S("display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--fg-4);font-size:11px")}>{(mo.saved)?(<><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
+                        <div style={S("display:flex;align-items:center;gap:8px;margin-top:8px;color:var(--fg-4);font-size:11px")}>{(mo.saved)?(<><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
                       </>):null}
                     </div></React.Fragment>))}
                   </div>
@@ -4081,9 +4081,9 @@ export default class App extends React.Component {
               
               {(V.isResult)?(<>
                 <div style={S("padding:var(--read-pad-y) var(--read-pad-x) 60px;max-width:var(--read-measure);margin:0 auto")}>
-                  <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:22px")}>
+                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:22px")}>
                     <span className="v-h1">{V.result.endTitle}</span>
-                    {(V.result.stuck)?(<><span style={S("font-size:11px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);background:rgba(235,87,87,.14);color:var(--g-contradict)")}>{V.ui.difficulty}</span></>):null}
+                    {(V.result.stuck)?(<><span style={S("font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:rgba(235,87,87,.14);color:var(--g-contradict)")}>{V.ui.difficulty}</span></>):null}
                   </div>
                   {(V.result.stuck)?(<><div className="v-body" style={S("color:var(--fg-3);margin-bottom:22px;line-height:1.7")}>{V.ui.resultStuck}</div></>):null}
 
@@ -4100,12 +4100,12 @@ export default class App extends React.Component {
                         {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                       </div>
                       <div style={S("margin-top:16px")}>
-                        <div onClick={V.result.onToggleFold} style={S("display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none")}>
+                        <div onClick={V.result.onToggleFold} style={S("display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none")}>
                           <span style={S("color:var(--fg-4);font-size:11px")}>{V.result.foldChevron}</span>
                           <span className="v-micro" style={S("color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em")}>{V.result.foldLabel}</span>
                         </div>
-                        {(V.result.foldOpen)?(<><div style={S("display:flex;flex-direction:column;gap:7px;margin-top:12px")}>
-                          {arr(V.result.corrections).map((c,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:10px;font-size:13px")}>
+                        {(V.result.foldOpen)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-top:12px")}>
+                          {arr(V.result.corrections).map((c,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:12px;font-size:13px")}>
                             <span className="v-micro" style={S("color:var(--fg-4);width:70px;flex:none")}>{c.label}</span>
                             <span style={S("font-weight:600;color:var(--g-contradict);text-decoration:line-through;text-decoration-color:var(--g-contradict)")}>{c.mine}</span>
                             <span style={S("color:var(--fg-4)")}>→</span>
@@ -4123,15 +4123,15 @@ export default class App extends React.Component {
 
                   <div style={S("border-top:1px solid var(--border);padding-top:22px")}>
                     <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:16px")}><span className="v-ui" style={S("color:var(--fg);flex:1")}>{V.result.nomLabel}</span><span style={V.result.nomStyle}>{V.result.nomResult}</span></div>
-                    <div style={S("display:flex;flex-direction:column;gap:10px;margin-bottom:20px")}>
+                    <div style={S("display:flex;flex-direction:column;gap:12px;margin-bottom:20px")}>
                       {arr(V.result.catScores).map((c,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:12px")}>
                         <span className="v-meta" style={S("color:var(--fg-3);width:44px;flex:none")}>{c.label}</span>
                         <span style={S("flex:1;height:6px;background:var(--bg-elevated-2);border-radius:3px;overflow:hidden")}><span style={c.barStyle}></span></span>
                         <span className="v-num" style={S("color:var(--fg-2);width:44px;flex:none;text-align:right;font-variant-numeric:tabular-nums")}>{c.correct}/{c.total}</span>
                       </div></React.Fragment>))}
                     </div>
-                    <div style={S("display:flex;gap:10px;margin-bottom:22px")}>
-                      {arr(V.result.metrics).map((m,$index)=>(<React.Fragment key={$index}><div style={S("flex:1;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px")}>{m.k}</div><div className="v-num" style={S("font-size:18px;font-weight:600;color:var(--fg)")}>{m.v}</div></div></React.Fragment>))}
+                    <div style={S("display:flex;gap:12px;margin-bottom:22px")}>
+                      {arr(V.result.metrics).map((m,$index)=>(<React.Fragment key={$index}><div style={S("flex:1;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px")}>{m.k}</div><div className="v-num" style={S("font-size:18px;font-weight:600;color:var(--fg)")}>{m.v}</div></div></React.Fragment>))}
                     </div>
                     <Button variant="ghost" onClick={V.result.onHome}>{V.ui.backHome}</Button>
                   </div>
@@ -4140,7 +4140,7 @@ export default class App extends React.Component {
 
               
               {(V.isMap)?(<>
-                <div style={S("padding:18px 24px;max-width:1100px")}>
+                <div style={S("padding:20px 24px;max-width:1100px")}>
                   <div className="segmented" style={S("margin-bottom:16px")}><div onClick={V.onMapPlan} style={V.mapPlanStyle}>{V.ui.mapModePlan}</div><div onClick={V.onMapGrid} style={V.mapGridStyle}>{V.ui.mapModeGrid}</div></div>
                   {(V.mapPlanMode)?(<>
                   {this.renderPlanTimes(V)}
@@ -4148,14 +4148,14 @@ export default class App extends React.Component {
                     <div onClick={V.plan.onOpen} style={V.plan.previewStyle} {...press(V.plan.onOpen, null, V.ui.planTapHint)}>
                       {this.renderPlanFigure(V)}
                     </div>
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:6px;display:flex;align-items:center;gap:5px")}>
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={S("flex:none")}><circle cx="7" cy="7" r="4.2" /><path d="M10.2 10.2L13.5 13.5M5.4 7h3.2M7 5.4v3.2" /></svg>
+                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:6px;display:flex;align-items:center;gap:4px")}>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4.2" /><path d="M10.2 10.2L13.5 13.5M5.4 7h3.2M7 5.4v3.2" /></svg>
                       {V.ui.planTapHint}
                     </div>
                   </>):(<>{this.renderPlanFigure(V)}</>)}
                   <div style={S("display:flex;flex-wrap:wrap;gap:12px;margin-top:12px")}>
-                    {arr(V.floor.dotLegend).map((lg,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S(`width:10px;height:10px;border-radius:50%;background:${lg.color}`)}></span>{lg.name}</span></React.Fragment>))}
-                    {(V.floor.hasClueMarks)?(<><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.floor.clueLegend}</span></>):null}
+                    {arr(V.floor.dotLegend).map((lg,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S(`width:10px;height:10px;border-radius:50%;background:${lg.color}`)}></span>{lg.name}</span></React.Fragment>))}
+                    {(V.floor.hasClueMarks)?(<><span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.floor.clueLegend}</span></>):null}
                   </div>
                   <div className="v-meta" style={S("color:var(--fg-4);margin:8px 0 0;line-height:1.5")}>{V.floor.scrubHint}</div>
                   </>):null}
@@ -4164,10 +4164,10 @@ export default class App extends React.Component {
                   <div style={S("margin-top:2px")}>
                     <div style={S("display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px")}>
                       <span className="v-caption" style={S("color:var(--fg-2)")}>{V.ui.gridTitle}</span>
-                      <div style={S("display:flex;align-items:center;gap:14px")}>
-                        <span style={S("display:inline-flex;align-items:center;gap:6px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
-                        <span style={S("display:inline-flex;align-items:center;gap:6px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
-                        <span style={S("display:inline-flex;align-items:center;gap:6px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
+                      <div style={S("display:flex;align-items:center;gap:16px")}>
+                        <span style={S("display:inline-flex;align-items:center;gap:8px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-confirm)")}></span>{V.ui.markConfirm}</span>
+                        <span style={S("display:inline-flex;align-items:center;gap:8px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-suspect)")}></span>{V.ui.markSuspect}</span>
+                        <span style={S("display:inline-flex;align-items:center;gap:8px")} className="v-meta"><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-contradict)")}></span>{V.ui.markContradict}</span>
                       </div>
                       <span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.gridHint}</span>
                     </div>
@@ -4177,7 +4177,7 @@ export default class App extends React.Component {
                   {(V.mapPlanMode)?(<>{(V.floor.hasNarr)?(<><div style={S("margin-top:22px")}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px;display:block")}>{V.floor.narrTitle}</div>
                     <div style={S("display:flex;flex-direction:column;gap:12px")}>
-                      {arr(V.floor.narrations).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px 13px 18px")}>
+                      {arr(V.floor.narrations).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px 12px 20px")}>
                         <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${n.barColor}`)}></div>
                         <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:5px")}><span className="v-ui" style={S("color:var(--fg)")}>{n.title}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{n.locName}</span></div>
                         <div style={S("font-size:16px;line-height:1.7;color:var(--fg-2);text-wrap:pretty")}>{n.desc}</div>
@@ -4189,12 +4189,12 @@ export default class App extends React.Component {
 
               
               {(V.isLog)?(<>
-                <div style={S("padding:18px 24px;max-width:720px;margin:0 auto")}>
-                  {(V.logView.emptyLog)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:26px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
-                  <div style={S("display:flex;flex-direction:column;gap:10px")}>
+                <div style={S("padding:20px 24px;max-width:720px;margin:0 auto")}>
+                  {(V.logView.emptyLog)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:28px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
+                  <div style={S("display:flex;flex-direction:column;gap:12px")}>
                     {arr(V.logView.log).map((e,$index)=>(<React.Fragment key={$index}><div onClick={e.onOpen} style={e.cardStyle}>
                       <div style={e.barStyle}></div>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span>{(e.hasTerm)?(<><span className="v-micro" style={S("color:var(--fg-4);display:inline-flex;align-items:center;gap:3px")}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M6 4l4 4-4 4"></path></svg>{V.ui.termFound}</span></>):null}<span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span>{(e.hasTerm)?(<><span className="v-micro" style={S("color:var(--fg-4);display:inline-flex;align-items:center;gap:4px")}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 4l4 4-4 4"></path></svg>{V.ui.termFound}</span></>):null}<span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
                       <div className="v-title" style={S("color:var(--fg);margin-bottom:3px")}>{e.title}</div>
                       <div style={S("font-size:14px;line-height:1.8;color:var(--fg-2);text-wrap:pretty")}>{e.desc}</div>
                     </div></React.Fragment>))}
@@ -4204,15 +4204,15 @@ export default class App extends React.Component {
 
               
               {(V.isGraph)?(<>
-                <div style={S("padding:18px 24px;max-width:1100px")}>
+                <div style={S("padding:20px 24px;max-width:1100px")}>
                   {this.renderGraphFigure(V)}
-                  <div style={S("display:flex;flex-wrap:wrap;gap:14px;margin-top:12px")}>
-                    <span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:50%;background:var(--fg-2);box-shadow:0 0 0 2px var(--border-strong)")}></span>{V.graph.legendPerson}</span>
-                    <span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.graph.legendEvidence}</span>
-                    <span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-contradict)")}></span>{V.graph.legendSecret}</span>
+                  <div style={S("display:flex;flex-wrap:wrap;gap:16px;margin-top:12px")}>
+                    <span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:50%;background:var(--fg-2);box-shadow:0 0 0 2px var(--border-strong)")}></span>{V.graph.legendPerson}</span>
+                    <span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.graph.legendEvidence}</span>
+                    <span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-contradict)")}></span>{V.graph.legendSecret}</span>
                   </div>
                   <div className="v-meta" style={S("color:var(--fg-4);margin-top:10px;line-height:1.6")}>{V.graph.hint}</div>
-                  {(V.graph.alibi.show)?(<><div style={S("margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-elevated)")}>
+                  {(V.graph.alibi.show)?(<><div style={S("margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-elevated)")}>
                     <span className="v-title" style={S("color:var(--fg)")}>{V.graph.alibi.names}</span>
                     <span style={S("flex:1")}></span>
                     {(V.graph.alibi.hint)?(<><span className="v-meta" style={S("color:var(--fg-4)")}>{V.graph.alibi.hint}</span></>):null}
@@ -4224,7 +4224,7 @@ export default class App extends React.Component {
 
               
               {(V.isReference)?(<>
-                <div style={S("padding:22px 24px;max-width:920px;margin:0 auto")}>
+                <div style={S("padding:24px 24px;max-width:920px;margin:0 auto")}>
                   <div className="v-body" style={S("color:var(--fg-3);margin-bottom:22px;line-height:1.6")}>{V.ui.refIntro}</div>
 
                   <div className="v-caption" style={S("color:var(--fg-2);margin:8px 0 12px;display:block")}>{V.ui.refBlanks}</div>
@@ -4239,7 +4239,7 @@ export default class App extends React.Component {
                   <div className="v-caption" style={S("color:var(--fg-2);margin:8px 0 12px;display:block")}>{V.ui.refSections}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:28px")}>
                     {arr(V.ref.sections).map((rs,$index)=>(<React.Fragment key={$index}><div style={rs.card}>
-                      <div style={S("display:flex;align-items:center;gap:9px;margin-bottom:10px")}>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:10px")}>
                         <StatusIcon status={rs.statusKey} size="16"></StatusIcon>
                         <span className="v-ui" style={S("color:var(--fg)")}>{rs.title}</span>
                         <span className="spacer" style={S("flex:1")}></span>
@@ -4252,49 +4252,49 @@ export default class App extends React.Component {
                   <div className="v-caption" style={S("color:var(--fg-2);margin:8px 0 12px;display:block")}>{V.ui.refMarks}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px")}>
                     {arr(V.ref.marks).map((rm,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:0;overflow:hidden")}>
-                      <div style={rm.cell}><span style={rm.iconStyle}>{rm.icon}</span><span style={S("color:var(--fg-2);font-size:13px")}>{rm.sample}</span>{(rm.auto)?(<><span style={S("font-size:9px;font-weight:700;color:var(--g-contradict);border:1px solid var(--g-contradict);border-radius:3px;padding:0 3px;margin-left:auto")}>{V.ui.autoTag}</span></>):null}</div>
-                      <div style={S("padding:10px 12px")}><div className="v-ui" style={S("color:var(--fg)")}>{rm.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{rm.desc}</div></div>
+                      <div style={rm.cell}><span style={rm.iconStyle}>{rm.icon}</span><span style={S("color:var(--fg-2);font-size:13px")}>{rm.sample}</span>{(rm.auto)?(<><span style={S("font-size:9px;font-weight:700;color:var(--g-contradict);border:1px solid var(--g-contradict);border-radius:3px;padding:0 4px;margin-left:auto")}>{V.ui.autoTag}</span></>):null}</div>
+                      <div style={S("padding:12px 12px")}><div className="v-ui" style={S("color:var(--fg)")}>{rm.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{rm.desc}</div></div>
                     </div></React.Fragment>))}
                   </div>
 
-                  <div className="v-caption" style={S("color:var(--fg-2);margin:22px 0 12px;display:block")}>{V.ui.refAnn}</div>
+                  <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refAnn}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
-                    {arr(V.ref.annotations).map((an,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px")}>
+                    {arr(V.ref.annotations).map((an,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
                       <div style={S("font-size:14px;line-height:1.7;color:var(--fg-2);margin-bottom:10px")}><span style={an.sampleStyle}>{an.sample}</span></div>
                       <div className="v-ui" style={S("color:var(--fg)")}>{an.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{an.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
-                  <div className="v-caption" style={S("color:var(--fg-2);margin:22px 0 12px;display:block")}>{V.ui.refProfSlot}</div>
+                  <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refProfSlot}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
-                    {arr(V.ref.profileSlots).map((ps,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px")}>
+                    {arr(V.ref.profileSlots).map((ps,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
                       <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:10px")}>
                         <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none")}>{V.ui.slotMotive}</span>
-                        {(ps.filled)?(<><span className="v-meta" style={S("color:var(--fg-2);flex:1")}>{ps.text}</span><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 5px")}>{V.ui.pNew}</span></>):null}
+                        {(ps.filled)?(<><span className="v-meta" style={S("color:var(--fg-2);flex:1")}>{ps.text}</span><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px")}>{V.ui.pNew}</span></>):null}
                         {(ps.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong)")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.pUnknown}</span></>):null}
                       </div>
                       <div className="v-ui" style={S("color:var(--fg)")}>{ps.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{ps.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
-                  <div className="v-caption" style={S("color:var(--fg-2);margin:22px 0 12px;display:block")}>{V.ui.refReveals}</div>
+                  <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refReveals}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
-                    {arr(V.ref.reveals).map((rv,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;border-left:2px solid var(--accent)")}>
+                    {arr(V.ref.reveals).map((rv,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px;border-left:2px solid var(--accent)")}>
                       <div className="v-ui" style={S("color:var(--fg)")}>{rv.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:3px;line-height:1.5")}>{rv.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
-                  <div className="v-caption" style={S("color:var(--fg-2);margin:22px 0 12px;display:block")}>{V.ui.refNewStates}</div>
+                  <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refNewStates}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
-                    {arr(V.ref.newStates).map((ns,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px")}>
+                    {arr(V.ref.newStates).map((ns,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
                       <div className="v-ui" style={S("color:var(--fg)")}>{ns.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:3px;line-height:1.5")}>{ns.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
-                  <div className="v-caption" style={S("color:var(--fg-2);margin:22px 0 12px;display:block")}>{V.ui.refSounds}</div>
+                  <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refSounds}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px")}>
-                    {arr(V.ref.sounds).map((sd,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:flex;gap:10px;align-items:flex-start")}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4" style={S("flex:none;margin-top:1px")}><path d="M4 6H2v4h2l3 2.5v-9L4 6z" /><path d="M9.5 6a2.5 2.5 0 010 4M11.5 4a5 5 0 010 8" /></svg>
+                    {arr(V.ref.sounds).map((sd,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px;display:flex;gap:12px;align-items:flex-start")}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6" style={S("flex:none;margin-top:1px")}><path d="M4 6H2v4h2l3 2.5v-9L4 6z" /><path d="M9.5 6a2.5 2.5 0 010 4M11.5 4a5 5 0 010 8" /></svg>
                       <div style={S("min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{sd.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{sd.desc}</div></div>
                     </div></React.Fragment>))}
                   </div>
@@ -4304,11 +4304,11 @@ export default class App extends React.Component {
               {(V.isOverview)?(<>
                 <div style={S("max-width:var(--read-measure);margin:0 auto;padding:var(--read-pad-y) var(--read-pad-x) 60px")}>
                   <div className="v-caption" style={S("color:var(--fg-4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;display:block")}>{V.ui.caseTitle}</div>
-                  <div style={S("position:relative")} onMouseUp={V.ovQuote.onSelect}>{arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p className="g-stmt-para" style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);margin:0 0 18px;text-wrap:pretty;cursor:text")}>{pp.text}</p></React.Fragment>))}{(V.ovQuote.showTb)?(<><span className="g-seltoolbar" style={V.ovQuote.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:3px;box-shadow:var(--shadow-popover)")}><span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span><span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span></span></span></>):null}</div>
+                  <div style={S("position:relative")} onMouseUp={V.ovQuote.onSelect}>{arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p className="g-stmt-para" style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty;cursor:text")}>{pp.text}</p></React.Fragment>))}{(V.ovQuote.showTb)?(<><span className="g-seltoolbar" style={V.ovQuote.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:4px;box-shadow:var(--shadow-popover)")}><span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span><span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span></span></span></>):null}</div>
                   <div style={S("border-top:1px solid var(--border);margin-top:28px;padding-top:24px")}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px;display:block")}>{V.ui.ovBrief}</div>
                     <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden")}>
-                      {arr(V.overview).map((ov,$index)=>(<React.Fragment key={$index}><div className="g-ovrow" style={ov.style}><span className="v-meta" style={S("color:var(--fg-4);width:96px;flex:none")}>{ov.k}</span><div style={S("flex:1;min-width:0")}><span className="v-body" style={S("color:var(--fg-2)")}>{ov.v}</span>{(ov.hasBadge)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 6px;margin-left:8px;vertical-align:middle")}>{ov.badge}</span></>):null}{(ov.hasPrev)?(<><span className="v-micro" style={S("color:var(--fg-4);margin-left:8px;text-decoration:line-through")}>{V.ui.windowPrev} {ov.prev}</span></>):null}</div><span style={S("display:inline-flex;align-items:center;gap:2px;flex:none")}><span className="g-ovquote" onClick={ov.onQuote} title={V.ui.quoteMemo} style={S("cursor:pointer;color:var(--fg-4);display:inline-flex;align-items:center;padding:3px")}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5"></path></svg></span><span className="g-ovquote" onClick={ov.onCopy} title={V.ui.copyText} style={S("cursor:pointer;color:var(--fg-4);display:inline-flex;align-items:center;padding:3px")}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1"></rect><path d="M3 10V3h7"></path></svg></span></span></div></React.Fragment>))}
+                      {arr(V.overview).map((ov,$index)=>(<React.Fragment key={$index}><div className="g-ovrow" style={ov.style}><span className="v-meta" style={S("color:var(--fg-4);width:96px;flex:none")}>{ov.k}</span><div style={S("flex:1;min-width:0")}><span className="v-body" style={S("color:var(--fg-2)")}>{ov.v}</span>{(ov.hasBadge)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 8px;margin-left:8px;vertical-align:middle")}>{ov.badge}</span></>):null}{(ov.hasPrev)?(<><span className="v-micro" style={S("color:var(--fg-4);margin-left:8px;text-decoration:line-through")}>{V.ui.windowPrev} {ov.prev}</span></>):null}</div><span style={S("display:inline-flex;align-items:center;gap:2px;flex:none")}><span className="g-ovquote" onClick={ov.onQuote} title={V.ui.quoteMemo} style={S("cursor:pointer;color:var(--fg-4);display:inline-flex;align-items:center;padding:4px")}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5"></path></svg></span><span className="g-ovquote" onClick={ov.onCopy} title={V.ui.copyText} style={S("cursor:pointer;color:var(--fg-4);display:inline-flex;align-items:center;padding:4px")}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="5" width="8" height="8" rx="1"></rect><path d="M3 10V3h7"></path></svg></span></span></div></React.Fragment>))}
                     </div>
                   </div>
                 </div>
@@ -4316,32 +4316,32 @@ export default class App extends React.Component {
 
               
               {(V.isProfile)?(<>
-                <div style={S("padding:18px 20px")}>
+                <div style={S("padding:20px 20px")}>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px")}>
-                    {arr(V.profiles).map((pf,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px 14px 0;display:flex;gap:0;cursor:pointer")} onClick={pf.onOpen}>
+                    {arr(V.profiles).map((pf,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px 16px 0;display:flex;gap:0;cursor:pointer")} onClick={pf.onOpen}>
                       <span style={S(`width:3px;align-self:stretch;background:${pf.color};border-radius:2px;flex:none;margin-right:13px`)}></span>
                       <div style={S("flex:1;min-width:0")}>
-                      <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:12px")}>
+                      <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:12px")}>
                         <span style={pf.avRingStyle}>{pf.ini}</span>
                         <div style={S("min-width:0;flex:1")}><div className="v-title" style={S("color:var(--fg)")}>{pf.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{pf.age} · {pf.job}{pf.rel}</div></div>
-                        {(pf.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:3px;flex:none")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{pf.memoCount}</span></>):null}
+                        {(pf.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:4px;flex:none")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{pf.memoCount}</span></>):null}
                         {(pf.hasVerdict)?(<><span style={S(`font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);border:1px solid ${pf.verdictColor};color:${pf.verdictColor}`)}>{pf.verdictLabel}</span></>):null}
-                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={S("flex:none")}><path d="M6 4l4 4-4 4" /></svg>
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S("flex:none")}><path d="M6 4l4 4-4 4" /></svg>
                       </div>
-                      <div onClick={pf.stopProp} style={S("display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)")}>
+                      <div onClick={pf.stopProp} style={S("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)")}>
                         <span className="v-micro" style={S("color:var(--fg-4);margin-right:2px")}>{V.ui.verdictLabel}</span>
                         {arr(pf.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}
                       </div>
                       <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px")}>{V.ui.pClaim}</div>
                       <div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;margin-bottom:14px")}>{pf.claim}</div>
                       <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.pClues}</div>
-                      {(pf.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:6px;margin-bottom:14px")}>{arr(pf.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:7px")}><span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:6px;flex:none")}></span><div style={S("min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 5px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:1px")}>{cl.action}</div></div></div></React.Fragment>))}</div></>):null}
+                      {(pf.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:14px")}>{arr(pf.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}><span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:6px;flex:none")}></span><div style={S("min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:1px")}>{cl.action}</div></div></div></React.Fragment>))}</div></>):null}
                       {(pf.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:14px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
                       {(pf.hasMemos)?(<><div style={S("border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.pMemos}</div><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(pf.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding-left:9px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></div></>):null}
-                      <div style={S("display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--border);padding-top:12px")}>
+                      <div style={S("display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px")}>
                         {arr(pf.slots).map((sl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:8px")}>
                           <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none")}>{sl.label}</span>
-                          {(sl.filled)?(<><span className="v-meta" style={S("color:var(--fg-2);flex:1")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 5px")}>{V.ui.pNew}</span></>):null}</>):null}
+                          {(sl.filled)?(<><span className="v-meta" style={S("color:var(--fg-2);flex:1")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px")}>{V.ui.pNew}</span></>):null}</>):null}
                           {(sl.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong)")}></span><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{V.ui.pUnknown}</span></>):null}
                         </div></React.Fragment>))}
                       </div>
@@ -4362,12 +4362,12 @@ export default class App extends React.Component {
                       <div style={S("display:flex;gap:4px")}>{arr(V.inv.pips).map((pip,$index)=>(<React.Fragment key={$index}><span style={pip.style}></span></React.Fragment>))}</div>
                       <div className="v-micro" style={S("color:var(--fg-4);margin-top:10px;line-height:1.5")}>{V.ui.invHint}</div>
                     </div>
-                    <div style={S("display:flex;flex-direction:column;gap:6px;margin-bottom:14px")}>
+                    <div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:14px")}>
                       {arr(V.inv.actions).map((act,$index)=>(<React.Fragment key={$index}><div onClick={act.onSelect} style={act.style}><span className="v-ui" style={S("color:inherit")}>{act.label}</span><span style={S("flex:1")}></span><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.cost} {act.cost}</span></div></React.Fragment>))}
                     </div>
                     {(V.inv.showTargets)?(<><div style={S("margin-bottom:14px")}>
                       <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:8px")}>{V.inv.targetLabelHead}</div>
-                      <div style={S("display:flex;flex-wrap:wrap;gap:7px")}>{arr(V.inv.targets).map((tg,$index)=>(<React.Fragment key={$index}><span onClick={tg.onToggle} style={tg.style}>{tg.label}</span></React.Fragment>))}</div>
+                      <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>{arr(V.inv.targets).map((tg,$index)=>(<React.Fragment key={$index}><span onClick={tg.onToggle} style={tg.style}>{tg.label}</span></React.Fragment>))}</div>
                     </div></>):null}
                     {(V.inv.noneTarget)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:14px")}>{V.ui.invNoTarget}</div></>):null}
                     <Button variant="primary" onClick={V.inv.onExec} style={V.inv.execStyle}>{V.inv.execLabel}</Button>
@@ -4375,11 +4375,11 @@ export default class App extends React.Component {
                   </div>
                   <div style={V.invRightStyle}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px")}>{V.ui.invLogTitle}</div>
-                    {arr(V.inv.targetNotes).map((tn,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);margin-bottom:8px")}>
-                      <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.5" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
+                    {arr(V.inv.targetNotes).map((tn,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:8px;padding:12px 12px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);margin-bottom:8px")}>
+                      <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                       <div style={S("min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{tn.label}</div><div className="v-micro" style={S("color:var(--fg-3)")}>{tn.secNum}{V.ui.navCase} {V.ui.revealedBy}</div></div>
                     </div></React.Fragment>))}
-                    {(V.inv.emptyLog)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:22px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
+                    {(V.inv.emptyLog)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:24px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
                     {arr(V.inv.log).map((e,$index)=>(<React.Fragment key={$index}><div style={e.cardStyle}>
                       <div style={e.barStyle}></div>
                       <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
@@ -4397,35 +4397,35 @@ export default class App extends React.Component {
                   <div onClick={V.right.tabs.statements.onClick} style={V.right.tabs.statements.style}>{V.right.labels.statements}</div>
                   <div onClick={V.right.tabs.invlog.onClick} style={V.right.tabs.invlog.style}>{V.right.labels.invlog}</div>
                   <div onClick={V.right.tabs.memo.onClick} style={V.right.tabs.memo.style}>{V.right.labels.memo}</div>
-                  <span className="iconbtn" onClick={V.shell.onToggleRight} style={S("width:24px;height:24px;margin:0 6px;font-size:13px;color:var(--fg-4);flex:none")}>✕</span>
+                  <span className="iconbtn" onClick={V.shell.onToggleRight} style={S("width:24px;height:24px;margin:0 8px;font-size:13px;color:var(--fg-4);flex:none")}>✕</span>
                 </div>
-                <div style={S("flex:1;overflow:auto;padding:14px")}>
+                <div style={S("flex:1;overflow:auto;padding:16px")}>
                   {(V.right.showStatements)?(<>
                     <div style={S("display:flex;justify-content:flex-end;margin-bottom:8px")}><span onClick={V.right.onToggleMarksOnly} style={V.right.marksToggleStyle}>{V.right.marksToggleLabel}</span></div>
                     {arr(V.right.statements).map((rst,$index)=>(<React.Fragment key={$index}><div style={S("border-bottom:1px solid var(--border)")}>
-                      <div className="acc-head" onClick={rst.onToggle} style={S("display:flex;align-items:center;gap:7px;padding:9px 2px;cursor:pointer")}><span style={S(`width:3px;height:20px;background:${rst.color};border-radius:2px;flex:none`)}></span><span style={rst.avStyle}>{rst.ini}</span><span className="v-ui" style={S("color:var(--fg)")}>{rst.name}</span>{(rst.collapsed)?(<><span className="v-micro" style={S("color:var(--fg-4);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{rst.preview}</span></>):null}<span style={S("flex:1")}></span><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.5" style={S(`flex:none;transform:${rst.rot}`)}><path d="M5 6.5L8 9.5l3-3" /></svg></div>
+                      <div className="acc-head" onClick={rst.onToggle} style={S("display:flex;align-items:center;gap:8px;padding:8px 2px;cursor:pointer")}><span style={S(`width:3px;height:20px;background:${rst.color};border-radius:2px;flex:none`)}></span><span style={rst.avStyle}>{rst.ini}</span><span className="v-ui" style={S("color:var(--fg)")}>{rst.name}</span>{(rst.collapsed)?(<><span className="v-micro" style={S("color:var(--fg-4);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{rst.preview}</span></>):null}<span style={S("flex:1")}></span><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S(`flex:none;transform:${rst.rot}`)}><path d="M5 6.5L8 9.5l3-3" /></svg></div>
                       {(rst.open)?(<><div style={S("padding:2px 2px 12px 20px")}>
                         {(V.right.marksOnly)?(<>
-                          {(rst.hasMarks)?(<><div style={S("display:flex;flex-direction:column;gap:9px")}>{arr(rst.marks).map((mk,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:9px;align-items:flex-start")}><span style={S(`width:3px;align-self:stretch;border-radius:2px;flex:none;min-height:18px;background:${mk.color}`)}></span><span style={S("font-size:13px;line-height:1.7;color:var(--fg-2)")}>{mk.t}</span></div></React.Fragment>))}</div></>):null}
+                          {(rst.hasMarks)?(<><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(rst.marks).map((mk,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:8px;align-items:flex-start")}><span style={S(`width:3px;align-self:stretch;border-radius:2px;flex:none;min-height:18px;background:${mk.color}`)}></span><span style={S("font-size:13px;line-height:1.7;color:var(--fg-2)")}>{mk.t}</span></div></React.Fragment>))}</div></>):null}
                           {(rst.noMarks)?(<><div style={S("font-size:12px;color:var(--fg-4);line-height:1.6")}>{V.ui.noMarksHint}</div></>):null}
                         </>):null}
-                        {(V.right.fullText)?(<>{arr(rst.paras).map((rp,$index)=>(<React.Fragment key={$index}><p style={S("margin:0 0 11px;font-size:13.5px;line-height:1.85;color:var(--fg-2);text-wrap:pretty")}>{arr(rp.segs).map((seg,$index)=>(<React.Fragment key={$index}><span style={seg.style}>{seg.text}</span></React.Fragment>))}</p></React.Fragment>))}</>):null}
+                        {(V.right.fullText)?(<>{arr(rst.paras).map((rp,$index)=>(<React.Fragment key={$index}><p style={S("margin:0 0 12px;font-size:13.5px;line-height:1.85;color:var(--fg-2);text-wrap:pretty")}>{arr(rp.segs).map((seg,$index)=>(<React.Fragment key={$index}><span style={seg.style}>{seg.text}</span></React.Fragment>))}</p></React.Fragment>))}</>):null}
                       </div></>):null}
                     </div></React.Fragment>))}
                   </>):null}
                   {(V.right.showInvlog)?(<>
                     {(V.right.invEmpty)?(<><div className="v-meta" style={S("color:var(--fg-4);text-align:center;padding:20px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
-                    {arr(V.right.invLog).map((e,$index)=>(<React.Fragment key={$index}><div style={e.cardStyle}><div style={e.barStyle}></div><div style={S("display:flex;align-items:center;gap:6px;margin-bottom:4px")}><span style={e.badgeStyle}>{e.typeLabel}</span><span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}</span></div><div className="v-ui" style={S("color:var(--fg);font-size:12.5px;margin-bottom:2px")}>{e.title}</div><div className="v-micro" style={S("color:var(--fg-3);line-height:1.5")}>{e.desc}</div></div></React.Fragment>))}
+                    {arr(V.right.invLog).map((e,$index)=>(<React.Fragment key={$index}><div style={e.cardStyle}><div style={e.barStyle}></div><div style={S("display:flex;align-items:center;gap:8px;margin-bottom:4px")}><span style={e.badgeStyle}>{e.typeLabel}</span><span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}</span></div><div className="v-ui" style={S("color:var(--fg);font-size:12.5px;margin-bottom:2px")}>{e.title}</div><div className="v-micro" style={S("color:var(--fg-3);line-height:1.5")}>{e.desc}</div></div></React.Fragment>))}
                   </>):null}
                   {(V.right.showMemo)?(<>
                     <div style={S("display:flex;justify-content:flex-end;margin-bottom:10px")}><span className="linklike" onClick={V.right.onAddMemo} style={S("color:var(--accent);font-size:12px")}>＋ {V.ui.memoNew}</span></div>
                     {(V.right.memoEmpty)?(<><div className="v-meta" style={S("color:var(--fg-4);text-align:center;padding:20px;line-height:1.6")}>{V.ui.memoEmpty}</div></>):null}
-                    {arr(V.right.memoRows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px")}>
-                      <div style={S("display:flex;align-items:center;gap:6px;margin-bottom:6px")}><span className="v-num" style={S("color:var(--fg-4);font-size:11px;font-weight:600")}>{mo.numLabel}</span><span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:11px")}>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:11px")}>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:11px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
+                    {arr(V.right.memoRows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 12px;margin-bottom:8px")}>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span className="v-num" style={S("color:var(--fg-4);font-size:11px;font-weight:600")}>{mo.numLabel}</span><span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:11px")}>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:11px")}>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:11px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
                       {(mo.hasQuote)?(<><div className="v-micro" style={S("color:var(--fg-3);font-style:italic;line-height:1.5;margin-bottom:6px")}>“{mo.quote}”</div></>):null}
-                      {(mo.editing)?(<><textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:44px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;color:var(--fg);font:400 12.5px var(--font-sans);outline:none;box-sizing:border-box")}></textarea></>):null}
+                      {(mo.editing)?(<><textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:44px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 8px;color:var(--fg);font:400 12.5px var(--font-sans);outline:none;box-sizing:border-box")}></textarea></>):null}
                       {(mo.readMode)?(<>{(mo.hasContent)?(<><div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;white-space:pre-wrap")}>{mo.content}</div></>):null}</>):null}
-                      <div style={S("display:flex;align-items:center;gap:5px;margin-top:5px;color:var(--fg-4);font-size:10px")}>{(mo.saved)?(<><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
+                      <div style={S("display:flex;align-items:center;gap:4px;margin-top:5px;color:var(--fg-4);font-size:10px")}>{(mo.saved)?(<><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
                     </div></React.Fragment>))}
                   </>):null}
                 </div>
@@ -4445,14 +4445,14 @@ export default class App extends React.Component {
 
           {(V.plan.zoomOpen)?(<>
             <div style={S("position:fixed;inset:0;z-index:92;background:var(--bg-app);display:flex;flex-direction:column")}>
-              <div style={S("display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none;border-bottom:1px solid var(--border)")}>
+              <div style={S("display:flex;align-items:center;gap:12px;padding:12px 16px;flex:none;border-bottom:1px solid var(--border)")}>
                 <span className="v-ui" style={S("color:var(--fg)")}>{V.ui.navMap}</span>
                 <span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.planZoomHint}</span>
                 <span style={S("flex:1")}></span>
                 <span className="v-micro" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{V.plan.zoomLabel}</span>
                 <button className="iconbtn" onClick={V.plan.onClose} title={V.ui.planZoomClose}>✕</button>
               </div>
-              <div style={S("padding:10px 14px 0;flex:none")}>{this.renderPlanTimes(V)}</div>
+              <div style={S("padding:12px 16px 0;flex:none")}>{this.renderPlanTimes(V)}</div>
               <div style={S("flex:1;position:relative;min-height:0")}>
                 <div ref={V.plan.stageRef} style={V.plan.stageStyle} onPointerDown={V.plan.onDown} onPointerMove={V.plan.onMove} onPointerUp={V.plan.onUp} onPointerCancel={V.plan.onCancel}>
                   <div ref={V.plan.figRef} style={V.plan.figStyle}>{this.renderPlanFigure(V)}</div>
@@ -4472,7 +4472,7 @@ export default class App extends React.Component {
 
           {(V.isIntro)?(<>
             <div style={S("position:fixed;inset:0;z-index:80;background:var(--bg-app);display:flex;flex-direction:column")}>
-              <div style={S("display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:12px 16px;flex:none")}>
+              <div style={S("display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 16px;flex:none")}>
                 <span className="segmented" style={S("padding:0")}><span className={V.langSeg.koCls} onClick={V.langSeg.onKo} style={S("height:24px;font-size:11px")}>한국어</span><span className={V.langSeg.enCls} onClick={V.langSeg.onEn} style={S("height:24px;font-size:11px")}>EN</span></span>
                 <span className="iconbtn" onClick={V.onToggleTheme} style={S("width:auto;height:24px;padding:0 8px;font-size:13px")}>{V.themeGlyph}</span>
               </div>
@@ -4499,7 +4499,7 @@ export default class App extends React.Component {
               {(V.stageBrief)?(<>
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto")}>
                   <div style={S("max-width:520px;width:100%")}>
-                    <div style={S("display:flex;align-items:center;gap:9px;margin-bottom:20px")}>
+                    <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:20px")}>
                       <span className="ws-av" style={S("width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--label-blue))")}>V</span>
                       <span className="v-ui" style={S("color:var(--fg-3)")}>{V.ui.caseTitle}</span>
                     </div>
@@ -4522,8 +4522,8 @@ export default class App extends React.Component {
                       <span style={S("flex:1")}></span>
                       <span className="linklike" onClick={V.readCard.onSkip}>{V.ui.skipRead}</span>
                     </div>
-                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:22px 24px;background:var(--bg-subtle)")}>
-                      <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:16px")}>
+                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:24px 24px;background:var(--bg-subtle)")}>
+                      <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:16px")}>
                         <span style={V.readCard.avStyle}>{V.readCard.ini}</span>
                         <span className="v-h3" style={S("color:var(--fg)")}>{V.readCard.name}</span>
                         <span className="v-meta" style={S("color:var(--fg-4)")}>{V.readCard.meta}</span>
@@ -4531,15 +4531,15 @@ export default class App extends React.Component {
                       {(V.readCard.hasPre)?(<><p style={V.readCard.gestureStyle}>{V.readCard.gesturePre}</p></>):null}
                       {arr(V.readCard.paras).map((para,$index)=>(<React.Fragment key={$index}><p style={para.style} onClick={para.onClick}>{para.text}</p></React.Fragment>))}
                       {(V.readCard.hasPost)?(<><p style={V.readCard.gesturePostStyle}>{V.readCard.gesturePost}</p></>):null}
-                      <div style={S("display:flex;align-items:center;gap:6px;margin:16px 0 6px;color:var(--fg-4)")}>
-                        <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin:16px 0 8px;color:var(--fg-4)")}>
+                        <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>
                         <span className="v-meta">{V.ui.memoLabel}</span>
                       </div>
-                      <textarea value={V.readCard.memo} onChange={V.readCard.onMemo} placeholder={V.ui.memoPh} style={S("width:100%;min-height:52px;resize:vertical;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:9px 11px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
+                      <textarea value={V.readCard.memo} onChange={V.readCard.onMemo} placeholder={V.ui.memoPh} style={S("width:100%;min-height:52px;resize:vertical;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:8px 12px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
                     </div>
-                    <div style={S("display:flex;align-items:center;gap:14px;margin-top:18px")}>
+                    <div style={S("display:flex;align-items:center;gap:16px;margin-top:18px")}>
                       <Button variant="ghost" onClick={V.readCard.onPrev} style={V.readCard.prevStyle}>{V.ui.prev}</Button>
-                      <div style={S("display:flex;gap:7px;flex:1;justify-content:center")}>{arr(V.readCard.dots).map((d,$index)=>(<React.Fragment key={$index}><span style={d.style} onClick={d.onClick}></span></React.Fragment>))}</div>
+                      <div style={S("display:flex;gap:8px;flex:1;justify-content:center")}>{arr(V.readCard.dots).map((d,$index)=>(<React.Fragment key={$index}><span style={d.style} onClick={d.onClick}></span></React.Fragment>))}</div>
                       {(V.readCard.isLast)?(<><Button variant="primary" onClick={V.readCard.onSkip}>{V.ui.openNarrative}</Button></>):null}
                       {(V.readCard.notLast)?(<><Button variant="primary" onClick={V.readCard.onNext}>{V.ui.next}</Button></>):null}
                     </div>
@@ -4552,7 +4552,7 @@ export default class App extends React.Component {
           {(V.isHome)?(<>
             <div style={S("position:fixed;inset:0;z-index:70;background:var(--bg-app);display:flex;flex-direction:column;overflow:auto")}>
               <svg width="0" height="0" style={S("position:absolute;overflow:hidden")} aria-hidden="true"><defs><linearGradient id="depGun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#aeb6c0" /><stop offset=".45" stopColor="#5a616b" /><stop offset="1" stopColor="#2b2f36" /></linearGradient><clipPath id="depClipD"><path d="M62 34 L62 166 A92 66 0 0 0 62 34 Z" /></clipPath><mask id="depMask"><path d="M62 34 L62 166 A92 66 0 0 0 62 34 Z" fill="#fff" /><g stroke="#000" strokeWidth="10" strokeLinecap="round"><line x1="34" y1="182" x2="152" y2="64" /><line x1="20" y1="150" x2="120" y2="50" /><line x1="12" y1="118" x2="92" y2="38" /></g></mask><symbol id="depMark" viewBox="0 0 200 200"><g transform="rotate(45 100 100)"><rect width="200" height="200" fill="url(#depGun)" mask="url(#depMask)" /><g clipPath="url(#depClipD)" stroke="rgba(255,255,255,.5)" strokeWidth="1.5" strokeLinecap="round"><line x1="40" y1="184" x2="158" y2="66" /><line x1="26" y1="152" x2="126" y2="52" /><line x1="18" y1="120" x2="98" y2="40" /></g></g></symbol></defs></svg>
-              <div style={S("display:flex;align-items:center;gap:10px;padding:16px 24px;border-bottom:1px solid var(--border);flex:none")}>
+              <div style={S("display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);flex:none")}>
                 <span style={S("width:24px;height:24px;border-radius:6px;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(125% 100% at 50% -12%, #1e2024 0%, #0b0c0d 62%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 1px 3px rgba(0,0,0,.5)")}><svg viewBox="0 0 200 200" width="17" height="17"><use href="#depMark" /></svg></span>
                 <span className="v-ui" style={S("color:var(--fg-3)")}>{V.ui.gameTitle}</span>
                 <span style={S("flex:1")}></span>
@@ -4565,8 +4565,8 @@ export default class App extends React.Component {
                   <div><div style={S("font:700 30px var(--font-sans);letter-spacing:-.02em;color:var(--fg)")}>{V.ui.gameTitle}</div>
                   <div className="v-body" style={S("color:var(--fg-3);margin-top:4px")}>{V.ui.gameTagline}</div></div>
                 </div>
-                {(V.home.resumeShow)?(<><div onClick={V.home.onResume} style={S("display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);cursor:pointer;margin-bottom:26px")}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.5"><path d="M5 3.5l7 4.5-7 4.5z" /></svg>
+                {(V.home.resumeShow)?(<><div onClick={V.home.onResume} style={S("display:flex;align-items:center;gap:16px;padding:16px 20px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);cursor:pointer;margin-bottom:26px")}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.6"><path d="M5 3.5l7 4.5-7 4.5z" /></svg>
                   <div style={S("flex:1;min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{V.ui.resume} · {V.home.resumeTitle}</div><div className="v-meta" style={S("color:var(--fg-3);margin-top:2px")}>{V.ui.narrProg} {V.home.resumeProgress} · {V.ui.budget} {V.home.resumeBudget}</div></div>
                   <span className="v-meta" style={S("color:var(--accent);font-size:16px")}>›</span>
                 </div></>):null}
@@ -4582,16 +4582,16 @@ export default class App extends React.Component {
                     {(c.confirmDel)?(<><span style={c.askStyle}>{c.askLabel}</span><span onClick={c.onDelYes} style={c.yesStyle}>{c.yesLabel}</span><span onClick={c.onDelNo} style={c.noStyle}>{c.noLabel}</span></>):null}
                   </div></React.Fragment>))}
                 </div>
-                <div className="v-caption" style={S("color:var(--fg-2);margin:26px 0 12px;display:block")}>{V.ui.daily}</div>
-                <div style={S("display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r-md);opacity:.55")}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="3" width="11" height="11" rx="1.5" /><path d="M2.5 6h11M6 2v2M10 2v2" /></svg>
+                <div className="v-caption" style={S("color:var(--fg-2);margin:28px 0 12px;display:block")}>{V.ui.daily}</div>
+                <div style={S("display:flex;align-items:center;gap:12px;padding:16px 16px;border:1px solid var(--border);border-radius:var(--r-md);opacity:.55")}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6"><rect x="2.5" y="3" width="11" height="11" rx="1.5" /><path d="M2.5 6h11M6 2v2M10 2v2" /></svg>
                   <span className="v-title" style={S("color:var(--fg-2);flex:1")}>{V.ui.daily}</span><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.dailyDesc}</span>
                 </div>
-                <div className="v-caption" style={S("color:var(--fg-2);margin:26px 0 12px;display:block")}>{V.ui.more}</div>
-                <div style={S("display:flex;gap:10px;flex-wrap:wrap")}>
-                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:10px;padding:13px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.joinRoom}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v2</span></div>
-                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:10px;padding:13px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.workshop}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v1.5</span></div>
-                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:10px;padding:13px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.coop}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v2</span></div>
+                <div className="v-caption" style={S("color:var(--fg-2);margin:28px 0 12px;display:block")}>{V.ui.more}</div>
+                <div style={S("display:flex;gap:12px;flex-wrap:wrap")}>
+                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.joinRoom}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v2</span></div>
+                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.workshop}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v1.5</span></div>
+                  <div style={S("flex:1 1 150px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--border-strong);border-radius:var(--r-md);opacity:.45")}><span className="v-title" style={S("color:var(--fg-3);flex:1")}>{V.ui.coop}</span><span className="pr-badge" style={S("background:var(--bg-elevated-2);color:var(--fg-4)")}>v2</span></div>
                 </div>
               </div>
             </div>
@@ -4600,14 +4600,14 @@ export default class App extends React.Component {
           {(V.isDetail)?(<>
             <div style={S("position:fixed;inset:0;z-index:72;background:var(--bg-app);display:flex;flex-direction:column;overflow:auto")}>
               <div style={S("display:flex;align-items:center;gap:12px;padding:16px 24px;flex:none")}>
-                <span className="linklike" onClick={V.detail.onBack} style={S("display:inline-flex;align-items:center;gap:6px")}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>{V.ui.detailBack}</span>
+                <span className="linklike" onClick={V.detail.onBack} style={S("display:inline-flex;align-items:center;gap:8px")}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>{V.ui.detailBack}</span>
                 <span style={S("flex:1")}></span>
                 <span className="segmented" style={S("padding:0")}><span className={V.langSeg.koCls} onClick={V.langSeg.onKo} style={S("height:24px;font-size:11px")}>한국어</span><span className={V.langSeg.enCls} onClick={V.langSeg.onEn} style={S("height:24px;font-size:11px")}>EN</span></span>
                 <span className="iconbtn" onClick={V.onToggleTheme} style={S("width:auto;height:24px;padding:0 8px;font-size:13px")}>{V.themeGlyph}</span>
               </div>
               <div style={S("flex:1;display:flex;align-items:center;justify-content:center;padding:24px")}>
                 <div style={S("max-width:460px;width:100%")}>
-                  <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:18px")}>
+                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:18px")}>
                     <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>{V.detail.diff}</span>
                     <span style={V.detail.chipStyle}>{V.detail.chipLabel}</span>
                   </div>
@@ -4616,7 +4616,7 @@ export default class App extends React.Component {
                     {arr(V.detail.rows).map((r,$index)=>(<React.Fragment key={$index}><div style={r.style}><span className="v-meta" style={S("color:var(--fg-4)")}>{r.k}</span><span className="v-ui" style={S("color:var(--fg)")}>{r.v}</span></div></React.Fragment>))}
                   </div>
                   {(V.detail.notPlayedNote)?(<><div className="v-meta" style={S("color:var(--fg-4);line-height:1.6;margin-bottom:20px")}>{V.detail.notPlayedNote}</div></>):null}
-                  <div style={S("display:flex;gap:10px")}>
+                  <div style={S("display:flex;gap:12px")}>
                     <Button variant="primary" onClick={V.detail.onPrimary} style={V.detail.primaryStyle}>{V.detail.primaryLabel}</Button>
                     <Button style={V.roomBtnStyle}>{V.ui.createRoom} · v2</Button>
                   </div>
@@ -4629,18 +4629,18 @@ export default class App extends React.Component {
           {(V.termDlg.open)?(<>
             <div className="scrim" style={S("z-index:96;align-items:center;justify-content:center")} onClick={V.termDlg.onClose}>
               <div style={S("width:400px;max-width:92vw;background:var(--bg-app);border:1px solid var(--border-strong);border-radius:var(--r-lg);box-shadow:var(--shadow-modal);overflow:hidden")} onClick={V.stop}>
-                <div style={S("display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--border)")}>
-                  <span style={S("width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);flex:none")}><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="var(--fg-2)" strokeWidth="1.4"><path d={V.termDlg.iconPath}></path></svg></span>
+                <div style={S("display:flex;align-items:center;gap:12px;padding:20px 20px;border-bottom:1px solid var(--border)")}>
+                  <span style={S("width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);flex:none")}><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="var(--fg-2)" strokeWidth="1.6"><path d={V.termDlg.iconPath}></path></svg></span>
                   <div className="v-ui" style={S("color:var(--fg);font-weight:600;flex:1;min-width:0")}>{V.termDlg.label}</div>
-                  {(V.termDlg.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:3px;flex:none;margin-right:6px")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{V.termDlg.memoCount}</span></>):null}
+                  {(V.termDlg.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:4px;flex:none;margin-right:6px")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{V.termDlg.memoCount}</span></>):null}
                   <span className="iconbtn" onClick={V.termDlg.onClose} style={S("flex:none")}>✕</span>
                 </div>
-                <div style={S("padding:16px 18px;display:flex;flex-direction:column;gap:14px")}>
+                <div style={S("padding:16px 20px;display:flex;flex-direction:column;gap:16px")}>
                   <div style={S("display:flex;gap:12px")}><div style={S("width:44px;flex:none;font-size:11px;color:var(--fg-4);letter-spacing:.04em;padding-top:2px")}>{V.ui.termFound}</div><div className="v-body" style={S("flex:1;min-width:0;color:var(--fg-2);line-height:1.6")}>{V.termDlg.found}</div></div>
                   <div style={S("display:flex;gap:12px")}><div style={S("width:44px;flex:none;font-size:11px;color:var(--fg-4);letter-spacing:.04em;padding-top:2px")}>{V.ui.termDesc}</div><div className="v-body" style={S("flex:1;min-width:0;color:var(--fg-2);line-height:1.8")}>{V.termDlg.desc}</div></div>
                 </div>
-                <div style={S("display:flex;justify-content:flex-end;padding:0 18px 16px")}>
-                  <span className="linklike" onClick={V.termDlg.onQuote} style={S("display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h5v4l-2 -1.2L5 8V4z"></path><path d="M4 12h8"></path></svg>{V.ui.termQuote}</span>
+                <div style={S("display:flex;justify-content:flex-end;padding:0 20px 16px")}>
+                  <span className="linklike" onClick={V.termDlg.onQuote} style={S("display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4h5v4l-2 -1.2L5 8V4z"></path><path d="M4 12h8"></path></svg>{V.ui.termQuote}</span>
                 </div>
               </div>
             </div>
@@ -4648,7 +4648,7 @@ export default class App extends React.Component {
 
           {(V.confirmAbandon)?(<>
             <div className="scrim" style={S("z-index:95;align-items:center;padding-top:0")}><div className="modal" style={S("width:400px")}>
-              <div style={S("padding:20px 20px 6px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.abandonConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.abandonConfirmD}</div></div>
+              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.abandonConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.abandonConfirmD}</div></div>
               <div className="modal-foot" style={S("justify-content:flex-end")}>
                 <Button variant="ghost" onClick={V.onCancelAbandon}>{V.ui.cancel}</Button>
                 <Button onClick={V.onAbandon} style={V.dangerBtnStyle}>{V.ui.quit}</Button>
@@ -4664,41 +4664,41 @@ export default class App extends React.Component {
                   <span style={V.profileDetail.avRingStyle}>{V.profileDetail.ini}</span>
                   <div style={S("flex:1;min-width:0")}><div className="v-h3" style={S("color:var(--fg)")}>{V.profileDetail.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{V.profileDetail.age} · {V.profileDetail.job}{V.profileDetail.rel}</div></div>
                   {(V.profileDetail.hasVerdict)?(<><span style={S(`font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);border:1px solid ${V.profileDetail.verdictColor};color:${V.profileDetail.verdictColor}`)}>{V.profileDetail.verdictLabel}</span></>):null}
-                  <button className="iconbtn" onClick={V.onCloseProfile}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l8 8M12 4l-8 8" /></svg></button>
+                  <button className="iconbtn" onClick={V.onCloseProfile}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4l8 8M12 4l-8 8" /></svg></button>
                 </div>
                 <div style={S("display:flex;flex:1;min-height:0")}>
-                  <div style={S("width:300px;flex:none;border-right:1px solid var(--border);padding:18px 20px;overflow:auto")}>
+                  <div style={S("width:300px;flex:none;border-right:1px solid var(--border);padding:20px 20px;overflow:auto")}>
                     <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.verdictLabel}</div>
-                    <div style={S("display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px")}>{arr(V.profileDetail.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}</div>
+                    <div style={S("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px")}>{arr(V.profileDetail.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}</div>
                     <div className="v-micro" style={S("color:var(--fg-4);margin-bottom:18px")}>{V.ui.verdictHint}</div>
                     <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px")}>{V.ui.pClaim} · <span style={S("color:var(--status-progress)")}>{V.ui.layerClaim}</span></div>
-                    <div style={S("display:flex;gap:9px;margin-bottom:20px")}><span style={S(`width:2px;align-self:stretch;background:${V.profileDetail.color};border-radius:2px;flex:none;opacity:.75`)}></span><div className="v-body" style={S("color:var(--fg-3);line-height:1.7;font-style:italic")}>“{V.profileDetail.claim}”</div></div>
+                    <div style={S("display:flex;gap:8px;margin-bottom:20px")}><span style={S(`width:2px;align-self:stretch;background:${V.profileDetail.color};border-radius:2px;flex:none;opacity:.75`)}></span><div className="v-body" style={S("color:var(--fg-3);line-height:1.7;font-style:italic")}>“{V.profileDetail.claim}”</div></div>
                     <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px")}>{V.ui.pGuilt}</div>
-                    <div style={S("display:flex;flex-direction:column;gap:11px")}>
+                    <div style={S("display:flex;flex-direction:column;gap:12px")}>
                       {arr(V.profileDetail.slots).map((sl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}>
                         <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none;padding-top:1px")}>{sl.label}</span>
-                        {(sl.filled)?(<><div style={S("flex:1;min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 5px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<span className="linklike" onClick={sl.onJump} style={S("display:block;color:var(--accent);font-size:11px;margin-top:1px")}>{V.ui.pViewSource} ↗</span></div></>):null}
+                        {(sl.filled)?(<><div style={S("flex:1;min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<span className="linklike" onClick={sl.onJump} style={S("display:block;color:var(--accent);font-size:11px;margin-top:1px")}>{V.ui.pViewSource} ↗</span></div></>):null}
                         {(sl.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong);margin-top:9px")}></span><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{V.ui.pUnknown}</span></>):null}
                       </div></React.Fragment>))}
                     </div>
                   </div>
-                  <div style={S("flex:1;min-width:0;padding:18px 20px;overflow:auto")}>
+                  <div style={S("flex:1;min-width:0;padding:20px 20px;overflow:auto")}>
                     <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pClues} · <span style={S("color:var(--g-confirm)")}>{V.ui.layerFact}</span></div>
-                    {(V.profileDetail.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:20px")}>{arr(V.profileDetail.clues).map((cl,$index)=>(<React.Fragment key={$index}><div onClick={cl.onJump} style={S("display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--border);border-left:2px solid var(--g-confirm);border-radius:var(--r-sm);cursor:pointer")}><span style={S("width:6px;height:6px;border-radius:2px;background:var(--g-confirm);margin-top:6px;flex:none")}></span><div style={S("min-width:0;flex:1")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 5px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:2px")}>{cl.action} ↗</div></div></div></React.Fragment>))}</div></>):null}
+                    {(V.profileDetail.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:20px")}>{arr(V.profileDetail.clues).map((cl,$index)=>(<React.Fragment key={$index}><div onClick={cl.onJump} style={S("display:flex;align-items:flex-start;gap:8px;padding:12px 12px;border:1px solid var(--border);border-left:2px solid var(--g-confirm);border-radius:var(--r-sm);cursor:pointer")}><span style={S("width:6px;height:6px;border-radius:2px;background:var(--g-confirm);margin-top:6px;flex:none")}></span><div style={S("min-width:0;flex:1")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:2px")}>{cl.action} ↗</div></div></div></React.Fragment>))}</div></>):null}
                     {(V.profileDetail.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:20px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
-                    {(V.profileDetail.hasNarr)?(<><div style={S("display:flex;flex-direction:column;gap:10px;margin-bottom:20px")}>{arr(V.profileDetail.narr).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px 11px 16px")}>
+                    {(V.profileDetail.hasNarr)?(<><div style={S("display:flex;flex-direction:column;gap:12px;margin-bottom:20px")}>{arr(V.profileDetail.narr).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px 12px 16px")}>
                       <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${n.barColor}`)}></div>
                       <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:4px")}><span className="v-ui" style={S("color:var(--fg)")}>{n.title}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{n.actionLabel}</span></div>
                       <div style={S("font-size:15px;line-height:1.7;color:var(--fg-2);text-wrap:pretty")}>{n.desc}</div>
                     </div></React.Fragment>))}</div></>):null}
                     <div style={S("border-top:1px solid var(--border);padding-top:14px;margin-bottom:8px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.navInvestigate}</div>
-                      <div style={S("display:flex;flex-direction:column;gap:6px")}>{arr(V.profileDetail.invActions).map((ia,$index)=>(<React.Fragment key={$index}><button onClick={ia.onRun} style={ia.style}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg><span style={S("flex:1")}>{ia.label}</span><span style={S("font-size:11px;color:var(--fg-4)")}>{ia.hint}</span></button></React.Fragment>))}</div>
+                      <div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(V.profileDetail.invActions).map((ia,$index)=>(<React.Fragment key={$index}><button onClick={ia.onRun} style={ia.style}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg><span style={S("flex:1")}>{ia.label}</span><span style={S("font-size:11px;color:var(--fg-4)")}>{ia.hint}</span></button></React.Fragment>))}</div>
                     </div>
                     <div style={S("display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:16px;margin-bottom:10px")}>
                       <span className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;flex:1")}>{V.ui.pMemos}</span>
                       <span className="linklike" onClick={V.profileDetail.onAddMemo} style={S("color:var(--accent);font-size:12px")}>＋ {V.ui.memoNew}</span>
                     </div>
-                    {(V.profileDetail.hasMemos)?(<><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(V.profileDetail.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding:2px 0 2px 10px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></>):null}
+                    {(V.profileDetail.hasMemos)?(<><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(V.profileDetail.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding:2px 0 2px 12px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></>):null}
                     {(V.profileDetail.noMemos)?(<><div className="v-meta" style={S("color:var(--fg-4);line-height:1.5")}>{V.ui.pNoMemos}</div></>):null}
                   </div>
                 </div>
@@ -4708,7 +4708,7 @@ export default class App extends React.Component {
 
           {(V.invConfirm.open)?(<>
             <div className="scrim" style={S("z-index:95;align-items:center;padding-top:0")}><div className="modal" style={S("width:380px")}>
-              <div style={S("padding:20px 20px 6px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.invConfirm.title}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.invConfirm.body}</div></div>
+              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.invConfirm.title}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.invConfirm.body}</div></div>
               <div className="modal-foot" style={S("justify-content:flex-end")}>
                 <Button variant="ghost" onClick={V.invConfirm.onCancel}>{V.ui.cancel}</Button>
                 <Button variant="primary" onClick={V.invConfirm.onRun}>{V.ui.navInvestigate}</Button>
@@ -4720,7 +4720,7 @@ export default class App extends React.Component {
             <div className="scrim" style={S("z-index:96;align-items:center;justify-content:center")}>
               <div style={S("width:520px;max-width:92vw;background:var(--bg-app);border:1px solid var(--border-strong);border-radius:var(--r-lg);box-shadow:var(--shadow-modal);overflow:hidden")}>
                 <div style={S(`height:3px;background:${V.invResultCard.accent}`)}></div>
-                <div style={S("padding:22px 24px")}>
+                <div style={S("padding:24px 24px")}>
                   <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:14px")}><span style={V.invResultCard.badgeStyle}>{V.invResultCard.typeLabel}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.invResultCard.target}</span></div>
                   <div className="v-h3" style={S("color:var(--fg);margin-bottom:12px")}>{V.invResultCard.title}</div>
                   <div style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.invResultCard.body}</div>
@@ -4732,23 +4732,23 @@ export default class App extends React.Component {
 
           {(V.confirmFinish)?(<>
             <div className="scrim" style={S("z-index:95;align-items:center;padding-top:0")}><div className="modal" style={S("width:420px")}>
-              <div style={S("padding:20px 20px 6px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.finishConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.finishConfirmD}</div>{(V.finishUnfilled)?(<><div className="v-meta" style={S("color:var(--status-progress);margin-top:10px;font-weight:600")}>{V.finishUnfilled}</div></>):null}</div>
+              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.finishConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.finishConfirmD}</div>{(V.finishUnfilled)?(<><div className="v-meta" style={S("color:var(--status-progress);margin-top:10px;font-weight:600")}>{V.finishUnfilled}</div></>):null}</div>
               <div className="modal-foot" style={S("justify-content:flex-end")}>
                 <Button variant="ghost" onClick={V.onCancelFinish}>{V.ui.cancel}</Button>
                 <Button variant="primary" onClick={V.onDoFinish}>{V.ui.submit}</Button>
               </div>
             </div></div>
           </>):null}
-          {(V.toast)?(<><div style={S("position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:120;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:9px 18px;display:flex;align-items:center;gap:9px;font:600 12.5px var(--font-sans);color:var(--fg)")}><span style={S("width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none")}></span>{V.toast}</div></>):null}
+          {(V.toast)?(<><div style={S("position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:120;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:8px 20px;display:flex;align-items:center;gap:8px;font:600 12.5px var(--font-sans);color:var(--fg)")}><span style={S("width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none")}></span>{V.toast}</div></>):null}
         </div>
 
           {(V.quotePickerOpen)?(<>
             <div className="scrim" style={S("z-index:96;align-items:center")} onClick={V.onQuotePickCancel}><div className="modal" style={S("width:320px")} onClick={V.stopModal}>
-              <div style={S("padding:16px 18px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.quotePickTitle}</div></div>
-              <div style={S("padding:4px 10px 12px;display:flex;flex-direction:column;gap:2px")}>
-                {arr(V.quotePicker).map((qp,$index)=>(<React.Fragment key={$index}><div onClick={qp.onPick} style={S("display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer")} styleHover="background:var(--bg-active)"><span style={S("width:22px;height:22px;border-radius:5px;background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;justify-content:center;font:600 11px sans-serif;flex:none")}>{qp.num}</span><span style={S("font-size:13px;color:var(--fg-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{qp.excerpt}</span></div></React.Fragment>))}
-                <div style={S("height:1px;background:var(--border);margin:5px 6px")}></div>
-                <div onClick={V.onQuotePickNew} style={S("display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer;color:var(--accent)")} styleHover="background:var(--bg-active)"><span style={S("width:22px;height:22px;border-radius:5px;border:1px dashed var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 3v10M3 8h10"></path></svg></span><span style={S("font-size:13px;font-weight:600")}>{V.ui.quotePickNew}</span></div>
+              <div style={S("padding:16px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.quotePickTitle}</div></div>
+              <div style={S("padding:4px 12px 12px;display:flex;flex-direction:column;gap:2px")}>
+                {arr(V.quotePicker).map((qp,$index)=>(<React.Fragment key={$index}><div onClick={qp.onPick} style={S("display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r-sm);cursor:pointer")} styleHover="background:var(--bg-active)"><span style={S("width:22px;height:22px;border-radius:5px;background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;justify-content:center;font:600 11px sans-serif;flex:none")}>{qp.num}</span><span style={S("font-size:13px;color:var(--fg-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{qp.excerpt}</span></div></React.Fragment>))}
+                <div style={S("height:1px;background:var(--border);margin:4px 8px")}></div>
+                <div onClick={V.onQuotePickNew} style={S("display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--r-sm);cursor:pointer;color:var(--accent)")} styleHover="background:var(--bg-active)"><span style={S("width:22px;height:22px;border-radius:5px;border:1px dashed var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 3v10M3 8h10"></path></svg></span><span style={S("font-size:13px;font-weight:600")}>{V.ui.quotePickNew}</span></div>
               </div>
             </div></div>
           </>):null}

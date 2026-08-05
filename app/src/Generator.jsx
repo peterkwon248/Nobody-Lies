@@ -545,10 +545,10 @@ const box = {
   background: 'var(--bg-surface, #14161a)',
   border: '1px solid var(--border, #2a2e35)',
   borderRadius: 'var(--r-md, 10px)',
-  padding: '18px 20px',
+  padding: '20px 20px',
 };
 const btn = (primary) => ({
-  padding: '9px 16px',
+  padding: '8px 16px',
   fontSize: '13px',
   fontWeight: 600,
   borderRadius: 'var(--r-sm, 7px)',
@@ -561,7 +561,7 @@ const stepNo = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   width: '22px', height: '22px', borderRadius: '50%',
   background: 'var(--accent, #4C8DFF)', color: '#fff',
-  fontSize: '12px', fontWeight: 700, marginRight: '9px', flex: 'none',
+  fontSize: '12px', fontWeight: 700, marginRight: '8px', flex: 'none',
 };
 
 export default function Generator() {
@@ -684,17 +684,17 @@ export default function Generator() {
    */
   const manualBox = (what, head) => (manual && manual.what === what ? (
     <div style={{
-      marginTop: '12px', padding: '14px',
+      marginTop: '12px', padding: '16px',
       border: '1px solid var(--accent, #4C8DFF)', borderRadius: 'var(--r-sm, 7px)',
     }}>
       <b style={{ fontSize: '13px' }}>{head || '클립보드를 못 쓴다 — 아래를 직접 복사해라'}</b>
-      <p style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '6px 0 10px', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '8px 0 12px', lineHeight: 1.6 }}>
         다운로드한 파일로 열면 브라우저가 복사를 막는다. 칸을 눌러 <b>전체 선택 → 복사</b>.
       </p>
       <textarea readOnly value={manual.text}
         onFocus={(e) => e.target.select()} onClick={(e) => e.target.select()}
         style={{
-          width: '100%', height: '200px', boxSizing: 'border-box', padding: '10px',
+          width: '100%', height: '200px', boxSizing: 'border-box', padding: '12px',
           background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
           border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
           fontSize: '12px', lineHeight: 1.6,
@@ -1337,7 +1337,7 @@ export default function Generator() {
       <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; }}
         style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', textDecoration: 'none' }}>← 홈</a>
 
-      <h1 style={{ fontSize: '26px', fontWeight: 700, margin: '14px 0 6px' }}>캠페인 생성기</h1>
+      <h1 style={{ fontSize: '26px', fontWeight: 700, margin: '16px 0 8px' }}>캠페인 생성기</h1>
       <p style={{ fontSize: '14px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 24px', lineHeight: 1.7 }}>
         사건의 <b>논리·트릭·평면도는 이 앱이</b> 만든다. 당신이 가져올 것은 <b>세계의 어휘</b>뿐이다 —
         무대·이름·직업·물건·동기. 그건 챗봇이 잘한다.
@@ -1349,11 +1349,11 @@ export default function Generator() {
         * 두면 사건을 만들러 온 사람의 길이 길어진다. **접어서 위에 둔다** —
         * 파일을 받아 온 사람은 첫 화면에서 자기 입구를 봐야 한다.
         */}
-      <section style={{ ...box, marginBottom: '14px', padding: '13px 20px' }}>
+      <section style={{ ...box, marginBottom: '16px', padding: '12px 20px' }}>
         <button
           onClick={() => { setImportOpen(!importOpen); setImportMsg(null); }}
           style={{
-            display: 'flex', alignItems: 'center', gap: '9px', width: '100%',
+            display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             color: 'var(--fg, #e6e9ef)', font: 'inherit', textAlign: 'left',
           }}>
@@ -1367,8 +1367,8 @@ export default function Generator() {
         </button>
 
         {!importOpen ? null : (
-          <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border, #2a2e35)' }}>
-            <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border, #2a2e35)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
               남이 만든 사건도, <b>예전에 내가 꺼내 둔 사건도</b> 여기로 돌아온다.
               들여오기 전에 <b>문법 · 구조 · 논리 · 왕복</b> 넷을 다 통과해야 한다 —
               하나라도 걸리면 <b>넣지 않고</b> 무엇이 틀렸는지 그대로 보여준다.
@@ -1391,29 +1391,29 @@ export default function Generator() {
               placeholder={'또는 YAML 을 그대로 붙여넣어라.\n챗봇이 준 것도, 파일을 연 것도 같은 길로 지나간다.'}
               spellCheck={false}
               style={{
-                width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '14px',
+                width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '16px',
                 background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
                 border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
-                padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
+                padding: '12px 12px', fontSize: '12px', lineHeight: 1.6,
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
               }}
             />
             <button
               onClick={() => importCase(importText, '붙여넣은 YAML')}
               disabled={!importText.trim()}
-              style={{ ...btn(true), marginTop: '10px', opacity: importText.trim() ? 1 : 0.5 }}>
+              style={{ ...btn(true), marginTop: '12px', opacity: importText.trim() ? 1 : 0.5 }}>
               들여오기
             </button>
 
             {importMsg && (
               <div style={{
-                marginTop: '13px', padding: '11px 14px', borderRadius: 'var(--r-sm, 7px)',
+                marginTop: '12px', padding: '12px 16px', borderRadius: 'var(--r-sm, 7px)',
                 background: 'var(--bg-app, #0e1013)',
                 border: '1px solid ' + (importMsg.ok ? 'var(--border, #2a2e35)' : 'var(--g-contradict, #EB5757)'),
               }}>
                 {importMsg.lines.map((l, i) => (
                   <p key={i} style={{
-                    margin: i ? '5px 0 0' : 0, fontSize: '12px', lineHeight: 1.65,
+                    margin: i ? '4px 0 0' : 0, fontSize: '12px', lineHeight: 1.65,
                     whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                     color: importMsg.ok
                       ? (i ? 'var(--fg-3, #8b93a1)' : 'var(--fg, #e6e9ef)')
@@ -1423,7 +1423,7 @@ export default function Generator() {
                 {/* 성공하면 **바로 열 수 있게** 한다 — 4번까지 스크롤해 찾게 하지 않는다 */}
                 {importMsg.ok && importMsg.id && (
                   <a href={`#case=local:${encodeURIComponent(importMsg.id)}`}
-                    style={{ ...btn(true), display: 'inline-block', marginTop: '11px', textDecoration: 'none' }}>
+                    style={{ ...btn(true), display: 'inline-block', marginTop: '12px', textDecoration: 'none' }}>
                     바로 열기
                   </a>
                 )}
@@ -1432,7 +1432,7 @@ export default function Generator() {
                 {!importMsg.ok && importMsg.errors?.length > 0 && (
                   <>
                     <button onClick={() => copy(fixBrief('import', importMsg.errors, importMsg.src), 'import-err')}
-                      style={{ ...btn(false), marginTop: '11px' }}>
+                      style={{ ...btn(false), marginTop: '12px' }}>
                       {copied === 'import-err' ? '복사됐다 ✓' : '수정 요청 복사 — 챗봇에 그대로 붙여넣기'}
                     </button>
                     {manualBox('import-err')}
@@ -1445,19 +1445,19 @@ export default function Generator() {
       </section>
 
       {/* 1 — 설정 */}
-      <section style={{ ...box, marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 14px', display: 'flex', alignItems: 'center' }}>
+      <section style={{ ...box, marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 16px', display: 'flex', alignItems: 'center' }}>
           <span style={stepNo}>1</span>사건의 크기를 고른다
         </h2>
 
-        <div style={{ marginBottom: '14px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', marginBottom: '7px' }}>난이도</div>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', marginBottom: '8px' }}>난이도</div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {DIFFS.map((d) => (
               <button key={d.id} onClick={() => setDifficulty(d.id)}
                 style={{ ...btn(difficulty === d.id), textAlign: 'left', flex: '1 1 180px' }}>
                 <div>{d.ko}</div>
-                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.75, marginTop: '3px' }}>{d.hint}</div>
+                <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.75, marginTop: '4px' }}>{d.hint}</div>
               </button>
             ))}
           </div>
@@ -1466,13 +1466,13 @@ export default function Generator() {
         <label style={{ fontSize: '13px', display: 'block' }}>
           <span style={{ color: 'var(--fg-3, #8b93a1)' }}>보고서 장 수 </span>
           <b>{chapters}</b>
-          <input type="range" min="3" max="8" value={chapters} style={{ display: 'block', width: '190px', marginTop: '5px' }}
+          <input type="range" min="3" max="8" value={chapters} style={{ display: 'block', width: '190px', marginTop: '4px' }}
             onChange={(e) => setChapters(Number(e.target.value))} />
         </label>
         <label style={{ fontSize: '13px', display: 'block', marginTop: '12px' }}>
           <span style={{ color: 'var(--fg-3, #8b93a1)' }}>사망 구간 칸 수 </span>
           <b>{deathCells}</b>
-          <input type="range" min="1" max="3" value={deathCells} style={{ display: 'block', width: '190px', marginTop: '5px' }}
+          <input type="range" min="1" max="3" value={deathCells} style={{ display: 'block', width: '190px', marginTop: '4px' }}
             onChange={(e) => setDeathCells(Number(e.target.value))} />
         </label>
         <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '12px 0 0', lineHeight: 1.6 }}>
@@ -1491,11 +1491,11 @@ export default function Generator() {
       </section>
 
       {/* 2 — 세계 고르기 */}
-      <section style={{ ...box, marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center' }}>
+      <section style={{ ...box, marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px', display: 'flex', alignItems: 'center' }}>
           <span style={stepNo}>2</span>세계를 고른다
         </h2>
-        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
           <b>세계는 어휘다</b> — 장소·직업·물건·시간대 이름. 논리는 앱이 만든다.
           아래 넷은 <b>이미 들어 있어서 바로 만들 수 있다.</b> 새 세계를 원할 때만
           챗봇에게 받아온다.
@@ -1505,13 +1505,13 @@ export default function Generator() {
             <button key={w.id} onClick={() => setWorld(w.id)}
               style={{ ...btn(world === w.id), textAlign: 'left', flex: '1 1 150px' }}>
               <div>{w.ko}</div>
-              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.75, marginTop: '3px' }}>{w.hint}</div>
+              <div style={{ fontSize: '11px', fontWeight: 400, opacity: 0.75, marginTop: '4px' }}>{w.hint}</div>
             </button>
           ))}
         </div>
         {world !== 'custom' ? null : (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border, #2a2e35)' }}>
-        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
           ChatGPT · Claude · Gemini · Grok — <b>아무 데나</b> 붙여 넣으면 된다.
           이 앱은 챗봇을 부르지 않는다. 받은 답을 아래 3번에 붙여 넣어라.
           <b> 한 번 붙여 넣으면 남는다</b> — 다음에 또 안 해도 된다.
@@ -1526,10 +1526,10 @@ export default function Generator() {
           placeholder={'챗봇이 준 JSON 을 그대로 붙여넣어라.\n비워두면 기본 어휘(산장풍)로 만든다.'}
           spellCheck={false}
           style={{
-            width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '14px',
+            width: '100%', minHeight: '150px', boxSizing: 'border-box', marginTop: '16px',
             background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',
             border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
-            padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
+            padding: '12px 12px', fontSize: '12px', lineHeight: 1.6,
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
           }}
         />
@@ -1538,11 +1538,11 @@ export default function Generator() {
       </section>
 
       {/* 3 — 만든다 */}
-      <section style={{ ...box, marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 10px', display: 'flex', alignItems: 'center' }}>
+      <section style={{ ...box, marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px', display: 'flex', alignItems: 'center' }}>
           <span style={stepNo}>3</span>사건을 만든다
         </h2>
-        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
           <b>{WORLDS.find((w) => w.id === world)?.ko}</b> ·{' '}
           {chapters}장 · {DIFFS.find((d) => d.id === difficulty)?.ko}
           {deathCells > 1 ? ` · 사망 구간 ${deathCells}칸` : ''}
@@ -1556,8 +1556,8 @@ export default function Generator() {
 
       {/* 오류 — 「수정 요청」으로 만들어 챗봇에 그대로 붙여넣을 수 있게 (§9) */}
       {errBox && (
-        <section style={{ ...box, marginBottom: '14px', borderColor: 'var(--g-contradict, #EB5757)' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 10px', color: 'var(--g-contradict, #EB5757)' }}>
+        <section style={{ ...box, marginBottom: '16px', borderColor: 'var(--g-contradict, #EB5757)' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 12px', color: 'var(--g-contradict, #EB5757)' }}>
             만들지 못했다
           </h2>
           <pre style={{
@@ -1586,8 +1586,8 @@ export default function Generator() {
               {made.map((c) => (
                 <div key={c.id}>
                   <div style={{
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '10px 10px 10px 14px',
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '12px 12px 12px 16px',
                     background: 'var(--bg-app, #0e1013)', borderRadius: 'var(--r-sm, 7px)',
                     border: '1px solid var(--border, #2a2e35)',
                   }}>
@@ -1634,13 +1634,13 @@ export default function Generator() {
                       // 사건을 바꾸면 **두 칸 다** 비운다 — 한쪽만 비우면 옛 사건에 쓴 답이 남는다
                       onClick={() => { setProseFor(proseFor === c.id ? null : c.id); setProseMsgRaw(null); setProseText(''); setStmtText(''); }}
                       title="이 사건에 진술을 입힌다"
-                      style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
+                      style={{ ...btn(false), flex: 'none', padding: '8px 12px', fontSize: '12px' }}>
                       {proseFor === c.id ? '닫기' : '산문'}
                     </button>
                     {/* 이 사건을 기계 밖으로 꺼내는 유일한 길 — `localStorage` 는 이 브라우저에만 산다 */}
                     <button onClick={() => exportOne(c)}
                       title="YAML 로 내려받는다 — engine/cases/ 에 넣고 커밋한다"
-                      style={{ ...btn(false), flex: 'none', padding: '7px 11px', fontSize: '12px' }}>
+                      style={{ ...btn(false), flex: 'none', padding: '8px 12px', fontSize: '12px' }}>
                       YAML
                     </button>
                     {/* 사건 하나만 지운다. 진행 저장도 같이 지운다 — 안 지우면
@@ -1655,7 +1655,7 @@ export default function Generator() {
                   </div>
                   {saveMsg && saveMsg.id === c.id && (
                     <p style={{
-                      margin: '7px 0 0', fontSize: '12px', lineHeight: 1.6,
+                      margin: '8px 0 0', fontSize: '12px', lineHeight: 1.6,
                       color: saveMsg.ok ? 'var(--fg-3, #8b93a1)' : 'var(--danger, #ef4444)',
                     }}>{saveMsg.line}</p>
                   )}
@@ -1663,7 +1663,7 @@ export default function Generator() {
                 </div>
               ))}
             </div>
-            <button onClick={clearAll} style={{ ...btn(false), marginTop: '14px' }}>전부 지우기</button>
+            <button onClick={clearAll} style={{ ...btn(false), marginTop: '16px' }}>전부 지우기</button>
           </>
         )}
         {/**
@@ -1680,11 +1680,11 @@ export default function Generator() {
           */}
         {made.length > 0 && (
           <div style={{
-            marginTop: '16px', padding: '13px 15px', borderRadius: 'var(--r-sm, 7px)',
+            marginTop: '16px', padding: '12px 16px', borderRadius: 'var(--r-sm, 7px)',
             background: 'var(--bg-app, #0e1013)', border: '1px solid var(--border, #2a2e35)',
           }}>
             <b style={{ fontSize: '13px' }}>여기서부터 할 일</b>
-            <ol style={{ margin: '9px 0 0', paddingLeft: '18px', fontSize: '12px', lineHeight: 1.85, color: 'var(--fg-3, #8b93a1)' }}>
+            <ol style={{ margin: '8px 0 0', paddingLeft: '20px', fontSize: '12px', lineHeight: 1.85, color: 'var(--fg-3, #8b93a1)' }}>
               <li><b>지금 바로 놀아도 된다</b> — 제목을 누르면 열린다. 조립 진술로도 끝까지 플레이된다.</li>
               <li><b>행의 「산문」 → 5번에서 진술을 두껍게 쓴다.</b> 읽는 맛의 격차가 여기서 가장 크다
                 (조립은 문단당 27자, 손으로 쓴 레퍼런스는 63~285자). <b>챗봇이 필요하다.</b></li>
@@ -1693,7 +1693,7 @@ export default function Generator() {
                 만든 사건은 <b>이 브라우저에만</b> 남고 작업 기계는 넷이다.
                 꺼낸 파일은 <code>engine/cases/</code> 에 넣고 커밋한다.</li>
             </ol>
-            <p style={{ margin: '10px 0 0', fontSize: '12px', color: 'var(--fg-4, #6b7280)', lineHeight: 1.6 }}>
+            <p style={{ margin: '12px 0 0', fontSize: '12px', color: 'var(--fg-4, #6b7280)', lineHeight: 1.6 }}>
               어디까지 왔는지는 <b>행 오른쪽 칩</b>이 말한다 — 「다음 · 진술 입히기」 →
               「⚠ 아직 안 꺼냈다」 → 「꺼냈다 ✓」.
             </p>
@@ -1729,8 +1729,8 @@ export default function Generator() {
          * 이름을 되돌리고 **①②로 순서를 박는다.**
          */
         const briefStep = (n, title, lead, brief, tag, text, setText, note, what) => (
-          <section style={{ ...box, marginTop: '14px' }}>
-            <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', display: 'flex', alignItems: 'center' }}>
+          <section style={{ ...box, marginTop: '16px' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 8px', display: 'flex', alignItems: 'center' }}>
               <span style={stepNo}>{n}</span>{title}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 16px', lineHeight: 1.7 }}>
@@ -1749,12 +1749,12 @@ export default function Generator() {
                 </button>
                 {manualBox(tag)}
                 {note && (
-                  <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '9px 0 0', lineHeight: 1.7 }}>
+                  <p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '8px 0 0', lineHeight: 1.7 }}>
                     {note}
                   </p>
                 )}
 
-                <div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '18px 0 7px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '20px 0 8px' }}>
                   ② <b>챗봇이 준 답</b>을 여기 붙여넣어라
                   <span style={{ color: 'var(--fg-4, #6b7280)' }}>
                     {' '}— 4번의 「YAML」은 <b>반대 방향</b>이다(완성된 사건을 파일로 꺼내는 버튼).
@@ -1767,10 +1767,10 @@ export default function Generator() {
                     width: '100%', height: '150px', boxSizing: 'border-box',
                     background: 'var(--bg-app, #0e1013)', color: 'var(--fg, #e6e9ef)',
                     border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',
-                    padding: '11px 13px', fontSize: '12px', lineHeight: 1.6,
+                    padding: '12px 12px', fontSize: '12px', lineHeight: 1.6,
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', resize: 'vertical',
                   }} />
-                <div style={{ marginTop: '12px', display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button onClick={() => applyProse(text, tag)} disabled={!text.trim()}
                     style={{ ...btn(true), opacity: text.trim() ? 1 : 0.5 }}>사건에 넣기</button>
                   <span style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)' }}>
@@ -1782,7 +1782,7 @@ export default function Generator() {
 
             {proseMsg && proseMsg.tag === tag && (
               <div style={{
-                marginTop: '14px', padding: '12px 14px', borderRadius: 'var(--r-sm, 7px)',
+                marginTop: '16px', padding: '12px 16px', borderRadius: 'var(--r-sm, 7px)',
                 border: '1px solid ' + (proseMsg.ok ? 'var(--accent, #4C8DFF)' : 'var(--g-contradict, #EB5757)'),
               }}>
                 <pre style={{
@@ -1799,7 +1799,7 @@ export default function Generator() {
                         fixBrief(tag === 'stmt' ? 'statement' : 'prose', proseMsg.errors, text),
                         tag + 'Err',
                       )}
-                      style={{ ...btn(false), marginTop: '11px' }}>
+                      style={{ ...btn(false), marginTop: '12px' }}>
                       {copied === tag + 'Err' ? '복사됐다 ✓' : '수정 요청 복사 — 챗봇에 그대로 붙여넣기'}
                     </button>
                     {manualBox(tag + 'Err')}
