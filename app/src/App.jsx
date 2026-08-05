@@ -75,11 +75,10 @@ export function StatusIcon(props) { const C = DS().StatusIcon; return C ? <C {..
 /**
  * Nobody Lies / 노바디 라이즈 — main app component.
  *
- * Everything lives here: screens (state.view), game data tables, the floorplan
- * engine (GEO + buildFloorplan), and the inlined 상황판 / board (PB_* members,
- * state.pb). renderVals() computes every value the UI needs; render() maps that
- * object (V) onto markup. Keeping that split makes the view logic easy to test
- * and mirrors how the design was authored.
+ * Everything lives here: screens (state.view), game data tables, and the
+ * floorplan engine (GEO + buildFloorplan). renderVals() computes every value
+ * the UI needs; render() maps that object (V) onto markup. Keeping that split
+ * makes the view logic easy to test and mirrors how the design was authored.
  */
 export default class App extends React.Component {
 
@@ -87,7 +86,7 @@ export default class App extends React.Component {
     lang: 'ko', theme: 'dark', view: 'narrative', stmtMode: 'grid', seenClaims: {},
     viewOpts: { timelineSort: false }, seenClues: [], narrMode: 'prose', verdicts: {},
     annMarks: {}, memos: [], openSent: null, memoFilter: 'all', memoSort: 'recent', memoQuery: '', quotePins: {}, quotePicker: null, editMemoId: null,
-    expanded: {}, hls: [], sel: null, dragCard: null, mapTime: 't2', openProfile: null, hlLog: null,
+    expanded: {}, hls: [], sel: null, mapTime: 't2', openProfile: null, hlLog: null,
     blanks: {}, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, reopenActive: {}, reopenUsed: {}, secExpand: {},
     openPicker: null, openCell: null, openAids: false,
     evidence: {}, cellMarks: {},
@@ -99,34 +98,13 @@ export default class App extends React.Component {
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
-    /**
-     * 상황판. **탭 여럿**이고, 탭마다 배경 도면 하나와 자기 배치를 갖는다.
-     *
-     *   루트   화면 상태(휘발) + **탭이 공유하는 것**(메모·타임라인)
-     *   boards[] 탭마다 따로 — 배치·실·영역·라벨·배경  (`PB_CONTENT` 참조)
-     *
-     * 읽기는 `this.PB`(루트+활성탭 병합), 쓰기는 `PB_set` 이 갈라 보낸다.
-     */
-    pb: {
-    dragId:null, dragKind:null, dragOff:{x:0,y:0}, moved:false, sel:null, detailId:null,
-    pan:{x:0,y:0}, zoom:1, panning:false, panStart:null, drawShape:null,
-    connectDrag:null, connectMode:false, connectFrom:null,
-    tool:null, addOpen:false, timelineOn:true, hlTimeId:null, drawerOpen:true, axisLock:false, mapLock:false,
-    // 공유 — 사건에 대한 기록이라 탭을 넘나든다
-    times:[{id:'t1',x:225,label:'전날 밤'},{id:'t2',x:675,label:'새벽 3시'},{id:'t3',x:1125,label:'3–8시'},{id:'t4',x:1575,label:'오전'}],
-    memoText:{}, memoOrder:[],
-    relPicker:null, progress:1, msel:[], marquee:null,
-    active:0,
-    boards:[{ name:'상황판 1', backdrop:null, backdropW:760,
-      placed:{}, strings:[], groups:[], binds:[], pins:{}, size:{}, labels:[] }],
-    },
   };
 
   DICT = {
     ko: {
       caseTitle: '산장 살인사건', navCase: '사건', navClue: '단서', navTool: '도구', navNarrative: '보고서', navStatements: '진술',
       navReference: '표기 안내', refShort: '안내', navSoon: '곧', navInvestigate: '조사', navMap: '현장',
-      navGraph: '관계도', navBoard: '상황판', graphHint: '조사로 드러난 인물·사건의 연결', logHint: '수행한 조사와 결과가 여기 누적됩니다', soon: '곧', budget: '잔여 조사', difficulty: '난이도', themeLabel: '테마', language: '언어', settings: '설정', toggleLeft: '사이드바', themeDark: '다크', themeLight: '라이트',
+      navGraph: '관계도', graphHint: '조사로 드러난 인물·사건의 연결', logHint: '수행한 조사와 결과가 여기 누적됩니다', soon: '곧', budget: '잔여 조사', difficulty: '난이도', themeLabel: '테마', language: '언어', settings: '설정', toggleLeft: '사이드바', themeDark: '다크', themeLight: '라이트',
       sidebarNote: '범인만 거짓말을 할 수 있다. 무고한 사람은 거짓말하지 않는다. 다만 자기 비밀은 말하지 않는다.',
       nTitle: '사건 보고서', nSub: '공란을 모두 채우면 장이 완성됩니다 · 마지막에 제출', sTitle: '진술', sSub: '다섯 사람의 원문 진술',
       rTitle: '상태 레퍼런스', rSub: '공란 2상태 · 장 2상태 · 셀 마킹',
@@ -136,7 +114,7 @@ export default class App extends React.Component {
       secOpen: '미확정', secSealed: '확정', secLocked: '대기', secLockedHint: '앞 장을 완성하면 열립니다', secLockedShort: '잠김', reopenBtn: '재개봉', reopenUsed: '재개봉 사용됨', reopenAvail: '재개봉 가능', reopenDone: '편집 완료', reopenWarn: '장당 한 번만 다시 열 수 있으며, 닫으면 더 이상 수정할 수 없습니다.',
       secDone: '완성', secTodo: '미완성', secFillHint: '공란을 모두 채우면 완성됩니다', clearBlank: '비우기',
       msgFill: '빈칸을 모두 채우세요.',
-      kindPerson: '인물', kindPlace: '장소', kindTime: '시각', kindWeapon: '흉기·수단', kindTrick: '정황', kindMotive: '동기', kindClue: '단서', openCand: '열림', modeProse: '서술', modeList: '목록', modeBoard: '보드', listUnrev: '이전 항 확인 후',
+      kindPerson: '인물', kindPlace: '장소', kindTime: '시각', kindWeapon: '흉기·수단', kindTrick: '정황', kindMotive: '동기', kindClue: '단서', openCand: '열림', modeProse: '서술', modeList: '목록', listUnrev: '이전 항 확인 후',
       vPerson: '인물', vPlace: '장소', vTime: '시각', vTool: '도구', vMotive: '동기', vIdentity: '정체', vConceal: '은폐수단', vStaging: '위장물', vLastSeen: '마지막목격자', vContact: '접촉수단', vHideout: '은닉처', vCause: '사인', vItem: '물품', vTarget: '협박대상',
       srcClosed: '목록', srcCollected: '확보 단어', revealedBy: '장 완성으로 공개', addedStmt: '추가 진술', windowPrev: '이전 추정', newTargetTitle: '새 조사 대상 공개', winNarrowed: '사망 추정 축소',
       pickList: '후보에서 선택', pickWord: '확보 단어에서 선택',
@@ -168,8 +146,7 @@ export default class App extends React.Component {
       detailBack: '사건 목록', budgetLabel: '조사 예산', estTime: '예상 소요', estTimeVal: '40\u201360분', suspects: '용의자', suspectsVal: '5명', clearedLabel: '클리어', more: '더 보기',
       notPlayedYet: '아직 플레이하지 않은 사건입니다. 시작하면 프롤로그부터 진행됩니다.', dailyDesc: '매일 새 사건 · 순위표', prologContinue: '계속',
       abandonConfirmT: '사건을 포기할까요?', abandonConfirmD: '진행 상황과 점수가 사라지고 처음부터 시작됩니다.', goHome: '홈',
-      mapModePlan: '평면도', mapModeGrid: '도식', navProfile: '용의자', mapHint: '평면도에서 시간대별 주장 위치를, 도식 탭에서 주장 대조표를 봅니다 · 둘은 같은 주장을 시각화·구조화한 것', boardTools: '보드 도구', boardToolsHint: '카드를 위 슬롯으로 끌어 배치하세요.',
-      finishReport: '보고서 제출', finishConfirmT: '이대로 사건을 종결할까요?', finishConfirmD: '제출 후에는 되돌릴 수 없습니다. 완성된 보고서가 사건의 전말이 됩니다.', submit: '제출', resultStory: '사건의 전말', endMine: '내가 재구성한 것', endReal: '실제', resultStuck: '조사 예산을 모두 소진했지만 사건을 종결하지 못했습니다.', backHome: '홈으로', pClaim: '본인 주장', pClues: '발견된 단서', pUnknown: '미확인', slotMotive: '동기', slotOpportunity: '기회', slotMeans: '수단', pNew: '신규', pNoClues: '아직 조사로 확보한 단서가 없습니다.', pNoMemos: '이 인물에 대한 메모가 아직 없습니다.', verdictLabel: '심증', vdCleared: '제외', vdWatching: '주목', vdPrime: '유력', vdNone: '미정', verdictHint: '내 판단일 뿐 · 점수 무관', pGuilt: '유죄 요건', pViewSource: '출처 보기',
+      mapModePlan: '평면도', mapModeGrid: '도식', navProfile: '용의자', mapHint: '평면도에서 시간대별 주장 위치를, 도식 탭에서 주장 대조표를 봅니다 · 둘은 같은 주장을 시각화·구조화한 것',      finishReport: '보고서 제출', finishConfirmT: '이대로 사건을 종결할까요?', finishConfirmD: '제출 후에는 되돌릴 수 없습니다. 완성된 보고서가 사건의 전말이 됩니다.', submit: '제출', resultStory: '사건의 전말', endMine: '내가 재구성한 것', endReal: '실제', resultStuck: '조사 예산을 모두 소진했지만 사건을 종결하지 못했습니다.', backHome: '홈으로', pClaim: '본인 주장', pClues: '발견된 단서', pUnknown: '미확인', slotMotive: '동기', slotOpportunity: '기회', slotMeans: '수단', pNew: '신규', pNoClues: '아직 조사로 확보한 단서가 없습니다.', pNoMemos: '이 인물에 대한 메모가 아직 없습니다.', verdictLabel: '심증', vdCleared: '제외', vdWatching: '주목', vdPrime: '유력', vdNone: '미정', verdictHint: '내 판단일 뿐 · 점수 무관', pGuilt: '유죄 요건', pViewSource: '출처 보기',
       gameTitle: '노바디 라이즈', gameTagline: '모든 진술을 의심하라', soonPrep: '준비 중', playSolo: '혼자 시작', createRoom: '방 만들기', joinRoom: '방 참가', demoOnly: '이 사건은 데모에 포함되지 않았습니다.', narrProg: '진행',
       navOverview: '사건 개요', ovBrief: '사건 브리핑',
       navMemo: '메모', memoTitle: '메모장', quoteMemo: '인용 메모', copyText: '복사', annHint: '문장을 눌러 표시하거나 인용하세요', crossRef: '나란히 보기', focusMode: '집중 모드', navBack: '뒤로', navFwd: '앞으로',
@@ -184,7 +161,7 @@ export default class App extends React.Component {
     en: {
       caseTitle: 'The Mountain Lodge Case', navCase: 'Case', navClue: 'Clues', navTool: 'Tools', navNarrative: 'Report', navStatements: 'Statements',
       navReference: 'How to read', refShort: 'Guide', navSoon: 'Soon', navInvestigate: 'Investigate', navMap: 'Scene',
-      navGraph: 'Graph', navBoard: 'Board', graphHint: 'Connections between people and events, revealed by investigation', logHint: 'Investigations and their results accumulate here', soon: 'soon', budget: 'Left', difficulty: 'Difficulty', themeLabel: 'Theme', language: 'Language', settings: 'Settings', toggleLeft: 'Sidebar', themeDark: 'Dark', themeLight: 'Light',
+      navGraph: 'Graph', graphHint: 'Connections between people and events, revealed by investigation', logHint: 'Investigations and their results accumulate here', soon: 'soon', budget: 'Left', difficulty: 'Difficulty', themeLabel: 'Theme', language: 'Language', settings: 'Settings', toggleLeft: 'Sidebar', themeDark: 'Dark', themeLight: 'Light',
       sidebarNote: 'Only the culprit can lie. The innocent do not lie. They only keep their own secrets.',
       nTitle: 'Case report', nSub: 'Fill every blank to complete a section · submit when ready', sTitle: 'Statements', sSub: 'The five statements, verbatim',
       rTitle: 'State reference', rSub: '2 blank states · 2 section states · cell marks',
@@ -194,7 +171,7 @@ export default class App extends React.Component {
       secOpen: 'Open', secSealed: 'Confirmed', secLocked: 'Pending', secLockedHint: 'Opens when the previous section is completed', secLockedShort: 'Locked', reopenBtn: 'Reopen', reopenUsed: 'Reopen used', reopenAvail: 'Reopen available', reopenDone: 'Done editing', reopenWarn: 'A section can be reopened only once; once closed it can no longer be edited.',
       secDone: 'Complete', secTodo: 'Incomplete', secFillHint: 'Fill every blank to complete', clearBlank: 'Clear',
       msgFill: 'Fill every blank first.',
-      kindPerson: 'Person', kindPlace: 'Place', kindTime: 'Time', kindWeapon: 'Means', kindTrick: 'Circumstance', kindMotive: 'Motive', kindClue: 'Clue', openCand: 'Open', modeProse: 'Prose', modeList: 'List', modeBoard: 'Board', listUnrev: 'After previous section',
+      kindPerson: 'Person', kindPlace: 'Place', kindTime: 'Time', kindWeapon: 'Means', kindTrick: 'Circumstance', kindMotive: 'Motive', kindClue: 'Clue', openCand: 'Open', modeProse: 'Prose', modeList: 'List', listUnrev: 'After previous section',
       vPerson: 'Person', vPlace: 'Place', vTime: 'Time', vTool: 'Tool', vMotive: 'Motive', vIdentity: 'Identity', vConceal: 'Concealment', vStaging: 'Staging', vLastSeen: 'Last seen by', vContact: 'Contact', vHideout: 'Hideout', vCause: 'Cause', vItem: 'Item', vTarget: 'Blackmail target',
       srcClosed: 'List', srcCollected: 'Collected', revealedBy: 'revealed on complete', addedStmt: 'Added statement', windowPrev: 'was', newTargetTitle: 'New investigation target', winNarrowed: 'Death window narrowed',
       pickList: 'Choose a candidate', pickWord: 'Pick from collected terms',
@@ -226,8 +203,7 @@ export default class App extends React.Component {
       detailBack: 'Cases', budgetLabel: 'Budget', estTime: 'Est. time', estTimeVal: '40\u201360 min', suspects: 'Suspects', suspectsVal: '5', clearedLabel: 'cleared', more: 'More',
       notPlayedYet: 'Not played yet. Starting begins from the prologue.', dailyDesc: 'New case daily · leaderboard', prologContinue: 'Continue',
       abandonConfirmT: 'Abandon this case?', abandonConfirmD: 'Your progress and score are lost and the case resets.', goHome: 'Home',
-      mapModePlan: 'Plan', mapModeGrid: 'Diagram', navProfile: 'Suspects', mapHint: 'Compare claimed positions by time on the plan; see the claim grid in the Diagram tab · both are the same claims, visualized and structured', boardTools: 'Board tools', boardToolsHint: 'Drag a card onto a slot above.',
-      finishReport: 'Submit report', finishConfirmT: 'Close the case as is?', finishConfirmD: 'This cannot be undone. The completed report becomes the full account.', submit: 'Submit', resultStory: 'The full account', endMine: 'My reconstruction', endReal: 'Actual', resultStuck: 'Budget exhausted before the case could be closed.', backHome: 'Home', pClaim: 'Own claim', pClues: 'Found clues', pUnknown: 'Unconfirmed', slotMotive: 'Motive', slotOpportunity: 'Opportunity', slotMeans: 'Means', pNew: 'New', pNoClues: 'No clues secured through investigation yet.', pNoMemos: 'No notes about this person yet.', verdictLabel: 'Verdict', vdCleared: 'Cleared', vdWatching: 'Watching', vdPrime: 'Prime', vdNone: 'Undecided', verdictHint: 'Your call only · no score effect', pGuilt: 'Guilt criteria', pViewSource: 'View source',
+      mapModePlan: 'Plan', mapModeGrid: 'Diagram', navProfile: 'Suspects', mapHint: 'Compare claimed positions by time on the plan; see the claim grid in the Diagram tab · both are the same claims, visualized and structured',      finishReport: 'Submit report', finishConfirmT: 'Close the case as is?', finishConfirmD: 'This cannot be undone. The completed report becomes the full account.', submit: 'Submit', resultStory: 'The full account', endMine: 'My reconstruction', endReal: 'Actual', resultStuck: 'Budget exhausted before the case could be closed.', backHome: 'Home', pClaim: 'Own claim', pClues: 'Found clues', pUnknown: 'Unconfirmed', slotMotive: 'Motive', slotOpportunity: 'Opportunity', slotMeans: 'Means', pNew: 'New', pNoClues: 'No clues secured through investigation yet.', pNoMemos: 'No notes about this person yet.', verdictLabel: 'Verdict', vdCleared: 'Cleared', vdWatching: 'Watching', vdPrime: 'Prime', vdNone: 'Undecided', verdictHint: 'Your call only · no score effect', pGuilt: 'Guilt criteria', pViewSource: 'View source',
       gameTitle: 'NOBODY LIES', gameTagline: 'Doubt every statement', soonPrep: 'Coming soon', playSolo: 'Start solo', createRoom: 'Create room', joinRoom: 'Join room', demoOnly: 'This case is not part of the demo.', narrProg: 'Progress',
       navOverview: 'Case overview', ovBrief: 'Case briefing',
       navMemo: 'Notes', memoTitle: 'Notebook', quoteMemo: 'Quote to note', copyText: 'Copy', annHint: 'Click a sentence to mark or quote it', crossRef: 'Side-by-side', focusMode: 'Focus mode', navBack: 'Back', navFwd: 'Forward',
@@ -1733,7 +1709,7 @@ export default class App extends React.Component {
    */
   SAVE_KEY = 'nobody-lies:mountain-lodge';
   /** 구조를 바꾸면 올린다. 옛 저장은 조용히 버려진다 — 깨진 채 복구하는 것보다 낫다 */
-  SAVE_VERSION = 2;   // 2: 상황판이 탭 여럿(`pb.boards[]`). v1 은 `loadSave` 가 감싸 올린다
+  SAVE_VERSION = 3;   // 3: 상황판 삭제 — `pb` 키를 안 쓴다. v1·v2 는 `loadSave` 가 받아 올린다
 
   SAVED = {
     progress: ['blanks', 'solved', 'reopenActive', 'reopenUsed', 'evidence', 'invLog',
@@ -1745,12 +1721,18 @@ export default class App extends React.Component {
     prefs: ['lang', 'theme', 'narrMode', 'stmtMode', 'viewOpts'],
   };
   /**
-   * 상황판 저장. `pan`·`zoom`·드래그 중간값은 화면 상태라 안 담는다.
+   * 읽을 수 있는 판. **v1·v2 는 상황판(`pb`)이 있던 판**이고 상황판은 v3 에서
+   * 제품에서 빠졌다. 진행·주석·설정은 구조가 그대로이므로 **버리지 않고 읽고
+   * `pb` 만 떨군다.**
    *
-   *   `SAVED_PB_SHARED`  탭이 공유하는 것 — `pb` 루트에 그대로
-   *   `PB_CONTENT` + name  탭마다 — `pb.boards[]`
+   * ⛔ **버전을 안 올리고 `pb` 만 빼면 안 된다** — 「v2인데 pb 있는 저장」과
+   * 「v2인데 pb 없는 저장」이 **같은 번호로 공존**해서 다음 마이그레이션
+   * 작성자를 속인다. 그래서 판을 올리고 옛 판을 여기 명시한다.
+   *
+   * ⚠ `otherStatus`(홈 목록)가 **이 배열을 같이 본다.** 눈이 갈리면 홈은
+   * 「진행 중」인데 눌러보면 프롤로그가 뜬다.
    */
-  SAVED_PB_SHARED = ['memoText', 'memoOrder', 'times'];
+  SAVE_READABLE = [1, 2, 3];
 
   loadSave() {
     let raw;
@@ -1758,32 +1740,17 @@ export default class App extends React.Component {
     if (!raw) return null;
     let data;
     try { data = JSON.parse(raw); } catch (e) { return null; }
-    if (!data || !(data.v === 1 || data.v === this.SAVE_VERSION)) return null;
+    if (!data || this.SAVE_READABLE.indexOf(data.v) < 0) return null;
     const next = {};
     for (const group of Object.values(this.SAVED))
       for (const k of group) if (k in data) next[k] = data[k];
+    /**
+     * v1·v2 → v3. 상황판 배치는 **작업물 정리**지 사건 정보 손실이 아니다 —
+     * 공란·조사·메모·표시는 위에서 그대로 실려 온다. 그래도 **조용히 버리지
+     * 않는다.** 사라진 것이 있으면 사라졌다고 말한다.
+     */
     if (data.pb) {
-      let pb = data.pb;
-      /**
-       * v1 → v2 마이그레이션. v1 은 상황판이 하나여서 배치가 `pb` 에 납작하게
-       * 있었다. 그것을 **첫 탭으로 감싼다.**
-       *
-       * 이걸 안 쓰면 `data.v !== SAVE_VERSION` 에서 걸려 **플레이 중인 사람의
-       * 상황판이 통째로 버려진다.** 「옛 저장은 조용히 버려진다」는 구조가
-       * 바뀔 때의 최후 수단이고, 감쌀 수 있는 변경에 쓸 것이 아니다.
-       */
-      if (data.v === 1) {
-        const b = this.PB_newBoard('상황판 1');
-        for (const k of this.PB_CONTENT) if (k in pb) b[k] = pb[k];
-        const shared = {};
-        for (const k of this.SAVED_PB_SHARED) if (k in pb) shared[k] = pb[k];
-        pb = Object.assign(shared, { active: 0, boards: [b] });
-      }
-      next.pb = Object.assign({}, this.state.pb, pb);
-      // 빈 배열로 들어오면 활성 탭이 없어 상황판이 죽는다
-      if (!Array.isArray(next.pb.boards) || !next.pb.boards.length)
-        next.pb.boards = [this.PB_newBoard('상황판 1')];
-      next.pb.active = Math.max(0, Math.min(next.pb.active || 0, next.pb.boards.length - 1));
+      try { console.info('상황판 데이터 v' + data.v + '→v' + this.SAVE_VERSION + ' 정리: pb 키 폐기'); } catch (e) {}
     }
     return next;
   }
@@ -1792,13 +1759,6 @@ export default class App extends React.Component {
     const s = this.state;
     const out = { v: this.SAVE_VERSION };
     for (const group of Object.values(this.SAVED)) for (const k of group) out[k] = s[k];
-    out.pb = { active: s.pb.active || 0, boards: [] };
-    for (const k of this.SAVED_PB_SHARED) out.pb[k] = s.pb[k];
-    for (const b of (s.pb.boards || [])) {
-      const o = { name: b.name };
-      for (const k of this.PB_CONTENT) o[k] = b[k];
-      out.pb.boards.push(o);
-    }
     try { localStorage.setItem(this.SAVE_KEY, JSON.stringify(out)); } catch (e) { /* 용량 초과 등 — 게임을 막지 않는다 */ }
   }
 
@@ -1849,329 +1809,6 @@ export default class App extends React.Component {
   }
   componentWillUnmount() { clearTimeout(this._saveT); this.save(); window.removeEventListener('resize', this._onResize); if (this._ro) this._ro.disconnect(); document.removeEventListener('click', this._onDocClick, true); }
 
-  PB_REL = { contradict:{label:'모순',color:'var(--label-red)'}, support:{label:'뒷받침',color:'var(--status-review)'}, same:{label:'동일인',color:'var(--accent)'}, timeclash:{label:'시간충돌',color:'var(--status-progress)'}, related:{label:'관련',color:'var(--fg-2)'} };
-  PB_LANES = ['전날 밤','새벽 3시','3–8시','오전'];
-  PB_CARDS = [
-    { id:'sakura', kind:'person', label:'문세라', sub:'산장지기 · 산장 거주', ini:'세', c1:'#F2994A', c2:'#EB5757' },
-    { id:'wonyoung', kind:'person', label:'백리원', sub:'아이돌 · 불참', ini:'리', c1:'#F2C94C', c2:'#F2994A' },
-    { id:'yuri', kind:'person', label:'오나경', sub:'가수 · 아침 도착', ini:'나', c1:'#4CB782', c2:'#2D9CDB' },
-    { id:'burner', kind:'evidence', label:'대포폰', sub:'별채에서 발견', icon:'M5 2.5h6v11H5z M7 12h2' },
-    { id:'note', kind:'evidence', label:'위장 유서', sub:'금고 열쇠 동봉', icon:'M4 2.5h6l2.5 2.5v9H4z M9.5 2.5v3H12' },
-    { id:'co', kind:'evidence', label:'일산화탄소', sub:'부검 · 직접 사인', icon:'M8 13c3 0 4-2 4-4 0-3-4-6-4-6S4 6 4 9c0 2 1 4 4 4z' },
-    { id:'q1', kind:'quote', label:'세라 진술', quote:'"경찰들이 올 때까지 계속 자고 있었습니다."' },
-    { id:'q2', kind:'quote', label:'리원 진술', quote:'"새벽 3시쯤 다인 언니한테 전화가 왔어요."' },
-    { id:'q3', kind:'quote', label:'세라 진술', quote:'"별채는 걸어서 10분 거리 정도?"' },
-  ];
-  PB_KINDS = [ {k:'person',title:'인물'}, {k:'evidence',title:'물증'}, {k:'quote',title:'진술'}, {k:'memo',title:'메모'}, {k:'source',title:'도판'} ];
-  /**
-   * 상황판 배경 — **탭의 바닥**이다. 탭마다 하나(또는 없음).
-   *
-   * 세 도면은 게임의 다른 화면이 이미 그리는 것이고, 여기서는 **같은 view 데이터로
-   * 같은 메서드를 부른다**(`renderPlanFigure` 등). 그래서 **공개 게이트가 저절로
-   * 따라온다** — 별채는 1장, 마약망은 4장 완성 전까지 도면에 없다. 사본을 따로
-   * 만들면 그 보장이 사라진다.
-   *
-   * ★ 바닥은 죽은 사본이다 ★ `pointerEvents:'none'` 으로 도면을 막는다. 원래
-   *   마크업에 조사 실행(`f.onRun`)·격자 주장 선택(`cell.onClick`)·알리바이 대조가
-   *   붙어 있어서, 막지 않으면 **상황판에서 조사 예산이 깎이고** §0.2 자동 분석
-   *   금지에 걸린다.
-   *
-   *   예외 하나 — **시간대 전환은 살린다.** `mapTime` 은 순수 화면 상태라 바꿔도
-   *   예산이 안 깎이고 아무것도 공개되지 않는다. 잠글 이유가 없다
-   *   (사용자가 「시간이 왜 안 따라오지」로 잡았다, 2026-07-26).
-   */
-  PB_SOURCES = [
-    { src: 'plan',  label: '평면도' },
-    { src: 'grid',  label: '도식'   },
-    { src: 'graph', label: '관계도' },
-  ];
-  PB_srcDef(src){ return this.PB_SOURCES.find(s=>s.src===src); }
-  /** 같은 것을 다시 누르면 바닥을 걷는다 — 토글이다 */
-  PB_setBackdrop(src){ this.PB_set({ backdrop: this.PB.backdrop===src?null:src, sel:null, detailId:null }); }
-  PB_setBackdropW(w){ this.PB_set({ backdropW: Math.max(360, Math.min(2000, Math.round(w))) }); }
-  /** 바닥이 놓이는 세계 좌표. 타임라인 띠(y 0~56)를 피해 아래에 둔다 */
-  PB_BACKDROP_AT = { x: 80, y: 76 };
-  get PB_cards(){ const seed=this.buildBoardSeed(); if(seed&&seed.cards&&seed.cards.length) return seed.cards; return this.PB_CARDS; }
-  get PB_revEvidence(){ const seed=this.buildBoardSeed(); if(seed&&seed.revealedEvidence) return seed.revealedEvidence; return null; }
-  PB_TOOLS = [ {t:'box',label:'박스 (영역)'}, {t:'venn',label:'교집합 (벤다이어그램)'}, {t:'memo',label:'메모'}, {t:'label',label:'텍스트 라벨'} ];
-  PB_sizeOf(id){ return this.PB.size[id]||'full'; }
-  PB_cardW(id){ const z=this.PB_sizeOf(id); return z==='dot'?32:(z==='chip'?128:200); }
-  PB_cycleSize(id){ const o={full:'chip',chip:'full'}; this.PB_set({size:Object.assign({},this.PB.size,{[id]:o[this.PB_sizeOf(id)]||'chip'})}); }
-  PB_centerOf(id){ const p=this.PB.placed[id]; return {x:p.x+this.PB_cardW(id)/2, y:p.y+this.PB_cardH(id)/2}; }
-  PB_regionMembers(g){ return Object.keys(this.PB.placed).filter(id=>{ if(!this.PB_card(id))return false; const c=this.PB_centerOf(id); return c.x>=g.x&&c.x<=g.x+g.w&&c.y>=g.y&&c.y<=g.y+g.h; }); }
-  PB_inVennOverlap(g,id){ if(g.shape!=='venn')return false; const c=this.PB_centerOf(id); const rx=g.w*0.32,ry=g.h*0.5,cyv=g.y+g.h/2; const lcx=g.x+g.w*0.32,rcx=g.x+g.w*0.68; const inL=((c.x-lcx)*(c.x-lcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; const inR=((c.x-rcx)*(c.x-rcx))/(rx*rx)+((c.y-cyv)*(c.y-cyv))/(ry*ry)<=1; return inL&&inR; }
-  PB_baseId(id){ return id.split('#')[0]; }
-  PB_card(id){ if(this.PB.memoText[id]!==undefined) return {id,kind:'memo',label:'메모',text:this.PB.memoText[id]}; return this.PB_cards.find(c=>c.id===this.PB_baseId(id)); }
-  PB_toWorld(e){ const r=(this._canvas||document.querySelector('[data-canvas]')).getBoundingClientRect(); return {x:(e.clientX-r.left-this.PB.pan.x)/this.PB.zoom, y:(e.clientY-r.top-this.PB.pan.y)/this.PB.zoom}; }
-  PB_cardH(id){ const z=this.PB_sizeOf(id); if(z==='dot')return 32; if(z==='chip')return 34; const d=this.PB_card(id); return (d&&d.kind==='quote')?96:64; }
-  PB_onPieceDown(id,e){ if(this.PB.connectMode){ e.stopPropagation(); return; } if(e.shiftKey){ let m=this.PB.msel.slice(); if(m.length===0&&this.PB.sel&&this.PB.sel.kind==='piece'&&this.PB.sel.id!==id) m=[this.PB.sel.id]; const i=m.indexOf(id); if(i>=0)m.splice(i,1); else m.push(id); this.PB_set({msel:m,sel:null}); e.stopPropagation(); return; } if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'piece',id},dragId:null}); e.stopPropagation(); return; } const bnd=this.PB_bindOf(id); if(bnd){ const w=this.PB_toWorld(e),offs={}; bnd.mem.forEach(mid=>{ if(this.PB.placed[mid]) offs[mid]={x:w.x-this.PB.placed[mid].x,y:w.y-this.PB.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false,msel:bnd.mem.slice(),sel:{kind:'bind',id:bnd.id}}); e.stopPropagation(); return; } const pos=this.PB.placed[id],w=this.PB_toWorld(e); if(this.PB.msel.length>1&&this.PB.msel.indexOf(id)>=0){ const offs={}; this.PB.msel.forEach(mid=>{ if(this.PB.placed[mid]) offs[mid]={x:w.x-this.PB.placed[mid].x,y:w.y-this.PB.placed[mid].y}; }); this.PB_set({dragId:id,dragKind:'multi',multiOff:offs,moved:false}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'piece',dragOff:{x:w.x-pos.x,y:w.y-pos.y},moved:false,msel:[]}); e.stopPropagation(); }
-  PB_onLabelDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'label',id},dragId:null}); e.stopPropagation(); return; } const lb=this.PB.labels.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'label',dragOff:{x:w.x-lb.x,y:w.y-lb.y},moved:false}); e.stopPropagation(); }
-  PB_onGroupMoveDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'group',id},dragId:null}); e.stopPropagation(); return; } const g=this.PB.groups.find(x=>x.id===id),w=this.PB_toWorld(e); const childG=this.PB.groups.filter(x=>x.id!==id&&x.x>=g.x-2&&x.y>=g.y-2&&x.x+x.w<=g.x+g.w+2&&x.y+x.h<=g.y+g.h+2).map(x=>x.id); const mem={}; this.PB_regionMembers(g).forEach(i=>mem[i]=1); childG.forEach(cid=>{ const cg=this.PB.groups.find(x=>x.id===cid); this.PB_regionMembers(cg).forEach(i=>mem[i]=1); }); this._carry=Object.keys(mem); this._carryG=childG; this.PB_set({dragId:id,dragKind:'group-move',dragOff:{x:w.x-g.x,y:w.y-g.y},moved:false}); e.stopPropagation(); }
-  PB_onGroupResizeDown(id,e){ if(this.PB.pins&&this.PB.pins[id]){ this.PB_set({sel:{kind:'group',id}}); e.stopPropagation(); return; } this.PB_set({dragId:id,dragKind:'group-resize',moved:true,sel:{kind:'group',id}}); e.stopPropagation(); }
-  PB_togglePin(id){ const p=Object.assign({},this.PB.pins||{}); if(p[id]) delete p[id]; else p[id]=true; this.PB_set({pins:p}); }
-  PB_makeBlock(){ const m=this.PB.msel.filter(id=>this.PB.placed[id]); if(m.length<2)return; this.PB_set({binds:this.PB.binds.concat([{id:'b'+Date.now(),mem:m}]),msel:[],sel:{kind:'bind',id:'b'+Date.now()}}); }
-  PB_bindOf(id){ return (this.PB.binds||[]).find(b=>b.mem.indexOf(id)>=0); }
-  PB_unbind(bid){ this.PB_set({binds:this.PB.binds.filter(b=>b.id!==bid),sel:null}); }
-  PB_onHandleDown(id,e){ const w=this.PB_toWorld(e); this.PB_set({connectDrag:{from:id,cx:w.x,cy:w.y}}); e.stopPropagation(); }
-  PB_onCanvasMove(e){ const s=this.PB,w=this.PB_toWorld(e);
-    if(s.dragId){ if(!s.moved) this.PB_set({moved:true}); if(s.dragKind==='time'){ this.PB_set({times:s.times.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(40,w.x-s.dragOff.x)}):x)}); } else if(s.dragKind==='multi'){ const np=Object.assign({},s.placed); s.msel.forEach(mid=>{ const o=s.multiOff[mid]; if(o&&np[mid]) np[mid]={x:Math.max(0,w.x-o.x),y:Math.max(0,w.y-o.y)}; }); this.PB_set({placed:np}); } else if(s.dragKind==='label'){ this.PB_set({labels:s.labels.map(x=>x.id===s.dragId?Object.assign({},x,{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}):x)}); } else if(s.dragKind==='group-move'){ const g=s.groups.find(x=>x.id===s.dragId); const nx=Math.max(0,w.x-s.dragOff.x),ny=Math.max(0,w.y-s.dragOff.y),dx=nx-g.x,dy=ny-g.y; const mem=this._carry||[]; const cg=this._carryG||[]; const np=Object.assign({},s.placed); mem.forEach(id=>{ if(np[id]) np[id]={x:np[id].x+dx,y:np[id].y+dy}; }); this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{x:nx,y:ny}):(cg.indexOf(x.id)>=0?Object.assign({},x,{x:x.x+dx,y:x.y+dy}):x)),placed:np}); } else if(s.dragKind==='group-resize'){ this.PB_set({groups:s.groups.map(x=>x.id===s.dragId?Object.assign({},x,{w:Math.max(80,w.x-x.x),h:Math.max(60,w.y-x.y)}):x)}); } else if(s.dragKind==='backdrop-resize'){ this.PB_setBackdropW(w.x-this.PB_BACKDROP_AT.x); } else { this.PB_set({placed:Object.assign({},s.placed,{[s.dragId]:{x:Math.max(0,w.x-s.dragOff.x),y:Math.max(0,w.y-s.dragOff.y)}})}); } return; }
-    if(s.connectDrag){ this.PB_set({connectDrag:Object.assign({},s.connectDrag,{cx:w.x,cy:w.y})}); return; }
-    if(s.marquee){ this.PB_set({marquee:Object.assign({},s.marquee,{x2:w.x,y2:w.y})}); return; }
-    if(s.panning){ this.PB_set({pan:this.PB_clampPan(e.clientX-s.panStart.x,e.clientY-s.panStart.y)}); return; }
-    if(s.drawShape){ this.PB_set({drawShape:Object.assign({},s.drawShape,{x2:w.x,y2:w.y})}); return; }
-  }
-  PB_onCanvasUp(e){ const s=this.PB;
-    if(s.dragId){ const wasBind=this.PB_bindOf(s.dragId); if(!s.moved){ const k=s.dragKind==='group-move'?'group':s.dragKind; this.PB_set({sel:wasBind?{kind:'bind',id:wasBind.id}:{kind:k,id:s.dragId},dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); } else this.PB_set({dragId:null,dragKind:null,msel:wasBind?[]:s.msel}); return; }
-    if(s.connectDrag){ const w=this.PB_toWorld(e); let hit=null; Object.keys(s.placed).forEach(id=>{ if(id===s.connectDrag.from||!this.PB_card(id))return; const p=s.placed[id]; if(w.x>=p.x&&w.x<=p.x+this.PB_cardW(id)&&w.y>=p.y&&w.y<=p.y+this.PB_cardH(id)) hit=id; }); if(hit){ const from=s.connectDrag.from,pa=s.placed[from],pb=s.placed[hit],rest=s.strings.filter(x=>!((x.a===from&&x.b===hit)||(x.a===hit&&x.b===from))); this.PB_set({connectDrag:null,strings:rest.concat([{a:from,b:hit,rel:'related'}]),relPicker:{a:from,b:hit,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22}}); } else this.PB_set({connectDrag:null}); return; }
-    if(s.panning){ this.PB_set({panning:false,panStart:null}); return; }
-    if(s.marquee){ const mq=s.marquee,x0=Math.min(mq.x1,mq.x2),y0=Math.min(mq.y1,mq.y2),x1=Math.max(mq.x1,mq.x2),y1=Math.max(mq.y1,mq.y2); const hit=Object.keys(s.placed).filter(id=>{ if(!this.PB_card(id))return false; const p=s.placed[id]; return p.x+this.PB_cardW(id)>=x0&&p.x<=x1&&p.y+this.PB_cardH(id)>=y0&&p.y<=y1; }); this.PB_set({marquee:null,msel:hit,sel:null}); return; }
-    if(s.drawShape){ const g=s.drawShape,tl=g.shape==='timeline',x=Math.min(g.x1,g.x2),y=Math.min(g.y1,g.y2),rawW=Math.abs(g.x2-g.x1),rawH=Math.abs(g.y2-g.y1),tiny=rawW<40&&rawH<30,wd=tl?(rawW<200?320:rawW):(tiny?220:rawW),ht=tl?52:(tiny?140:rawH); this.PB_set({groups:s.groups.concat([{id:'g'+Date.now(),x,y,w:wd,h:ht,shape:g.shape,label:g.shape==='venn'?'교집합':(tl?'타임라인':'용의선상'),anchor:null}]), drawShape:null, tool:null, sel:{kind:'group',id:null}}); return; }
-  }
-  PB_onBgDown(e){ const s=this.PB;
-    if(s.tool==='box'||s.tool==='venn'||s.tool==='timeline'){ const w=this.PB_toWorld(e); this.PB_set({drawShape:{x1:w.x,y1:w.y,x2:w.x,y2:w.y,shape:s.tool},sel:null}); return; }
-    if(s.tool==='memo'){ const w=this.PB_toWorld(e); const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},s.memoText,{[id]:''}),memoOrder:s.memoOrder.concat([id]),placed:Object.assign({},s.placed,{[id]:{x:w.x,y:w.y}}),tool:null,sel:{kind:'piece',id}}); return; }
-    if(s.tool==='label'){ const w=this.PB_toWorld(e); const id='l'+Date.now(); this.PB_set({labels:s.labels.concat([{id,x:w.x,y:w.y,text:''}]),tool:null,sel:{kind:'label',id}}); return; }
-    if(s.connectMode){ this.PB_set({connectFrom:null,relPicker:null,sel:null}); return; }
-    if(e.shiftKey&&!s.mapLock){ const w=this.PB_toWorld(e); this.PB_set({marquee:{x1:w.x,y1:w.y,x2:w.x,y2:w.y},sel:null,msel:[],detailId:null}); return; }
-    if(s.mapLock){ this.PB_set({hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]}); return; }
-    this.PB_set({panning:true,panStart:{x:e.clientX-s.pan.x,y:e.clientY-s.pan.y},hlTimeId:null,addOpen:false,sel:null,detailId:null,relPicker:null,msel:[]});
-  }
-  PB_onPieceClick(id){ if(!this.PB.connectMode) return; const f=this.PB.connectFrom; if(!f){ this.PB_set({connectFrom:id}); return; } if(f===id){ this.PB_set({connectFrom:null}); return; } const pa=this.PB.placed[f],pb=this.PB.placed[id],rest=this.PB.strings.filter(x=>!((x.a===f&&x.b===id)||(x.a===id&&x.b===f))); this.PB_set({strings:rest.concat([{a:f,b:id,rel:'related'}]),relPicker:{a:f,b:id,x:(pa.x+pb.x)/2+90,y:(pa.y+pb.y)/2+22},connectFrom:null}); }
-  PB_setRel(rel){ const rp=this.PB.relPicker; if(!rp)return; const rest=this.PB.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))); this.PB_set({strings:rest.concat([{a:rp.a,b:rp.b,rel}]),relPicker:null}); }
-  PB_delRel(){ const rp=this.PB.relPicker; this.PB_set({strings:this.PB.strings.filter(s=>!((s.a===rp.a&&s.b===rp.b)||(s.a===rp.b&&s.b===rp.a))),relPicker:null}); }
-  PB_freshId(base){ if(!this.PB.placed[base]) return base; let n=2; while(this.PB.placed[base+'#'+n]) n++; return base+'#'+n; }
-  PB_addPiece(id){ const nid=this.PB_freshId(id); this.PB_set({placed:Object.assign({},this.PB.placed,{[nid]:{x:300+Math.random()*160,y:180+Math.random()*180}}),sel:{kind:'piece',id:nid}}); }
-  PB_dupPiece(id){ const d=this.PB_card(id),p=this.PB.placed[id]; if(!p)return; if(d.kind==='memo'){ const nid='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.PB.memoText,{[nid]:d.text}),memoOrder:this.PB.memoOrder.concat([nid]),placed:Object.assign({},this.PB.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); return; } const nid=this.PB_freshId(this.PB_baseId(id)); this.PB_set({placed:Object.assign({},this.PB.placed,{[nid]:{x:p.x+24,y:p.y+24}}),sel:{kind:'piece',id:nid}}); }
-  PB_removePiece(id){ const p=Object.assign({},this.PB.placed); delete p[id]; this.PB_set({placed:p,strings:this.PB.strings.filter(s=>s.a!==id&&s.b!==id)}); }
-  PB_newMemo(){ const id='m'+Date.now(); this.PB_set({memoText:Object.assign({},this.PB.memoText,{[id]:''}),memoOrder:this.PB.memoOrder.concat([id]),placed:Object.assign({},this.PB.placed,{[id]:{x:320+Math.random()*120,y:200+Math.random()*140}}),sel:{kind:'piece',id}}); }
-  PB_deleteSel(){ const sel=this.PB.sel; if(!sel)return; if(sel.kind==='piece') this.PB_removePiece(sel.id); else if(sel.kind==='label') this.PB_set({labels:this.PB.labels.filter(x=>x.id!==sel.id)}); else if(sel.kind==='group') this.PB_set({groups:this.PB.groups.filter(x=>x.id!==sel.id)}); this.PB_set({sel:null,detailId:null}); }
-  PB_setZoom(z){ if(this.PB.mapLock)return; this.PB_set({zoom:Math.max(0.5,Math.min(1.6,z))}); }
-  PB_clampPan(x,y){ return { x:Math.min(40,x), y:Math.min(40,y) }; }
-  PB_laneIdx(x){ return Math.max(0,Math.min(3,Math.floor(x/450))); }
-  PB_bandOf(cx){ const ts=this.PB.times.slice().sort((a,b)=>a.x-b.x); if(!ts.length)return null; let owner=ts[0].id; for(const t of ts){ if(cx>=t.x-90) owner=t.id; } return owner; }
-  PB_onTimeDown(id,e){ const t=this.PB.times.find(x=>x.id===id),w=this.PB_toWorld(e); this.PB_set({dragId:id,dragKind:'time',dragOff:{x:w.x-t.x,y:0},moved:false}); e.stopPropagation(); }
-  PB_addTime(){ const xs=this.PB.times.map(t=>t.x),nx=(xs.length?Math.max.apply(null,xs):200)+250; const id='t'+Date.now(); this.PB_set({times:this.PB.times.concat([{id,x:nx,label:'새 시간'}]),sel:{kind:'time',id}}); }
-  PB_delTime(id){ this.PB_set({times:this.PB.times.filter(t=>t.id!==id),sel:null,hlTimeId:this.PB.hlTimeId===id?null:this.PB.hlTimeId}); }
-  PB_render(){ this.PB_key();
-    const s=this.PB;
-    const ln=this.state.lang;
-    const placedIds=Object.keys(s.placed).filter(id=>this.PB_card(id));
-    const cx={},cy={}; placedIds.forEach(id=>{ cx[id]=s.placed[id].x+90; cy[id]=s.placed[id].y+26; });
-    const selP=s.sel&&s.sel.kind==='piece'?s.sel.id:null;
-    const vennHot={}; s.groups.forEach(g=>{ if(g.shape==='venn') placedIds.forEach(id=>{ if(this.PB_inVennOverlap(g,id)) vennHot[id]=true; }); });
-    const _selBind=(s.sel&&s.sel.kind==='bind')?(s.binds||[]).find(x=>x.id===s.sel.id):null; const _bindMem=_selBind?_selBind.mem:[];
-    const pieces=placedIds.map(id=>{ const d=this.PB_card(id); if(!d) return null; const pos=s.placed[id],selc=s.connectFrom===id,seld=selP===id; const cxw=pos.x+this.PB_cardW(id)/2; const laned=s.timelineOn&&pos.y<56; const own=laned?this.PB_bandOf(cxw):null; const tmk=own?s.times.find(t=>t.id===own):null; const tl=tmk?tmk.label:''; const hot=s.hlTimeId!==null&&laned&&own===s.hlTimeId; const dim=s.hlTimeId!==null&&laned&&own!==s.hlTimeId; const sz=this.PB_sizeOf(id); const vh=vennHot[id];
-      const typeColor=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':(d.kind==='quote'?(d.spk||'var(--fg-3)'):'var(--fg-3)')));
-      const inBind=_bindMem.indexOf(id)>=0; const on=selc||seld||hot||vh||inBind||(s.msel.indexOf(id)>=0); const bd=on?'var(--accent)':'var(--border-strong)';
-      return { id, tierFull:sz==='full',tierChip:sz==='chip',tierDot:sz==='dot', notPersonChip:d.kind!=='person',
-        isPerson:d.kind==='person',isEvidence:d.kind==='evidence',isQuote:d.kind==='quote',isMemo:d.kind==='memo',notMemo:d.kind!=='memo',
-        label:d.label,sub:d.sub||'',hasSub:!!d.sub,ini:d.ini||(d.kind==='memo'?'메':(d.kind==='quote'?'\u201C':'')),icon:d.icon,quote:d.quote||'',text:d.text||'',
-        typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),typeColor,laned,timeLabel:tl,
-        avStyle:{width:'24px',height:'24px',borderRadius:'5px',flex:'none',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 10px var(--font-sans)',color:'#0A0A0B',background:'linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'},
-        chipStyle:{display:'flex',alignItems:'center',gap:'7px',width:'128px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'6px 9px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
-        chipDot:{width:'16px',height:'16px',borderRadius:d.kind==='person'?'50%':'4px',flex:'none',background:typeColor,color:'#0A0A0B',display:'inline-flex',alignItems:'center',justifyContent:'center',font:'600 9px var(--font-sans)'},
-        dotStyle:{width:'28px',height:'28px',borderRadius:d.kind==='person'?'50%':'6px',background:d.kind==='person'?('linear-gradient(135deg,'+d.c1+','+(d.c2||d.c1)+')'):typeColor,border:'2px solid '+(on?'var(--accent)':'var(--bg-app)'),boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)',display:'flex',alignItems:d.kind==='quote'?'flex-start':'center',justifyContent:'center',font:(d.kind==='quote'?'700 22px':'700 10px')+' var(--font-sans)',lineHeight:d.kind==='quote'?'20px':'1',color:'#0A0A0B'},
-        wrapCls:'pb-piece'+((selc||seld)?' pb-sel':''),
-        pinned:!!(s.pins&&s.pins[id]),
-        wrapStyle:{left:pos.x+'px',top:pos.y+'px',zIndex:(selc||seld)?20:5,cursor:s.connectMode?'crosshair':((s.pins&&s.pins[id])?'default':'grab'),opacity:dim?0.32:1,transition:'opacity .15s'},
-        cardStyle:{width:'200px',border:'1px solid '+bd,borderLeft:'3px solid '+typeColor,background:'var(--bg-elevated)',borderRadius:'var(--r-md)',padding:'9px 11px 10px',boxShadow:on?'0 0 0 2px var(--accent-soft)':'var(--shadow-card)'},
-        handleStyle:{position:'absolute',right:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
-        portInStyle:{position:'absolute',left:'2px',top:'calc(50% - 6px)',width:'12px',height:'12px',borderRadius:'50%',background:'var(--accent)',border:'2px solid var(--bg-app)',cursor:'crosshair'},
-        onPortInDown:(e)=>this.PB_onHandleDown(id,e),
-        onDown:(e)=>this.PB_onPieceDown(id,e), onClick:()=>this.PB_onPieceClick(id), onHandleDown:(e)=>this.PB_onHandleDown(id,e),
-        onText:(e)=>this.PB_set({memoText:Object.assign({},s.memoText,{[id]:e.target.value})}), stopDown:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } };
-    }).filter(Boolean);
-    const portR=(id)=>({x:s.placed[id].x+this.PB_cardW(id),y:s.placed[id].y+this.PB_cardH(id)/2}), portL=(id)=>({x:s.placed[id].x,y:s.placed[id].y+this.PB_cardH(id)/2});
-    const rp=s.relPicker;
-    const strings=s.strings.filter(st=>s.placed[st.a]&&s.placed[st.b]).map(st=>{ const active=rp&&((rp.a===st.a&&rp.b===st.b)||(rp.a===st.b&&rp.b===st.a)); const r=active?{label:this.PB_REL[st.rel].label,color:'var(--accent)'}:(this.PB_REL[st.rel]||this.PB_REL.same); const pa=portR(st.a),pb=portL(st.b); const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
-      return { x1:pa.x,y1:pa.y,x2:pb.x,y2:pb.y,color:r.color,lineStyle:{stroke:r.color,strokeWidth:1.5,strokeDasharray:'5 4'},relLabel:r.label,labelStyle:{position:'absolute',left:mx+'px',top:my+'px',transform:'translate(-50%,-50%)',zIndex:6,background:'var(--bg-subtle)',border:'1px solid '+r.color,color:r.color,borderRadius:'var(--r-pill)',padding:'1px 8px',fontSize:'10px',fontWeight:600,cursor:'pointer'},onEdit:()=>{ this.PB_set({relPicker:{a:st.a,b:st.b,x:mx,y:my}}); } }; });
-    const cd=s.connectDrag; const cdp=cd?portR(cd.from):null; const liveLine={show:!!cd,x1:cdp?cdp.x:0,y1:cdp?cdp.y:0,x2:cd?cd.cx:0,y2:cd?cd.cy:0};
-    const placedSet={}; placedIds.forEach(id=>placedSet[id]=1);
-    const revEv=this.PB_revEvidence;
-    const drawer=this.PB_KINDS.map(kd=>{
-      // 도판은 카드가 아니라 **이 탭의 바닥**이다. 하나만 켜지고, 다시 누르면 꺼진다
-      if(kd.k==='source') return { title:kd.title, isMemo:false, locked:false, lockedHint:'',
-        dot:{width:'7px',height:'7px',borderRadius:'2px',flex:'none',background:'var(--fg-3)'},
-        // 배지는 카드의 「몇 개 놓았나」를 위한 자리다. 바닥은 켜짐/꺼짐뿐이라
-        // 숫자를 넣으면 「평면도 0」이 찍힌다 — 처음에 `0` 을 넣어서 그렇게 나왔다
-        items:this.PB_SOURCES.map(d=>{ const placed=s.backdrop===d.src; const cnt='✓';
-          return { label:d.label, placed, count:cnt, onAdd:()=>this.PB_setBackdrop(d.src),
-            rowStyle:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 8px',border:'1px solid '+(placed?'var(--accent)':'var(--border-strong)'),borderRadius:'var(--r-sm)',cursor:'pointer',background:placed?'var(--accent-soft)':'transparent'},
-            badgeStyle:{fontSize:'10px',fontWeight:700,color:'var(--fg-on-accent)',background:'var(--accent)',borderRadius:'var(--r-pill)',padding:'0 6px',flex:'none'} }; }) };
-      let ids=kd.k==='memo'?s.memoOrder.slice():this.PB_cards.filter(c=>c.kind===kd.k).map(c=>c.id);
-      if(kd.k==='evidence'&&revEv) ids=ids.filter(id=>revEv[id]);
-      const locked=kd.k==='evidence'&&ids.length===0;
-      return { title:kd.title, isMemo:kd.k==='memo', onNew:()=>this.PB_newMemo(), locked, lockedHint:'조사 전 · 없음',
-        dot:{width:'7px',height:'7px',borderRadius:kd.k==='person'?'50%':'2px',flex:'none',background:kd.k==='person'?'var(--fg-3)':(kd.k==='evidence'?'var(--accent)':(kd.k==='memo'?'#F2C94C':'var(--fg-3)'))},
-        items:ids.map(id=>{ const d=this.PB_card(id); const cnt=Object.keys(s.placed).filter(pid=>this.PB_baseId(pid)===id).length; const placed=cnt>0;
-          return { label:d.kind==='memo'?((d.text||'빈 메모').slice(0,16)):d.label, placed, count:cnt, onAdd:()=>this.PB_addPiece(id),
-            rowStyle:{display:'flex',alignItems:'center',gap:'7px',padding:'6px 8px',border:'1px solid '+(placed?'var(--accent)':'var(--border-strong)'),borderRadius:'var(--r-sm)',cursor:'pointer',background:placed?'var(--accent-soft)':'transparent'},
-            badgeStyle:{fontSize:'10px',fontWeight:700,color:'var(--fg-on-accent)',background:'var(--accent)',borderRadius:'var(--r-pill)',padding:'0 6px',flex:'none'} }; }) }; });
-    const ds=s.drawShape,tempGroup={show:!!ds,style:ds?{position:'absolute',left:Math.min(ds.x1,ds.x2)+'px',top:Math.min(ds.y1,ds.y2)+'px',width:Math.abs(ds.x2-ds.x1)+'px',height:Math.abs(ds.y2-ds.y1)+'px',border:'1.5px dashed var(--accent)',borderRadius:ds.shape==='venn'?'var(--r-md)':'var(--r-md)',background:'var(--accent-soft)',zIndex:1}:{}};
-    const selG=s.sel&&s.sel.kind==='group'?s.sel.id:null;
-    const groups=s.groups.map(g=>{ const isVenn=g.shape==='venn',isTl=g.shape==='timeline'; const sg=selG===g.id; const cbc=sg?'var(--accent)':'var(--border-strong)';
-      const boxStyle=isVenn?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',background:'transparent',zIndex:1}:isTl?{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',borderTop:'1.5px '+(sg?'solid ':'dashed ')+cbc,background:'transparent',zIndex:1}:{position:'absolute',left:g.x+'px',top:g.y+'px',width:g.w+'px',height:g.h+'px',border:'1.5px '+(sg?'solid ':'dashed ')+cbc,borderRadius:'var(--r-md)',background:'rgba(255,255,255,.02)',zIndex:1};
-      const circ={position:'absolute',top:'0',width:'64%',height:'100%',borderRadius:'50%',border:'1.5px dashed '+cbc,background:'rgba(76,141,255,.04)'};
-      const an=g.anchor?this.PB_card(g.anchor):null,anColor=an?(an.kind==='person'?an.c1:'var(--accent)'):null;
-      const tlTicks=isTl?this.PB_LANES.map((lb,i)=>({label:lb,style:{position:'absolute',left:((i+0.5)/this.PB_LANES.length*100)+'%',top:'2px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'},tickStyle:{width:'1px',height:'7px',background:'var(--border-strong)'},labelStyle:{color:'var(--fg-4)',fontSize:'10px',whiteSpace:'nowrap'}})):[];
-      return { label:g.label, isVenn, isTl, notTl:!isTl, empty:!isTl&&this.PB_regionMembers(g).length===0, boxStyle, circleL:Object.assign({},circ,{left:'0'}), circleR:Object.assign({},circ,{right:'0'}), tlTicks,
-        hasAnchor:!!an, anchorIni:an?(an.ini||'"'):'', anchorLabel:an?an.label:'', anchorColor:anColor,
-        anchorSlotStyle:{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'16px',height:'16px',borderRadius:'4px',border:an?'none':'1px dashed var(--border-strong)',background:an?('linear-gradient(135deg,'+anColor+','+anColor+')'):'transparent',color:'#0A0A0B',font:'700 9px var(--font-sans)',cursor:'pointer',flex:'none'},
-        onClearAnchor:()=>this.PB_set({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{anchor:null}):x)}),
-        labelWrapStyle:{position:'absolute',left:isVenn?'50%':(isTl?'8px':'18px'),top:'-11px',transform:isVenn?'translateX(-50%)':'none',display:'flex',alignItems:'center',gap:'5px',background:'var(--bg-subtle)',padding:'0 4px'},
-        labelStyle:{background:'transparent',border:'none',outline:'none',boxShadow:'none',color:an?anColor:'var(--fg-3)',font:'600 11px var(--font-sans)',padding:0,maxWidth:'140px'},
-        stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onLabel:(e)=>this.PB_set({groups:s.groups.map(x=>x.id===g.id?Object.assign({},x,{label:e.target.value}):x)}),onMoveDown:(e)=>this.PB_onGroupMoveDown(g.id,e),onResizeDown:(e)=>this.PB_onGroupResizeDown(g.id,e) }; });
-    const selL=s.sel&&s.sel.kind==='label'?s.sel.id:null;
-    const labels=s.labels.map(lb=>({text:lb.text,selected:selL===lb.id,onDel:()=>{ this.PB_set({labels:s.labels.filter(x=>x.id!==lb.id),sel:null}); },delStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },wrapStyle:{left:lb.x+'px',top:lb.y+'px',zIndex:4,display:'flex',alignItems:'center',gap:'4px',cursor:'grab'},inputStyle:{background:selL===lb.id?'var(--accent-soft)':'transparent',pointerEvents:selL===lb.id?'auto':'none'},onDown:(e)=>this.PB_onLabelDown(lb.id,e),stopIfEdit:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },onText:(e)=>this.PB_set({labels:s.labels.map(x=>x.id===lb.id?Object.assign({},x,{text:e.target.value}):x)})}));
-    const markers=s.times.slice().sort((a,b)=>a.x-b.x).map(t=>{ const sel=s.sel&&s.sel.kind==='time'&&s.sel.id===t.id; const active=s.hlTimeId===t.id; return { id:t.id, label:t.label, selected:sel,
-      onDown:(e)=>this.PB_onTimeDown(t.id,e), onHi:()=>this.PB_set({hlTimeId:active?null:t.id}),
-      onLabel:(e)=>this.PB_set({times:s.times.map(x=>x.id===t.id?Object.assign({},x,{label:e.target.value}):x)}),
-      onDel:()=>this.PB_delTime(t.id), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); }, locked:false, notLocked:true,
-      wrapStyle:{position:'absolute',left:t.x+'px',top:'8px',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',cursor:'grab',zIndex:sel?12:6},
-      tickStyle:{width:'2px',height:'11px',background:active?'var(--accent)':'var(--border-strong)'},
-      inputStyle:{background:sel?'var(--accent-soft)':'transparent',border:'none',outline:'none',textAlign:'center',color:active?'var(--accent)':'var(--fg-3)',font:(active?'600':'500')+' 12px var(--font-sans)',width:'72px',pointerEvents:sel?'auto':'none',borderRadius:'4px'},
-      guideStyle:active?{position:'absolute',left:t.x+'px',top:'56px',width:'1px',height:'1544px',background:'var(--accent-soft)',pointerEvents:'none',zIndex:0}:null }; });
-    const relPicker={open:!!rp,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:rp?{position:'absolute',left:rp.x+'px',top:rp.y+'px',zIndex:30,minWidth:'150px'}:{},onDelete:()=>this.PB_delRel(),opts:Object.keys(this.PB_REL).map(k=>({label:this.PB_REL[k].label,onPick:()=>this.PB_setRel(k),dot:{width:'9px',height:'9px',borderRadius:'3px',flex:'none',background:this.PB_REL[k].color}}))};
-    let toolbar={show:false,style:{},actions:[]};
-    if(s.sel){ let ex,ey,acts=[]; const pinned=!!(s.pins&&s.pins[s.sel.id]); const abtn=(label,fn,danger)=>({label,onClick:fn,stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{cursor:'pointer',fontSize:'12px',fontWeight:500,color:danger?'var(--label-red)':'var(--fg-2)',padding:'0 4px'}});
-      const pinBtn=abtn(pinned?'고정 해제':'고정',()=>this.PB_togglePin(s.sel.id));
-      if(s.sel.kind==='piece'){ const p=s.placed[s.sel.id],d=this.PB_card(s.sel.id); if(p){ ex=p.x; ey=p.y; acts.push(abtn(this.PB_sizeOf(s.sel.id)==='chip'?'크게':'작게',()=>this.PB_cycleSize(s.sel.id))); if(d.kind!=='memo') acts.push(abtn('상세',()=>this.PB_set({detailId:s.sel.id,detailFull:false}))); acts.push(abtn('복제',()=>this.PB_dupPiece(s.sel.id))); acts.push(pinBtn); acts.push(abtn('삭제',()=>this.PB_deleteSel(),true)); } }
-      else if(s.sel.kind==='label'){ ex=undefined; }
-      else if(s.sel.kind==='group'){ const g=s.groups.find(x=>x.id===s.sel.id); if(g){ ex=g.x; ey=g.y; acts.push(pinBtn); acts.push(abtn('삭제',()=>this.PB_deleteSel(),true)); } }
-      if(ex!==undefined) toolbar={show:true,actions:acts,style:{position:'absolute',left:ex+'px',top:(ey-34)+'px',zIndex:25,display:'flex',alignItems:'center',gap:'10px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-sm)',boxShadow:'var(--shadow-popover)',padding:'5px 9px'}};
-    }
-    let detail={open:false,style:{}};
-    if(s.detailId&&s.placed[s.detailId]){ const d=this.PB_card(s.detailId),p=s.placed[s.detailId]; const tc=d.kind==='person'?d.c1:(d.kind==='evidence'?'var(--accent)':(d.kind==='memo'?'#F2C94C':'var(--fg-3)'));
-      detail={open:true,color:tc,typeLabel:d.kind==='person'?'인물':(d.kind==='evidence'?'물증':(d.kind==='memo'?'메모':'진술')),label:d.label,sub:d.sub||'',hasSub:!!d.sub,body:d.quote||d.text||'',hasBody:!!(d.quote||d.text),claim:d.claim||'',hasClaim:!!d.claim,claimLabel:ln==='ko'?'본인 주장':'Own claim',clues:d.clues||[],hasClues:!!(d.clues&&d.clues.length),cluesLabel:ln==='ko'?'발견된 단서':'Found clues',slots:d.slots||[],hasSlots:!!(d.slots&&d.slots.length),unknownLabel:ln==='ko'?'미확인':'Unknown',hasFull:!!d.fullStmt,fullText:d.fullStmt||'',fullOpen:!!s.detailFull,fullChevron:s.detailFull?'rotate(90deg)':'rotate(0deg)',fullLabel:ln==='ko'?'진술 원문':'Full statement',onToggleFull:()=>this.PB_set({detailFull:!s.detailFull}),onClose:()=>this.PB_set({detailId:null}),stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },style:{position:'absolute',left:(p.x+this.PB_cardW(s.detailId)+10)+'px',top:p.y+'px',zIndex:35,width:'240px',background:'var(--bg-elevated)',border:'1px solid var(--border-strong)',borderRadius:'var(--r-md)',boxShadow:'var(--shadow-modal)',padding:'14px 16px'}}; }
-    const scX=150/2600,scY=100/1600,dots=placedIds.map(id=>({style:{position:'absolute',left:(s.placed[id].x*scX)+'px',top:(s.placed[id].y*scY)+'px',width:'5px',height:'5px',borderRadius:'50%',background:this.PB_card(id).kind==='person'?'var(--accent)':'var(--fg-3)'}}));
-    const mmMap=(e)=>{ const el=e.currentTarget.getBoundingClientRect(); const mx=(e.clientX-el.left)/scX, my=(e.clientY-el.top)/scY; return this.PB_clampPan(-(mx*s.zoom)+350, -(my*s.zoom)+260); };
-    const minimap={dots,onDown:(e)=>{ if(s.mapLock)return; this._mmDrag=true; this.PB_set({pan:mmMap(e)}); },onMove:(e)=>{ if(this._mmDrag&&!s.mapLock) this.PB_set({pan:mmMap(e)}); },onUp:()=>{ this._mmDrag=false; },viewport:{pointerEvents:'none',position:'absolute',left:((-s.pan.x/s.zoom)*scX)+'px',top:((-s.pan.y/s.zoom)*scY)+'px',width:((700/s.zoom)*scX)+'px',height:((520/s.zoom)*scY)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)'}};
-    const tool=s.tool;
-    /**
-     * 배경(바닥). 탭마다 하나. 세계의 고정된 자리에 놓이고 **움직이지 않는다** —
-     * 「상황판 자체가 그 장소」라는 것이 사용자 결정이다(2026-05-26 → 2026-07-26).
-     *
-     * 도면은 `pointerEvents:'none'` 으로 막는다. 안 막으면 상황판에서 조사가
-     * 실행되고 격자 주장이 바뀐다. `zIndex:0` 이라 영역(1)·라벨(4)·조각(5)이
-     * 전부 그 위에 온다 — 서랍의 카드를 도면 위에 올리는 것이 이 기능의 목적이다.
-     *
-     * 시간대 전환은 **살린다**. `mapTime` 은 순수 화면 상태다.
-     */
-    const bdSrc = s.backdrop || null;
-    const bdW = s.backdropW || 760;
-    const backdrop = !bdSrc ? { show:false } : {
-      show:true, src:bdSrc, label:(this.PB_srcDef(bdSrc)||{}).label || bdSrc,
-      isPlan:bdSrc==='plan', isGrid:bdSrc==='grid', isGraph:bdSrc==='graph',
-      needsTimes:bdSrc==='plan',
-      wrapStyle:{position:'absolute',left:this.PB_BACKDROP_AT.x+'px',top:this.PB_BACKDROP_AT.y+'px',
-        width:bdW+'px',zIndex:0,pointerEvents:'none',userSelect:'none'},
-      capStyle:{pointerEvents:'auto',display:'flex',alignItems:'center',gap:'6px',marginBottom:'4px',
-        fontSize:'11px',fontWeight:500,color:'var(--fg-4)',letterSpacing:'.04em'},
-      // 시간대 전환만 살린다. 나머지 도면은 아래에서 `pointerEvents:none` 로 죽는다
-      timesStyle:{pointerEvents:'auto',marginBottom:'6px'},
-      onResizeDown:(e)=>{ if(e.stopPropagation)e.stopPropagation(); this.PB_set({dragId:'backdrop',dragKind:'backdrop-resize',moved:true}); },
-      resizeStyle:{pointerEvents:'auto',position:'absolute',right:'-6px',bottom:'-6px',width:'13px',height:'13px',
-        border:'1px solid var(--border-strong)',borderRadius:'2px',background:'var(--bg-elevated)',cursor:'nwse-resize'},
-      onClear:()=>this.PB_setBackdrop(bdSrc),
-      clearStyle:{pointerEvents:'auto',cursor:'pointer',color:'var(--fg-4)',fontSize:'11px'},
-    };
-    /** 탭 띠 — 스프레드시트 탭처럼 */
-    const boards=(s.boards||[]).map((b,i)=>({
-      name:b.name||('상황판 '+(i+1)), active:i===(s.active||0),
-      onGo:()=>this.PB_gotoBoard(i),
-      onName:(e)=>this.PB_renameBoard(i,e.target.value),
-      onDel:(e)=>{ if(e.stopPropagation)e.stopPropagation(); this.PB_delBoard(i); },
-      showDel:i===(s.active||0)&&(s.boards||[]).length>1,
-      backdropMark:(this.PB_srcDef(b.backdrop)||{}).label || '',
-      // 단축 `border` 와 `borderBottom` 을 섞으면 React 가 경고한다(재렌더 때
-      // 어느 쪽이 이기는지 보장이 없다). 세 변을 따로 적는다
-      tabStyle:{display:'flex',alignItems:'center',gap:'5px',padding:'4px 8px',flex:'none',cursor:'pointer',
-        borderRadius:'var(--r-sm) var(--r-sm) 0 0',
-        borderTop:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
-        borderLeft:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
-        borderRight:'1px solid '+(i===(s.active||0)?'var(--border-strong)':'transparent'),
-        background:i===(s.active||0)?'var(--bg-elevated)':'transparent'},
-      nameStyle:{width:'82px',border:'none',background:'transparent',outline:'none',padding:0,
-        fontSize:'11px',fontWeight:i===(s.active||0)?600:400,
-        color:i===(s.active||0)?'var(--fg)':'var(--fg-3)'},
-      markStyle:{fontSize:'9px',color:'var(--fg-4)',whiteSpace:'nowrap'},
-      delStyle:{fontSize:'10px',color:'var(--fg-4)',cursor:'pointer'},
-    }));
-    const onAddBoard=()=>this.PB_addBoard();
-
-    return { drawer,pieces,strings,liveLine,groups,tempGroup,labels,markers,backdrop,boards,onAddBoard,onAddTime:()=>this.PB_addTime(),tlStop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); },relPicker,minimap,toolbar,detail,timelineOn:s.timelineOn,
-      worldStyle:{position:'absolute',left:0,top:0,width:'2600px',height:'1600px',transformOrigin:'0 0',transform:'translate('+s.pan.x+'px,'+s.pan.y+'px) scale('+s.zoom+')'},
-      tlBandTop: (s.mapLock?0:((-s.pan.y)/s.zoom))+'px',
-      canvasCursor: tool?'copy':(s.panning?'grabbing':'default'),
-      addChip:'v-chip'+(s.addOpen||tool?' active':''), addOpen:s.addOpen, onToggleAdd:()=>this.PB_set({addOpen:!s.addOpen,tool:null}),
-      tools:this.PB_TOOLS.map(t=>({label:t.label,onPick:()=>this.PB_set({tool:t.t,addOpen:false}),dot:{width:'8px',height:'8px',borderRadius:t.t==='venn'?'50%':'2px',flex:'none',background:'var(--fg-3)'}})),
-      connChip:'v-chip'+(s.connectMode?' active':''), onToggleConn:()=>this.PB_set({connectMode:!s.connectMode,connectFrom:null,tool:null}),
-      tlChip:'v-chip'+(s.timelineOn?' active':''), onToggleTl:()=>this.PB_set({timelineOn:!s.timelineOn,hlTimeId:null}),
-      mapLockChip:'v-chip'+(s.mapLock?' active':''), onToggleMapLock:()=>this.PB_set({mapLock:!s.mapLock,panning:false}),
-      drawerOpen:s.drawerOpen, drawerClosed:!s.drawerOpen, drawerTitle: ln==='ko'?'자료':'Sources', onToggleDrawer:()=>this.PB_set({drawerOpen:!s.drawerOpen}),
-      hint: tool?'클릭/드래그해 배치':(s.connectMode?(s.connectFrom?'이을 두 번째 카드를 누르세요':'연결할 첫 카드를 누르세요'):'클릭=선택 · 드래그=이동 · 우측 점 끌어 연결 · 빈 곳=이동'),
-      zoomPct:Math.round(s.zoom*100)+'%',onZoomIn:()=>this.PB_setZoom(s.zoom+0.15),onZoomOut:()=>this.PB_setZoom(s.zoom-0.15),
-      onHome:()=>this.PB_set({zoom:1,pan:{x:40,y:40}}),
-      onFit:()=>{ const ids=placedIds; if(!ids.length){ this.PB_set({zoom:1,pan:{x:0,y:0}}); return; } let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const p=s.placed[id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x+this.PB_cardW(id)); y1=Math.max(y1,p.y+this.PB_cardH(id)); }); const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2,z=Math.max(0.5,Math.min(1.3,Math.min(700/bw,520/bh))); this.PB_set({zoom:z,pan:{x:-(x0-pad)*z+40,y:-(y0-pad)*z+40}}); },
-      onReset:()=>this.PB_set({placed:{},memoText:{},memoOrder:[],labels:[],groups:[],strings:[],times:this.PB.times,sel:null,detailId:null,relPicker:null,pan:{x:0,y:0},zoom:1}),
-      onBgDown:(e)=>this.PB_onBgDown(e),onCanvasMove:(e)=>this.PB_onCanvasMove(e),onCanvasUp:(e)=>this.PB_onCanvasUp(e),
-      marquee: s.marquee?{ style:{position:'absolute',left:Math.min(s.marquee.x1,s.marquee.x2)+'px',top:Math.min(s.marquee.y1,s.marquee.y2)+'px',width:Math.abs(s.marquee.x2-s.marquee.x1)+'px',height:Math.abs(s.marquee.y2-s.marquee.y1)+'px',border:'1px solid var(--accent)',background:'var(--accent-soft)',zIndex:30,pointerEvents:'none'} }:null,
-      bindBox: null,
-      mselBar: (s.sel&&s.sel.kind==='bind'&&(this.PB.binds||[]).find(b=>b.id===s.sel.id))?{ bind:true, word:'결속', label:'해제', clearLabel:'선택 해제', count:((this.PB.binds||[]).find(b=>b.id===s.sel.id)||{mem:[]}).mem.length, onBlock:()=>this.PB_unbind(s.sel.id), onClear:()=>this.PB_set({sel:null}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } } : (s.msel.length>=2?{ word:'선택', label:'묶기', clearLabel:'해제', count:s.msel.length, onBlock:()=>this.PB_makeBlock(), onClear:()=>this.PB_set({msel:[]}), stop:(e)=>{ if(e.stopPropagation)e.stopPropagation(); } }:null) };
-  }
-
-  /**
-   * 탭마다 따로 갖는 키. 나머지는 `pb` 루트에 남아 **모든 탭이 공유**한다.
-   *
-   * 갈라놓은 기준은 「사건에 대한 기록인가, 이 추리에 대한 배치인가」다 —
-   * 메모와 타임라인은 사건에 대한 것이라 탭을 넘나들고(한 탭에서 쓴 메모를 다른
-   * 탭에서도 쓴다), 배치·실·영역·라벨은 그 추리에만 속한다. 사용자 결정(2026-07-26).
-   */
-  PB_CONTENT = ['placed','strings','groups','binds','pins','size','labels','backdrop','backdropW'];
-  PB_newBoard(name){ return { name, backdrop:null, backdropW:760,
-    placed:{}, strings:[], groups:[], binds:[], pins:{}, size:{}, labels:[] }; }
-  /**
-   * 「루트 + 활성 탭」 병합 읽기 뷰.
-   *
-   * 이것이 탭 기능을 싸게 만든 열쇠다 — 상황판 코드 86곳이 `s.placed`·`s.pan` 을
-   * 섞어 읽는데, 병합해서 넘기면 **그 코드가 한 줄도 안 바뀐다.** 쓰기는
-   * `PB_set` 이 콘텐츠/화면으로 갈라 보낸다.
-   *
-   * `pb` 는 변경마다 새 객체로 갈리므로 **identity 로 캐시**한다. 캐시가 없으면
-   * 필터 콜백 안의 `this.PB.placed` 가 항목마다 병합을 새로 만든다.
-   */
-  get PB(){
-    const p=this.state.pb;
-    if(this._pbMemoFor===p) return this._pbMemo;
-    const b=(p.boards||[])[p.active||0]||{};
-    this._pbMemoFor=p; this._pbMemo=Object.assign({},p,b);
-    return this._pbMemo;
-  }
-  PB_set(patch){
-    this.setState(s=>{
-      const p=s.pb, cut={}, root={};
-      for(const k of Object.keys(patch)) (this.PB_CONTENT.indexOf(k)>=0?cut:root)[k]=patch[k];
-      if(!Object.keys(cut).length) return { pb: Object.assign({},p,root) };
-      const boards=(p.boards||[]).slice(); const i=p.active||0;
-      boards[i]=Object.assign({}, boards[i]||this.PB_newBoard('상황판 1'), cut);
-      return { pb: Object.assign({},p,root,{boards}) };
-    });
-  }
-  PB_addBoard(){
-    const p=this.state.pb, boards=(p.boards||[]).slice();
-    boards.push(this.PB_newBoard('상황판 '+(boards.length+1)));
-    this.PB_set({boards, active:boards.length-1, sel:null, msel:[], detailId:null, pan:{x:0,y:0}});
-  }
-  PB_gotoBoard(i){ this.PB_set({active:i, sel:null, msel:[], detailId:null, dragId:null, dragKind:null}); }
-  PB_renameBoard(i,name){ const b=(this.state.pb.boards||[]).slice(); b[i]=Object.assign({},b[i],{name}); this.PB_set({boards:b}); }
-  PB_delBoard(i){
-    const p=this.state.pb, boards=(p.boards||[]).slice();
-    if(boards.length<=1) return;                    // 마지막 하나는 남긴다
-    boards.splice(i,1);
-    this.PB_set({boards, active:Math.max(0,Math.min(i,boards.length-1)), sel:null, msel:[], detailId:null});
-  }
-  PB_key(){ if(this._pbKey) return; this._pbKey=(e)=>{ const t=document.activeElement,tag=t&&t.tagName; if(tag==='INPUT'||tag==='TEXTAREA')return; if(this.state.view!=='board')return; if((e.key==='Delete'||e.key==='Backspace')&&this.PB&&this.PB.sel){ e.preventDefault(); this.PB_deleteSel(); } }; window.addEventListener('keydown',this._pbKey); }
-
   applyTheme() { try { document.documentElement.setAttribute('data-theme', this.state.theme === 'light' ? 'light' : 'dark'); } catch (e) {} }
 
   batchim(w) { if (!w) return false; const c = w.charCodeAt(w.length - 1); if (c < 0xAC00 || c > 0xD7A3) return false; return (c - 0xAC00) % 28 !== 0; }
@@ -2205,7 +1842,6 @@ export default class App extends React.Component {
       map: '<path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z"/><path d="M6 3v9M10 4.5v9"/>',
       guide: '<rect x="2.5" y="2.5" width="11" height="4" rx="1"/><rect x="2.5" y="9.5" width="11" height="4" rx="1"/>',
       graph: '<circle cx="4" cy="5" r="2"/><circle cx="12" cy="4" r="1.6"/><circle cx="11" cy="12" r="2"/><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4"/>',
-      board: '<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><path d="M7 4.75h2M4.75 7v2"/>',
     };
     return React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, dangerouslySetInnerHTML: { __html: I[name] || '' } });
   }
@@ -2226,7 +1862,7 @@ export default class App extends React.Component {
   buildMoreNav(view) {
     const t = this.T();
     const item = (v, label, icon) => ({ label, icon: this.ICO(icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(v)), style: { display: 'flex', alignItems: 'center', gap: '10px', color: view === v ? 'var(--accent)' : 'var(--fg-2)' } });
-    return [ item('overview', t.navOverview, 'overview'), item('memo', t.navMemo, 'memo'), item('graph', t.navGraph, 'graph'), item('board', t.navBoard, 'board'), item('reference', t.navReference, 'guide') ];
+    return [ item('overview', t.navOverview, 'overview'), item('memo', t.navMemo, 'memo'), item('graph', t.navGraph, 'graph'), item('reference', t.navReference, 'guide') ];
   }
   markProfileSeen() { const seen = (this.state.seenClues || []).slice(); (this.state.invLog || []).forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; if (seen.indexOf(k) < 0) seen.push(k); }); }); this.setState({ seenClues: seen }); }
   openProfileDetail(pid) { this.setState({ openProfile: pid }); }
@@ -2272,7 +1908,6 @@ export default class App extends React.Component {
           style: { display: 'flex', alignItems: 'center', gap: '7px', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
       slots: sd.map(s => { const f = d.slots[s.k]; return { label: s.l, filled: !!f, empty: !f, text: f ? f.text : '', isNew: f ? f.isNew : false, onJump: f ? (() => this.goToLog(f.logKey)) : (() => {}) }; }) }; });
   }
-  boardJump(cardId, target){ const pid=(cardId||'').replace(/^(p_|q_|e_)/,''); if(target==='profile'){ this.setState({ view:'profile', openProfile:pid, sel:null }); } else { const e=Object.assign({},this.state.expanded); e[pid]=true; this.setState({ view:'statements', stmtMode:'original', expanded:e, sel:null }); } }
   goToLog(logKey) { this.setState({ view: 'investigate', openProfile: null, hlLog: logKey || null }); if (logKey) { clearTimeout(this._hlT); this._hlT = setTimeout(() => { if (this.state.hlLog === logKey) this.setState({ hlLog: null }); }, 2200); } }
   setMode(m) { this.setState({ stmtMode: m, openCell: null }); }
   /**
@@ -2558,7 +2193,7 @@ export default class App extends React.Component {
         const raw = localStorage.getItem('nobody-lies:' + c.id)
         if (!raw) return 'unplayed'
         const d = JSON.parse(raw)
-        if (!d || !(d.v === 1 || d.v === this.SAVE_VERSION)) return 'unplayed'
+        if (!d || this.SAVE_READABLE.indexOf(d.v) < 0) return 'unplayed'
         if (!c.blanks) return 'inProgress'
         const filled = Object.keys(d.blanks || {}).length
         return filled >= c.blanks ? 'clear' : 'inProgress'
@@ -2790,13 +2425,12 @@ export default class App extends React.Component {
   blankSection(bid) { for (const sid in this.SEC_BLANKS) if (this.SEC_BLANKS[sid].indexOf(bid) >= 0) return sid; return null; }
   secComplete(sid) { return this.SEC_BLANKS[sid].every(id => this.state.blanks[id] != null); }
   computeReveals(b) {
-    const sv = Object.assign({}, this.state.solved); const newLog = []; let changed = false, board = false;
+    const sv = Object.assign({}, this.state.solved); const newLog = []; let changed = false;
     this.SECTIONS.forEach((s, idx) => {
       const complete = this.SEC_BLANKS[s.id].every(id => b[id] != null);
       if (complete && !sv[s.id]) {
         sv[s.id] = true; changed = true;
         newLog.push({ action: 'seal', key: s.id, actionLabel: this.T().sealRecord, targetLabel: this.state.lang === 'ko' ? s.tKo : s.tEn, cost: 0, type: 'sealed', title: (this.state.lang === 'ko' ? (s.num + '장 완성') : ('Chapter ' + s.num + ' complete')), desc: this.sealSummaryFor(s.id, b) });
-        if (idx === this.SECTIONS.length - 2) board = true;
       }
     });
     if (!changed) return {};
@@ -2821,7 +2455,6 @@ export default class App extends React.Component {
     const q = newLog.map(l => l.key).filter(k => this.REVEALS[k] && this.REVEALS[k].narration);
     if (q.length) { patch.interludeQ = (this.state.interludeQ || []).concat(q); patch.stage = 'interlude'; }
     if (where) { patch.toast = (this.state.lang === 'ko' ? '새 정보가 공개되었습니다 · ' : 'New information · ') + where; clearTimeout(this._toastT); this._toastT = setTimeout(() => this.setState({ toast: null }), 4600); }
-    if (board && false) patch.narrMode = 'board';
     return patch;
   }
   sealSummaryFor(sid, b) { return this.SEC_BLANKS[sid].map(id => (b[id] || '') + this.particle(b[id] || '', this.BLANKS[id].par)).join(' · '); }
@@ -2911,8 +2544,6 @@ export default class App extends React.Component {
     });
   }
 
-  onDragCard(kind, value) { this.setState({ dragCard: { kind, value } }); }
-  onDropSlot(bid) { const d = this.state.dragCard, def = this.BLANKS[bid]; if (!d) return; const wantPerson = def.src === 'person'; const wantTerm = def.src === 'collected'; if ((wantPerson && d.kind === 'person') || (wantTerm && d.kind === 'term')) { const b = Object.assign({}, this.state.blanks); b[bid] = d.value; this.setState({ blanks: b, dragCard: null }); } else this.setState({ dragCard: null }); }
   buildResult() {
     const t = this.T(), ln = this.state.lang;
     const total = Object.keys(this.BLANKS).length;
@@ -2990,20 +2621,6 @@ export default class App extends React.Component {
     { logKey: 'belongings:sakura', node: { id: 'note', ko: '위장 유서', en: 'Fake note', x: 62, y: 40 }, a: 'note', b: 'sakura', ko: '작성', en: 'Written by', danger: true },
     { logKey: 'phone:wonyoung', node: null, a: 'wonyoung', b: 'victim', ko: '새벽 통화 확인', en: 'Call verified', danger: false },
   ];
-  buildBoardSeed() {
-    const rev = this.revealedTerms();
-    const cards = [];
-    const profs = {}; this.buildProfiles().forEach(pf => { profs[pf.id] = pf; });
-    this.PEOPLE.forEach(p => { const pf = profs[p.id] || {}; cards.push({ id: 'p_' + p.id, kind: 'person', label: p.name, sub: (this.state.lang === 'ko' ? (p.relKo || '') : (p.relEn || '')), ini: p.ini, c1: p.c1, c2: p.c2,
-      claim: (this.state.lang === 'ko' ? (p.claimKo || '') : (p.claimEn || p.claimKo || '')),
-      clues: (pf.clues || []).map(c => c.text || c),
-      slots: (pf.slots || []).map(s => ({ label: s.label, filled: !!s.filled, empty: !s.filled, text: s.text || '' })), fullStmt: (this.STMT[p.id] || []).join(String.fromCharCode(10,10)) }); });
-    this.COLLECTED_POOL.forEach(w => { if (rev[w]) cards.push({ id: 'e_' + w, kind: 'evidence', label: w, sub: '', icon: this.termIconPath(w) }); });
-    this.PEOPLE.forEach(p => { const first = (this.STMT[p.id] && this.STMT[p.id][0]) ? this.STMT[p.id][0] : ''; if (first) cards.push({ id: 'q_' + p.id, kind: 'quote', label: p.name + ' 진술', spk: p.c1, fullStmt: (this.STMT[p.id] || []).join(String.fromCharCode(10,10)), quote: '"' + (first.length > 70 ? first.slice(0, 70) + '…' : first) + '"' }); });
-    (this.state.memos || []).forEach((m, i) => { if (m.content && m.content.trim()) cards.push({ id: 'mm_' + m.id, kind: 'quote', label: '메모 #' + (i + 1), quote: m.content }); });
-    const revealedEvidence = {}; this.COLLECTED_POOL.forEach(w => { if (rev[w]) revealedEvidence['e_' + w] = true; });
-    return { cards, revealedEvidence };
-  }
   buildGraph() {
     const ln = this.state.lang, t = this.T(), byId = {}, secured = {}, sel = this.state.graphSel || [];
     (this.state.invLog || []).forEach(e => { secured[e.action + ':' + e.key] = true; });
@@ -3318,26 +2935,6 @@ export default class App extends React.Component {
     { logKey: 'belongings:sakura', loc: 'annex', ko: '위장 유서', en: 'Fake note' },
     { logKey: 'autopsy:body', loc: 'room', ko: '일산화탄소', en: 'CO' },
   ];
-  buildBoard() {
-    const t = this.T(), ln = this.state.lang;
-    const sections = this.SECTIONS.map(s => { const st = this.secState(s.id); return {
-      id: s.id, num: s.num, title: ln === 'ko' ? s.tKo : s.tEn, locked: st === 'locked',
-      statusKey: st === 'sealed' ? 'done' : st === 'open' ? 'progress' : 'backlog',
-      slots: this.SEC_BLANKS[s.id].map(bid => { const def = this.BLANKS[bid], val = this.state.blanks[bid], sealed = st === 'sealed';
-        const isPersonVal = val && this.PEOPLE.find(p => p.name === val);
-        return { bid, label: t[def.kind], filled: val != null, locked: st === 'locked', value: val,
-          color: isPersonVal ? isPersonVal.color : 'var(--accent)',
-          onDrop: () => this.onDropSlot(bid), onClear: () => { const b = Object.assign({}, this.state.blanks); delete b[bid]; this.setState({ blanks: b }); },
-          slotStyle: { minHeight: '46px', border: '1.5px dashed ' + (val ? 'transparent' : 'var(--border-strong)'), borderRadius: 'var(--r-sm)', background: val ? (isPersonVal ? 'var(--bg-elevated)' : 'var(--accent-soft)') : (st === 'locked' ? 'transparent' : 'var(--bg-subtle)'), display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', opacity: st === 'locked' ? 0.4 : 1, boxShadow: isPersonVal ? 'inset 3px 0 0 ' + isPersonVal.color : 'none' } };
-      }) }; });
-    const suspects = this.PEOPLE.map(p => ({ kind: 'person', value: p.name, name: p.name, sexAge: this.sexAgeOf(p), color: p.color, onDrag: () => this.onDragCard('person', p.name),
-      style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-md)', background: 'var(--bg-elevated)', cursor: 'grab', boxShadow: 'inset 3px 0 0 ' + p.color },
-      trayStyle: { display: 'inline-flex', alignItems: 'center', gap: '7px', height: '30px', padding: '0 12px 0 9px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated)', cursor: 'grab', fontSize: '13px', fontWeight: 500, color: 'var(--fg)', whiteSpace: 'nowrap', boxShadow: 'inset 3px 0 0 ' + p.color } }));
-    const rev = this.revealedTerms();
-    const terms = this.COLLECTED_POOL.filter(w => rev[w]).map(w => ({ kind: 'term', value: w, label: w, iconPath: this.termIconPath(w), onDrag: () => this.onDragCard('term', w),
-      style: { display: 'inline-flex', alignItems: 'center', gap: '6px', height: '30px', padding: '0 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-pill)', background: 'var(--bg-elevated)', cursor: 'grab', fontSize: '13px', color: 'var(--fg-2)' } }));
-    return { sections, suspects, terms, termsEmpty: terms.length === 0 };
-  }
   buildListBlank(bid) {
     const t = this.T(), def = this.BLANKS[bid], val = this.state.blanks[bid];
     const candType = def.src === 'collected' ? t.srcCollected : t.srcClosed;
@@ -3688,7 +3285,6 @@ export default class App extends React.Component {
         { title: ln === 'ko' ? '최종 제출 · 확인' : 'Final submit · confirm', desc: ln === 'ko' ? '아무 때나 제출 가능. 제출 후에만 채점되며 되돌릴 수 없음. 미채움 공란 개수를 경고.' : 'Submit anytime. Graded only after submission, irreversible. Warns of unfilled blanks.' },
         { title: ln === 'ko' ? '도착 신호 · 안 읽음' : 'Arrival · unread', desc: ln === 'ko' ? '새 정보가 공개되면 토스트로 위치만 알리고, 사이드바 항목에 안 읽음 점이 남음. 방문하면 사라짐.' : 'New info shows a toast pointing to where, and leaves an unread dot on the sidebar item; cleared on visit.' },
         { title: ln === 'ko' ? '관계도 · 알리바이 대조' : 'Graph · alibi cross-check', desc: ln === 'ko' ? '두 용의자 노드를 선택하면 대조 바가 뜨고, 실행하면 조사 1회로 관계가 드러남.' : 'Selecting two suspect nodes shows a cross-check bar; running it spends one investigation to reveal a link.' },
-        { title: ln === 'ko' ? '보드 모드 · 심증판' : 'Board mode', desc: ln === 'ko' ? '공란 슬롯에 용의자·확보 단어 카드를 드래그. 5장 도달 시 기본 열림.' : 'Drag suspect/term cards into blank slots. Opens by default at the final section.' },
         { title: ln === 'ko' ? '평면도 · 시간대별' : 'Floor plan · by time', desc: ln === 'ko' ? '시간대를 바꾸면 각 인물의 주장 위치가 점으로 이동. 판정하지 않음.' : 'Switching times moves each person’s claimed position. No judgment.' },
         { title: ln === 'ko' ? '평면도 · 미공개 장소' : 'Floor plan · hidden place', desc: ln === 'ko' ? '별채는 1장 완성 전까지 지도에 나타나지 않음.' : 'The annex does not appear until section 1 is complete.' },
         { title: ln === 'ko' ? '정독 · 하이라이트' : 'Reading · highlight', desc: ln === 'ko' ? '드래그 선택 → 확인·의심·모순 색 적용. 인용·복사 가능.' : 'Drag-select → apply verified/doubtful/contradiction. Quote or copy.' },
@@ -3709,7 +3305,7 @@ export default class App extends React.Component {
     const t = this.T(), s = this.state, ln = s.lang;
     const view = s.view, isNarr = view === 'narrative', isStmt = view === 'statements', isRef = view === 'reference', isInv = view === 'investigate';
     const route = s.route, isHome = route === 'home', isDetail = route === 'detail';
-    const isProfile = view === 'profile', isOverview = view === 'overview', isMemo = view === 'memo', isMap = view === 'map', isGraph = view === 'graph', isLog = view === 'log', isBoard = view === 'board';
+    const isProfile = view === 'profile', isOverview = view === 'overview', isMemo = view === 'memo', isMap = view === 'map', isGraph = view === 'graph', isLog = view === 'log';
     const solvedCount = this.SECTIONS.filter(x => this.SEC_BLANKS[x.id].every(id => s.blanks[id] != null)).length;
     const filledBlanks = Object.keys(s.blanks).filter(k => s.blanks[k] != null).length;
     const navCls = (v) => 'nav-item' + (view === v ? ' active' : '');
@@ -3767,7 +3363,6 @@ export default class App extends React.Component {
         memoCls: navCls('memo'), memoSeg: segCls(isMemo), onMemo: () => this.setView('memo'), memoBadge: (s.memos || []).length ? ('' + (s.memos || []).length) : '',
         mapCls: navCls('map'), mapSeg: segCls(isMap), onMap: () => this.setView('map'),
         graphCls: navCls('graph'), graphSeg: segCls(isGraph), onGraph: () => this.setView('graph'),
-        boardCls: navCls('board'), boardSeg: segCls(isBoard), onBoard: () => this.setView('board'),
         logCls: navCls('log'), logSeg: segCls(isLog), onLog: () => this.setView('log'), logBadge: (s.invLog || []).length ? ('' + (s.invLog || []).length) : '',
         narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length, invBadge: '' + (this.BUDGET - this.invSpent()),
       },
@@ -3776,13 +3371,11 @@ export default class App extends React.Component {
       moreOpen: s.moreOpen, onCloseMore: () => this.setState({ moreOpen: false }), stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
       stmt: { gridCls: segCls(s.stmtMode === 'grid'), origCls: segCls(s.stmtMode === 'original'), onGrid: () => this.setMode('grid'), onOriginal: () => this.setMode('original') },
       overview,
-      narrLayoutStyle: { display: 'flex', gap: '22px', padding: '22px 24px', flexDirection: s.isNarrow ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'center', maxWidth: (s.narrMode === 'board') ? 'none' : '1120px', margin: '0 auto' },
+      narrLayoutStyle: { display: 'flex', gap: '22px', padding: '22px 24px', flexDirection: s.isNarrow ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'center', maxWidth: '1120px', margin: '0 auto' },
       bankStyle: { width: s.isNarrow ? '100%' : '292px', flex: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', position: s.isNarrow ? 'static' : 'sticky', top: '0', background: 'var(--bg-subtle)' },
       sections: this.buildSections(),
-      narr: { proseCls: segCls(s.narrMode === 'prose'), listCls: segCls(s.narrMode === 'list'), boardCls: segCls(s.narrMode === 'board'), onProse: () => this.setState({ narrMode: 'prose' }), onList: () => this.setState({ narrMode: 'list' }), onBoard: () => this.setState({ narrMode: 'board' }) },
-      narrProse: s.narrMode === 'prose', narrList: s.narrMode === 'list', narrBoard: s.narrMode === 'board',
+      narrProse: s.narrMode === 'prose', narrList: s.narrMode === 'list',
       narrShowBank: s.narrMode === 'prose',
-      board: this.buildBoard(),
       preventDefault: (e) => { if (e && e.preventDefault) e.preventDefault(); },
       reportHead: {
         caseNo: 'CASE-001', subject: ln === 'ko' ? '윤다인 (30)' : 'Kim Chae-won (30)',
@@ -3808,7 +3401,6 @@ export default class App extends React.Component {
       mapPlanMode: (s.mapMode || 'plan') === 'plan', mapGridMode: (s.mapMode || 'plan') === 'grid', onMapPlan: () => this.setState({ mapMode: 'plan' }), onMapGrid: () => this.setState({ mapMode: 'grid' }), mapPlanStyle: this.segTab((s.mapMode || 'plan') === 'plan'), mapGridStyle: this.segTab((s.mapMode || 'plan') === 'grid'),
       isGraph: isGraph, graph: this.buildGraph(),
       isLog: isLog, logView: this.buildInvestigation(),
-      isBoard: isBoard, boardSeed: this.buildBoardSeed(), boardJump: (cardId, target) => this.boardJump(cardId, target), pb: (this.state.view === 'board') ? this.PB_render() : null,
       invConfirm: this.buildInvConfirm(), invResultCard: this.buildInvResult(),
       isResult: view === 'result', result: result,
       finishCTA: { show: view === 'narrative' && s.started, onFinish: () => this.setState({ confirmFinish: true }) },
@@ -3818,8 +3410,7 @@ export default class App extends React.Component {
       shell: {
         showLeft: !s.isNarrow && s.leftOpen && !s.focusMode,
         leftClosed: !(!s.isNarrow && s.leftOpen && !s.focusMode),
-        showRight: s.rightOpen && !s.focusMode && !isBoard,
-        rightBoardMode: false, notRightBoard: true,
+        showRight: s.rightOpen && !s.focusMode,
         rightPanelStyle: s.isNarrow
           ? { position: 'absolute', left: 0, right: 0, bottom: 0, top: '38%', zIndex: 60, borderTop: '1px solid var(--border-strong)', borderRadius: '12px 12px 0 0', display: 'flex', flexDirection: 'column', minHeight: 0, background: 'var(--bg-elevated)', boxShadow: 'var(--shadow-modal)' }
           : { width: '340px', flex: 'none', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', minHeight: 0, background: 'var(--bg-subtle)' },
@@ -4019,10 +3610,6 @@ export default class App extends React.Component {
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                   <span>{V.ui.invLogTitle}</span><span className="count">{V.nav.logBadge}</span>
                 </div>
-                <div className={V.nav.boardCls} {...press(V.nav.onBoard, V.nav.boardCls, V.ui.navBoard)}>
-                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><path d="M7 4.75h2M4.75 7v2" /></svg>
-                  <span>{V.ui.navBoard}</span>
-                </div>
                 <div className={V.nav.memoCls} {...press(V.nav.onMemo, V.nav.memoCls, V.ui.navMemo)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 2.5h10v11H3z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
                   <span>{V.ui.navMemo}</span><span className="count">{V.nav.memoBadge}</span>
@@ -4179,38 +3766,6 @@ export default class App extends React.Component {
                         </>):null}
                       </div>
                     </React.Fragment>))}
-                    </>):null}
-                    {(V.narrBoard)?(<>
-                    <div style={S("display:flex;flex-direction:column;gap:14px")}>
-                      {arr(V.board.sections).map((bs,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px")}>
-                        <div style={S("display:flex;align-items:center;gap:9px;margin-bottom:12px")}>
-                          <StatusIcon status={bs.statusKey} size="16"></StatusIcon>
-                          <span className="v-meta" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{bs.num}{V.ui.navCase}</span>
-                          <span className="v-h3">{bs.title}</span>
-                        </div>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px")}>
-                          {arr(bs.slots).map((sl,$index)=>(<React.Fragment key={$index}><div>
-                            <div className="v-micro" style={S("color:var(--fg-4);margin-bottom:3px")}>{sl.label}</div>
-                            <div onDragOver={V.preventDefault} onDrop={sl.onDrop} style={sl.slotStyle}>
-                              {(sl.filled)?(<><span className="v-ui" style={S("color:var(--fg);flex:1;min-width:0")}>{sl.value}</span><span onClick={sl.onClear} style={S("cursor:pointer;color:var(--fg-4);font-size:11px")}>✕</span></>):null}
-                              {(sl.locked)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.secLocked}</span></>):null}
-                            </div>
-                          </div></React.Fragment>))}
-                        </div>
-                      </div></React.Fragment>))}
-                    </div>
-                    <div style={S("position:sticky;bottom:0;margin-top:16px;background:var(--bg-subtle);border:1px solid var(--border-strong);border-radius:var(--r-md);padding:10px 12px;box-shadow:0 -6px 18px rgba(0,0,0,.22)")}>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:9px")}>
-                        <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="4" width="11" height="8.5" rx="1.2"></rect><path d="M2.5 6.5h11"></path></svg>
-                        <span className="v-caption" style={S("color:var(--fg-2)")}>{V.ui.boardTools}</span>
-                        <span className="v-micro" style={S("color:var(--fg-4);margin-left:auto")}>{V.ui.boardToolsHint}</span>
-                      </div>
-                      <div style={S("display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;max-height:112px;overflow-y:auto;padding-bottom:2px")}>
-                        {(V.board.termsEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4);white-space:nowrap")}>{V.ui.bankEmpty}</span></>):null}
-                        {arr(V.board.terms).map((tm,$index)=>(<React.Fragment key={$index}><span draggable="true" onDragStart={tm.onDrag} style={tm.style}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4" style={S("flex:none")}><path d={tm.iconPath}></path></svg>{tm.label}</span></React.Fragment>))}
-                        {arr(V.board.suspects).map((c,$index)=>(<React.Fragment key={$index}><span style={S("flex:none")}><span draggable="true" onDragStart={c.onDrag} style={c.trayStyle}>{c.name}</span></span></React.Fragment>))}
-                      </div>
-                    </div>
                     </>):null}
                   </div>
 
@@ -4441,166 +3996,6 @@ export default class App extends React.Component {
               </>):null}
 
               
-              {(V.isBoard)?(<>
-                <div style={S("position:absolute;inset:0")}>
-        <div data-surface="vector" style={S("height:100vh;background:var(--bg-app);display:flex;flex-direction:column;font-family:var(--font-sans);overflow:hidden")}>
-          <div style={S("padding:12px 20px 10px;flex:none;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px")}>
-            <div className="v-ui" style={S("color:var(--fg)")}>상황판</div>
-            <span className="v-meta" style={S("color:var(--fg-4)")}>{V.pb.hint}</span>
-            <span style={S("flex:1")}></span>
-            <div style={S("position:relative")}>
-              <span className={V.pb.addChip} onClick={V.pb.onToggleAdd} style={S("cursor:pointer")}>＋ 생성</span>
-              {(V.pb.addOpen)?(<><div className="v-menu" style={S("position:absolute;right:0;top:30px;z-index:40;min-width:170px")}>
-                {arr(V.pb.tools).map((tl,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={tl.onPick}><span style={tl.dot}></span>{tl.label}</div></React.Fragment>))}
-              </div></>):null}
-            </div>
-            <span className={V.pb.tlChip} onClick={V.pb.onToggleTl} style={S("cursor:pointer")}>타임라인</span>
-            <span className={V.pb.mapLockChip} onClick={V.pb.onToggleMapLock} style={S("cursor:pointer")} title="화면 이동·줌 잠금">화면 고정</span>
-            <div style={S("display:flex;align-items:center;gap:2px;margin-left:2px")}>
-              <button className="iconbtn" onClick={V.pb.onZoomOut}>−</button><span className="v-micro" style={S("color:var(--fg-4);width:36px;text-align:center")}>{V.pb.zoomPct}</span><button className="iconbtn" onClick={V.pb.onZoomIn}>+</button><button className="iconbtn" onClick={V.pb.onFit} style={S("width:auto;padding:0 8px;font-size:11px")}>전체 보기</button><button className="iconbtn" onClick={V.pb.onHome} title="초기 화면" style={S("width:auto;padding:0 8px;font-size:11px")}>홈</button><button className="iconbtn" onClick={V.pb.onReset} title="빈 판으로 초기화" style={S("width:auto;padding:0 8px;font-size:11px;color:var(--label-red)")}>초기화</button>
-            </div>
-          </div>
-
-          <div className="pb-wrap" style={S("flex:1;display:flex;min-height:0")}>
-            {(V.pb.drawerOpen)?(<><div style={S("width:186px;flex:none;border-right:1px solid var(--border);background:var(--bg-sidebar);overflow:auto;padding:0 10px 20px")}>
-              <div style={S("position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:9px 2px 8px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);margin-bottom:10px")}>
-                <span className="v-micro" style={S("color:var(--fg-3);text-transform:uppercase;letter-spacing:.05em")}>{V.pb.drawerTitle}</span>
-                <span style={S("flex:1")}></span>
-                <div onClick={V.pb.onToggleDrawer} title="서랍 닫기" style={S("width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);border:1px solid var(--border-strong);background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px;flex:none")}>‹</div>
-              </div>
-              {arr(V.pb.drawer).map((sec,$index)=>(<React.Fragment key={$index}><div style={S("margin-bottom:14px")}>
-                <div style={S("display:flex;align-items:center;gap:6px;margin-bottom:7px")}><span style={sec.dot}></span><span className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em")}>{sec.title}</span><span style={S("flex:1")}></span></div>
-                <div style={S("display:flex;flex-direction:column;gap:5px")}>
-                  {(sec.locked)?(<><div style={S("padding:8px 10px;border:1px dashed var(--border-strong);border-radius:var(--r-sm);color:var(--fg-4);font-size:11px;line-height:1.5")}>{sec.lockedHint}</div></>):null}
-                  {arr(sec.items).map((it,$index)=>(<React.Fragment key={$index}><div className="pb-draw" onClick={it.onAdd} style={it.rowStyle}><span className="v-meta" style={S("color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{it.label}</span><span style={S("flex:1")}></span>{(it.placed)?(<><span style={it.badgeStyle}>{it.count}</span></>):null}</div></React.Fragment>))}
-                </div>
-              </div></React.Fragment>))}
-            </div></>):null}
-            {(V.pb.drawerClosed)?(<><div onClick={V.pb.onToggleDrawer} title="서랍 열기" style={S("position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:20;width:16px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);border-left:none;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--bg-elevated);color:var(--fg-3);cursor:pointer;font-size:13px")}>›</div></>):null}
-
-            <div style={S("flex:1;display:flex;flex-direction:column;min-width:0")}>
-              <div style={S("display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;flex:none;background:var(--bg-app);border-bottom:1px solid var(--border-strong);overflow-x:auto")}>
-                {arr(V.pb.boards).map((b,$index)=>(<React.Fragment key={$index}><div onClick={b.onGo} style={b.tabStyle}>
-                  <input value={b.name} onChange={b.onName} onClick={b.onGo} style={b.nameStyle} />
-                  {(b.backdropMark)?(<><span style={b.markStyle}>{b.backdropMark}</span></>):null}
-                  {(b.showDel)?(<><span onClick={b.onDel} title="이 상황판 삭제" style={b.delStyle}>✕</span></>):null}
-                </div></React.Fragment>))}
-                <span onClick={V.pb.onAddBoard} title="상황판 추가" style={S("flex:none;padding:4px 10px;cursor:pointer;color:var(--fg-3);font-size:13px")}>＋</span>
-              </div>
-            <div style={S(`position:relative;flex:1;overflow:hidden;background:var(--bg-subtle);touch-action:none;cursor:${V.pb.canvasCursor}`)} onPointerDown={V.pb.onBgDown} onPointerMove={V.pb.onCanvasMove} onPointerUp={V.pb.onCanvasUp}>
-              <div data-canvas style={V.pb.worldStyle}>
-                {(V.pb.backdrop.show)?(<><div style={V.pb.backdrop.wrapStyle}>
-                  <div style={V.pb.backdrop.capStyle}>
-                    <span>{V.pb.backdrop.label}</span>
-                    <span style={S("flex:1")}></span>
-                    <span onClick={V.pb.backdrop.onClear} title="바닥 걷기" style={V.pb.backdrop.clearStyle}>✕</span>
-                  </div>
-                  {(V.pb.backdrop.needsTimes)?(<><div style={V.pb.backdrop.timesStyle}>{this.renderPlanTimes(V)}</div></>):null}
-                  {(V.pb.backdrop.isPlan)?(<>{this.renderPlanFigure(V)}</>):null}
-                  {(V.pb.backdrop.isGrid)?(<>{this.renderClaimGridFigure(V)}</>):null}
-                  {(V.pb.backdrop.isGraph)?(<>{this.renderGraphFigure(V)}</>):null}
-                  <span onPointerDown={V.pb.backdrop.onResizeDown} title="크기" style={V.pb.backdrop.resizeStyle}></span>
-                </div></>):null}
-                {(V.pb.timelineOn)?(<>
-                  <div style={S(`position:absolute;left:0;top:${V.pb.tlBandTop};width:15000px;height:56px;border-bottom:1px dashed var(--border-strong);background:var(--bg-subtle)`)}>
-                    <span className="v-micro" style={S("position:absolute;left:10px;top:7px;color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em")}>시간 →</span>
-                    <span onClick={V.pb.onAddTime} onPointerDown={V.pb.tlStop} style={S("position:absolute;left:70px;top:6px;font-size:11px;color:var(--accent);cursor:pointer")}>＋시간</span>
-                    {arr(V.pb.markers).map((tk,$index)=>(<React.Fragment key={$index}><div style={tk.wrapStyle} onPointerDown={tk.onDown}>
-                      <span onClick={tk.onHi} onPointerDown={tk.stop} style={tk.tickStyle} title="시간 강조"></span>
-                      <input value={tk.label} onChange={tk.onLabel} onPointerDown={tk.stop} style={tk.inputStyle} />
-                      {(tk.selected)?(<>{(tk.locked)?(<><span title="시간축 고정됨" style={S("font-size:10px;color:var(--fg-4)")}>🔒</span></>):null}{(tk.notLocked)?(<><span onClick={tk.onDel} onPointerDown={tk.stop} title="삭제" style={S("font-size:10px;color:var(--label-red);cursor:pointer")}>삭제</span></>):null}</>):null}
-                    </div></React.Fragment>))}
-                  </div>
-                  {arr(V.pb.markers).map((tk,$index)=>(<React.Fragment key={$index}>{(tk.guideStyle)?(<><div style={tk.guideStyle}></div></>):null}</React.Fragment>))}
-                </>):null}
-
-                {arr(V.pb.groups).map((g,$index)=>(<React.Fragment key={$index}><div className="pb-box" style={g.boxStyle}>
-                  {(g.isVenn)?(<><span style={g.circleL}></span><span style={g.circleR}></span></>):null}
-                  {(g.empty)?(<><span style={S("position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font:700 22px var(--font-sans);color:var(--fg);opacity:.07;pointer-events:none")}>비어 있음</span></>):null}
-                  {(g.isTl)?(<>{arr(g.tlTicks).map((tk,$index)=>(<React.Fragment key={$index}><div style={tk.style}><span style={tk.tickStyle}></span><span style={tk.labelStyle}>{tk.label}</span></div></React.Fragment>))}</>):null}
-                  <span className="pb-grip" onPointerDown={g.onMoveDown} title="이동" style={S("position:absolute;left:-2px;top:-2px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:move;color:var(--fg-4);font-size:10px;z-index:2")}>⠿</span>
-                  <div style={g.labelWrapStyle}>
-                    <input value={g.label} onChange={g.onLabel} onPointerDown={g.stop} style={g.labelStyle} />
-                  </div>
-                  <span className="pb-grip" onPointerDown={g.onResizeDown} title="크기" style={S("position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;display:flex;align-items:flex-end;justify-content:flex-end;cursor:nwse-resize;color:var(--fg-4);font-size:11px;z-index:2")}>◢</span>
-                </div></React.Fragment>))}
-                {(V.pb.tempGroup.show)?(<><div style={V.pb.tempGroup.style}></div></>):null}
-                {(V.pb.marquee)?(<><div style={V.pb.marquee.style}></div></>):null}
-
-                <svg width="2600" height="1600" style={S("position:absolute;left:0;top:0;pointer-events:none")}>
-                  {arr(V.pb.strings).map((s,$index)=>(<React.Fragment key={$index}><line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} style={s.lineStyle}></line></React.Fragment>))}
-                  {(V.pb.liveLine.show)?(<><line x1={V.pb.liveLine.x1} y1={V.pb.liveLine.y1} x2={V.pb.liveLine.x2} y2={V.pb.liveLine.y2} stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 3"></line></>):null}
-                </svg>
-                {arr(V.pb.strings).map((s,$index)=>(<React.Fragment key={$index}><div onClick={s.onEdit} style={s.labelStyle}>{s.relLabel}</div></React.Fragment>))}
-
-                {arr(V.pb.labels).map((lb,$index)=>(<React.Fragment key={$index}><div className="pb-piece" style={lb.wrapStyle} onPointerDown={lb.onDown}>
-                  <input value={lb.text} onChange={lb.onText} onPointerDown={lb.stopIfEdit} placeholder="라벨" className="pb-lbl" style={lb.inputStyle} />
-                  {(lb.selected)?(<><span onClick={lb.onDel} onPointerDown={lb.delStop} title="삭제" style={S("display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 8px;border-radius:var(--r-sm);background:var(--bg-elevated);border:1px solid var(--border-strong);color:var(--label-red);cursor:pointer;font:600 11px var(--font-sans);flex:none")}>삭제</span></>):null}
-                </div></React.Fragment>))}
-
-                {arr(V.pb.pieces).map((p,$index)=>(<React.Fragment key={$index}><div className={p.wrapCls} style={p.wrapStyle} onPointerDown={p.onDown} onClick={p.onClick}>
-                  {(p.tierDot)?(<><div className="pb-card" style={p.dotStyle} title={p.label}>{p.ini}</div></>):null}
-                  {(p.tierChip)?(<><div className="pb-card" style={p.chipStyle}>
-                    {(p.isPerson)?(<><span style={p.avStyle}>{p.ini}</span></>):null}
-                    {(p.notPersonChip)?(<><span style={p.chipDot}>{p.ini}</span></>):null}
-                    <span className="v-ui" style={S("color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px")}>{p.label}</span>
-                  </div></>):null}
-                  {(p.tierFull)?(<><div className="pb-card" style={p.cardStyle}>
-                    <div style={S("display:flex;align-items:center;gap:6px;margin-bottom:7px")}>
-                      <span style={S(`width:7px;height:7px;border-radius:2px;background:${p.typeColor};flex:none`)}></span>
-                      <span className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em")}>{p.typeLabel}</span>
-                      {(p.laned)?(<><span className="v-micro" style={S("color:var(--accent)")}>· {p.timeLabel}</span></>):null}
-                    </div>
-                    {(p.isMemo)?(<><textarea value={p.text} onChange={p.onText} onPointerDown={p.stopDown} placeholder="메모…" style={S("width:100%;min-height:40px;resize:none;background:transparent;border:none;outline:none;color:var(--fg);font:500 12px var(--font-sans);line-height:1.5")}></textarea></>):null}
-                    {(p.notMemo)?(<><div style={S("display:flex;align-items:center;gap:8px")}>
-                      {(p.isPerson)?(<><span style={p.avStyle}>{p.ini}</span></>):null}
-                      {(p.isEvidence)?(<><span style={S("width:24px;height:24px;border-radius:5px;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;flex:none")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.4"><path d={p.icon}></path></svg></span></>):null}
-                      <div style={S("min-width:0")}><div className="v-ui" style={S("color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{p.label}</div>{(p.hasSub)?(<><div className="v-micro" style={S("color:var(--fg-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{p.sub}</div></>):null}</div>
-                    </div></>):null}
-                    {(p.isQuote)?(<><div className="v-meta" style={S("color:var(--fg-2);font-style:italic;line-height:1.55;margin-top:7px")}>{p.quote}</div></>):null}
-                  </div></>):null}
-                  {(p.pinned)?(<><span title="고정됨" style={S("position:absolute;left:-5px;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:9px;z-index:9")}>📌</span></>):null}
-                  <span className="pb-zone pb-zone-l"><span className="pb-handle" onPointerDown={p.onPortInDown} title="연결 입력" style={p.portInStyle}></span></span>
-                  <span className="pb-zone pb-zone-r"><span className="pb-handle" onPointerDown={p.onHandleDown} title="끌어서 연결" style={p.handleStyle}></span></span>
-                </div></React.Fragment>))}
-
-                {(V.pb.toolbar.show)?(<><div style={V.pb.toolbar.style}>
-                  {arr(V.pb.toolbar.actions).map((a,$index)=>(<React.Fragment key={$index}><span onClick={a.onClick} onPointerDown={a.stop} style={a.style}>{a.label}</span></React.Fragment>))}
-                </div></>):null}
-
-                {(V.pb.detail.open)?(<><div style={V.pb.detail.style} onPointerDown={V.pb.detail.stop}>
-                  <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:10px")}><span style={S(`width:8px;height:8px;border-radius:2px;background:${V.pb.detail.color};flex:none`)}></span><span className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em")}>{V.pb.detail.typeLabel}</span><span style={S("flex:1")}></span><span onClick={V.pb.detail.onClose} onPointerDown={V.pb.detail.stop} style={S("cursor:pointer;color:var(--fg-4);font-size:12px")}>✕</span></div>
-                  <div className="v-title" style={S("color:var(--fg);margin-bottom:4px")}>{V.pb.detail.label}</div>
-                  {(V.pb.detail.hasSub)?(<><div className="v-meta" style={S("color:var(--fg-3);margin-bottom:8px")}>{V.pb.detail.sub}</div></>):null}
-                  {(V.pb.detail.hasClaim)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px")}>{V.pb.detail.claimLabel}</div><div className="v-meta" style={S("color:var(--fg-2);line-height:1.6;margin-bottom:10px")}>{V.pb.detail.claim}</div></>):null}
-                  {(V.pb.detail.hasClues)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px")}>{V.pb.detail.cluesLabel}</div><div style={S("display:flex;flex-direction:column;gap:4px;margin-bottom:10px")}>{arr(V.pb.detail.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:6px")}><span style={S("color:var(--accent);flex:none")}>·</span><span className="v-meta" style={S("color:var(--fg-2)")}>{cl}</span></div></React.Fragment>))}</div></>):null}
-                  {(V.pb.detail.hasBody)?(<><div className="v-meta" style={S("color:var(--fg-2);line-height:1.6")}>{V.pb.detail.body}</div></>):null}
-                  {(V.pb.detail.hasSlots)?(<><div style={S("display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);padding-top:9px;margin-top:2px")}>{arr(V.pb.detail.slots).map((sl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:8px")}><span className="v-micro" style={S("color:var(--fg-4);width:36px;flex:none")}>{sl.label}</span>{(sl.filled)?(<><span className="v-meta" style={S("color:var(--fg-2)")}>{sl.text}</span></>):null}{(sl.empty)?(<><span style={S("flex:1;border-bottom:1px dashed var(--border-strong)")}></span><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{V.pb.detail.unknownLabel}</span></>):null}</div></React.Fragment>))}</div></>):null}
-                  {(V.pb.detail.hasFull)?(<><div style={S("border-top:1px solid var(--border);margin-top:10px;padding-top:9px")}><div onClick={V.pb.detail.onToggleFull} style={S("display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg-3);font-size:12px;font-weight:500")}><span style={S(`display:inline-block;transform:${V.pb.detail.fullChevron};transition:transform .12s`)}>▸</span>{V.pb.detail.fullLabel}</div>{(V.pb.detail.fullOpen)?(<><div className="v-meta" style={S("color:var(--fg-2);line-height:1.7;margin-top:8px;max-height:220px;overflow-y:auto;white-space:pre-wrap")}>{V.pb.detail.fullText}</div></>):null}</div></>):null}
-                </div></>):null}
-
-                {(V.pb.relPicker.open)?(<><div className="v-menu" style={V.pb.relPicker.style} onPointerDown={V.pb.relPicker.stop}>
-                  {arr(V.pb.relPicker.opts).map((o,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={o.onPick}><span style={o.dot}></span>{o.label}</div></React.Fragment>))}
-                  <div className="panel-sep" style={S("margin:4px 0")}></div><div className="v-menu-item" onClick={V.pb.relPicker.onDelete} style={S("color:var(--label-red)")}>연결 삭제</div>
-                </div></>):null}
-              </div>
-
-              <div onPointerDown={V.pb.minimap.onDown} onPointerMove={V.pb.minimap.onMove} onPointerUp={V.pb.minimap.onUp} style={S("position:absolute;right:12px;bottom:12px;width:150px;height:100px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--bg-app);overflow:hidden;touch-action:none;cursor:pointer")}>
-                {arr(V.pb.minimap.dots).map((d,$index)=>(<React.Fragment key={$index}><span style={d.style}></span></React.Fragment>))}
-                <div style={V.pb.minimap.viewport}></div>
-              </div>
-              {(V.pb.mselBar)?(<><div onPointerDown={V.pb.mselBar.stop} style={S("position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-pill);box-shadow:var(--shadow-popover);padding:6px 8px 6px 14px")}>
-                <span className="v-ui" style={S("color:var(--fg);font-size:12px")}>{V.pb.mselBar.count}개 {V.pb.mselBar.word}</span>
-                <span onClick={V.pb.mselBar.onBlock} style={S("display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--accent);color:var(--fg-on-accent);font-size:12px;font-weight:600;cursor:pointer")}>{V.pb.mselBar.label}</span>
-              </div></>):null}
-            </div>
-            </div>
-          </div>
-        </div>
-                </div>
-              </>):null}
-
-              
               {(V.isGraph)?(<>
                 <div style={S("padding:18px 24px;max-width:1100px")}>
                   {this.renderGraphFigure(V)}
@@ -4791,27 +4186,6 @@ export default class App extends React.Component {
 
             {(V.shell.showRight)?(<>
               <div style={V.shell.rightPanelStyle}>
-                {(V.shell.rightBoardMode)?(<>
-                  <div style={S("display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);flex:none")}>
-                    <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4"><rect x="2.5" y="4" width="11" height="8.5" rx="1.2" /><path d="M2.5 6.5h11" /></svg>
-                    <span className="v-ui" style={S("color:var(--fg)")}>{V.ui.boardTools}</span>
-                  </div>
-                  <div style={S("flex:1;overflow:auto;padding:14px")}>
-                    <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:10px")}>{V.ui.bankTitle}</div>
-                    {(V.board.termsEmpty)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-bottom:16px;line-height:1.5")}>{V.ui.bankEmpty}</div></>):null}
-                    <div style={S("display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px")}>
-                      {arr(V.board.terms).map((tm,$index)=>(<React.Fragment key={$index}><span draggable="true" onDragStart={tm.onDrag} style={tm.style}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.4" style={S("flex:none")}><path d={tm.iconPath}></path></svg>{tm.label}</span></React.Fragment>))}
-                    </div>
-                    <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:10px")}>{V.ui.navProfile}</div>
-                    <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                      {arr(V.board.suspects).map((c,$index)=>(<React.Fragment key={$index}><div draggable="true" onDragStart={c.onDrag} style={c.style}>
-                        <div style={S("min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{c.name}</div><div className="v-micro" style={S("color:var(--fg-4)")}>{c.sexAge}</div></div>
-                      </div></React.Fragment>))}
-                    </div>
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:16px;line-height:1.6")}>{V.ui.boardToolsHint}</div>
-                  </div>
-                </>):null}
-                {(V.shell.notRightBoard)?(<>
                 <div style={S("display:flex;align-items:center;border-bottom:1px solid var(--border);flex:none")}>
                   <div onClick={V.right.tabs.statements.onClick} style={V.right.tabs.statements.style}>{V.right.labels.statements}</div>
                   <div onClick={V.right.tabs.invlog.onClick} style={V.right.tabs.invlog.style}>{V.right.labels.invlog}</div>
@@ -4848,7 +4222,6 @@ export default class App extends React.Component {
                     </div></React.Fragment>))}
                   </>):null}
                 </div>
-                </>):null}
               </div>
             </>):null}
             </div>

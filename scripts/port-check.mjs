@@ -83,11 +83,10 @@ const APP_ONLY = new Set([
   // 새 기능을 지을 때 **그 커밋에서** 여기 이름을 더한다 — 미리 적어두면
   // 아래 `staleAllow` 가 잡는다(그게 이 목록이 안 썩는 이유다)
 
-  // 상황판이 탭 여럿이 됐다 (2026-07-27) — 탭마다 바닥 도면 하나(평면도·도식·
-  // 관계도)를 깔고 그 위에 서랍의 카드를 올린다. 도면은 현장·관계도 화면과 **같은
-  // 메서드**를 부르므로 공개 게이트가 그대로 따라온다
-  'pb.boards', 'b.backdropMark', 'b.showDel',
-  'pb.backdrop.show', 'pb.backdrop.needsTimes', 'pb.backdrop.isPlan', 'pb.backdrop.isGrid', 'pb.backdrop.isGraph',
+  // ⛳ 상황판 탭 여덟 갈래가 여기 있었다 (2026-07-27 신설 → 2026-08-05 삭제).
+  // 상황판이 제품에서 빠지면서 **앱 전용이 아니라 존재하지 않는 것**이 됐다.
+  // 프로토타입에도 없으므로 `REMOVED` 가 아니라 여기서 **지우는** 것이 맞다 —
+  // 남겨두면 `staleAllow` 가 여덟을 물고 게이트가 빨간 채로 상주한다
 
   // 홈 목록에서 만든 사건을 지운다 (2026-07-29) — 캠페인 생성기가 생기기 전에는
   // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
@@ -136,8 +135,34 @@ const APP_ONLY = new Set([
  * ⛳ **항목마다 결정 출처를 한 줄 남긴다** — 목록이 커지는 미래에 「이건 왜 뺐더라」를
  * 코드가 답하게. 값은 그 근거 문자열이다.
  */
+const WHY_BOARD = '상황판 삭제 · 2026-08-05 사용자 확정 · docs/PLAYTEST.md(모바일에서 못 쓴다)'
+const WHY_NARR = '보고서 「보드」 모드 동반 삭제 · 상황판과 한 벌 · 자동 전환은 이미 죽어 있었다'
+const WHY_RIGHT = '오른쪽 보드 도구 패널 · rightBoardMode 가 상수 false 라 이미 죽어 있었다'
+
+/** 항목 → 근거. 세 무리이고 무리마다 결정 출처가 다르다 */
 const REMOVED = new Map([
-  // ['pb.tools', '2026-08-05 사용자 결정 + 테스터 의견 · docs/PLAYTEST.md'],
+  // ① 상황판 화면 자체 (view === 'board') — PB_* 멤버 322줄 + JSX 160줄
+  ...['isBoard', 'it.placed', 'lb.selected', 'sec.items',
+    'g.empty', 'g.isTl', 'g.isVenn', 'g.tlTicks',
+    'p.hasSub', 'p.isEvidence', 'p.isMemo', 'p.isPerson', 'p.isQuote', 'p.laned',
+    'p.notMemo', 'p.notPersonChip', 'p.pinned', 'p.tierChip', 'p.tierDot', 'p.tierFull',
+    'pb.addOpen', 'pb.drawer', 'pb.drawerClosed', 'pb.drawerOpen', 'pb.groups', 'pb.labels',
+    'pb.liveLine.show', 'pb.markers', 'pb.marquee', 'pb.minimap.dots', 'pb.mselBar', 'pb.pieces',
+    'pb.strings', 'pb.timelineOn', 'pb.tools', 'pb.tempGroup.show',
+    'pb.detail.clues', 'pb.detail.fullOpen', 'pb.detail.hasBody', 'pb.detail.hasClaim',
+    'pb.detail.hasClues', 'pb.detail.hasFull', 'pb.detail.hasSlots', 'pb.detail.hasSub',
+    'pb.detail.open', 'pb.detail.slots',
+    'pb.relPicker.open', 'pb.relPicker.opts', 'pb.toolbar.actions', 'pb.toolbar.show',
+    'tk.guideStyle', 'tk.locked', 'tk.notLocked', 'tk.selected',
+  ].map((k) => [k, WHY_BOARD]),
+
+  // ② 보고서 보드 모드 (narrMode === 'board') — 공란 슬롯 드래그 배치
+  ...['board.sections', 'board.suspects', 'board.terms', 'board.termsEmpty',
+    'bs.slots', 'narrBoard', 'sl.locked',
+  ].map((k) => [k, WHY_NARR]),
+
+  // ③ 오른쪽 패널의 보드 도구
+  ...['shell.rightBoardMode', 'shell.notRightBoard'].map((k) => [k, WHY_RIGHT]),
 ])
 
 const P = fromPrototype(readFileSync(PROTO, 'utf8'))
