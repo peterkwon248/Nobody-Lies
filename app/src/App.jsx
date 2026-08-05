@@ -2209,6 +2209,7 @@ export default class App extends React.Component {
   statusChip(st) { const t = this.T(); const m = { clear: t.cleared, inProgress: t.inProgress, unplayed: t.unplayed, locked: t.locked }[st] || ''; const c = st === 'clear' ? 'var(--g-lock-mark)' : st === 'inProgress' ? 'var(--status-progress)' : 'var(--fg-3)'; const bg = st === 'clear' ? 'var(--g-lock-bg)' : st === 'inProgress' ? 'rgba(242,201,76,.14)' : 'var(--bg-elevated-2)'; return { label: m, style: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', color: c, background: bg } }; }
   buildHome() {
     const t = this.T(), ln = this.state.lang, status = this.caseStatus();
+    const narrow = !!this.state.isNarrow;
     /**
      * ⚠ **`s1·s2·s3` 만 세고 있었다** (2026-08-01 수정). 아래 §이어하기가 이 값을
      * `solved + '/' + this.SECTIONS.length` 로 찍는데, 5장 사건에서 4장을 봉해도
@@ -2270,7 +2271,7 @@ export default class App extends React.Component {
          * 그 길로 열린다(§만든 사건들의 `goRoute`).
          */
         onClick: () => (mine || !c.id ? this.openDetail(c.n) : this.goRoute('case=' + encodeURIComponent(c.id))),
-        cardStyle: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
+        cardStyle: { display: 'flex', alignItems: 'center', flexWrap: narrow ? 'wrap' : 'nowrap', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' } }; });
 
     /**
      * ─────────────────────────────────────────────────────────────
@@ -2283,7 +2284,7 @@ export default class App extends React.Component {
      *
      * 생성기 자체는 `Generator.jsx` 로 이 파일 밖에 있다.
      */
-    const card = { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' };
+    const card = { display: 'flex', alignItems: 'center', flexWrap: narrow ? 'wrap' : 'nowrap', gap: '12px', padding: '12px 16px', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer' };
     const dim = { background: 'var(--bg-elevated-2)', color: 'var(--fg-3)' };
 
     // 만든 사건들. 브라우저에 저장돼 있어서 이 기계에서만 보인다
@@ -2336,7 +2337,24 @@ export default class App extends React.Component {
     });
 
     // 「이어하기」는 **지금 열려 있는 사건**의 진행이다 — 제목도 그 사건 것이어야 한다
-    return { resumeShow: status === 'inProgress', resumeTitle: this.T().caseTitle, resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
+    /**
+     * #21 — 375 에서 행이 깨진다 (2026-08-06)
+     *
+     * 한 줄에 번호·제목·소요·난이도·상태를 다 넣으려는 것이 병이었다.
+     * 제목이 36px 로 눌려 **단어 중간에서** 3줄로 접혔다(「캠페 / 인 생 / 성」).
+     *
+     * ⛳ **넓은 폭은 한 픽셀도 안 바뀐다** — `display: contents` 라 감싸개가
+     * 렌더 트리에서 사라져 자식들이 카드의 직계로 남는다. 좁은 폭에서만
+     * 메타 셋이 한 덩어리가 되어 둘째 줄로 내려간다(번호 폭 22 + gap 12 만큼 들여씀).
+     *
+     * ⛳ `word-break: keep-all` 이 한국어를 **어절 경계**에서만 끊는다. 그래도
+     * 컨테이너보다 긴 낱말이 오면 `overflow-wrap: anywhere` 가 탈출구가 된다.
+     */
+    const titleStyle = { color: 'var(--fg)', flex: '1 1 auto', minWidth: 0, wordBreak: 'keep-all', overflowWrap: 'anywhere' };
+    const metaStyle = narrow
+      ? { display: 'flex', alignItems: 'center', gap: '8px', flexBasis: '100%', paddingLeft: '34px' }
+      : { display: 'contents' };
+    return { titleStyle, metaStyle, resumeShow: status === 'inProgress', resumeTitle: this.T().caseTitle, resumeProgress: solved + '/' + this.SECTIONS.length, resumeBudget: this.BUDGET - this.invSpent(), onResume: () => this.resumeCase(), cases };
   }
   /**
    * 화면 이동. **경로를 새로 만들지 않고 해시만 바꾼다.**
@@ -4575,10 +4593,12 @@ export default class App extends React.Component {
                 <div style={S("display:flex;flex-direction:column;gap:8px")}>
                   {arr(V.home.cases).map((c,$index)=>(<React.Fragment key={$index}><div onClick={c.onClick} style={c.cardStyle}>
                     <span className="v-num" style={S("font-size:13px;color:var(--fg-4);width:22px;flex:none")}>{c.num}</span>
-                    <span className="v-title" style={S("color:var(--fg);flex:1;min-width:0")}>{c.title}</span>
-                    <span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{c.est}</span>
-                    <span className="pr-badge" style={c.diffStyle}>{c.diff}</span>
-                    <span style={c.chipStyle}>{c.chipLabel}</span>
+                    <span className="v-title" style={V.home.titleStyle}>{c.title}</span>
+                    <span style={V.home.metaStyle}>
+                      <span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{c.est}</span>
+                      <span className="pr-badge" style={c.diffStyle}>{c.diff}</span>
+                      <span style={c.chipStyle}>{c.chipLabel}</span>
+                    </span>
                     {(c.canDel)?(<><span onClick={c.onDel} title={c.delTitle} style={c.delStyle}>✕</span></>):null}
                     {(c.confirmDel)?(<><span style={c.askStyle}>{c.askLabel}</span><span onClick={c.onDelYes} style={c.yesStyle}>{c.yesLabel}</span><span onClick={c.onDelNo} style={c.noStyle}>{c.noLabel}</span></>):null}
                   </div></React.Fragment>))}
