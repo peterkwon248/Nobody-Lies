@@ -62,7 +62,9 @@ const STATES = {
    * ⚠ `readIdx` 는 **`PEOPLE.length - 1` 을 넘지 못한다** — `finishRead()` 가
    * 인덱스를 그대로 두고 stage 만 바꾸기 때문이다. 5를 넣었더니 `buildReadCard`
    * 가 `PEOPLE[5].name` 을 읽어 **앱 전체가 「렌더 실패」로 죽었다.**
-   * (그 무가드 접근 자체는 감사 표의 §구조 백로그로 넘긴다 — 수리는 여기 일이 아니다.)
+   * ✅ **그 무가드는 2026-08-06 수리-A 에서 닫혔다** (`emptyReadCard`) — 이제 5를
+   * 넣어도 안 죽는다. 그래도 `4` 로 둔다: `finishRead()` 뒤의 **실제 값**이 그것이라
+   * 씨앗이 실물과 같아야 한다.
    */
   empty: {
     v: 3, started: true, stage: 'free', readDone: true, readIdx: 4,
@@ -163,7 +165,7 @@ const CRAWL = () => {
   // CSS 규칙에서 상태 선택자가 정의돼 있나 (요소가 아니라 규칙을 본다)
   const sel = { hover: 0, focusVisible: 0, focus: 0, disabled: 0, active: 0 }
   for (const sheet of [...document.styleSheets]) {
-    let rules; try { rules = sheet.cssRules } catch (e) { continue }
+    let rules; try { rules = sheet.cssRules } catch (_e) { continue }
     for (const r of [...(rules || [])]) {
       const t = r.selectorText; if (!t) continue
       if (t.includes(':hover')) sel.hover++
@@ -228,6 +230,55 @@ async function goto(page, label) {
   }, label)
 }
 
+/**
+ * 홈 덮개를 걷고 게임으로 들어간다 — **캡처가 이름과 같아지려면 이 한 걸음이 필요하다.**
+ *
+ * ⛔ **2026-08-06 이전에는 이 걸음이 없어서 56장이 전부 홈이었다.**
+ * `seed()` 뒤 `page.goto(BASE)` 는 앱을 **`route:'home'`** 으로 띄운다
+ * (`App.jsx` 가 `route` 를 일부러 저장하지 않는다 — 새로고침하면 홈이다).
+ * 그런데 `goto()` 는 `setView()` 만 부르므로 **`route` 는 홈 그대로**다.
+ * 홈은 `position:fixed · z-index:70` 덮개고 게임 셸(`.app`)은 그 **밑에 깔린 채**라:
+ *
+ *   스크린샷   덮개만 찍힌다 — 파일 이름이 가리키는 화면이 아니다
+ *   크롤       덮개 **밑** 셸을 재긴 하는데(그래서 화면마다 값이 달랐다)
+ *              화면에 없는 요소를 재고 **홈 덮개의 요소와 섞어서** 센다
+ *
+ * ★ **`.click()` 은 가려져도 먹으므로 `goto()` 는 「성공」을 돌려주고 있었다.**
+ *   덮였는지는 아무도 안 물었다 — 그래서 조용했다.
+ */
+async function enterGame(page) {
+  return page.evaluate(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+    const norm = (s) => (s || '').replace(/\s+/g, '')
+    const home = () => [...document.querySelectorAll('div')]
+      .some((e) => /^노바디라이즈$/.test(norm((e.innerText || '').split('\n')[0])) && getComputedStyle(e).position === 'fixed')
+
+    // ① 진행 중이면 홈에 「이어하기 · <사건명>」 배너가 있다 (onClick = resumeCase)
+    const banner = [...document.querySelectorAll('div')]
+      .find((e) => /^이어하기·/.test(norm((e.innerText || '').split('\n')[0])))
+    if (banner) { banner.click(); await wait(450); if (!home()) return true }
+
+    /**
+     * ② 배너가 없는 상태가 있다 — **`done` 이 그렇다.**
+     * `resumeShow` 는 `status === 'inProgress'` 일 때만 참이고, 다 푼 사건은
+     * `clear` 라 홈 배너가 아니라 **사건 상세의 「다시 보기」**가 입구다.
+     * ⛳ 처음에 ①만 넣었다가 `report-done-*` 넷이 「덮개를 못 걷었다」로 떨어져서 알았다 —
+     *    **검사가 자기 구멍을 이름으로 말해준 것이다**(조용히 홈을 찍는 것보다 낫다).
+     */
+    const rows = [...document.querySelectorAll('div')]
+      .filter((e) => /산장 살인사건/.test(e.innerText || '') && (e.innerText || '').length < 200)
+    const row = rows[rows.length - 1]   // 가장 안쪽 = 실제 카드
+    if (!row) return false
+    row.click(); await wait(600)
+    const b = [...document.querySelectorAll('button')]
+      .find((x) => /다시 보기|이어하기|혼자 시작/.test(x.innerText || ''))
+    if (!b) return false
+    b.click(); await wait(600)
+    // ★ 눌렀다가 아니라 **걷혔나**를 돌려준다 — 옛 조용한 실패가 이 차이에서 났다
+    return !home()
+  })
+}
+
 async function seed(page, save) {
   await page.evaluate(([k, s]) => {
     if (s === null) localStorage.removeItem(k)
@@ -256,6 +307,8 @@ const main = async () => {
           await seed(page, STATES[st])
           await page.goto(BASE, { waitUntil: 'networkidle' })
           await page.waitForTimeout(450)
+          // 홈 덮개를 먼저 걷는다 — 안 걷으면 아래 캡처가 전부 홈이 된다
+          if (!(await enterGame(page))) { data.errors.push(`${key}: 홈 덮개를 못 걷었다`); continue }
           const opened = await goto(page, scr.nav)
           if (!opened) {
             if (!scr.optional) data.errors.push(`${key}: nav '${scr.nav}' 못 찾음`)
@@ -269,6 +322,23 @@ const main = async () => {
         }
       }
     }
+
+    /**
+     * 홈 — **덮개가 아니라 화면이다.** (2026-08-06 신설 · 사용자 확정)
+     *
+     * 위 `enterGame` 이 홈을 걷어내므로 홈이 「안 재는 화면」이 될 뻔했는데,
+     * 표 #21(「캠페인 생성」이 375 에서 3줄로 깨진다)이 **홈의 결함**이다.
+     * 그러니 홈은 빼는 화면이 아니라 **따로 재는 화면**이다.
+     * 진행이 있는 홈이 실물이므로 `mid` 저장으로 잰다(이어하기 배너가 뜬다).
+     */
+    try {
+      await seed(page, STATES.mid)
+      await page.goto(BASE, { waitUntil: 'networkidle' })
+      await page.waitForTimeout(450)
+      const key = `home-mid-${vp.key}`
+      if (SHOTS) await page.screenshot({ path: `${SHOT_DIR}/${key}.png`, fullPage: false })
+      data.screens[key] = await page.evaluate(CRAWL)
+    } catch (e) { data.errors.push(`home-${vp.key}: ${e.message.slice(0, 120)}`) }
 
     // 인트로 단계 — 저장이 없으면 프롤로그부터 흐른다
     try {
