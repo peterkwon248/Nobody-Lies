@@ -456,6 +456,26 @@ export function parseCase(raw: unknown, source: string): Case {
         if (ask?.kind === 'factSubject' && target.subject !== ans)
           p.add(`${bat}.asks`, `factSubject 가 가리키는 '${target.id}'.subject 가 답과 다르다 (사실 '${target.subject}' · 답 '${ans}')`)
       }
+      /**
+       * `personAt` — 가리키는 인물·칸이 실재하나, 그리고 **진짜 세계에서** 답과 맞나.
+       *
+       * ⚠ **전 세계 일치를 묻지 않는다.** 범인이 주어면 답이 세계마다 갈리는 것이
+       * 정상이고(`types.ts` §personAt), 여기서 그것까지 요구하면 **정상 동작을
+       * 오류로 잡는다.** `people[].presence` 는 진실 격자라 범인·무고 양쪽에서
+       * 「진짜 세계의 답」이고, 세계를 가르는 판정은 솔버 몫이다.
+       */
+      if (ask?.kind === 'personAt') {
+        const who = (b.asks as { person?: string }).person
+        const sl = (b.asks as { slot?: string }).slot
+        if (!who || !personIds.has(who)) p.add(`${bat}.asks.person`, `인물 '${who}' 가 없다`)
+        if (!sl || !slots.has(sl)) p.add(`${bat}.asks.slot`, `슬롯 '${sl}' 이 없다`)
+        const cells = people.find((x) => x.id === who)?.presence ?? []
+        const at = cells.find((x) => x.slot === sl)?.location
+        if (at === undefined && who && sl && personIds.has(who) && slots.has(sl))
+          p.add(`${bat}.asks`, `personAt 이 가리키는 '${who}' 의 '${sl}' 칸이 격자에 없다`)
+        else if (at !== undefined && b?.answer !== undefined && at !== String(b.answer))
+          p.add(`${bat}.asks`, `personAt 이 가리키는 칸이 답과 다르다 (격자 '${at}' · 답 '${b.answer}')`)
+      }
       return {
         label: b?.label as BlankLabel, candidates: b?.candidates, answer: String(b?.answer),
         ...(b?.particle ? { particle: b.particle as Particle } : {}),

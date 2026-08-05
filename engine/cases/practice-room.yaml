@@ -394,7 +394,11 @@ chapters:
           asks: { kind: belongingsOwner, item: 접힌 영수증 } }
       - { label: 인물, candidates: closed, answer: p5,
           asks: { kind: belongingsOwner, item: 낡은 사진 } }
-      - { label: 장소, candidates: closed, answer: cvs, particle: (으)로 }
+      # ★순서대로 재서 ①에서 끝났다★ (2026-08-05) 답 cvs 가 곧 p4 의 t2 칸이다.
+      # 「알리바이 행선지」 전용 어휘를 안 만든다 — 그것이 어휘가 사건마다 자라는 입구다.
+      # p4 진술이 「편의점이 왕복 사십 분이라」로 같은 칸을 말한다
+      - { label: 장소, candidates: closed, answer: cvs, particle: (으)로,
+          asks: { kind: personAt, person: p4, slot: t2 } }
     report:
       - "네 시 정각, 두 사람이 함께 건물을 나섰다. 소지품에서 접힌 영수증이 나온 "
       - { blank: 0 }

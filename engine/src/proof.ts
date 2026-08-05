@@ -634,6 +634,7 @@ function byAsks(c: Case, asks?: Blank['asks']): string[] | null {
     case 'scene':
     case 'recordPlace':
     case 'lastSeenLoc':
+    case 'personAt':
       return c.locations.map((l) => l.id)
     case 'murderCell':
     case 'discoveryTime':

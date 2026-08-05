@@ -367,6 +367,19 @@ export function answerOf(c: Case, w: World, asks: Asks | undefined): string | nu
       return lastSighting(c, w)?.who ?? null
     case 'lastSeenLoc':
       return lastSighting(c, w)?.at ?? null
+
+    /**
+     * 지정된 칸을 읽는다. **진실 격자다 — `claim` 이 아니다**(types.ts §personAt).
+     * 범인만 세계가 정하고 나머지는 자기 격자가 곧 진실이다(거짓말하지 않는다).
+     * ⛳ 범인이 주어면 값이 세계마다 갈린다 — 그것이 이 의미론의 증명이다.
+     */
+    case 'personAt': {
+      const cells =
+        asks.person === w.culprit
+          ? w.culpritTruth
+          : (c.people.find((x) => x.id === asks.person)?.presence ?? [])
+      return cells.find((x) => x.slot === asks.slot)?.location ?? null
+    }
   }
 }
 
