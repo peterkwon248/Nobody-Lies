@@ -98,6 +98,17 @@ export default class App extends React.Component {
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
+    /**
+     * 평면도 전체화면 (2026-08-05) — 첫 테스터 보고 *"평면도가 모바일에서 뭉개진다"*
+     * 에 대한 답이다 (`docs/PLAYTEST.md`).
+     *
+     * `null` 이면 닫힘. 열리면 `{ s 배율, x·y 이동 }` 이고 그것이 그대로
+     * **CSS transform 한 줄**이 된다 — 외부 라이브러리를 안 쓴다.
+     *
+     * ⛔ **저장하지 않는다** (`SAVED` 에 없다). 보는 동안의 화면 상태이고,
+     * 새로고침하면 도면을 다시 여는 것이 맞다.
+     */
+    planZoom: null,
   };
 
   DICT = {
@@ -146,6 +157,7 @@ export default class App extends React.Component {
       detailBack: '사건 목록', budgetLabel: '조사 예산', estTime: '예상 소요', estTimeVal: '40\u201360분', suspects: '용의자', suspectsVal: '5명', clearedLabel: '클리어', more: '더 보기',
       notPlayedYet: '아직 플레이하지 않은 사건입니다. 시작하면 프롤로그부터 진행됩니다.', dailyDesc: '매일 새 사건 · 순위표', prologContinue: '계속',
       abandonConfirmT: '사건을 포기할까요?', abandonConfirmD: '진행 상황과 점수가 사라지고 처음부터 시작됩니다.', goHome: '홈',
+      planTapHint: '도면을 눌러 크게 보기', planZoomHint: '손가락 두 개로 확대 · 끌어서 이동', planZoomClose: '닫기',
       mapModePlan: '평면도', mapModeGrid: '도식', navProfile: '용의자', mapHint: '평면도에서 시간대별 주장 위치를, 도식 탭에서 주장 대조표를 봅니다 · 둘은 같은 주장을 시각화·구조화한 것',      finishReport: '보고서 제출', finishConfirmT: '이대로 사건을 종결할까요?', finishConfirmD: '제출 후에는 되돌릴 수 없습니다. 완성된 보고서가 사건의 전말이 됩니다.', submit: '제출', resultStory: '사건의 전말', endMine: '내가 재구성한 것', endReal: '실제', resultStuck: '조사 예산을 모두 소진했지만 사건을 종결하지 못했습니다.', backHome: '홈으로', pClaim: '본인 주장', pClues: '발견된 단서', pUnknown: '미확인', slotMotive: '동기', slotOpportunity: '기회', slotMeans: '수단', pNew: '신규', pNoClues: '아직 조사로 확보한 단서가 없습니다.', pNoMemos: '이 인물에 대한 메모가 아직 없습니다.', verdictLabel: '심증', vdCleared: '제외', vdWatching: '주목', vdPrime: '유력', vdNone: '미정', verdictHint: '내 판단일 뿐 · 점수 무관', pGuilt: '유죄 요건', pViewSource: '출처 보기',
       gameTitle: '노바디 라이즈', gameTagline: '모든 진술을 의심하라', soonPrep: '준비 중', playSolo: '혼자 시작', createRoom: '방 만들기', joinRoom: '방 참가', demoOnly: '이 사건은 데모에 포함되지 않았습니다.', narrProg: '진행',
       navOverview: '사건 개요', ovBrief: '사건 브리핑',
@@ -203,6 +215,7 @@ export default class App extends React.Component {
       detailBack: 'Cases', budgetLabel: 'Budget', estTime: 'Est. time', estTimeVal: '40\u201360 min', suspects: 'Suspects', suspectsVal: '5', clearedLabel: 'cleared', more: 'More',
       notPlayedYet: 'Not played yet. Starting begins from the prologue.', dailyDesc: 'New case daily · leaderboard', prologContinue: 'Continue',
       abandonConfirmT: 'Abandon this case?', abandonConfirmD: 'Your progress and score are lost and the case resets.', goHome: 'Home',
+      planTapHint: 'Tap the plan to enlarge', planZoomHint: 'Pinch to zoom · drag to pan', planZoomClose: 'Close',
       mapModePlan: 'Plan', mapModeGrid: 'Diagram', navProfile: 'Suspects', mapHint: 'Compare claimed positions by time on the plan; see the claim grid in the Diagram tab · both are the same claims, visualized and structured',      finishReport: 'Submit report', finishConfirmT: 'Close the case as is?', finishConfirmD: 'This cannot be undone. The completed report becomes the full account.', submit: 'Submit', resultStory: 'The full account', endMine: 'My reconstruction', endReal: 'Actual', resultStuck: 'Budget exhausted before the case could be closed.', backHome: 'Home', pClaim: 'Own claim', pClues: 'Found clues', pUnknown: 'Unconfirmed', slotMotive: 'Motive', slotOpportunity: 'Opportunity', slotMeans: 'Means', pNew: 'New', pNoClues: 'No clues secured through investigation yet.', pNoMemos: 'No notes about this person yet.', verdictLabel: 'Verdict', vdCleared: 'Cleared', vdWatching: 'Watching', vdPrime: 'Prime', vdNone: 'Undecided', verdictHint: 'Your call only · no score effect', pGuilt: 'Guilt criteria', pViewSource: 'View source',
       gameTitle: 'NOBODY LIES', gameTagline: 'Doubt every statement', soonPrep: 'Coming soon', playSolo: 'Start solo', createRoom: 'Create room', joinRoom: 'Join room', demoOnly: 'This case is not part of the demo.', narrProg: 'Progress',
       navOverview: 'Case overview', ovBrief: 'Case briefing',
@@ -3188,6 +3201,116 @@ export default class App extends React.Component {
   toggleRight() { this.setState({ rightOpen: !this.state.rightOpen }); }
   setRightView(v) { this.setState({ rightOpen: true, rightView: v }); }
   toggleFocus() { const f = !this.state.focusMode; this.setState({ focusMode: f, leftOpen: !f }); }
+
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  평면도 탭-확대 (2026-08-05) — **좁은 화면 전용**
+   * ─────────────────────────────────────────────────────────────
+   *
+   * ★ 왜 있나 ★ 첫 테스터 데이터 셋 중 하나가 *"평면도가 모바일에서 뭉개진다"*
+   * 였다 (`docs/PLAYTEST.md`). 375px 에서 도면 폭이 ~343px 이라 방 이름·문
+   * 라벨·인물 마커가 서로 겹친다.
+   *
+   * ★ 뭉개짐의 정체는 **해상도가 아니라 밀도**다 ★ 도면은 SVG(`viewBox 0 0
+   * 1000 625`) + 퍼센트 좌표의 HTML 라벨이라 **래스터가 한 장도 없다.** 그래서
+   * 확대하면 선도 글자도 그대로 또렷하다 — CSS 로 고칠 수 있는 부류다.
+   * (원본 해상도 문제였다면 CSS 범위 밖이라 여기서 멈췄어야 한다.)
+   *
+   * ⛳ **`isNarrow` 를 그대로 쓴다** — `w < 820` 판정이 이미 여덟 곳의 단일
+   * 출처다. 여기에 `isMobile`·`userAgent` 를 새로 만들면 **같은 판정이 두 벌**이
+   * 되고, 두 벌은 반드시 갈라진다 (`styles.css` §읽는 화면의 자 의 그 규칙).
+   *
+   * ⛔ **외부 라이브러리를 안 쓴다.** 배율·이동은 `transform` 한 줄이고,
+   * 제스처는 포인터 이벤트 셋이 전부다.
+   */
+  PLAN_ZOOM_MIN = 1;
+  PLAN_ZOOM_MAX = 4;
+
+  /**
+   * ⚠ **1배로 열면 목적을 못 채운다 — 재서 알았다.** 375px 화면에서 미리보기가
+   * 327px, 전체화면이 375px 라 **고작 +15%** 다. 도면은 16:10 가로인데 폰은
+   * 세로라 폭에 갇히고, 무대 높이 711px 중 234px 만 쓴다.
+   *
+   * 그래서 **높이를 채우는 배율로 열고**(375×812 에서 ~2.9배) 거기서 손가락으로
+   * 조절하게 한다. 오므리면 `PLAN_ZOOM_MIN` 이 1 이라 **전체 도면으로 언제든
+   * 돌아온다** — 잃는 것이 없다.
+   *
+   * ⛳ **비율을 JS 에 다시 적지 않는다.** `aspect-ratio:16/10` 은 도면 마크업에
+   * 있고, 여기서 1.6 을 또 쓰면 **한 값이 두 곳**이 된다(이 저장소가 하루에
+   * 여섯 번 밟은 부류). 그래서 배율 1 로 먼저 그린 뒤 **실측**한다.
+   */
+  openPlanZoom() {
+    this._ptrs = new Map();
+    this.setState({ planZoom: { s: 1, x: 0, y: 0 } }, () => {
+      const st = this._planStage, fig = this._planFig;
+      if (!st || !fig) return;
+      const ph = fig.getBoundingClientRect().height;
+      if (!ph) return;
+      const s = Math.max(this.PLAN_ZOOM_MIN, Math.min(this.PLAN_ZOOM_MAX, (st.clientHeight * 0.95) / ph));
+      if (s > 1.01) this.setState({ planZoom: this.planClamp({ s, x: 0, y: 0 }) });
+    });
+  }
+  closePlanZoom() { this._ptrs = null; this.setState({ planZoom: null }); }
+
+  /** 지금 화면에 닿아 있는 손가락들의 중심과 벌어진 거리. 하나면 거리는 0(=이동만) */
+  planGesture() {
+    const ps = [...(this._ptrs || new Map()).values()];
+    if (!ps.length) return null;
+    const cx = ps.reduce((a, p) => a + p.x, 0) / ps.length;
+    const cy = ps.reduce((a, p) => a + p.y, 0) / ps.length;
+    return { cx, cy, d: ps.length >= 2 ? Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y) : 0, n: ps.length };
+  }
+  /** 손가락이 늘거나 줄면 기준을 다시 잡는다 — 안 하면 그 순간 도면이 튄다 */
+  planRebase(g) { this._planStart = g; this._planBase = Object.assign({ s: 1, x: 0, y: 0 }, this.state.planZoom); }
+
+  /**
+   * 배율은 1~4 로, 이동은 **도면이 무대 밖으로 넘친 만큼**으로 가둔다.
+   * 안 가두면 도면을 화면 밖으로 밀어버리고 돌아올 길이 없다.
+   *
+   * ⚠ **무대 크기로 재면 안 된다 — 눌러보고 알았다.** 도면은 16:10 가로라
+   * 세로 화면에서 폭에 갇힌다(375 무대에 375×234). 무대 기준으로 세면 세로 여백을
+   * `(711×2.88−711)/2 = 668px` 로 **없는 여백을 만들어내서** 도면이 화면 밖으로
+   * 사라진다. 실제로 넘치는 것은 **도면**이므로 도면을 잰다.
+   *
+   * `offsetWidth/Height` 는 **transform 을 안 탄** 배치 크기다 — 여기에 배율을
+   * 곱해야 지금 화면에 뜬 크기가 된다. `getBoundingClientRect` 를 쓰면 이미
+   * 확대된 값이 다시 곱해져 두 배로 어긋난다.
+   */
+  planClamp(z) {
+    const s = Math.max(this.PLAN_ZOOM_MIN, Math.min(this.PLAN_ZOOM_MAX, z.s));
+    const el = this._planStage, fig = this._planFig;
+    const sw = (el && el.clientWidth) || 0, sh = (el && el.clientHeight) || 0;
+    const pw = (fig && fig.offsetWidth) || sw, ph = (fig && fig.offsetHeight) || sh;
+    const mx = Math.max(0, (pw * s - sw) / 2), my = Math.max(0, (ph * s - sh) / 2);
+    return { s, x: Math.max(-mx, Math.min(mx, z.x)), y: Math.max(-my, Math.min(my, z.y)) };
+  }
+
+  planDown(e) {
+    if (!this._ptrs) this._ptrs = new Map();
+    this._ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    this.planRebase(this.planGesture());
+  }
+  planMove(e) {
+    if (!this._ptrs || !this._ptrs.has(e.pointerId) || !this.state.planZoom) return;
+    this._ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const now = this.planGesture(), st = this._planStart, base = this._planBase;
+    if (!now || !st || !base || now.n !== st.n) { this.planRebase(now); return; }
+    const el = this._planStage; if (!el) return;
+    const r = el.getBoundingClientRect(), ox = r.left + r.width / 2, oy = r.top + r.height / 2;
+    const k = (st.d > 1 && now.d > 1) ? (now.d / st.d) : 1;
+    const s = Math.max(this.PLAN_ZOOM_MIN, Math.min(this.PLAN_ZOOM_MAX, base.s * k));
+    /**
+     * 손가락 **아래에 있던 지점이 제자리에 남게** 이동을 다시 푼다.
+     * 배율만 바꾸면 도면이 손에서 미끄러져 「확대가 엉뚱한 데를 본다」가 된다.
+     */
+    const px = ((st.cx - ox) - base.x) / base.s, py = ((st.cy - oy) - base.y) / base.s;
+    this.setState({ planZoom: this.planClamp({ s, x: (now.cx - ox) - px * s, y: (now.cy - oy) - py * s }) });
+  }
+  planUp(e) {
+    if (this._ptrs) this._ptrs.delete(e.pointerId);
+    this.planRebase(this.planGesture());
+  }
   buildRightPanel() {
     const t = this.T(), ln = this.state.lang, v = this.state.rightView;
     const tab = (id) => ({ active: v === id, onClick: () => this.setRightView(id), style: { flex: 1, textAlign: 'center', padding: '7px 4px', fontSize: '11px', fontWeight: v === id ? 600 : 500, color: v === id ? 'var(--fg)' : 'var(--fg-3)', borderBottom: '2px solid ' + (v === id ? 'var(--accent)' : 'transparent'), cursor: 'pointer' } });
@@ -3398,6 +3521,31 @@ export default class App extends React.Component {
       profileOpen: !!s.openProfile, onCloseProfile: () => this.closeProfileDetail(),
       isMemo: isMemo, memo: this.buildMemos(),
       isMap: isMap, floor: this.buildFloorplan(),
+      /**
+       * 평면도 탭-확대. **데스크톱에서는 `tapToZoom` 이 거짓이라 아래 값이 하나도
+       * 안 읽히고, 마크업도 옛것 그대로 렌더된다** — 무변경이 조건이었다.
+       */
+      plan: (() => {
+        const z = s.planZoom;
+        return {
+          tapToZoom: s.isNarrow,
+          onOpen: () => this.openPlanZoom(),
+          zoomOpen: !!z,
+          onClose: () => this.closePlanZoom(),
+          // 미리보기는 「눌러진다」는 것만 말한다 — 도면 자체는 그대로 둔다
+          previewStyle: { cursor: 'zoom-in', position: 'relative' },
+          stageRef: (el) => { this._planStage = el; },
+          figRef: (el) => { this._planFig = el; },
+          // ⛔ touch-action:none 이 없으면 브라우저가 먼저 스크롤·확대를 가져간다
+          stageStyle: { position: 'absolute', inset: '0', overflow: 'hidden', touchAction: 'none', overscrollBehavior: 'contain', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+          figStyle: z
+            ? { width: '100%', transform: `translate(${Math.round(z.x)}px, ${Math.round(z.y)}px) scale(${z.s})`, transformOrigin: 'center center' }
+            : { width: '100%' },
+          zoomLabel: z ? Math.round(z.s * 100) + '%' : '100%',
+          onDown: (e) => this.planDown(e), onMove: (e) => this.planMove(e),
+          onUp: (e) => this.planUp(e), onCancel: (e) => this.planUp(e),
+        };
+      })(),
       mapPlanMode: (s.mapMode || 'plan') === 'plan', mapGridMode: (s.mapMode || 'plan') === 'grid', onMapPlan: () => this.setState({ mapMode: 'plan' }), onMapGrid: () => this.setState({ mapMode: 'grid' }), mapPlanStyle: this.segTab((s.mapMode || 'plan') === 'plan'), mapGridStyle: this.segTab((s.mapMode || 'plan') === 'grid'),
       isGraph: isGraph, graph: this.buildGraph(),
       isLog: isLog, logView: this.buildInvestigation(),
@@ -3449,7 +3597,10 @@ export default class App extends React.Component {
   /**
    * 현장 평면도 도면 — 컨테이너 · SVG · 절대배치 오버레이 한 벌.
    *
-   * 현장 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * 현장 화면과 **탭-확대 오버레이**가 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * (2026-08-05 정정: 둘째 자리는 원래 상황판 배경 판이었는데 상황판이 제품에서
+   *  빠졌다. 같은 날 탭-확대가 그 자리를 채웠다 — 우연이고, 하나가 됐다면 합칠
+   *  자리였다.)
    * 블록은 **한 글자도 바꾸지 않고** 그대로 옮겼다 — 들여쓰기가 깊은 채로 남아
    * 있는 것은 그 때문이다. 이식된 마크업이라 읽기 좋게 고치는 것보다 같은 것이 낫다.
    *
@@ -3496,7 +3647,9 @@ export default class App extends React.Component {
   /**
    * 주장 대조표(도식) — 인물 × 시간대 격자 한 벌.
    *
-   * 현장·관계도 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * ⛳ **지금은 한 자리에서만 쓴다** (2026-08-05 정정). 둘째 자리가 상황판 배경
+   * 판이었는데 상황판이 제품에서 빠졌다. 그래도 **되돌려 넣지 않는다** — 뺀
+   * 이유(같은 것을 두 곳이 각자 그리면 갈라진다)는 자리 수와 무관하다.
    * 블록은 **한 글자도 바꾸지 않고** 옮겼다 — 깊은 들여쓰기가 남은 것은 그 때문이다.
    *
    * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
@@ -3526,7 +3679,8 @@ export default class App extends React.Component {
   /**
    * 관계도 도면 — 컨테이너 · SVG · 노드/간선 오버레이 한 벌.
    *
-   * 현장·관계도 화면과 **상황판 배경 판**이 같은 것을 그린다. 두 자리에서 쓰므로 뺐다.
+   * ⛳ **지금은 한 자리에서만 쓴다** (2026-08-05 정정 · `renderClaimGridFigure`
+   * 머리 주석과 같은 이유). 둘째 자리가 상황판 배경 판이었다.
    * 블록은 **한 글자도 바꾸지 않고** 옮겼다 — 깊은 들여쓰기가 남은 것은 그 때문이다.
    *
    * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
@@ -3545,14 +3699,16 @@ export default class App extends React.Component {
   }
 
   /**
-   * 시간대 전환 띠 — 현장 화면과 **상황판 바닥**이 같이 쓴다.
+   * 시간대 전환 띠 — 현장 화면과 **탭-확대 오버레이**가 같이 쓴다.
    *
-   * 평면도의 인물 마커는 `this.state.mapTime` 을 본다. 처음 상황판에 도면만
-   * 옮기고 이 띠를 빼먹었더니 **판 위 평면도가 현장에서 마지막에 고른 시간대로
-   * 굳어 있었다** (사용자가 「시간이 왜 안 따라오지」로 잡았다, 2026-07-26).
+   * ★ **교훈은 상황판보다 오래 산다** ★ 원래 둘째 자리는 상황판 바닥이었고,
+   * 처음 거기에 도면만 옮기고 이 띠를 빼먹었더니 **판 위 평면도가 현장에서
+   * 마지막에 고른 시간대로 굳어 있었다** (사용자가 「시간이 왜 안 따라오지」로
+   * 잡았다, 2026-07-26). 상황판은 2026-08-05에 빠졌지만 **같은 함정이 확대
+   * 오버레이에 그대로 있어서** 거기서도 이 띠를 같이 렌더한다.
    *
-   * `mapTime` 은 순수 화면 상태라 상황판에서 바꿔도 예산이 안 깎이고 아무것도
-   * 공개되지 않는다 — 그래서 바닥에서는 **이것만** 살아 있다.
+   * `mapTime` 은 순수 화면 상태라 확대하고 시간대를 바꿔도 예산이 안 깎이고
+   * 아무것도 공개되지 않는다.
    *
    * ⚠ 인자 이름 `V` 는 규약이다. `renderPlanFigure` 머리 주석 참조.
    */
@@ -3945,7 +4101,15 @@ export default class App extends React.Component {
                   <div className="segmented" style={S("margin-bottom:16px")}><div onClick={V.onMapPlan} style={V.mapPlanStyle}>{V.ui.mapModePlan}</div><div onClick={V.onMapGrid} style={V.mapGridStyle}>{V.ui.mapModeGrid}</div></div>
                   {(V.mapPlanMode)?(<>
                   {this.renderPlanTimes(V)}
-                  {this.renderPlanFigure(V)}
+                  {(V.plan.tapToZoom)?(<>
+                    <div onClick={V.plan.onOpen} style={V.plan.previewStyle} {...press(V.plan.onOpen, null, V.ui.planTapHint)}>
+                      {this.renderPlanFigure(V)}
+                    </div>
+                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:6px;display:flex;align-items:center;gap:5px")}>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={S("flex:none")}><circle cx="7" cy="7" r="4.2" /><path d="M10.2 10.2L13.5 13.5M5.4 7h3.2M7 5.4v3.2" /></svg>
+                      {V.ui.planTapHint}
+                    </div>
+                  </>):(<>{this.renderPlanFigure(V)}</>)}
                   <div style={S("display:flex;flex-wrap:wrap;gap:12px;margin-top:12px")}>
                     {arr(V.floor.dotLegend).map((lg,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S(`width:10px;height:10px;border-radius:50%;background:${lg.color}`)}></span>{lg.name}</span></React.Fragment>))}
                     {(V.floor.hasClueMarks)?(<><span style={S("display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.floor.clueLegend}</span></>):null}
@@ -4235,6 +4399,24 @@ export default class App extends React.Component {
               </div>
             </>):null}
           </div>
+
+          {(V.plan.zoomOpen)?(<>
+            <div style={S("position:fixed;inset:0;z-index:92;background:var(--bg-app);display:flex;flex-direction:column")}>
+              <div style={S("display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none;border-bottom:1px solid var(--border)")}>
+                <span className="v-ui" style={S("color:var(--fg)")}>{V.ui.navMap}</span>
+                <span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.planZoomHint}</span>
+                <span style={S("flex:1")}></span>
+                <span className="v-micro" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{V.plan.zoomLabel}</span>
+                <button className="iconbtn" onClick={V.plan.onClose} title={V.ui.planZoomClose}>✕</button>
+              </div>
+              <div style={S("padding:10px 14px 0;flex:none")}>{this.renderPlanTimes(V)}</div>
+              <div style={S("flex:1;position:relative;min-height:0")}>
+                <div ref={V.plan.stageRef} style={V.plan.stageStyle} onPointerDown={V.plan.onDown} onPointerMove={V.plan.onMove} onPointerUp={V.plan.onUp} onPointerCancel={V.plan.onCancel}>
+                  <div ref={V.plan.figRef} style={V.plan.figStyle}>{this.renderPlanFigure(V)}</div>
+                </div>
+              </div>
+            </div>
+          </>):null}
 
           {(V.moreOpen)?(<>
             <div className="scrim" style={S("z-index:70;align-items:flex-end")} onClick={V.onCloseMore}>
