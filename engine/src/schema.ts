@@ -464,6 +464,50 @@ export function parseCase(raw: unknown, source: string): Case {
        * 오류로 잡는다.** `people[].presence` 는 진실 격자라 범인·무고 양쪽에서
        * 「진짜 세계의 답」이고, 세계를 가르는 판정은 솔버 몫이다.
        */
+      /**
+       * `recordPlace` — 「기록이 **가리킨다**」가 이 어휘의 이름이자 **계약**이다.
+       *
+       * 세 가지를 묻는다:
+       * ① `points_at.location` 이 **있나** — 없으면 `answerOf` 가 `null` 을 내고
+       *    솔버가 `undecidable` 로 떨어져 그 공란이 **교차표에서 통째로 빠진다.**
+       *    「참조는 있는데 참조 대상이 비면 조용하다」— 이 부류의 네 번째였다
+       *    (`poolFor` → `discoveryTime` → `협박대상` → 여기).
+       * ② 그 값이 **답과 같나**.
+       * ③ ★ 닻 대조 ★ **기록 문안이 그 장소를 실제로 말하나.** 이것이 없으면
+       *    `points_at` 은 근거 없는 선언이고 **솔버가 그 위에서 증명한다.**
+       *    검열관 ⓐ(인용 실재)와 같은 모양이다.
+       */
+      /**
+       * 확보 단어 넷(`strandTerm`·`murderWeapon`·`culpritAlias`·`culpritMotive`) —
+       * `answerOf` 가 **`yieldsTerms.length === 1` 일 때만** 답을 낸다. 아니면 `null`,
+       * 곧 `undecidable`, 곧 **교차표에서 조용히 빠진다.** 이 부류의 **다섯 번째**를
+       * 스키마 수준에서 죽인다(2026-08-05 · 「참조는 있는데 값이 비면 조용하다」).
+       */
+      if (
+        ask?.evidence &&
+        (ask.kind === 'strandTerm' || ask.kind === 'murderWeapon' ||
+          ask.kind === 'culpritAlias' || ask.kind === 'culpritMotive')
+      ) {
+        const ev = evidence.find((x) => x.id === ask.evidence)
+        const terms = ev?.yieldsTerms ?? []
+        if (ev && terms.length !== 1)
+          p.add(`${bat}.asks`, `${ask.kind} 이 가리키는 '${ev.id}' 의 yields_terms 가 ${terms.length}개다 — 1개일 때만 답이 갈린다(아니면 솔버가 조용히 undecidable 을 낸다)`)
+        else if (ev && b?.answer !== undefined && terms[0] !== String(b.answer))
+          p.add(`${bat}.asks`, `${ask.kind} 이 가리키는 '${ev.id}' 의 확보 단어가 답과 다르다 (단어 '${terms[0]}' · 답 '${b.answer}')`)
+      }
+      if (ask?.kind === 'recordPlace' && ask.evidence) {
+        const ev = evidence.find((x) => x.id === ask.evidence)
+        const at = ev?.pointsAt?.location
+        if (ev && !at)
+          p.add(`${bat}.asks`, `recordPlace 가 가리키는 '${ev.id}' 에 points_at.location 이 없다 — 참조는 있는데 값이 비면 솔버가 조용히 undecidable 을 낸다`)
+        else if (ev && at) {
+          if (b?.answer !== undefined && at !== String(b.answer))
+            p.add(`${bat}.asks`, `recordPlace 가 가리키는 '${ev.id}'.points_at 이 답과 다르다 (가리킴 '${at}' · 답 '${b.answer}')`)
+          const label = locationList.find((l) => l.id === at)?.label
+          if (label && !(ev.record ?? '').includes(label))
+            p.add(`${bat}.asks`, `'${ev.id}' 의 기록 문안이 '${label}' 을 말하지 않는다 — 「기록이 가리킨다」는 문안이 그 자리를 말할 때만 참이다`)
+        }
+      }
       if (ask?.kind === 'personAt') {
         const who = (b.asks as { person?: string }).person
         const sl = (b.asks as { slot?: string }).slot

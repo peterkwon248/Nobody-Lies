@@ -896,6 +896,18 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
   // 확보 단어가 붙을 라벨. 전부 물증 부문이라 부문 분포가 한쪽으로 쏠리지 않는다
   const REC_LABELS: BlankLabel[] = ['물품', '접촉수단', '은닉처', '위장물', '은폐수단', '도구']
 
+  /**
+   * 가닥이 「가리키는 곳」. 아래 `pointsAt` 이 이 값을 쓰고, **`REC_STRAND` 의 홀수
+   * 가지가 같은 자리를 문안으로 말한다**(§기록 문장의 단일 출처).
+   *
+   * ⚠ **그 둘이 갈라지면 조용하다** — `asks: recordPlace` 는 「그 기록이 가리키는
+   * 곳」을 묻는데, 문안이 그 자리를 말하지 않으면 `pointsAt` 은 근거 없는 선언이
+   * 되고 솔버가 그 위에서 증명한다. 2026-08-05에 커밋된 `closing-theater` 가
+   * 정확히 그 상태였다 — **생성기가 아니라 산문 왕복이 닻을 떨어뜨렸다.**
+   * 이제 `schema.ts` 가 「기록 문안이 그 장소를 말하나」를 파스 시점에 문다.
+   */
+  const REC_AT = 'hall'
+
   const strands = Array.from({ length: midChapters }, (_, i) => {
     const word = records[i % records.length]
     const n = i + 1
@@ -903,16 +915,21 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
       word,
       label: REC_LABELS[i % REC_LABELS.length],
       evidence: {
+        // ⚠ 이 `record` 는 **자리표다** — 아래 `REC_STRAND` 루프가 덮어쓴다
+        //   (`slotLabel` 이 여기보다 뒤에 서기 때문이다). 여기를 고쳐도 출력은
+        //   한 글자도 안 바뀐다 — 2026-08-05에 고쳐보고 `gen-baseline` 회귀 0 으로 확인했다
         id: `e_rec${n}`, description: word, record: '기록에 그대로 남아 있었다.',
         yieldsTerms: [word],
         // ★ 「가리키는 곳」을 구조로 적는다 — 아래 action.target 과 같은 값이지만
         //   **뜻이 다르다**(발견된 곳 ≠ 가리키는 곳). `Evidence.pointsAt` 주석 참조
-        pointsAt: { location: 'hall' },
+        //   ⛳ 위 REC_RECORD 와 **같은 변수**에서 난다 — 문안이 이 값을 말한다
+        pointsAt: { location: REC_AT },
       } as Ev,
       action: {
         id: `a_rec${n}`, label: `${word} 확인`, cost: 1, gives: [`e_rec${n}`],
         salience: 0.32, yield: 'solution' as const,
         verb: 'search' as const, target: { kind: 'location' as const, id: 'hall' },
+        // ⚠ 이 결과문도 **자리표다** — 같은 루프가 `REC_STRAND` 로 덮어쓴다
         result: res(word, '기록에 그대로 남아 있었다.'),
       } as Act,
       fact: {

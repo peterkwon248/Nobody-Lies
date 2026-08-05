@@ -549,6 +549,9 @@ evidence:
   - id: e_rec2
     description: 자재 반출 전표
     record: 자재 반출 전표 묶음. 그날 자로 끊긴 전표가 한 장 섞여 있다. 끊은 자리는 공방 식당으로 적혀 있었다.
+    # ★2026-08-05★ 문안은 이미 「공방 식당」을 글자로 가리키고 있었다 — 값만 없었다.
+    # 그래서 여기는 **파기 중단**이고, closing-theater 쪽이 문안 수리였다
+    points_at: { location: hall }
     yields_terms:
       - 자재 반출 전표
   - id: e_rec3
