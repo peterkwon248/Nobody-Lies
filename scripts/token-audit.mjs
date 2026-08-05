@@ -31,7 +31,7 @@ const walk = (dir) => readdirSync(dir).flatMap((n) => {
 const isComment = (line) => /^\s*(\/\/|\*|\/\*)/.test(line)
 
 const files = walk(ROOT)
-const hits = { hex: [], rgba: [], stroke: [], spacing: [], media: [], inline: [] }
+const hits = { hex: [], hexFallback: [], rgba: [], stroke: [], spacing: [], media: [], inline: [] }
 let inlineStyleCalls = 0
 
 for (const f of files) {
@@ -48,6 +48,22 @@ for (const f of files) {
     for (const m of line.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
       if (isTokenDef) continue
       if (/id=|href=|url\(#|fpHatch|#root/.test(line)) continue   // SVG 참조·앵커는 색이 아니다
+      /**
+       * ⛔ **`var(--토큰, #폴백)` 의 폴백 자리도 뺀다 (2026-08-06).**
+       *
+       * 이걸 안 빼서 **100건 중 74건을 잘못 셌다.** `Generator.jsx` 가 76건으로
+       * 「전체의 76%」를 차지해 **스킨 배치의 범위 판단이 통째로 그 수 위에 서 있었다**
+       * (*"Generator 가 개발 도구면 범위가 확 좁아진다"*). 실제로는 정반대다 —
+       * 74건이 이미 `var(--fg-3, #8b93a1)` 꼴이라 **앱에서 가장 잘 토큰화된 파일**이고,
+       * 진짜 하드코딩은 **2건**이다.
+       *
+       * ★ 폴백은 **결함이 아니라 방어**다 — 토큰이 안 실렸을 때 화면이 검게 죽지
+       *   않게 한다. 그것을 결함으로 세면 **잘 한 일이 벌점이 된다.**
+       * ★ 판정: 이 hex 앞에 **닫히지 않은 `var(`** 가 있고 그 안에 콤마가 있으면 폴백이다.
+       */
+      const before = line.slice(0, m.index)
+      const vi = before.lastIndexOf('var(')
+      if (vi >= 0) { const seg = before.slice(vi); if (!seg.includes(')') && seg.includes(',')) { hits.hexFallback.push(at({ value: m[0] })); continue } }
       hits.hex.push(at({ value: m[0] }))
     }
     for (const m of line.matchAll(/rgba?\(\s*\d+[^)]*\)/g)) {
@@ -79,6 +95,7 @@ const summary = {
   files: files.length,
   hardcodedHex: hits.hex.length,
   hardcodedHexUnique: uniq(hits.hex).length,
+  hexAsVarFallback: hits.hexFallback.length,   // 결함이 아니라 방어 — 따로 센다
   rgbaLiteral: hits.rgba.length,
   strokeWidthValues: uniq(hits.stroke).sort((a, b) => a - b),
   strokeWidthCount: hits.stroke.length,
@@ -92,6 +109,7 @@ const summary = {
 console.log('\n축5 토큰 규율 — 정적 전수\n' + '─'.repeat(52))
 console.log(`파일 ${summary.files}개 · 인라인 스타일 호출 S() ${summary.inlineStyleCalls}회`)
 console.log(`하드코딩 hex        ${summary.hardcodedHex}건 (고유 ${summary.hardcodedHexUnique})`)
+console.log(`  ↳ var() 폴백       ${summary.hexAsVarFallback}건 — 이미 토큰화된 자리다 (위 수에 안 든다)`)
 console.log(`rgba() 리터럴       ${summary.rgbaLiteral}건`)
 console.log(`strokeWidth 값      ${summary.strokeWidthValues.join(' · ')}  (${summary.strokeWidthCount}회)`)
 console.log(`간격 4px 그리드 밖  ${summary.spacingOffGrid}건  값: ${summary.spacingOffGridValues.slice(0, 14).join(' ')}`)
