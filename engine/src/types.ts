@@ -288,6 +288,38 @@ export type Fact = {
   kind: FactKind
   subject: PersonId
   content: string
+  /**
+   * ★ 이 사실의 **값** ★ (2026-08-05 신설 · 사용자 승인)
+   *
+   * ## ⛔ 답의 사본이 아니다 — **사실이라는 저작물의 속성**이다
+   *
+   * 기각된 안은 *"`asks` 에 답의 단어를 적자"* 였다. 그러면 `answerOf` 가 `asks` 를
+   * 읽어 되돌려주므로 **항진명제**가 된다 — 무엇을 물어도 언제나 맞는다.
+   *
+   * ```
+   * ❌ asks 가 값을 품는다    answerOf(asks) = asks.term      항진명제
+   * ✅ Fact 가 값을 갖는다    answerOf(asks) = fact(asks).value   가리킬 뿐이다
+   * ```
+   *
+   * 「가명의 정체는 김선생이다」는 **저작된 사실**이고, 그 사실에 `revealedBy` 로
+   * **도달 가능한가**는 별도로 검증된다. **대조의 실질이 그쪽으로 옮겨간다**
+   * (`proof.ts` R12·R13 · `weakBlanks`). `belongingsOwner` 의 1:1 이 「검사가
+   * 통과하는데 아무것도 안 문다」가 아니었던 것과 같은 자리다.
+   *
+   * ## 왜 `content` 로는 안 되나 — 재서 갈랐다 (2026-08-05)
+   *
+   * ```
+   * f_alias_exists  content 「가명을 쓰는 유통책이 존재한다」  ← 답 '김선생' 이 글자에 없다
+   * f_sakura_motive content 「분배금 다툼 + 폭로 임박」        ← 산문에 묻힌 부분 문자열
+   * f_last_seen     content 「새벽 3시까지 본채에서 피해자와 음주」 ← 답은 슬롯 id 't1'
+   * ```
+   * **문자열을 파싱해도 못 찾거나, 찾아도 답의 꼴이 아니다.** 그래서 필드다.
+   *
+   * ⛳ **새 정보 생성이 아니라 파기 중단이다** — 생성기는 `f_identity`·`f_motive` 를
+   * 만드는 순간 값을 이미 쥐고 있었고(`alias`·`motive`) 방출할 때 버리고 있었다.
+   * `Blank.asks`·`Evidence.pointsAt` 과 같은 부류다(`MANIFESTO §정보 이중화 원칙`).
+   */
+  value?: string
   /** 비어 있으면 진술에서 무료 획득 */
   revealedBy: EvidenceId[]
   requires?: FactId[]
@@ -681,6 +713,30 @@ export type Asks =
    * 새 정보 생성이고, ⑤검열관 ⓐ가 잡아야 할 부류를 손으로 심는 것이 된다.
    */
   | { kind: 'factSubject'; fact: FactId }
+  /**
+   * **그 사실의 값** (2026-08-05 신설 · 사용자 승인). 답의 채널은 `Fact.value` 다.
+   *
+   * `factSubject` 의 짝이다 — 저쪽은 사실의 **주어**를, 이쪽은 사실의 **값**을 묻는다.
+   * 산장 다섯이 이 하나로 닫힌다(2장 시각 · 4장 물품·정체 · 5장 동기·은닉처).
+   *
+   * ## ⛔ 왜 `strandTerm` 으로 못 때우나 — 세서 갈랐다
+   *
+   * 넷이 `candidates: discovered` 라 확보 단어처럼 보이는데, **카드 한 장이 단어
+   * 여러 개를 준다:**
+   * ```
+   * e_wy_text  yields_terms [김선생, 마약, 폭로 임박]     ← 셋
+   * e_burner   yields_terms [별채 대포폰, 김선생, 폭로 임박] ← 셋
+   * ```
+   * `strandTerm` 은 `yieldsTerms.length === 1` 일 때만 답을 가른다. **손저작에서만
+   * 깨지는 전제다** — 생성분은 가닥마다 카드가 1:1 이라 지금 구현이 맞다.
+   *
+   * ## ⚠ 후보 영역은 이 물음이 정하지 못한다
+   *
+   * 값의 도메인은 **사실마다 다르다**(슬롯 id · 확보 단어 · 그 밖). 그래서
+   * `byAsks` 가 `null` 을 돌려주고 라벨이 영역을 준다. **답을 보고 도메인을
+   * 역추정하지 않는다** — 삭제된 `roleOf` 가 그 부류였다(08-04에 두 번 틀렸다).
+   */
+  | { kind: 'factValue'; fact: FactId }
   /**
    * **생전의 피해자를 마지막으로 본 사람** (2026-08-05 신설 · 사용자 승인).
    *

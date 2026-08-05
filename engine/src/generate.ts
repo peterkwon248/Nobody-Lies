@@ -2853,9 +2853,12 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
         id: `f_no_${id}_ok`, kind: 'no_opportunity' as const, subject: id,
         content: '머문 자리 상호 일치', revealedBy: ['e_mutual'],
       })),
-      { id: 'f_identity', kind: 'identity', subject: culprit, content: `${alias} = 범인`, revealedBy: ['e_alias', 'e_alias2'] },
+      // ★ `value` — 만드는 순간 아는 값을 버리지 않고 적는다 (2026-08-05).
+      //   `asks` 를 안 바꾼다 — 생성분은 물증이 1:1 이라 culpritAlias·culpritMotive
+      //   가 이미 답을 가른다. 여기서 하는 일은 **파기 중단**뿐이다.
+      { id: 'f_identity', kind: 'identity', subject: culprit, content: `${alias} = 범인`, value: alias, revealedBy: ['e_alias', 'e_alias2'] },
       { id: 'f_means', kind: 'means', subject: culprit, content: '도구를 다룰 수 있었다', revealedBy: ['e_tool', 'e_toolmark'] },
-      { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, revealedBy: ['e_motive'], requires: ['f_identity'] },
+      { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, value: motive, revealedBy: ['e_motive'], requires: ['f_identity'] },
       // 레드 헤링 — **다섯 전원**의 비밀. 수상해 보이지만 사건과 무관하다.
       // `context` 라 유죄 계산에 안 낀다 — 범인이 하나 더 갖는다고 논리는 안 바뀐다.
       // ⚠ 위 §HERRING 과 **같은 순서(`ids`)여야** `e_herring{i}` 짝이 맞는다

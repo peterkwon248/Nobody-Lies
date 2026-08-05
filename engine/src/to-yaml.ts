@@ -166,6 +166,8 @@ export function caseToRaw(c: Case): Raw {
 
     facts: c.facts.map((f) => tidy({
       id: f.id, kind: f.kind, subject: f.subject, content: f.content,
+      // 「이 사실의 값」— `asks: factValue` 가 읽는다. types.ts §Fact.value 참조
+      value: f.value,
       revealed_by: f.revealedBy, requires: f.requires, available_after: f.availableAfter,
     })),
 

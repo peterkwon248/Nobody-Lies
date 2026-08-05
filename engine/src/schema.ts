@@ -356,6 +356,9 @@ export function parseCase(raw: unknown, source: string): Case {
       if (!evidenceIds.has(e)) p.add(`${at}.revealed_by`, `물증 '${e}' 가 없다`)
     return {
       id: f?.id, kind: f?.kind, subject: f?.subject, content: f?.content,
+      // 「이 사실의 값」 — `asks: factValue` 의 답 채널 (types.ts §Fact.value).
+      // 답의 사본이 아니라 저작물의 속성이다. 없으면 factValue 가 null 을 낸다
+      ...(f?.value !== undefined ? { value: String(f.value) } : {}),
       revealedBy: arr(f?.revealed_by),
       ...(f?.requires ? { requires: f.requires } : {}),
       ...(f?.available_after !== undefined ? { availableAfter: f.available_after } : {}),
@@ -425,6 +428,34 @@ export function parseCase(raw: unknown, source: string): Case {
       if (b?.answer === undefined) p.add(bat, 'answer 가 없다')
       if (b?.particle && !PARTICLES.has(b.particle))
         p.add(`${bat}.particle`, `조사는 ${[...PARTICLES].join(' · ')} 중 하나여야 한다 (받은 값: ${b.particle})`)
+      // 물음이 **가리키는 것이 실재하나**. 여기까지 `asks` 는 맨 캐스트였다 —
+      // id 하나만 틀려도 `answerOf` 가 null 을 내고 그 공란은 조용히 무검사가 된다
+      // (2026-08-05 `poolFor` 와 같은 병 · 검열관 ⓐ「인용 실재」와 같은 모양)
+      const ask = b?.asks as { kind?: string; fact?: string; evidence?: string } | undefined
+      if (ask?.fact && !factIds.has(ask.fact))
+        p.add(`${bat}.asks.fact`, `사실 '${ask.fact}' 가 없다`)
+      if (ask?.evidence && !evidenceIds.has(ask.evidence))
+        p.add(`${bat}.asks.evidence`, `물증 '${ask.evidence}' 가 없다`)
+      /**
+       * ★ 가리키는 값이 **답과 같은가** ★ (2026-08-05)
+       *
+       * ⛳ **뮤테이션으로 필요를 증명하고 넣었다.** `f_ring_goods.value` 를 답과
+       * 어긋나게 고쳐도 `solve-check` 이 exit 0 · verifier 도 한 마디 없었다 —
+       * `proveBlanks` 는 R4(확보 단어)가 먼저 후보를 1개로 줄여 R12·R13 까지
+       * 가지도 않고, 솔버는 그냥 **틀린 답을 조용히** 돌려준다.
+       * **손으로 적은 값을 아무도 안 보는 상태**였다.
+       *
+       * `factSubject` 도 같은 창이 열려 있었다 — `proof.ts` 의 `subjectFact` 는
+       * 어긋나면 `null` 을 내고 **규칙이 조용히 안 걸릴** 뿐이다.
+       */
+      const target = ask?.fact ? facts.find((y) => y.id === ask.fact) : undefined
+      if (target && b?.answer !== undefined) {
+        const ans = String(b.answer)
+        if (ask?.kind === 'factValue' && target.value !== ans)
+          p.add(`${bat}.asks`, `factValue 가 가리키는 '${target.id}'.value 가 답과 다르다 (사실 '${target.value ?? '없음'}' · 답 '${ans}')`)
+        if (ask?.kind === 'factSubject' && target.subject !== ans)
+          p.add(`${bat}.asks`, `factSubject 가 가리키는 '${target.id}'.subject 가 답과 다르다 (사실 '${target.subject}' · 답 '${ans}')`)
+      }
       return {
         label: b?.label as BlankLabel, candidates: b?.candidates, answer: String(b?.answer),
         ...(b?.particle ? { particle: b.particle as Particle } : {}),

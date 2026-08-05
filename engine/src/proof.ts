@@ -185,6 +185,21 @@ function subjectFact(x: Ctx): Fact | null {
 }
 
 /**
+ * `asks: factValue` 가 가리키는 사실 — 실재하고 **값이 답과 같을 때만**.
+ *
+ * ⛳ `f.value !== x.answer` 면 `null` 을 낸다. 이 한 줄이 **저작 오류를 무는 자리**다 —
+ * 사실의 값과 공란의 답이 어긋나면 증명이 안 서고 `solve-check` 이 무검사로 올린다.
+ * `subjectFact` 의 `f.subject !== x.answer` 와 같은 모양이다.
+ */
+function valueFact(x: Ctx): Fact | null {
+  const asks = x.asks
+  if (asks?.kind !== 'factValue') return null
+  const f = x.c.facts.find((y) => y.id === asks.fact)
+  if (!f || f.value !== x.answer) return null
+  return f
+}
+
+/**
  * 규칙표. **여기가 곧 「무엇을 증명할 수 있나」의 전부다.**
  * 새 규칙을 더하면 덮이는 공란이 늘고, 그것이 `proof-check` 의 비율로 나온다.
  */
@@ -495,6 +510,85 @@ const RULES: Rule[] = [
         observation: `진술 격자 — 사망 구간 이전에 피해자와 같은 칸에 있던 사람은 ${x.nameOf(s.who)} 하나다`,
         cost: 0,
         rule: 'R11 마지막 목격',
+        eliminates: gone.map(x.nameOf),
+      }
+    },
+  },
+
+  /**
+   * R12 · R13 **사실의 값** — `asks: factValue` 를 그대로 읽는다. R9·R10 의 짝이다.
+   *
+   * 저쪽이 사실의 **주어**를 물었다면 이쪽은 사실의 **값**을 묻는다. 산장 다섯이
+   * 여기로 닫힌다 — 2장 시각 · 4장 물품·정체 · 5장 동기·은닉처.
+   *
+   * ## 왜 산문을 안 읽나 (R9 와 같은 이유)
+   *
+   * ```
+   * f_alias_exists  「가명을 쓰는 유통책이 존재한다」   답 '김선생' 이 글자에 없다
+   * f_last_seen     「새벽 3시까지 … 음주」            답은 슬롯 id 't1'
+   * ```
+   * 근거가 없어서가 아니라 **읽을 채널이 없어서** 못 냈다. 이제 구조가 답을 쥔다.
+   *
+   * ## ⛔ 둘로 나눈 이유도 R9·R10 과 같다
+   *
+   * `clues.ts` 의 `isDeclaredPremise` 가 **규칙 id 로** 전제를 가른다. 「진술에서
+   * 무료」와 「조사해서 얻음」을 한 id 로 내면 그 판정이 둘을 못 가르고 **누설 검사에
+   * 구멍이 뚫린다.** 그래서 비용의 출처를 id 에 적는다.
+   *
+   * ⛔ **R12 를 `PREMISE` 에 넣지 않았다** — 무료 사실 하나를 쓰고 공란이 그것을
+   * 가리키기만 하면 무엇이든 「정당하게 무료」가 된다. 무료가 정당한지는 **사건
+   * 설계의 판단**이라 사람이 본다(장 단위 `free_chapter` 로만 선언한다).
+   *
+   * ## ⚠ 지금 이 둘은 **한 번도 발화하지 않는다** — 재서 확인했다 (2026-08-05)
+   *
+   * `proveBlanks` 는 규칙표 순서대로 돌다가 후보가 1개가 되면 멈춘다. 산장 다섯은
+   * **먼저 오는 규칙이 이미 잡는다**:
+   * ```
+   * 4장 물품·정체 · 5장 동기·은닉처   R4 확보 단어   (pool=terms · 구조 채널)
+   * 2장 시각                        R6 기록이 가리킨다 (pool=label · **산문 채널**)
+   * ```
+   * **그래서 이 둘의 값은 증명이 아니라 대비다.** 실효 방어는 두 곳에 있다 —
+   * 솔버의 `answerOf`(독립 경로)와 `schema.ts` 의 **답↔값 일치 검사**(뮤테이션으로
+   * 물리는 것을 확인했다). 그 검사가 없을 때는 값을 틀리게 해도 게이트가 전부
+   * 초록이었다.
+   *
+   * ⛳ **순서를 바꾸지 않았다 — 저작 판단이 먼저다.** R12 를 R6 앞에 놓으면
+   * 2장 시각이 비용 0(`f_last_seen.revealed_by: []`)이 되어 **누설 경고가 하나
+   * 는다.** 2장을 `free_chapter` 로 선언할지는 사람이 정할 일이라(`MEMORY §이식
+   * 규칙 6` · 1·2장 사실이 전부 무료고 3장부터 유료) 코드가 앞질러 정하지 않는다.
+   */
+  {
+    id: 'R12 사실의 값 · 진술',
+    applies: (x) => {
+      const f = valueFact(x)
+      return Boolean(f) && costOfFact(x.c, f!) === 0
+    },
+    step: (x) => {
+      const f = valueFact(x)!
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `진술이 말한다 — 「${f.content}」`,
+        cost: 0,
+        rule: 'R12 사실의 값 · 진술',
+        eliminates: gone.map(x.nameOf),
+      }
+    },
+  },
+  {
+    id: 'R13 사실의 값 · 조사',
+    applies: (x) => {
+      const f = valueFact(x)
+      return Boolean(f) && costOfFact(x.c, f!) > 0
+    },
+    step: (x) => {
+      const f = valueFact(x)!
+      const gone = x.pool.filter((v) => v !== x.answer)
+      if (!gone.length) return null
+      return {
+        observation: `조사가 밝힌다 — 「${f.content}」`,
+        cost: costOfFact(x.c, f),
+        rule: 'R13 사실의 값 · 조사',
         eliminates: gone.map(x.nameOf),
       }
     },

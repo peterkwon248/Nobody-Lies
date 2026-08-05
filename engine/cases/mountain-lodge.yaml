@@ -577,8 +577,10 @@ facts:
   - { id: f_yujin_no, kind: no_opportunity, subject: yujin, content: 오전 8시 도착, revealed_by: [] }
   - { id: f_yuri_no,  kind: no_opportunity, subject: yuri,  content: 장을 보고 아침 도착, revealed_by: [] }
   - { id: f_wy_no,    kind: no_opportunity, subject: wonyoung, content: "늦잠, 가장 늦게 도착", revealed_by: [] }
+  # value — 2장 서술문이 「[t1]까지 두 사람은 [main]에서」라고 이 사실을 다시 말한다.
+  # 답은 슬롯 id 라 content 글자('새벽 3시')와 꼴이 다르다 → 파싱으로는 못 잇는다
   - { id: f_last_seen, kind: context, subject: sakura,
-      content: 새벽 3시까지 본채에서 피해자와 음주, revealed_by: [] }
+      content: 새벽 3시까지 본채에서 피해자와 음주, value: t1, revealed_by: [] }
   - { id: f_wy_call, kind: context, subject: wonyoung,
       content: 새벽 3시 피해자의 전화를 받음, revealed_by: [] }
 
@@ -607,7 +609,28 @@ facts:
     kind: context
     subject: sakura
     content: 가명을 쓰는 유통책이 존재한다
+    # 4장 '정체' 의 답. **이 사실에 이름이 글자로 없다** — 그래서 필드다.
+    # ⛳ f_sakura_is_alias 를 안 쓴다: 저쪽은 「그 이름의 주인은 세라」라 4장 마지막
+    #    공란의 몫이고, 여기서 걸면 이름이 밝혀지기 전에 범인이 딸려 나온다
+    value: 김선생
     revealed_by: [e_yuri_threat, e_yena_info, e_wy_text]
+
+  # ── 거울 사실 둘 (2026-08-05) — 4장 물품 · 5장 은닉처 ──
+  # 받칠 사실이 **아예 없었다**(전수로 세고 확인했다). 파기 중단이 아니라 신설이지만
+  # 새 정보는 아니다 — 두 단어 다 이미 확보 단어이고 물증이 준다. 사실만 없었다.
+  # ⛔ strandTerm 으로 못 때운다: e_wy_text·e_burner 가 각각 단어 셋을 준다(1:1 아님)
+  - id: f_ring_goods
+    kind: context
+    subject: sakura
+    content: 산장에 흘러든 유통 물품
+    value: 마약
+    revealed_by: [e_wy_text, e_yuri_threat]
+  - id: f_burner_hidden
+    kind: context
+    subject: sakura
+    content: 거래 기록이 남은 자리
+    value: 별채 대포폰
+    revealed_by: [e_burner]
   # 거울 사실 (2026-08-05) — 4장 '인물' 공란이 묻는 **추적자**.
   # f_alias_exists 는 subject 가 sakura 라 「가명이 있다」는 말이지 「누가 캤나」가
   # 아니다. 추적은 구조에 셋으로 이미 있었고(a_wy.clues 「'김선생' 추적 정황」 ·
@@ -632,6 +655,8 @@ facts:
     kind: motive
     subject: sakura
     content: 분배금 다툼 + 폭로 임박
+    # 5장 '동기' 의 답. content 안에 **부분 문자열로 묻혀** 있어 파싱으로는 못 꺼낸다
+    value: 폭로 임박
     revealed_by: []
     requires: [f_sakura_is_alias]
 
@@ -989,7 +1014,11 @@ chapters:
       # ★ lastSeenBy/Loc 은 **세계의 함수다** — 범인의 진실 격자가 세계마다 다르니
       #   답이 갈린다. 이 사건 최초의 discriminated 공란이 되는 자리다.
       - { label: 마지막목격자, candidates: closed, answer: sakura, asks: { kind: lastSeenBy } }
-      - { label: 시각,       candidates: closed, answer: t1 }
+      # 「[t1]까지 두 사람은 [main]에서」— f_last_seen 을 그대로 다시 말하는 문장이다.
+      # ⛔ lastSeenSlot(격자 도출) 은 **반증됐다** — 피해자와 같은 칸이던 마지막
+      #    슬롯은 t0(둘 다 main)이고 답은 t1 이다. 도출하면 틀린 답을 돌려준다
+      - { label: 시각,       candidates: closed, answer: t1,
+          asks: { kind: factValue, fact: f_last_seen } }
       - { label: 장소,       candidates: closed, answer: main, asks: { kind: lastSeenLoc } }
       # 「전화를 받았다고 **진술한** 사람」이다 — 소지품이 아니다.
       # e_wy_text 를 걸면 2장 공란을 4장 물증으로 정의하게 된다(시제가 어긋난다).
@@ -1043,8 +1072,10 @@ chapters:
     opening: 현장은 설명됐다. 그러나 설명된 것은 방법뿐이었다.
     requires_facts: [f_alias_exists, f_sakura_is_alias]
     blanks:
-      - { label: 물품,     candidates: discovered, answer: 마약,   particle: 이/가 }
-      - { label: 정체,     candidates: discovered, answer: 김선생 }
+      - { label: 물품,     candidates: discovered, answer: 마약,   particle: 이/가,
+          asks: { kind: factValue, fact: f_ring_goods } }
+      - { label: 정체,     candidates: discovered, answer: 김선생,
+          asks: { kind: factValue, fact: f_alias_exists } }
       # 협박대상 — 기존 사실에 그대로 걸린다(신설 0). 「조직이 약물로 붙들어 둔 사람」
       - { label: 협박대상, candidates: closed,     answer: yuri,   particle: 을/를,
           asks: { kind: factSubject, fact: f_yuri_secret } }
@@ -1078,8 +1109,10 @@ chapters:
     blanks:
       - { label: 인물,   candidates: closed,     answer: sakura, is_accusation: true,
           asks: { kind: culprit } }
-      - { label: 동기,   candidates: discovered, answer: 폭로 임박, particle: "(으)로" }
-      - { label: 은닉처, candidates: discovered, answer: 별채 대포폰 }
+      - { label: 동기,   candidates: discovered, answer: 폭로 임박, particle: "(으)로",
+          asks: { kind: factValue, fact: f_sakura_motive } }
+      - { label: 은닉처, candidates: discovered, answer: 별채 대포폰,
+          asks: { kind: factValue, fact: f_burner_hidden } }
     report:
       - "모든 정황이 한 사람을 가리켰다. 진범은 "
       - { blank: 0 }

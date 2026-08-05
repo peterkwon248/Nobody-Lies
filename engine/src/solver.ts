@@ -355,6 +355,13 @@ export function answerOf(c: Case, w: World, asks: Asks | undefined): string | nu
       return f?.subject ?? null
     }
 
+    // 그 사실의 값. **`asks` 가 아니라 `Fact` 가 값을 쥔다** — 물음이 값을 품으면
+    // 여기가 asks 를 되읽어 항진명제가 된다(기각된 안 · types.ts §Fact.value)
+    case 'factValue': {
+      const f = c.facts.find((x) => x.id === asks.fact)
+      return f?.value ?? null
+    }
+
     // ── 세계의 함수 (범인의 진실 격자에 의존한다) ──
     case 'lastSeenBy':
       return lastSighting(c, w)?.who ?? null
