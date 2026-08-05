@@ -72,8 +72,25 @@ for (const f of files) {
     }
     // strokeWidth 불일치
     for (const m of line.matchAll(/strokeWidth[=:]\s*["'{]?\s*([\d.]+)/g)) hits.stroke.push(at({ value: m[1] }))
-    // 간격 그리드 — px 값 중 4의 배수가 아닌 것 (0·1·2·폰트크기 제외)
-    for (const m of line.matchAll(/(?:padding|margin|gap|top|bottom|left|right)[^:;'"]*:\s*([\d]+)px/g)) {
+    /**
+     * 간격 그리드 — px 값 중 4의 배수가 아닌 것 (0·1·2·폰트크기 제외)
+     *
+     * ⛔ **단축 표기의 뒷값을 놓치고 있었다 (2026-08-06).** 옛 정규식은 콜론 뒤
+     * **첫 px 하나**만 봐서 `padding: '2px 8px'` 의 **8 을 못 봤다.**
+     * 실측: 보이던 수 244 · 실제 308 — **64개가 계수기 밖에서 살아 있었다.**
+     * 이대로 수리하면 「244 → 0」을 인쇄하면서 64개가 그대로 남는다.
+     * ★ 속성값 **전체**를 잡아 그 안의 px 를 전부 센다.
+     */
+    const PROP = /(?:padding|margin|gap)[A-Za-z]*\s*:\s*(?:'([^']*)'|"([^"]*)"|([^;,}\n]+))/g
+    for (const m of line.matchAll(PROP)) {
+      const val = m[1] ?? m[2] ?? m[3] ?? ''
+      for (const q of val.matchAll(/(\d+)px/g)) {
+        const v = Number(q[1])
+        if (v > 2 && v % 4 !== 0) hits.spacing.push(at({ value: v }))
+      }
+    }
+    // 위치 속성은 간격 문법이 아니라 좌표라 따로 — 첫 값만 본다(옛 규칙 유지)
+    for (const m of line.matchAll(/(?:top|bottom|left|right)\s*:\s*([\d]+)px/g)) {
       const v = Number(m[1])
       if (v > 2 && v % 4 !== 0) hits.spacing.push(at({ value: v }))
     }
