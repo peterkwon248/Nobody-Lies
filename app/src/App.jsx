@@ -3674,7 +3674,7 @@ export default class App extends React.Component {
                     {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${w.mx}%;top:${w.my}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px`)}>{w.label}</span></React.Fragment>))}
                     {arr(V.floor.locs).map((l,$index)=>(<React.Fragment key={$index}><div style={l.boxStyle} onClick={l.onSearch}>
                       <div style={S("display:flex;align-items:center;gap:8px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 4px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
-                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:6px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 8px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
+                      {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:8px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 8px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
                     </div></React.Fragment>))}
                     {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
                     {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span style={f.labelStyle}>{f.name}</span></React.Fragment>))}
@@ -3781,16 +3781,16 @@ export default class App extends React.Component {
                 <div className="nav-caption">{V.ui.navCase}</div>
                 <div className={V.nav.overviewCls} {...press(V.nav.onOverview, V.nav.overviewCls, V.ui.navOverview)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="5.5" /><path d="M8 7.2v3.2M8 5.4v.1" /></svg>
-                  <span>{V.ui.navOverview}</span>{(V.nav.overviewUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
+                  <span>{V.ui.navOverview}</span>{(V.nav.overviewUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.narrCls} {...press(V.nav.onNarr, V.nav.narrCls, V.ui.navNarrative)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3M6 8h4M6 10.5h4" /></svg>
-                  <span>{V.ui.navNarrative}</span>{(V.nav.narrUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}<span className="count">{V.nav.narrProgress}</span>
+                  <span>{V.ui.navNarrative}</span>{(V.nav.narrUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;flex:none")}></span></>):null}<span className="count">{V.nav.narrProgress}</span>
                 </div>
-                <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navClue}</div>
+                <div className="nav-caption" style={S("margin-top:8px")}>{V.ui.navClue}</div>
                 <div className={V.nav.stmtCls} {...press(V.nav.onStmt, V.nav.stmtCls, V.ui.navStatements)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2.5" y="3" width="11" height="10" rx="1" /><path d="M2.5 6.5h11M6.5 6.5V13M10 6.5V13" /></svg>
-                  <span>{V.ui.navStatements}</span>{(V.nav.stmtUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
+                  <span>{V.ui.navStatements}</span>{(V.nav.stmtUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.profileCls} {...press(V.nav.onProfile, V.nav.profileCls, V.ui.navProfile)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="5.5" r="2.5" /><path d="M3.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" /></svg>
@@ -3798,13 +3798,13 @@ export default class App extends React.Component {
                 </div>
                 <div className={V.nav.mapCls} {...press(V.nav.onMap, V.nav.mapCls, V.ui.navMap)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2.5 4.5L6 3l4 1.5L13.5 3v9L10 13.5 6 12 2.5 13.5z" /><path d="M6 3v9M10 4.5v9" /></svg>
-                  <span>{V.ui.navMap}</span>{(V.nav.mapUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;flex:none")}></span></>):null}
+                  <span>{V.ui.navMap}</span>{(V.nav.mapUnread)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:8px;flex:none")}></span></>):null}
                 </div>
                 <div className={V.nav.graphCls} {...press(V.nav.onGraph, V.nav.graphCls, V.ui.navGraph)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="4" cy="5" r="2" /><circle cx="12" cy="4" r="1.6" /><circle cx="11" cy="12" r="2" /><path d="M5.7 6.3l4 4.3M5.7 4.6l4.8-.4" /></svg>
                   <span>{V.ui.navGraph}</span>
                 </div>
-                <div className="nav-caption" style={S("margin-top:6px")}>{V.ui.navTool}</div>
+                <div className="nav-caption" style={S("margin-top:8px")}>{V.ui.navTool}</div>
                 <div className={V.nav.logCls} {...press(V.nav.onLog, V.nav.logCls, V.ui.invLogTitle)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                   <span>{V.ui.invLogTitle}</span><span className="count">{V.nav.logBadge}</span>
@@ -3823,8 +3823,8 @@ export default class App extends React.Component {
                   <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>{V.status.diff}</span>
                   <span className="v-meta">{V.ui.budget} · <b className="v-num" style={S("color:var(--fg-2)")}>{V.status.budget}</b></span>
                 </div>
-                <div className="v-micro" style={S("margin-top:10px;line-height:1.55;color:var(--fg-4)")}>{V.ui.sidebarNote}</div>
-                <div className="linklike" {...press(V.onAbandonReq, null, V.ui.abandon)} style={S("margin-top:10px;padding-left:0;color:var(--label-red);font-size:12px")}>{V.ui.abandon}</div>
+                <div className="v-micro" style={S("margin-top:12px;line-height:1.55;color:var(--fg-4)")}>{V.ui.sidebarNote}</div>
+                <div className="linklike" {...press(V.onAbandonReq, null, V.ui.abandon)} style={S("margin-top:12px;padding-left:0;color:var(--label-red);font-size:12px")}>{V.ui.abandon}</div>
               </div>
             </div>
           </>):null}
@@ -3847,7 +3847,7 @@ export default class App extends React.Component {
 
             <div className="viewheader">
               {(V.isWide)?(<><span style={S("display:inline-flex;align-items:center;gap:2px;margin-right:8px")}>{(V.shell.leftClosed)?(<><button className="iconbtn" onClick={V.shell.onToggleLeft} title={V.ui.toggleLeft}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="7" y1="3.6" x2="7" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="2.8" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button></>):null}<button className="iconbtn" onClick={V.shell.onBack} title={V.ui.navBack} style={V.shell.backStyle}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg></button><button className="iconbtn" onClick={V.shell.onFwd} title={V.ui.navFwd} style={V.shell.fwdStyle}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 3.5L10.5 8 6 12.5" /></svg></button></span></>):null}
-              <div className="viewtitle"><h1>{V.ui.viewTitle}</h1><span className="v-meta" style={S("margin-left:6px;color:var(--fg-4)")}>{V.ui.viewSub}</span></div>
+              <div className="viewtitle"><h1>{V.ui.viewTitle}</h1><span className="v-meta" style={S("margin-left:8px;color:var(--fg-4)")}>{V.ui.viewSub}</span></div>
               <span className="spacer"></span>
               <span className="toolbar-icons g-settings" style={S("position:relative")}>
                 {(V.isWide)?(<><button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="11.2" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button></>):null}
@@ -3870,7 +3870,7 @@ export default class App extends React.Component {
               {(V.isNarrative)?(<>
                 <div style={V.narrLayoutStyle}>
                   <div style={S("flex:1;min-width:0;max-width:780px")}>
-                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:18px")}>
+                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:20px")}>
                       <div style={S("display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)")}>
                         <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3" /></svg>
                         <span className="v-ui" style={S("color:var(--fg);letter-spacing:.02em")}>{V.ui.nTitle}</span>
@@ -3945,7 +3945,7 @@ export default class App extends React.Component {
                           <span style={S("flex:1")}></span>
                           <span style={sec.stateChipStyle}>{sec.stateLabel}</span>
                         </div>
-                        <div style={S("display:flex;flex-direction:column;gap:8px;margin-top:14px")}>
+                        <div style={S("display:flex;flex-direction:column;gap:8px;margin-top:16px")}>
                           {arr(sec.listBlanks).map((lb,$index)=>(<React.Fragment key={$index}>
                             <div style={S("display:flex;align-items:center;gap:12px;padding:12px 12px;border:1px solid var(--border);border-radius:var(--r-sm);position:relative")}>
                               <span className="v-title" style={S("color:var(--fg-2);flex:1;min-width:0")}>{lb.label}</span>
@@ -3958,7 +3958,7 @@ export default class App extends React.Component {
                           </React.Fragment>))}
                         </div>
                         {(sec.open)?(<>
-                          <div style={S("display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--fg-4)")}>
+                          <div style={S("display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--fg-4)")}>
                             <span className="v-meta" style={S("font-variant-numeric:tabular-nums")}>{sec.progressLabel}</span>
                             <span className="v-meta">{V.ui.secFillHint}</span>
                           </div>
@@ -3969,11 +3969,11 @@ export default class App extends React.Component {
                   </div>
 
                   {(V.narrShowBank)?(<><div style={V.bankStyle}>
-                    <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}>
+                    <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}>
                       <svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="var(--fg-3)" strokeWidth="1.6"><rect x="2.5" y="4" width="11" height="8.5" rx="1.2" /><path d="M2.5 6.5h11" /></svg>
                       <span className="v-caption" style={S("color:var(--fg-2)")}>{V.ui.bankTitle}</span>
                     </div>
-                    <div className="v-micro" style={S("margin-bottom:14px;line-height:1.55;color:var(--fg-4)")}>{V.ui.bankHint}</div>
+                    <div className="v-micro" style={S("margin-bottom:16px;line-height:1.55;color:var(--fg-4)")}>{V.ui.bankHint}</div>
                     {(V.bank.showEmpty)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-sm);padding:16px;color:var(--fg-4);font-size:12px;line-height:1.6;text-align:center")}>{V.ui.bankEmpty}</div></>):null}
                     <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
                       {arr(V.bank.words).map((w,$index)=>(<React.Fragment key={$index}><span className="g-word" onClick={w.onOpen} style={w.style}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none;opacity:.7")}><path d={w.iconPath}></path></svg>{w.label}</span></React.Fragment>))}
@@ -4019,8 +4019,8 @@ export default class App extends React.Component {
                             <span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span>
                           </span></span></>):null}
                         </div></React.Fragment>))}
-                        {arr(st.added).map((ad,$index)=>(<React.Fragment key={$index}><div style={S("margin-top:6px;padding:12px 16px;border-left:2px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;position:relative")}>
-                          <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:5px")}><span style={S("font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em")}>{V.ui.addedStmt}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{ad.secNum}{V.ui.navCase} {ad.secTitle} · {V.ui.revealedBy}</span></div>
+                        {arr(st.added).map((ad,$index)=>(<React.Fragment key={$index}><div style={S("margin-top:8px;padding:12px 16px;border-left:2px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;position:relative")}>
+                          <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:4px")}><span style={S("font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em")}>{V.ui.addedStmt}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{ad.secNum}{V.ui.navCase} {ad.secTitle} · {V.ui.revealedBy}</span></div>
                           <p className="g-stmt-para" onMouseUp={ad.onSelect} style={S("margin:0;font-size:16px;line-height:1.85;color:var(--fg-2);text-wrap:pretty;cursor:text")}>{ad.text}</p>
                           {(ad.showTb)?(<><span className="g-seltoolbar" style={ad.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:4px;box-shadow:var(--shadow-popover)")}>
                             <span onClick={V.selTb.onFlag} style={S("display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:var(--r-sm);cursor:pointer;font:600 12px var(--font-sans);color:var(--accent)")}><span style={S("width:9px;height:9px;border-radius:3px;background:var(--accent)")}></span>{V.ui.markFlag}</span>
@@ -4048,7 +4048,7 @@ export default class App extends React.Component {
                     <div style={S("display:flex;gap:8px")}>{arr(V.memo.sortOpts).map((so,$index)=>(<React.Fragment key={$index}><span onClick={so.onClick} style={so.style}>{so.label}</span></React.Fragment>))}</div>
                     <Button variant="ghost" onClick={V.memo.onNew}>＋ {V.ui.memoNew}</Button>
                   </div>
-                  <div style={S("position:relative;margin-bottom:14px")}>
+                  <div style={S("position:relative;margin-bottom:16px")}>
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-4)" strokeWidth="1.6" style={S("position:absolute;left:11px;top:50%;transform:translateY(-50%)")}><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5l3 3"></path></svg>
                     <input value={V.memo.query} onInput={V.memo.onQuery} placeholder={V.ui.memoSearchPh} style={S("width:100%;box-sizing:border-box;height:34px;padding:0 12px 0 32px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--fg);font:400 13px var(--font-sans);outline:none")} />
                   </div>
@@ -4057,11 +4057,11 @@ export default class App extends React.Component {
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;align-items:start")}>
                     {arr(V.memo.rows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px;position:relative")}>
                       <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${mo.accent}`)}></div>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span className="v-num" style={S("color:var(--fg-4);font-size:12px;font-weight:600")}>{mo.numLabel}</span>{(mo.hasLayer)?(<><span style={mo.layerStyle}>{mo.layerLabel}</span></>):null}<span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onPin} style={mo.pinStyle}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 2v6 M5 5l3-3 3 3 M4 13h8" /></svg>{mo.pinLabel}</span><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:12px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
-                      {(mo.hasQuote)?(<><div style={S("display:flex;gap:8px;margin-bottom:10px")}><span style={S("color:var(--fg-4);font-size:18px;line-height:1")}>“</span><div style={S("min-width:0")}><div className="v-meta" style={S("color:var(--fg-2);font-style:italic;line-height:1.6")}>{mo.quote}</div>{(mo.quoteWho)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:3px")}>— {mo.quoteWho} · {V.ui.quotedFrom}</div></>):null}</div></div></>):null}
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span className="v-num" style={S("color:var(--fg-4);font-size:12px;font-weight:600")}>{mo.numLabel}</span>{(mo.hasLayer)?(<><span style={mo.layerStyle}>{mo.layerLabel}</span></>):null}<span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /><path d="M9.4 3.4l2.4 2.4" /></svg>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onPin} style={mo.pinStyle}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 2v6 M5 5l3-3 3 3 M4 13h8" /></svg>{mo.pinLabel}</span><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:12px;display:inline-flex;align-items:center;gap:4px")}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:12px;margin-left:8px")}>{V.ui.memoDelete}</span></>):null}</div>
+                      {(mo.hasQuote)?(<><div style={S("display:flex;gap:8px;margin-bottom:12px")}><span style={S("color:var(--fg-4);font-size:18px;line-height:1")}>“</span><div style={S("min-width:0")}><div className="v-meta" style={S("color:var(--fg-2);font-style:italic;line-height:1.6")}>{mo.quote}</div>{(mo.quoteWho)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:4px")}>— {mo.quoteWho} · {V.ui.quotedFrom}</div></>):null}</div></div></>):null}
                       {(mo.editing)?(<>
                         <textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:46px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
-                        <div style={S("display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap")}>
+                        <div style={S("display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap")}>
                           <span className="v-micro" style={S("color:var(--fg-4);margin-right:2px")}>{V.ui.memoTarget}</span>
                           {arr(mo.targets).map((tg,$index)=>(<React.Fragment key={$index}><span onClick={tg.onClick} style={tg.style}>{tg.label}</span></React.Fragment>))}
                         </div>
@@ -4081,14 +4081,14 @@ export default class App extends React.Component {
               
               {(V.isResult)?(<>
                 <div style={S("padding:var(--read-pad-y) var(--read-pad-x) 60px;max-width:var(--read-measure);margin:0 auto")}>
-                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:22px")}>
+                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:24px")}>
                     <span className="v-h1">{V.result.endTitle}</span>
                     {(V.result.stuck)?(<><span style={S("font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:rgba(235,87,87,.14);color:var(--g-contradict)")}>{V.ui.difficulty}</span></>):null}
                   </div>
-                  {(V.result.stuck)?(<><div className="v-body" style={S("color:var(--fg-3);margin-bottom:22px;line-height:1.7")}>{V.ui.resultStuck}</div></>):null}
+                  {(V.result.stuck)?(<><div className="v-body" style={S("color:var(--fg-3);margin-bottom:24px;line-height:1.7")}>{V.ui.resultStuck}</div></>):null}
 
                   {(V.result.anyWrong)?(<>
-                    <div style={S("margin-bottom:22px")}>
+                    <div style={S("margin-bottom:24px")}>
                       <div className="v-micro" style={S("color:var(--g-contradict);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px")}>{V.result.mineLabel}</div>
                       <div style={S("display:flex;flex-direction:column;gap:16px")}>
                         {arr(V.result.narrMine).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-3);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
@@ -4116,12 +4116,12 @@ export default class App extends React.Component {
                     </div>
                   </>):null}
                   {(V.result.allCorrect)?(<>
-                    <div style={S("display:flex;flex-direction:column;gap:20px;margin-bottom:34px")}>
+                    <div style={S("display:flex;flex-direction:column;gap:20px;margin-bottom:36px")}>
                       {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                     </div>
                   </>):null}
 
-                  <div style={S("border-top:1px solid var(--border);padding-top:22px")}>
+                  <div style={S("border-top:1px solid var(--border);padding-top:24px")}>
                     <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:16px")}><span className="v-ui" style={S("color:var(--fg);flex:1")}>{V.result.nomLabel}</span><span style={V.result.nomStyle}>{V.result.nomResult}</span></div>
                     <div style={S("display:flex;flex-direction:column;gap:12px;margin-bottom:20px")}>
                       {arr(V.result.catScores).map((c,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:12px")}>
@@ -4130,7 +4130,7 @@ export default class App extends React.Component {
                         <span className="v-num" style={S("color:var(--fg-2);width:44px;flex:none;text-align:right;font-variant-numeric:tabular-nums")}>{c.correct}/{c.total}</span>
                       </div></React.Fragment>))}
                     </div>
-                    <div style={S("display:flex;gap:12px;margin-bottom:22px")}>
+                    <div style={S("display:flex;gap:12px;margin-bottom:24px")}>
                       {arr(V.result.metrics).map((m,$index)=>(<React.Fragment key={$index}><div style={S("flex:1;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px")}>{m.k}</div><div className="v-num" style={S("font-size:18px;font-weight:600;color:var(--fg)")}>{m.v}</div></div></React.Fragment>))}
                     </div>
                     <Button variant="ghost" onClick={V.result.onHome}>{V.ui.backHome}</Button>
@@ -4148,7 +4148,7 @@ export default class App extends React.Component {
                     <div onClick={V.plan.onOpen} style={V.plan.previewStyle} {...press(V.plan.onOpen, null, V.ui.planTapHint)}>
                       {this.renderPlanFigure(V)}
                     </div>
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:6px;display:flex;align-items:center;gap:4px")}>
+                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:8px;display:flex;align-items:center;gap:4px")}>
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4.2" /><path d="M10.2 10.2L13.5 13.5M5.4 7h3.2M7 5.4v3.2" /></svg>
                       {V.ui.planTapHint}
                     </div>
@@ -4174,12 +4174,12 @@ export default class App extends React.Component {
                     {this.renderClaimGridFigure(V)}
                   </div>
                   </>):null}
-                  {(V.mapPlanMode)?(<>{(V.floor.hasNarr)?(<><div style={S("margin-top:22px")}>
+                  {(V.mapPlanMode)?(<>{(V.floor.hasNarr)?(<><div style={S("margin-top:24px")}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px;display:block")}>{V.floor.narrTitle}</div>
                     <div style={S("display:flex;flex-direction:column;gap:12px")}>
                       {arr(V.floor.narrations).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px 12px 20px")}>
                         <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${n.barColor}`)}></div>
-                        <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:5px")}><span className="v-ui" style={S("color:var(--fg)")}>{n.title}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{n.locName}</span></div>
+                        <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:4px")}><span className="v-ui" style={S("color:var(--fg)")}>{n.title}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{n.locName}</span></div>
                         <div style={S("font-size:16px;line-height:1.7;color:var(--fg-2);text-wrap:pretty")}>{n.desc}</div>
                       </div></React.Fragment>))}
                     </div>
@@ -4194,8 +4194,8 @@ export default class App extends React.Component {
                   <div style={S("display:flex;flex-direction:column;gap:12px")}>
                     {arr(V.logView.log).map((e,$index)=>(<React.Fragment key={$index}><div onClick={e.onOpen} style={e.cardStyle}>
                       <div style={e.barStyle}></div>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span>{(e.hasTerm)?(<><span className="v-micro" style={S("color:var(--fg-4);display:inline-flex;align-items:center;gap:4px")}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 4l4 4-4 4"></path></svg>{V.ui.termFound}</span></>):null}<span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
-                      <div className="v-title" style={S("color:var(--fg);margin-bottom:3px")}>{e.title}</div>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span>{(e.hasTerm)?(<><span className="v-micro" style={S("color:var(--fg-4);display:inline-flex;align-items:center;gap:4px")}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 4l4 4-4 4"></path></svg>{V.ui.termFound}</span></>):null}<span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
+                      <div className="v-title" style={S("color:var(--fg);margin-bottom:4px")}>{e.title}</div>
                       <div style={S("font-size:14px;line-height:1.8;color:var(--fg-2);text-wrap:pretty")}>{e.desc}</div>
                     </div></React.Fragment>))}
                   </div>
@@ -4211,7 +4211,7 @@ export default class App extends React.Component {
                     <span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.graph.legendEvidence}</span>
                     <span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--g-contradict)")}></span>{V.graph.legendSecret}</span>
                   </div>
-                  <div className="v-meta" style={S("color:var(--fg-4);margin-top:10px;line-height:1.6")}>{V.graph.hint}</div>
+                  <div className="v-meta" style={S("color:var(--fg-4);margin-top:12px;line-height:1.6")}>{V.graph.hint}</div>
                   {(V.graph.alibi.show)?(<><div style={S("margin-top:12px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--bg-elevated)")}>
                     <span className="v-title" style={S("color:var(--fg)")}>{V.graph.alibi.names}</span>
                     <span style={S("flex:1")}></span>
@@ -4225,21 +4225,21 @@ export default class App extends React.Component {
               
               {(V.isReference)?(<>
                 <div style={S("padding:24px 24px;max-width:920px;margin:0 auto")}>
-                  <div className="v-body" style={S("color:var(--fg-3);margin-bottom:22px;line-height:1.6")}>{V.ui.refIntro}</div>
+                  <div className="v-body" style={S("color:var(--fg-3);margin-bottom:24px;line-height:1.6")}>{V.ui.refIntro}</div>
 
                   <div className="v-caption" style={S("color:var(--fg-2);margin:8px 0 12px;display:block")}>{V.ui.refBlanks}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:28px")}>
                     {arr(V.ref.blanks).map((rb,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px")}>
                       <div style={S("font-size:15px;line-height:2;color:var(--fg-2);margin-bottom:12px")}>{rb.pre}<span style={rb.style}>{(rb.check)?(<><span style={S("color:var(--g-lock-mark);font-weight:700")}>✓</span></>):null}{rb.word}</span>{rb.post}</div>
                       <div className="v-ui" style={S("color:var(--fg)")}>{rb.title}</div>
-                      <div className="v-meta" style={S("color:var(--fg-4);margin-top:3px;line-height:1.5")}>{rb.desc}</div>
+                      <div className="v-meta" style={S("color:var(--fg-4);margin-top:4px;line-height:1.5")}>{rb.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
                   <div className="v-caption" style={S("color:var(--fg-2);margin:8px 0 12px;display:block")}>{V.ui.refSections}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:28px")}>
                     {arr(V.ref.sections).map((rs,$index)=>(<React.Fragment key={$index}><div style={rs.card}>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:10px")}>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:12px")}>
                         <StatusIcon status={rs.statusKey} size="16"></StatusIcon>
                         <span className="v-ui" style={S("color:var(--fg)")}>{rs.title}</span>
                         <span className="spacer" style={S("flex:1")}></span>
@@ -4260,7 +4260,7 @@ export default class App extends React.Component {
                   <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refAnn}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
                     {arr(V.ref.annotations).map((an,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
-                      <div style={S("font-size:14px;line-height:1.7;color:var(--fg-2);margin-bottom:10px")}><span style={an.sampleStyle}>{an.sample}</span></div>
+                      <div style={S("font-size:14px;line-height:1.7;color:var(--fg-2);margin-bottom:12px")}><span style={an.sampleStyle}>{an.sample}</span></div>
                       <div className="v-ui" style={S("color:var(--fg)")}>{an.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:2px;line-height:1.5")}>{an.desc}</div>
                     </div></React.Fragment>))}
                   </div>
@@ -4268,7 +4268,7 @@ export default class App extends React.Component {
                   <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refProfSlot}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
                     {arr(V.ref.profileSlots).map((ps,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:10px")}>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:12px")}>
                         <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none")}>{V.ui.slotMotive}</span>
                         {(ps.filled)?(<><span className="v-meta" style={S("color:var(--fg-2);flex:1")}>{ps.text}</span><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px")}>{V.ui.pNew}</span></>):null}
                         {(ps.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong)")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.ui.pUnknown}</span></>):null}
@@ -4280,14 +4280,14 @@ export default class App extends React.Component {
                   <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refReveals}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
                     {arr(V.ref.reveals).map((rv,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px;border-left:2px solid var(--accent)")}>
-                      <div className="v-ui" style={S("color:var(--fg)")}>{rv.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:3px;line-height:1.5")}>{rv.desc}</div>
+                      <div className="v-ui" style={S("color:var(--fg)")}>{rv.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:4px;line-height:1.5")}>{rv.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
                   <div className="v-caption" style={S("color:var(--fg-2);margin:24px 0 12px;display:block")}>{V.ui.refNewStates}</div>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px")}>
                     {arr(V.ref.newStates).map((ns,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px")}>
-                      <div className="v-ui" style={S("color:var(--fg)")}>{ns.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:3px;line-height:1.5")}>{ns.desc}</div>
+                      <div className="v-ui" style={S("color:var(--fg)")}>{ns.title}</div><div className="v-meta" style={S("color:var(--fg-4);margin-top:4px;line-height:1.5")}>{ns.desc}</div>
                     </div></React.Fragment>))}
                   </div>
 
@@ -4319,7 +4319,7 @@ export default class App extends React.Component {
                 <div style={S("padding:20px 20px")}>
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px")}>
                     {arr(V.profiles).map((pf,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px 16px 0;display:flex;gap:0;cursor:pointer")} onClick={pf.onOpen}>
-                      <span style={S(`width:3px;align-self:stretch;background:${pf.color};border-radius:2px;flex:none;margin-right:13px`)}></span>
+                      <span style={S(`width:3px;align-self:stretch;background:${pf.color};border-radius:2px;flex:none;margin-right:12px`)}></span>
                       <div style={S("flex:1;min-width:0")}>
                       <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:12px")}>
                         <span style={pf.avRingStyle}>{pf.ini}</span>
@@ -4333,11 +4333,11 @@ export default class App extends React.Component {
                         {arr(pf.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}
                       </div>
                       <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px")}>{V.ui.pClaim}</div>
-                      <div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;margin-bottom:14px")}>{pf.claim}</div>
-                      <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.pClues}</div>
-                      {(pf.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:14px")}>{arr(pf.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}><span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:6px;flex:none")}></span><div style={S("min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:1px")}>{cl.action}</div></div></div></React.Fragment>))}</div></>):null}
-                      {(pf.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:14px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
-                      {(pf.hasMemos)?(<><div style={S("border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.pMemos}</div><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(pf.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding-left:9px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></div></>):null}
+                      <div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;margin-bottom:16px")}>{pf.claim}</div>
+                      <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pClues}</div>
+                      {(pf.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:16px")}>{arr(pf.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}><span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:8px;flex:none")}></span><div style={S("min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:4px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:1px")}>{cl.action}</div></div></div></React.Fragment>))}</div></>):null}
+                      {(pf.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:16px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
+                      {(pf.hasMemos)?(<><div style={S("border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pMemos}</div><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(pf.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding-left:8px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></div></>):null}
                       <div style={S("display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px")}>
                         {arr(pf.slots).map((sl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:center;gap:8px")}>
                           <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none")}>{sl.label}</span>
@@ -4355,21 +4355,21 @@ export default class App extends React.Component {
                 <div style={V.invLayoutStyle}>
                   <div style={V.invLeftStyle}>
                     <div style={S("border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:16px")}>
-                      <div style={S("display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px")}>
+                      <div style={S("display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px")}>
                         <span className="v-caption" style={S("color:var(--fg-3)")}>{V.ui.invRemaining}</span>
                         <span className="v-num" style={S("font-size:22px;font-weight:600;color:var(--fg)")}>{V.inv.remaining} <span style={S("font-size:13px;color:var(--fg-4)")}>/ {V.inv.budget}</span></span>
                       </div>
                       <div style={S("display:flex;gap:4px")}>{arr(V.inv.pips).map((pip,$index)=>(<React.Fragment key={$index}><span style={pip.style}></span></React.Fragment>))}</div>
-                      <div className="v-micro" style={S("color:var(--fg-4);margin-top:10px;line-height:1.5")}>{V.ui.invHint}</div>
+                      <div className="v-micro" style={S("color:var(--fg-4);margin-top:12px;line-height:1.5")}>{V.ui.invHint}</div>
                     </div>
-                    <div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:14px")}>
+                    <div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:16px")}>
                       {arr(V.inv.actions).map((act,$index)=>(<React.Fragment key={$index}><div onClick={act.onSelect} style={act.style}><span className="v-ui" style={S("color:inherit")}>{act.label}</span><span style={S("flex:1")}></span><span className="v-meta" style={S("color:var(--fg-4)")}>{V.ui.cost} {act.cost}</span></div></React.Fragment>))}
                     </div>
-                    {(V.inv.showTargets)?(<><div style={S("margin-bottom:14px")}>
+                    {(V.inv.showTargets)?(<><div style={S("margin-bottom:16px")}>
                       <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:8px")}>{V.inv.targetLabelHead}</div>
                       <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>{arr(V.inv.targets).map((tg,$index)=>(<React.Fragment key={$index}><span onClick={tg.onToggle} style={tg.style}>{tg.label}</span></React.Fragment>))}</div>
                     </div></>):null}
-                    {(V.inv.noneTarget)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:14px")}>{V.ui.invNoTarget}</div></>):null}
+                    {(V.inv.noneTarget)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:16px")}>{V.ui.invNoTarget}</div></>):null}
                     <Button variant="primary" onClick={V.inv.onExec} style={V.inv.execStyle}>{V.inv.execLabel}</Button>
                     {(V.inv.showReason)?(<><div className="v-meta" style={S("color:var(--fg-4);text-align:center;margin-top:8px")}>{V.inv.execReason}</div></>):null}
                   </div>
@@ -4382,8 +4382,8 @@ export default class App extends React.Component {
                     {(V.inv.emptyLog)?(<><div style={S("border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:24px;text-align:center;color:var(--fg-4);font-size:12px;line-height:1.6")}>{V.ui.invEmptyLog}</div></>):null}
                     {arr(V.inv.log).map((e,$index)=>(<React.Fragment key={$index}><div style={e.cardStyle}>
                       <div style={e.barStyle}></div>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
-                      <div className="v-title" style={S("color:var(--fg);margin-bottom:3px")}>{e.title}</div>
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
+                      <div className="v-title" style={S("color:var(--fg);margin-bottom:4px")}>{e.title}</div>
                       <div className="v-meta" style={S("color:var(--fg-3);line-height:1.55")}>{e.desc}</div>
                     </div></React.Fragment>))}
                   </div>
@@ -4418,14 +4418,14 @@ export default class App extends React.Component {
                     {arr(V.right.invLog).map((e,$index)=>(<React.Fragment key={$index}><div style={e.cardStyle}><div style={e.barStyle}></div><div style={S("display:flex;align-items:center;gap:8px;margin-bottom:4px")}><span style={e.badgeStyle}>{e.typeLabel}</span><span style={S("flex:1")}></span><span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}</span></div><div className="v-ui" style={S("color:var(--fg);font-size:12.5px;margin-bottom:2px")}>{e.title}</div><div className="v-micro" style={S("color:var(--fg-3);line-height:1.5")}>{e.desc}</div></div></React.Fragment>))}
                   </>):null}
                   {(V.right.showMemo)?(<>
-                    <div style={S("display:flex;justify-content:flex-end;margin-bottom:10px")}><span className="linklike" onClick={V.right.onAddMemo} style={S("color:var(--accent);font-size:12px")}>＋ {V.ui.memoNew}</span></div>
+                    <div style={S("display:flex;justify-content:flex-end;margin-bottom:12px")}><span className="linklike" onClick={V.right.onAddMemo} style={S("color:var(--accent);font-size:12px")}>＋ {V.ui.memoNew}</span></div>
                     {(V.right.memoEmpty)?(<><div className="v-meta" style={S("color:var(--fg-4);text-align:center;padding:20px;line-height:1.6")}>{V.ui.memoEmpty}</div></>):null}
                     {arr(V.right.memoRows).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 12px;margin-bottom:8px")}>
-                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:6px")}><span className="v-num" style={S("color:var(--fg-4);font-size:11px;font-weight:600")}>{mo.numLabel}</span><span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:11px")}>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:11px")}>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:11px;margin-left:6px")}>{V.ui.memoDelete}</span></>):null}</div>
-                      {(mo.hasQuote)?(<><div className="v-micro" style={S("color:var(--fg-3);font-style:italic;line-height:1.5;margin-bottom:6px")}>“{mo.quote}”</div></>):null}
+                      <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span className="v-num" style={S("color:var(--fg-4);font-size:11px;font-weight:600")}>{mo.numLabel}</span><span style={S("flex:1")}></span>{(mo.readMode)?(<><span className="linklike" onClick={mo.onEdit} style={S("color:var(--fg-3);font-size:11px")}>{V.ui.memoEdit}</span></>):null}{(mo.editing)?(<><span className="linklike" onClick={mo.onLock} style={S("color:var(--accent);font-size:11px")}>{V.ui.memoDone}</span><span className="linklike" onClick={mo.onDel} style={S("color:var(--label-red);font-size:11px;margin-left:8px")}>{V.ui.memoDelete}</span></>):null}</div>
+                      {(mo.hasQuote)?(<><div className="v-micro" style={S("color:var(--fg-3);font-style:italic;line-height:1.5;margin-bottom:8px")}>“{mo.quote}”</div></>):null}
                       {(mo.editing)?(<><textarea value={mo.content} onChange={mo.onContent} placeholder={V.ui.memoPh2} style={S("width:100%;min-height:44px;resize:vertical;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 8px;color:var(--fg);font:400 12.5px var(--font-sans);outline:none;box-sizing:border-box")}></textarea></>):null}
                       {(mo.readMode)?(<>{(mo.hasContent)?(<><div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;white-space:pre-wrap")}>{mo.content}</div></>):null}</>):null}
-                      <div style={S("display:flex;align-items:center;gap:4px;margin-top:5px;color:var(--fg-4);font-size:10px")}>{(mo.saved)?(<><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
+                      <div style={S("display:flex;align-items:center;gap:4px;margin-top:4px;color:var(--fg-4);font-size:10px")}>{(mo.saved)?(<><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--g-confirm)" strokeWidth="1.6"><path d="M3.5 8.5l3 3 6-7" /></svg><span style={S("color:var(--g-confirm)")}>{mo.savedLabel}</span></>):null}{(mo.hasMeta)?(<><span>· {mo.metaText}</span></>):null}</div>
                     </div></React.Fragment>))}
                   </>):null}
                 </div>
@@ -4480,7 +4480,7 @@ export default class App extends React.Component {
               {(V.stageProlog)?(<>
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x)")}>
                   <div style={S("max-width:var(--read-measure);width:100%")}>
-                    <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.ui.caseTitle}</div>
+                    <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:28px;letter-spacing:.1em;text-transform:uppercase")}>{V.ui.caseTitle}</div>
                     {arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:var(--read-fs);line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.onPrologContinue}>{V.ui.prologContinue}</Button></div>
                   </div>
@@ -4489,9 +4489,9 @@ export default class App extends React.Component {
               {(V.stageInterlude && V.interlude.open)?(<>
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x)")}>
                   <div style={S("max-width:var(--read-measure);width:100%")}>
-                    <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.interlude.chapter}</div>
+                    <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:28px;letter-spacing:.1em;text-transform:uppercase")}>{V.interlude.chapter}</div>
                     {arr(V.interlude.paras).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:var(--read-fs);line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
-                    {(V.interlude.hasDest)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:26px;padding-top:16px;border-top:1px solid var(--border)")}>{V.interlude.dest}</div></>):null}
+                    {(V.interlude.hasDest)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)")}>{V.interlude.dest}</div></>):null}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.interlude.onNext}>{V.ui.prologContinue}</Button></div>
                   </div>
                 </div>
@@ -4503,9 +4503,9 @@ export default class App extends React.Component {
                       <span className="ws-av" style={S("width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--label-blue))")}>V</span>
                       <span className="v-ui" style={S("color:var(--fg-3)")}>{V.ui.caseTitle}</span>
                     </div>
-                    <div className="v-h1" style={S("margin-bottom:6px")}>{V.ui.briefTitle}</div>
-                    <div className="v-body" style={S("color:var(--fg-3);margin-bottom:22px")}>{V.ui.briefSub}</div>
-                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:22px")}>
+                    <div className="v-h1" style={S("margin-bottom:8px")}>{V.ui.briefTitle}</div>
+                    <div className="v-body" style={S("color:var(--fg-3);margin-bottom:24px")}>{V.ui.briefSub}</div>
+                    <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:24px")}>
                       {arr(V.briefRows).map((br,$index)=>(<React.Fragment key={$index}><div style={br.style}><span className="v-meta" style={S("color:var(--fg-4);width:100px;flex:none")}>{br.k}</span><span className="v-body" style={S("color:var(--fg-2)")}>{br.v}</span></div></React.Fragment>))}
                     </div>
                     <Button variant="primary" onClick={V.onStartRead} style={V.briefBtnStyle}>{V.ui.startRead}</Button>
@@ -4537,7 +4537,7 @@ export default class App extends React.Component {
                       </div>
                       <textarea value={V.readCard.memo} onChange={V.readCard.onMemo} placeholder={V.ui.memoPh} style={S("width:100%;min-height:52px;resize:vertical;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:8px 12px;color:var(--fg);font:400 13px var(--font-sans);outline:none;box-sizing:border-box")}></textarea>
                     </div>
-                    <div style={S("display:flex;align-items:center;gap:16px;margin-top:18px")}>
+                    <div style={S("display:flex;align-items:center;gap:16px;margin-top:20px")}>
                       <Button variant="ghost" onClick={V.readCard.onPrev} style={V.readCard.prevStyle}>{V.ui.prev}</Button>
                       <div style={S("display:flex;gap:8px;flex:1;justify-content:center")}>{arr(V.readCard.dots).map((d,$index)=>(<React.Fragment key={$index}><span style={d.style} onClick={d.onClick}></span></React.Fragment>))}</div>
                       {(V.readCard.isLast)?(<><Button variant="primary" onClick={V.readCard.onSkip}>{V.ui.openNarrative}</Button></>):null}
@@ -4565,7 +4565,7 @@ export default class App extends React.Component {
                   <div><div style={S("font:700 30px var(--font-sans);letter-spacing:-.02em;color:var(--fg)")}>{V.ui.gameTitle}</div>
                   <div className="v-body" style={S("color:var(--fg-3);margin-top:4px")}>{V.ui.gameTagline}</div></div>
                 </div>
-                {(V.home.resumeShow)?(<><div onClick={V.home.onResume} style={S("display:flex;align-items:center;gap:16px;padding:16px 20px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);cursor:pointer;margin-bottom:26px")}>
+                {(V.home.resumeShow)?(<><div onClick={V.home.onResume} style={S("display:flex;align-items:center;gap:16px;padding:16px 20px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--r-md);cursor:pointer;margin-bottom:28px")}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" strokeWidth="1.6"><path d="M5 3.5l7 4.5-7 4.5z" /></svg>
                   <div style={S("flex:1;min-width:0")}><div className="v-ui" style={S("color:var(--fg)")}>{V.ui.resume} · {V.home.resumeTitle}</div><div className="v-meta" style={S("color:var(--fg-3);margin-top:2px")}>{V.ui.narrProg} {V.home.resumeProgress} · {V.ui.budget} {V.home.resumeBudget}</div></div>
                   <span className="v-meta" style={S("color:var(--accent);font-size:16px")}>›</span>
@@ -4607,7 +4607,7 @@ export default class App extends React.Component {
               </div>
               <div style={S("flex:1;display:flex;align-items:center;justify-content:center;padding:24px")}>
                 <div style={S("max-width:460px;width:100%")}>
-                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:18px")}>
+                  <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:20px")}>
                     <span className="pr-badge" style={S("background:var(--accent-soft);color:var(--accent)")}>{V.detail.diff}</span>
                     <span style={V.detail.chipStyle}>{V.detail.chipLabel}</span>
                   </div>
@@ -4632,7 +4632,7 @@ export default class App extends React.Component {
                 <div style={S("display:flex;align-items:center;gap:12px;padding:20px 20px;border-bottom:1px solid var(--border)")}>
                   <span style={S("width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);flex:none")}><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="var(--fg-2)" strokeWidth="1.6"><path d={V.termDlg.iconPath}></path></svg></span>
                   <div className="v-ui" style={S("color:var(--fg);font-weight:600;flex:1;min-width:0")}>{V.termDlg.label}</div>
-                  {(V.termDlg.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:4px;flex:none;margin-right:6px")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{V.termDlg.memoCount}</span></>):null}
+                  {(V.termDlg.hasMemos)?(<><span style={S("font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--bg-elevated-2);color:var(--fg-3);display:inline-flex;align-items:center;gap:4px;flex:none;margin-right:8px")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l.8-3L10 2.8l2.4 2.4L6.2 11.4z" /></svg>{V.termDlg.memoCount}</span></>):null}
                   <span className="iconbtn" onClick={V.termDlg.onClose} style={S("flex:none")}>✕</span>
                 </div>
                 <div style={S("padding:16px 20px;display:flex;flex-direction:column;gap:16px")}>
@@ -4668,33 +4668,33 @@ export default class App extends React.Component {
                 </div>
                 <div style={S("display:flex;flex:1;min-height:0")}>
                   <div style={S("width:300px;flex:none;border-right:1px solid var(--border);padding:20px 20px;overflow:auto")}>
-                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px")}>{V.ui.verdictLabel}</div>
-                    <div style={S("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px")}>{arr(V.profileDetail.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}</div>
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-bottom:18px")}>{V.ui.verdictHint}</div>
-                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px")}>{V.ui.pClaim} · <span style={S("color:var(--status-progress)")}>{V.ui.layerClaim}</span></div>
+                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.verdictLabel}</div>
+                    <div style={S("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px")}>{arr(V.profileDetail.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}</div>
+                    <div className="v-micro" style={S("color:var(--fg-4);margin-bottom:20px")}>{V.ui.verdictHint}</div>
+                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px")}>{V.ui.pClaim} · <span style={S("color:var(--status-progress)")}>{V.ui.layerClaim}</span></div>
                     <div style={S("display:flex;gap:8px;margin-bottom:20px")}><span style={S(`width:2px;align-self:stretch;background:${V.profileDetail.color};border-radius:2px;flex:none;opacity:.75`)}></span><div className="v-body" style={S("color:var(--fg-3);line-height:1.7;font-style:italic")}>“{V.profileDetail.claim}”</div></div>
-                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px")}>{V.ui.pGuilt}</div>
+                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px")}>{V.ui.pGuilt}</div>
                     <div style={S("display:flex;flex-direction:column;gap:12px")}>
                       {arr(V.profileDetail.slots).map((sl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}>
                         <span className="v-meta" style={S("color:var(--fg-4);width:40px;flex:none;padding-top:1px")}>{sl.label}</span>
-                        {(sl.filled)?(<><div style={S("flex:1;min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<span className="linklike" onClick={sl.onJump} style={S("display:block;color:var(--accent);font-size:11px;margin-top:1px")}>{V.ui.pViewSource} ↗</span></div></>):null}
-                        {(sl.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong);margin-top:9px")}></span><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{V.ui.pUnknown}</span></>):null}
+                        {(sl.filled)?(<><div style={S("flex:1;min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{sl.text}</span>{(sl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:4px")}>{V.ui.pNew}</span></>):null}<span className="linklike" onClick={sl.onJump} style={S("display:block;color:var(--accent);font-size:11px;margin-top:1px")}>{V.ui.pViewSource} ↗</span></div></>):null}
+                        {(sl.empty)?(<><span style={S("flex:1;border-bottom:1.5px dashed var(--border-strong);margin-top:8px")}></span><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>{V.ui.pUnknown}</span></>):null}
                       </div></React.Fragment>))}
                     </div>
                   </div>
                   <div style={S("flex:1;min-width:0;padding:20px 20px;overflow:auto")}>
                     <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pClues} · <span style={S("color:var(--g-confirm)")}>{V.ui.layerFact}</span></div>
-                    {(V.profileDetail.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:20px")}>{arr(V.profileDetail.clues).map((cl,$index)=>(<React.Fragment key={$index}><div onClick={cl.onJump} style={S("display:flex;align-items:flex-start;gap:8px;padding:12px 12px;border:1px solid var(--border);border-left:2px solid var(--g-confirm);border-radius:var(--r-sm);cursor:pointer")}><span style={S("width:6px;height:6px;border-radius:2px;background:var(--g-confirm);margin-top:6px;flex:none")}></span><div style={S("min-width:0;flex:1")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:5px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:2px")}>{cl.action} ↗</div></div></div></React.Fragment>))}</div></>):null}
+                    {(V.profileDetail.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:20px")}>{arr(V.profileDetail.clues).map((cl,$index)=>(<React.Fragment key={$index}><div onClick={cl.onJump} style={S("display:flex;align-items:flex-start;gap:8px;padding:12px 12px;border:1px solid var(--border);border-left:2px solid var(--g-confirm);border-radius:var(--r-sm);cursor:pointer")}><span style={S("width:6px;height:6px;border-radius:2px;background:var(--g-confirm);margin-top:8px;flex:none")}></span><div style={S("min-width:0;flex:1")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:4px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:2px")}>{cl.action} ↗</div></div></div></React.Fragment>))}</div></>):null}
                     {(V.profileDetail.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:20px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
                     {(V.profileDetail.hasNarr)?(<><div style={S("display:flex;flex-direction:column;gap:12px;margin-bottom:20px")}>{arr(V.profileDetail.narr).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px 12px 16px")}>
                       <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${n.barColor}`)}></div>
                       <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:4px")}><span className="v-ui" style={S("color:var(--fg)")}>{n.title}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{n.actionLabel}</span></div>
                       <div style={S("font-size:15px;line-height:1.7;color:var(--fg-2);text-wrap:pretty")}>{n.desc}</div>
                     </div></React.Fragment>))}</div></>):null}
-                    <div style={S("border-top:1px solid var(--border);padding-top:14px;margin-bottom:8px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.navInvestigate}</div>
+                    <div style={S("border-top:1px solid var(--border);padding-top:16px;margin-bottom:8px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.navInvestigate}</div>
                       <div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(V.profileDetail.invActions).map((ia,$index)=>(<React.Fragment key={$index}><button onClick={ia.onRun} style={ia.style}><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg><span style={S("flex:1")}>{ia.label}</span><span style={S("font-size:11px;color:var(--fg-4)")}>{ia.hint}</span></button></React.Fragment>))}</div>
                     </div>
-                    <div style={S("display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:16px;margin-bottom:10px")}>
+                    <div style={S("display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:16px;margin-bottom:12px")}>
                       <span className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;flex:1")}>{V.ui.pMemos}</span>
                       <span className="linklike" onClick={V.profileDetail.onAddMemo} style={S("color:var(--accent);font-size:12px")}>＋ {V.ui.memoNew}</span>
                     </div>
@@ -4721,7 +4721,7 @@ export default class App extends React.Component {
               <div style={S("width:520px;max-width:92vw;background:var(--bg-app);border:1px solid var(--border-strong);border-radius:var(--r-lg);box-shadow:var(--shadow-modal);overflow:hidden")}>
                 <div style={S(`height:3px;background:${V.invResultCard.accent}`)}></div>
                 <div style={S("padding:24px 24px")}>
-                  <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:14px")}><span style={V.invResultCard.badgeStyle}>{V.invResultCard.typeLabel}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.invResultCard.target}</span></div>
+                  <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:16px")}><span style={V.invResultCard.badgeStyle}>{V.invResultCard.typeLabel}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.invResultCard.target}</span></div>
                   <div className="v-h3" style={S("color:var(--fg);margin-bottom:12px")}>{V.invResultCard.title}</div>
                   <div style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.invResultCard.body}</div>
                   <div style={S("display:flex;justify-content:flex-end;margin-top:20px")}><Button variant="primary" onClick={V.invResultCard.onClose}>{V.invResultCard.saveLabel}</Button></div>
@@ -4732,7 +4732,7 @@ export default class App extends React.Component {
 
           {(V.confirmFinish)?(<>
             <div className="scrim" style={S("z-index:95;align-items:center;padding-top:0")}><div className="modal" style={S("width:420px")}>
-              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.finishConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.finishConfirmD}</div>{(V.finishUnfilled)?(<><div className="v-meta" style={S("color:var(--status-progress);margin-top:10px;font-weight:600")}>{V.finishUnfilled}</div></>):null}</div>
+              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.finishConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.finishConfirmD}</div>{(V.finishUnfilled)?(<><div className="v-meta" style={S("color:var(--status-progress);margin-top:12px;font-weight:600")}>{V.finishUnfilled}</div></>):null}</div>
               <div className="modal-foot" style={S("justify-content:flex-end")}>
                 <Button variant="ghost" onClick={V.onCancelFinish}>{V.ui.cancel}</Button>
                 <Button variant="primary" onClick={V.onDoFinish}>{V.ui.submit}</Button>

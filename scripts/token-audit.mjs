@@ -81,7 +81,14 @@ for (const f of files) {
      * 이대로 수리하면 「244 → 0」을 인쇄하면서 64개가 그대로 남는다.
      * ★ 속성값 **전체**를 잡아 그 안의 px 를 전부 센다.
      */
-    const PROP = /(?:padding|margin|gap)[A-Za-z]*\s*:\s*(?:'([^']*)'|"([^"]*)"|([^;,}\n]+))/g
+    /**
+     * ⛔ **`[A-Za-z]*` 였다가 케밥 표기를 통째로 놓쳤다 (2026-08-06 · 같은 날 두 번째).**
+     * JS 객체는 `marginTop` 이지만 `S("...")` 안은 **CSS 문법이라 `margin-top`** 이다.
+     * 하이픈이 빠져서 **85건이 계수기 밖**에 있었고, 수리도 같은 정규식을 써서
+     * **계수기와 수리가 같은 눈으로 같은 자리를 놓쳤다** — 「간격 0」이 거짓이었다.
+     * ★ 검사와 수리가 **같은 패턴을 공유하면 사각도 공유한다.**
+     */
+    const PROP = /(?:padding|margin|gap)[A-Za-z-]*\s*:\s*(?:'([^']*)'|"([^"]*)"|([^;,}\n]+))/g
     for (const m of line.matchAll(PROP)) {
       const val = m[1] ?? m[2] ?? m[3] ?? ''
       for (const q of val.matchAll(/(\d+)px/g)) {
@@ -89,8 +96,14 @@ for (const f of files) {
         if (v > 2 && v % 4 !== 0) hits.spacing.push(at({ value: v }))
       }
     }
-    // 위치 속성은 간격 문법이 아니라 좌표라 따로 — 첫 값만 본다(옛 규칙 유지)
-    for (const m of line.matchAll(/(?:top|bottom|left|right)\s*:\s*([\d]+)px/g)) {
+    /**
+     * 위치 속성은 간격 문법이 아니라 좌표라 따로 센다.
+     *
+     * ⛔ **경계가 없어서 `margin-left:6px` 의 꼬리를 좌표로 셌다 (2026-08-06).**
+     * `left:6px` 가 부분 문자열로 잡힌다 — 그래서 「좌표 87」이라고 인쇄했는데
+     * **진짜 좌표는 2** 였다(85개가 간격의 꼬리). 앞의 `[-A-Za-z]` 를 막는다.
+     */
+    for (const m of line.matchAll(/(?<![-A-Za-z])(?:top|bottom|left|right)\s*:\s*([\d]+)px/g)) {
       const v = Number(m[1])
       if (v > 2 && v % 4 !== 0) hits.spacing.push(at({ value: v }))
     }
