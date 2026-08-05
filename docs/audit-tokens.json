@@ -1,0 +1,660 @@
+{
+ "summary": {
+  "files": 5,
+  "hardcodedHex": 100,
+  "hardcodedHexUnique": 18,
+  "rgbaLiteral": 33,
+  "strokeWidthValues": [
+   "1",
+   "1.2",
+   "1.3",
+   "1.4",
+   "1.5",
+   "1.6",
+   "1.75",
+   "1.8",
+   "3",
+   "4.5",
+   "7",
+   "10"
+  ],
+  "strokeWidthCount": 80,
+  "spacingOffGrid": 244,
+  "spacingOffGridValues": [
+   3,
+   5,
+   6,
+   7,
+   9,
+   10,
+   11,
+   13,
+   14,
+   15,
+   18,
+   22,
+   26,
+   34,
+   74
+  ],
+  "breakpoints": [
+   "JS < 820"
+  ],
+  "breakpointCount": 1,
+  "inlineStyleCalls": 713
+ },
+ "hits": {
+  "hexTop": [
+   {
+    "file": "app/src/App.jsx",
+    "line": 234,
+    "text": "{ id: 'yena', name: '서지안', age: 31, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 234,
+    "text": "{ id: 'yena', name: '서지안', age: 31, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 234,
+    "text": "{ id: 'yena', name: '서지안', age: 31, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrived",
+    "value": "#2D9CDB"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 235,
+    "text": "{ id: 'yujin', name: '한유빈', age: 27, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#BB6BD9"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 235,
+    "text": "{ id: 'yujin', name: '한유빈', age: 27, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#BB6BD9"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 235,
+    "text": "{ id: 'yujin', name: '한유빈', age: 27, sexKo: '여', sexEn: 'F', role: 'roleFirst', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 236,
+    "text": "{ id: 'sakura', name: '문세라', age: 32, sexKo: '여', sexEn: 'F', role: 'roleKeeper', relKo: '산장 거주', relEn: 'Live",
+    "value": "#F2994A"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 236,
+    "text": "{ id: 'sakura', name: '문세라', age: 32, sexKo: '여', sexEn: 'F', role: 'roleKeeper', relKo: '산장 거주', relEn: 'Live",
+    "value": "#F2994A"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 236,
+    "text": "{ id: 'sakura', name: '문세라', age: 32, sexKo: '여', sexEn: 'F', role: 'roleKeeper', relKo: '산장 거주', relEn: 'Live",
+    "value": "#EB5757"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 237,
+    "text": "{ id: 'yuri', name: '오나경', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#4CB782"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 237,
+    "text": "{ id: 'yuri', name: '오나경', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#4CB782"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 237,
+    "text": "{ id: 'yuri', name: '오나경', age: 29, sexKo: '여', sexEn: 'F', role: 'roleSinger', relKo: '아침 도착', relEn: 'Arrive",
+    "value": "#2D9CDB"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 238,
+    "text": "{ id: 'wonyoung', name: '백리원', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'A",
+    "value": "#F2C94C"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 238,
+    "text": "{ id: 'wonyoung', name: '백리원', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'A",
+    "value": "#F2C94C"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 238,
+    "text": "{ id: 'wonyoung', name: '백리원', age: 26, sexKo: '여', sexEn: 'F', role: 'roleIdol', relKo: '불참·늦게 출발', relEn: 'A",
+    "value": "#F2994A"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 2112,
+    "text": "badgeStyle: { fontSize: '10px', fontWeight: 700, color: e.type === 'empty' ? 'var(--fg-3)' : '#0A0A0B', backgr",
+    "value": "#0A0A0B"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 2141,
+    "text": "badgeStyle: e.type === 'empty' ? { fontSize: '10px', fontWeight: 700, color: 'var(--fg-3)', background: 'var(-",
+    "value": "#0A0A0B"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 2288,
+    "text": "chipStyle: { background: 'var(--accent)', color: '#fff' },",
+    "value": "#fff"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 2493,
+    "text": "const base = { width: size + 'px', height: size + 'px', borderRadius: '6px', flex: 'none', display: 'inline-fl",
+    "value": "#0A0A0B"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 2663,
+    "text": "if (sel.length === 2) { const status = this.invStatusFor('alibi', sel); alibi = { show: true, names: sel.map(i",
+    "value": "#0A0A0B"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3143,
+    "text": "if (kind === 'onsite') return S(base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(24",
+    "value": "#F2994A"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3461,
+    "text": "dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 }",
+    "value": "#fff"
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 4460,
+    "text": "<span className=\"ws-av\" style={S(\"width:26px;height:26px;background:linear-gradient(135deg,var(--accent),#2D9C",
+    "value": "#2D9CDB"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 545,
+    "text": "background: 'var(--bg-surface, #14161a)',",
+    "value": "#14161a"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 546,
+    "text": "border: '1px solid var(--border, #2a2e35)',",
+    "value": "#2a2e35"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 555,
+    "text": "border: primary ? 'none' : '1px solid var(--border-strong, #3a4049)',",
+    "value": "#3a4049"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 556,
+    "text": "background: primary ? 'var(--accent, #4C8DFF)' : 'transparent',",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 557,
+    "text": "color: primary ? '#fff' : 'var(--fg-2, #c8ccd4)',",
+    "value": "#fff"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 557,
+    "text": "color: primary ? '#fff' : 'var(--fg-2, #c8ccd4)',",
+    "value": "#c8ccd4"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 563,
+    "text": "background: 'var(--accent, #4C8DFF)', color: '#fff',",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 563,
+    "text": "background: 'var(--accent, #4C8DFF)', color: '#fff',",
+    "value": "#fff"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 688,
+    "text": "border: '1px solid var(--accent, #4C8DFF)', borderRadius: 'var(--r-sm, 7px)',",
+    "value": "#4C8DFF"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 691,
+    "text": "<p style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', margin: '6px 0 10px', lineHeight: 1.6 }}>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 698,
+    "text": "background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',",
+    "value": "#0e1013"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 698,
+    "text": "background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',",
+    "value": "#c8ccd4"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 699,
+    "text": "border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',",
+    "value": "#2a2e35"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1334,
+    "text": "<div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 20px 80px', color: 'var(--fg, #e6e9ef)' }}>",
+    "value": "#e6e9ef"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1338,
+    "text": "style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', textDecoration: 'none' }}>← 홈</a>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1341,
+    "text": "<p style={{ fontSize: '14px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 24px', lineHeight: 1.7 }}>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1358,
+    "text": "color: 'var(--fg, #e6e9ef)', font: 'inherit', textAlign: 'left',",
+    "value": "#e6e9ef"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1360,
+    "text": "<span style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', flex: 'none' }}>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1364,
+    "text": "<span style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', fontWeight: 400 }}>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1370,
+    "text": "<div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border, #2a2e35)' }}>",
+    "value": "#2a2e35"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1371,
+    "text": "<p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1395,
+    "text": "background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',",
+    "value": "#0e1013"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1395,
+    "text": "background: 'var(--bg-app, #0e1013)', color: 'var(--fg-2, #c8ccd4)',",
+    "value": "#c8ccd4"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1396,
+    "text": "border: '1px solid var(--border, #2a2e35)', borderRadius: 'var(--r-sm, 7px)',",
+    "value": "#2a2e35"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1411,
+    "text": "background: 'var(--bg-app, #0e1013)',",
+    "value": "#0e1013"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1412,
+    "text": "border: '1px solid ' + (importMsg.ok ? 'var(--border, #2a2e35)' : 'var(--g-contradict, #EB5757)'),",
+    "value": "#2a2e35"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1412,
+    "text": "border: '1px solid ' + (importMsg.ok ? 'var(--border, #2a2e35)' : 'var(--g-contradict, #EB5757)'),",
+    "value": "#EB5757"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1419,
+    "text": "? (i ? 'var(--fg-3, #8b93a1)' : 'var(--fg, #e6e9ef)')",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1419,
+    "text": "? (i ? 'var(--fg-3, #8b93a1)' : 'var(--fg, #e6e9ef)')",
+    "value": "#e6e9ef"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1420,
+    "text": ": (i ? 'var(--fg-3, #8b93a1)' : 'var(--g-contradict, #EB5757)'),",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1420,
+    "text": ": (i ? 'var(--fg-3, #8b93a1)' : 'var(--g-contradict, #EB5757)'),",
+    "value": "#EB5757"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1454,
+    "text": "<div style={{ fontSize: '12px', color: 'var(--fg-3, #8b93a1)', marginBottom: '7px' }}>난이도</div>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1467,
+    "text": "<span style={{ color: 'var(--fg-3, #8b93a1)' }}>보고서 장 수 </span>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1473,
+    "text": "<span style={{ color: 'var(--fg-3, #8b93a1)' }}>사망 구간 칸 수 </span>",
+    "value": "#8b93a1"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1478,
+    "text": "<p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '12px 0 0', lineHeight: 1.6 }}>",
+    "value": "#6b7280"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1483,
+    "text": "<p style={{ fontSize: '12px', color: 'var(--fg-4, #6b7280)', margin: '8px 0 0', lineHeight: 1.6 }}>",
+    "value": "#6b7280"
+   },
+   {
+    "file": "app/src/Generator.jsx",
+    "line": 1498,
+    "text": "<p style={{ fontSize: '13px', color: 'var(--fg-3, #8b93a1)', margin: '0 0 14px', lineHeight: 1.7 }}>",
+    "value": "#8b93a1"
+   }
+  ],
+  "spacing": [
+   {
+    "file": "app/src/App.jsx",
+    "line": 3142,
+    "text": "const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:var(--r-pi",
+    "value": 5
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3633,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:6px\")}><span style={S(`font-size:11px;color:${l.nameColor}`",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3634,
+    "text": "{(l.hasClues)?(<><div style={S(\"display:flex;flex-wrap:wrap;gap:4px;margin-top:6px\")}>{arr(l.clues).map((c,$in",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3661,
+    "text": "<div style={S(\"width:184px;flex:none;padding:9px 14px;position:sticky;left:0;background:var(--bg-subtle);z-ind",
+    "value": 9
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3665,
+    "text": "<div style={S(\"width:184px;flex:none;display:flex;align-items:center;gap:9px;padding:0 14px;position:sticky;le",
+    "value": 9
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3741,
+    "text": "<span>{V.ui.navOverview}</span>{(V.nav.overviewUnread)?(<><span style={S(\"width:6px;height:6px;border-radius:5",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3745,
+    "text": "<span>{V.ui.navNarrative}</span>{(V.nav.narrUnread)?(<><span style={S(\"width:6px;height:6px;border-radius:50%;",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3747,
+    "text": "<div className=\"nav-caption\" style={S(\"margin-top:6px\")}>{V.ui.navClue}</div>",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3750,
+    "text": "<span>{V.ui.navStatements}</span>{(V.nav.stmtUnread)?(<><span style={S(\"width:6px;height:6px;border-radius:50%",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3758,
+    "text": "<span>{V.ui.navMap}</span>{(V.nav.mapUnread)?(<><span style={S(\"width:6px;height:6px;border-radius:50%;backgro",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3764,
+    "text": "<div className=\"nav-caption\" style={S(\"margin-top:6px\")}>{V.ui.navTool}</div>",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3783,
+    "text": "<div className=\"v-micro\" style={S(\"margin-top:10px;line-height:1.55;color:var(--fg-4)\")}>{V.ui.sidebarNote}</d",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3784,
+    "text": "<div className=\"linklike\" {...press(V.onAbandonReq, null, V.ui.abandon)} style={S(\"margin-top:10px;padding-lef",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3807,
+    "text": "<div className=\"viewtitle\"><h1>{V.ui.viewTitle}</h1><span className=\"v-meta\" style={S(\"margin-left:6px;color:v",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3830,
+    "text": "<div style={S(\"border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:18px\")}>",
+    "value": 18
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3831,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3831,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border",
+    "value": 11
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3839,
+    "text": "{arr(V.reportHead.fields).map((f,$index)=>(<React.Fragment key={$index}><div style={S(\"flex:1 1 33%;min-width:",
+    "value": 9
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3847,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px\")}>",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3855,
+    "text": "<div onClick={sec.onToggle} style={S(`display:flex;align-items:center;gap:10px;cursor:${sec.headerCursor}`)}>",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3888,
+    "text": "{(sec.showReopenBtn)?(<><div style={S(\"margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3888,
+    "text": "{(sec.showReopenBtn)?(<><div style={S(\"margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap",
+    "value": 5
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3888,
+    "text": "{(sec.showReopenBtn)?(<><div style={S(\"margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap",
+    "value": 5
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3889,
+    "text": "{(sec.showCloseReopen)?(<><div style={S(\"margin-top:16px\")}><span className=\"linklike\" onClick={sec.onCloseReo",
+    "value": 5
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3898,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px\")}>",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3905,
+    "text": "<div style={S(\"display:flex;flex-direction:column;gap:6px;margin-top:14px\")}>",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3905,
+    "text": "<div style={S(\"display:flex;flex-direction:column;gap:6px;margin-top:14px\")}>",
+    "value": 14
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3907,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);borde",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3907,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);borde",
+    "value": 10
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3918,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--fg-4)\")}>",
+    "value": 14
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3929,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:6px;margin-bottom:6px\")}>",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3929,
+    "text": "<div style={S(\"display:flex;align-items:center;gap:6px;margin-bottom:6px\")}>",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3933,
+    "text": "<div className=\"v-micro\" style={S(\"margin-bottom:14px;line-height:1.55;color:var(--fg-4)\")}>{V.ui.bankHint}</d",
+    "value": 14
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3935,
+    "text": "<div style={S(\"display:flex;flex-wrap:wrap;gap:7px\")}>",
+    "value": 7
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3952,
+    "text": "<div className=\"v-micro\" style={S(\"color:var(--fg-4);margin-top:12px;padding:0 8px;display:flex;align-items:ce",
+    "value": 6
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3956,
+    "text": "<div onClick={st.onToggle} style={S(\"display:flex;align-items:center;gap:13px;padding:15px 4px;cursor:pointer\"",
+    "value": 13
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3956,
+    "text": "<div onClick={st.onToggle} style={S(\"display:flex;align-items:center;gap:13px;padding:15px 4px;cursor:pointer\"",
+    "value": 15
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3959,
+    "text": "<div style={S(\"display:flex;flex-direction:column;gap:3px;min-width:150px;flex:none\")}><span style={S(\"font-si",
+    "value": 3
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3969,
+    "text": "<span onClick={V.selTb.onFlag} style={S(\"display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 ",
+    "value": 5
+   },
+   {
+    "file": "app/src/App.jsx",
+    "line": 3970,
+    "text": "<span onClick={V.selTb.onConfirm} style={S(\"display:inline-flex;align-items:center;gap:5px;height:26px;padding",
+    "value": 5
+   }
+  ],
+  "media": [
+   {
+    "file": "app/src/App.jsx",
+    "line": 1812,
+    "text": "this._onResize = () => { const el = this._root && this._root.closest ? this._root.closest('.app') : null; cons",
+    "value": "JS < 820"
+   }
+  ]
+ }
+}

@@ -30,3 +30,6 @@ app/dist-single/
 
 # 생성 산출물 기준선 (2MB+). 도구는 커밋하고 산출물은 재생성한다 — engine/src/gen-baseline.ts
 engine/.gen-baseline.json
+
+# 감사 캡처 — 스크립트로 재생성한다 (scripts/design-audit.mjs)
+docs/audit-shots/
