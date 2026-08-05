@@ -223,7 +223,10 @@ class Boundary extends React.Component {
           margin: 0,
           padding: '24px',
           font: '13px/1.6 ui-monospace, monospace',
-          color: '#EB5757',
+          // ⛳ **폴백을 남긴다** — 이 화면은 앱이 깨졌을 때 뜬다. 깨진 원인이 DS
+          //    스타일시트 로드 실패면 토큰이 안 풀려 **오류 글자가 안 보인다.**
+          //    위 주석의 「깨진 이유가 화면에 있어야 한다」가 그래서 여기선 규칙이다.
+          color: 'var(--label-red, #EB5757)',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
         }}

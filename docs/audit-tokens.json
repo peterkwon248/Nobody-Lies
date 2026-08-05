@@ -1,9 +1,9 @@
 {
  "summary": {
   "files": 5,
-  "hardcodedHex": 26,
+  "hardcodedHex": 23,
   "hardcodedHexUnique": 9,
-  "hexAsVarFallback": 74,
+  "hexAsVarFallback": 75,
   "rgbaLiteral": 33,
   "strokeWidthValues": [
    "1",
@@ -168,21 +168,9 @@
    },
    {
     "file": "app/src/App.jsx",
-    "line": 3186,
-    "text": "if (kind === 'onsite') return S(base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(24",
-    "value": "#F2994A"
-   },
-   {
-    "file": "app/src/App.jsx",
     "line": 3504,
     "text": "dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 }",
     "value": "#fff"
-   },
-   {
-    "file": "app/src/App.jsx",
-    "line": 4503,
-    "text": "<span className=\"ws-av\" style={S(\"width:26px;height:26px;background:linear-gradient(135deg,var(--accent),#2D9C",
-    "value": "#2D9CDB"
    },
    {
     "file": "app/src/Generator.jsx",
@@ -195,12 +183,6 @@
     "line": 563,
     "text": "background: 'var(--accent, #4C8DFF)', color: '#fff',",
     "value": "#fff"
-   },
-   {
-    "file": "app/src/main.jsx",
-    "line": 226,
-    "text": "color: '#EB5757',",
-    "value": "#EB5757"
    }
   ],
   "spacing": [

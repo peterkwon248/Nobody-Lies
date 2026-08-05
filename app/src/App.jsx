@@ -3183,7 +3183,7 @@ export default class App extends React.Component {
    */
   relChip(kind) {
     const base = 'display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;border-radius:var(--r-pill);padding:5px 12px;flex:none;white-space:nowrap;';
-    if (kind === 'onsite') return S(base + 'color:#F2994A;background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)');
+    if (kind === 'onsite') return S(base + 'color:var(--label-orange);background:rgba(242,153,74,.16);border:1px solid rgba(242,153,74,.4)');
     if (kind === 'absent') return S(base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)');
     return S(base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)');
   }
@@ -4500,7 +4500,7 @@ export default class App extends React.Component {
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow:auto")}>
                   <div style={S("max-width:520px;width:100%")}>
                     <div style={S("display:flex;align-items:center;gap:9px;margin-bottom:20px")}>
-                      <span className="ws-av" style={S("width:26px;height:26px;background:linear-gradient(135deg,var(--accent),#2D9CDB)")}>V</span>
+                      <span className="ws-av" style={S("width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--label-blue))")}>V</span>
                       <span className="v-ui" style={S("color:var(--fg-3)")}>{V.ui.caseTitle}</span>
                     </div>
                     <div className="v-h1" style={S("margin-bottom:6px")}>{V.ui.briefTitle}</div>
