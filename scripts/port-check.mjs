@@ -102,10 +102,53 @@ const APP_ONLY = new Set([
   'interlude.paras', 'interlude.hasDest',
 ])
 
+/**
+ * 제거됨 — **프로토타입에 있으나 제품에서 빼기로 결정한 갈래.** (2026-08-05 신설)
+ *
+ * ## ⛔ `APP_ONLY` 와 부류가 다르다 — 섞으면 안 된다
+ *
+ * 위 `APP_ONLY` 주석이 *"이식된 화면을 고치다 생긴 어긋남을 여기 적어 넘기면
+ * 대조기가 죽는다"* 고 경고한다. 그 경고는 **의도 없는 드리프트**를 말한다 —
+ * 목록에 적는 순간 대조기가 무력화되는 부류다.
+ *
+ * **이쪽은 반대다. 의도의 기록이다.**
+ *
+ * ```
+ * APP_ONLY   앱에 있고 프로토타입에 없다   「새로 지었다」는 선언
+ * REMOVED    프로토타입에 있고 앱에 없다   「제품에서 뺐다」는 선언
+ * 어긋남      설명이 없다                 ← 둘 중 어디에도 안 적힌 것
+ * ```
+ *
+ * `inShipGate` 가 태그가 아니라 규칙이듯, **「제품에서 뺀 것」도 침묵이 아니라
+ * 선언이어야 한다**(2026-08-05 사용자 확정). 침묵으로 두면 `missing` 이 쌓여
+ * 게이트가 빨간 채로 상주하고, 그러면 사람이 게이트를 안 보게 된다.
+ *
+ * ## 역방향 검사 **둘**이 이 목록의 본체다
+ *
+ * ```
+ * revived       여기 적혔는데 App.jsx 에 있다   → 뺀다고 해놓고 되살아났다
+ * staleRemoved  여기 적혔는데 프로토타입에 없다  → 목록이 낡았다
+ * ```
+ *
+ * 이것이 없으면 REMOVED 는 **「안 보기로 한 목록」**일 뿐이다. `staleAllow` 가
+ * `APP_ONLY` 를 안 썩게 하는 것과 같은 장치이고, **그래야 목록이 계약이 된다.**
+ *
+ * ⛳ **항목마다 결정 출처를 한 줄 남긴다** — 목록이 커지는 미래에 「이건 왜 뺐더라」를
+ * 코드가 답하게. 값은 그 근거 문자열이다.
+ */
+const REMOVED = new Map([
+  // ['pb.tools', '2026-08-05 사용자 결정 + 테스터 의견 · docs/PLAYTEST.md'],
+])
+
 const P = fromPrototype(readFileSync(PROTO, 'utf8'))
 const A = fromApp(readFileSync(APP, 'utf8'))
 
-const missing = [...P].filter((x) => !A.has(x)).sort()   // 앱이 빠뜨렸다
+// 제거 선언된 것은 `missing` 에서 뺀다 — 대신 아래 역방향 둘이 그 선언을 감시한다
+const missing = [...P].filter((x) => !A.has(x) && !REMOVED.has(x)).sort()   // 앱이 빠뜨렸다
+/** 뺐다고 적어놓고 앱에 살아 있다 — 선언과 실물이 어긋났다 */
+const revived = [...REMOVED.keys()].filter((x) => A.has(x)).sort()
+/** 뺐다고 적어놓았는데 프로토타입에도 없다 — 목록이 낡았다(동결 원본이 바뀌었거나 오타) */
+const staleRemoved = [...REMOVED.keys()].filter((x) => !P.has(x)).sort()
 const newFeat = [...A].filter((x) => !P.has(x) && APP_ONLY.has(x)).sort()      // 새로 지은 것
 const extra = [...A].filter((x) => !P.has(x) && !APP_ONLY.has(x)).sort()       // 설명 안 되는 것
 // 적어뒀는데 실제로 없는 이름 — 기능을 지웠거나 이름을 바꿨다. 목록이 썩는 것을 막는다
@@ -126,13 +169,17 @@ const say = (title, arr, hint) => {
 say('❗ 앱에 없다', missing, '재export 가 빠뜨렸거나, 프로토타입만 갱신됐다')
 say('❗ 프로토타입에 없다', extra, '앱이 옛 마스터에서 왔거나, 앱만 갱신됐다')
 say('❗ 앱 전용 목록이 낡았다', staleAllow, 'APP_ONLY 에 적혀 있는데 앱에 없다 — 지웠거나 이름이 바뀌었다')
+say('❗ 뺐다고 해놓고 살아 있다', revived, 'REMOVED 에 적혀 있는데 App.jsx 에 있다 — 되살아났거나 선언이 틀렸다')
+say('❗ 제거 목록이 낡았다', staleRemoved, 'REMOVED 에 적혀 있는데 프로토타입에도 없다 — 오타이거나 동결 원본이 바뀌었다')
 say('· 앱 전용 (프로토타입에 없는 새 기능)', newFeat, 'APP_ONLY 에 선언됨 — 어긋남으로 세지 않는다')
+say('· 제거됨 (제품에서 빼기로 결정)', [...REMOVED.keys()].sort(), 'REMOVED 에 선언됨 — 어긋남으로 세지 않는다')
 
-const ok = !missing.length && !extra.length && !staleAllow.length
+const ok = !missing.length && !extra.length && !staleAllow.length && !revived.length && !staleRemoved.length
 console.log(
   `\n${ok ? '✓' : '✗'} 프로토타입 ${P.size} · 앱 ${A.size} · `
   + `공통 ${[...P].filter((x) => A.has(x)).length} · 앱 전용 ${newFeat.length} · `
-  + `어긋남 ${missing.length + extra.length + staleAllow.length}`,
+  + `제거됨 ${REMOVED.size} · `
+  + `어긋남 ${missing.length + extra.length + staleAllow.length + revived.length + staleRemoved.length}`,
 )
 if (ok) console.log('  (갈래가 있느냐까지만 본다 — 같은 조건에서 뜨는지는 눈으로 본다)')
 process.exit(ok ? 0 : 1)
