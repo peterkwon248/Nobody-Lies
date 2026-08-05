@@ -34,7 +34,12 @@ budget: 7                      # ★지어냄★ 원문에 예산·조사 개념
 incident:
   kind: homicide
   subject: v_mina
-  description: 신년 휴일의 빈 사옥, 3층 피아노 녹음실에서 한 사람이 숨진 채 발견됐다
+  # ★2026-08-05★ 「다섯 시」를 적었다 — **문안 꾸미기가 아니라 전제 명시다.**
+  # 발견 시각은 사건이 열리는 조건이라 조사로 알아낼 것이 아닌데(`proof.ts` R7),
+  # 여기 안 쓰여 있어서 1장 시각 공란이 **증명 경로 없이** 살아 있었다.
+  # asks 를 달자 솔버가 보기 시작했고 그때 드러났다(그전엔 아무도 안 봤다).
+  # 원문과 정합: 나연이 「다섯 시가 다 되어서」 도착했고 그 직후 비명이 난다
+  description: 신년 휴일의 빈 사옥, 다섯 시 무렵 3층 피아노 녹음실에서 한 사람이 숨진 채 발견됐다
   scene: piano
   body_state: 복부에 과도가 꽂힌 채 피아노 의자에 기대어 있었다
   scene_state: 소지품은 소파에 가지런히 놓여 있었고 그 옆에서부터 핏자국이 이어졌다
@@ -354,7 +359,14 @@ chapters:
     opening: 먼저 그날 무엇이 있었는지를 적는다.
     requires_facts: [f_no_p2, f_no_p3, f_no_p4, f_no_p5]
     blanks:
-      - { label: 시각, candidates: closed,     answer: t2 }
+      # ★결함 수리★ (2026-08-05) 답이 t2 였다 — **같은 문장의 뒷절과 어긋나 있었다.**
+      # 서술문은 「처음 문을 연 것은 … [p2]」라고 발견자를 스스로 지목하는데
+      # p2(문사희)가 현장에 닿는 칸은 t3 하나뿐이다(t2=vocal · t3=piano).
+      # ⛳ 원문 주석 둘이 다른 사람을 가리킨다 — 「최초 발견자」=사나(p2) ·
+      #   「4시 50분 입장」=나연(p3). 그래서 발견 칸과 사망 칸(t2)은 안 겹친다.
+      # ⛳ 고친 것은 「지어냄」으로 분류된 게임화 층(보고서)이고 원문 격자는 무수정이다
+      - { label: 시각, candidates: closed,     answer: t3,
+          asks: { kind: discoveryTime } }
       - { label: 장소, candidates: closed,     answer: piano, asks: { kind: scene } }
       # 서술문이 물건을 말하고 사람을 묻는다 — 식별 고리가 산문에 살아 있다
       - { label: 인물, candidates: closed,     answer: p2,
