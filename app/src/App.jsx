@@ -1860,7 +1860,8 @@ export default class App extends React.Component {
   }
   bottomItem(view, cur, key, label, icon, onClick) {
     const active = view === cur;
-    return { label, icon: this.ICO(icon), onClick, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: active ? 'var(--accent)' : 'var(--fg-3)', background: active ? 'var(--accent-soft)' : 'transparent' } };
+    // `active` 를 밖으로 낸다 — JSX 가 press() 에 넘겨 aria-current 를 붙인다 (2026-08-06 · #3)
+    return { label, active, icon: this.ICO(icon), onClick, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: active ? 'var(--accent)' : 'var(--fg-3)', background: active ? 'var(--accent-soft)' : 'transparent' } };
   }
   buildBottomNav(view) {
     const t = this.T();
@@ -1871,7 +1872,7 @@ export default class App extends React.Component {
       this.bottomItem(view, 'statements', 's', t.navStatements, 'depo', () => this.setView('statements')),
       this.bottomItem(view, 'map', 'm', t.navMap, 'map', () => this.setView('map')),
       this.bottomItem(view, 'profile', 'p', t.navProfile, 'suspect', () => this.setView('profile')),
-      { label: t.more || '더보기', icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: inMore ? 'var(--accent)' : 'var(--fg-3)', background: inMore ? 'var(--accent-soft)' : 'transparent' } },
+      { label: t.more || '더보기', active: inMore, icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '8px 2px 8px', cursor: 'pointer', color: inMore ? 'var(--accent)' : 'var(--fg-3)', background: inMore ? 'var(--accent-soft)' : 'transparent' } },
     ];
   }
   /**
@@ -1897,7 +1898,7 @@ export default class App extends React.Component {
     ];
   }
   buildMoreNav(view) {
-    return this.MORE_ITEMS().map((m) => ({ label: m.label, icon: this.ICO(m.icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(m.v)), style: { display: 'flex', alignItems: 'center', gap: '12px', minHeight: '44px', color: view === m.v ? 'var(--accent)' : 'var(--fg-2)' } }));
+    return this.MORE_ITEMS().map((m) => ({ label: m.label, active: view === m.v, icon: this.ICO(m.icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(m.v)), style: { display: 'flex', alignItems: 'center', gap: '12px', minHeight: '44px', color: view === m.v ? 'var(--accent)' : 'var(--fg-2)' } }));
   }
   markProfileSeen() { const seen = (this.state.seenClues || []).slice(); (this.state.invLog || []).forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; if (seen.indexOf(k) < 0) seen.push(k); }); }); this.setState({ seenClues: seen }); }
   openProfileDetail(pid) { this.setState({ openProfile: pid }); }
@@ -4435,7 +4436,7 @@ export default class App extends React.Component {
 
             {(V.isNarrow)?(<>
               <div style={S("display:flex;align-items:stretch;border-top:1px solid var(--border);background:var(--bg-sidebar);flex:none")}>
-                {arr(V.bottomNav).map((b,$index)=>(<React.Fragment key={$index}><div onClick={b.onClick} style={b.style}>
+                {arr(V.bottomNav).map((b,$index)=>(<React.Fragment key={$index}><div {...press(b.onClick, b.active ? 'active' : '', b.label)} style={b.style}>
                   <span style={S("line-height:0")}>{b.icon}</span>
                   <span style={S("font-size:10px;font-weight:500")}>{b.label}</span>
                 </div></React.Fragment>))}
@@ -4465,7 +4466,7 @@ export default class App extends React.Component {
             <div className="scrim" style={S("z-index:70;align-items:flex-end")} onClick={V.onCloseMore}>
               <div style={S("width:100%;background:var(--bg-elevated);border-radius:12px 12px 0 0;padding:8px 8px 20px")} onClick={V.stop}>
                 <div style={S("width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:8px auto 12px")}></div>
-                {arr(V.moreNav).map((m,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" onClick={m.onClick} style={m.style}><span style={S("line-height:0")}>{m.icon}</span>{m.label}</div></React.Fragment>))}
+                {arr(V.moreNav).map((m,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" {...press(m.onClick, m.active ? 'active' : '', m.label)} style={m.style}><span style={S("line-height:0")}>{m.icon}</span>{m.label}</div></React.Fragment>))}
               </div>
             </div>
           </>):null}

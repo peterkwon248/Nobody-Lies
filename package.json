@@ -36,7 +36,8 @@
     "censor": "npm run censor -w engine --",
     "space-audit": "npm run space-audit -w engine",
     "design-audit": "node scripts/design-audit.mjs",
-    "token-audit": "node scripts/token-audit.mjs"
+    "token-audit": "node scripts/token-audit.mjs",
+    "focus-check": "node scripts/focus-check.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",

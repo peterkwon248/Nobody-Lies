@@ -50,6 +50,47 @@
    보이는 것은 hover·active 일 때뿐이다. */
 .iconbtn, .seg { min-width: 44px; min-height: 44px; }
 
+/* ⛔ **그릇도 같이 키워야 한다 (2026-08-06 정정).** `.tabbar` 는 DS 에서
+   `--tabbar-h: 36px` 고정인데 그 안의 `.iconbtn` 을 44 로 키웠더니 버튼이
+   **위아래로 4px 씩 삐져나왔다**(버튼 top −4 ~ 40, 바 0 ~ 36).
+   #3 의 키보드 순회에서 초점 링 y 가 −4 로 찍혀서 잡혔다 —
+   **링을 그리기 전에는 안 보이던 결함**이다.
+   ⛳ 처음 보고할 때 「상단 바 36 → 44」라고 적었는데 그때 잰 것은 버튼의
+      래퍼였지 `.tabbar` 가 아니었다. **바는 안 자라 있었다.** */
+[data-surface="vector"] { --tabbar-h: 44px; }
+
+/* ===== 키보드 초점 링 (2026-08-06 · 기본 디자인 감사 #3) =====
+   감사 실측: `:focus-visible` 규칙 **0건**. hover 는 97개인데 키보드 초점은
+   어디에도 안 그려진다. `press()` 가 `role=button`·`tabIndex=0` 을 붙여
+   **탭이 가긴 가는데 어디 있는지 안 보였다** — 접근성 결함이다.
+
+   ⛳ **DS 의 기존 문법을 쓴다 — 새로 짓지 않는다.**
+   `colors_and_type.css:273` 의 `.v-input:focus` 가 이미
+   `box-shadow: 0 0 0 3px var(--accent-soft)` 이고 `--border-focus: var(--accent)`
+   토큰도 있다. 여기서 `outline` 을 쓰면 **DS 와 싸운다** — DS 는 입력 요소에
+   `outline: 0` 을 광범위하게 건다(app.css 여덟 곳).
+
+   ⛳ **`:focus` 가 아니라 `:focus-visible` 이다.** 마우스로 눌렀을 때 링이 뜨면
+   그건 고친 게 아니라 **새 거슬림**이다. 브라우저가 입력 방식으로 갈라준다.
+
+   ★ 두 겹인 이유 — 안쪽 2px 은 **배경색 간격**, 바깥 2px 이 **강조색 링**이다.
+   ⛔ 처음엔 `1px accent + 3px accent-soft`(DS 입력 문법 그대로)로 썼는데,
+   **강조색 배경 위의 버튼에서 링이 묻혔다** — `보고서 제출` 이 그 자리다
+   (키보드 순회 검사가 `bg=ACCENT` 로 잡아줬다). 배경색 간격을 안쪽에 두면
+   **버튼 배경이 무엇이든** 링이 그 위에 뜬다. */
+[data-surface="vector"] :is(
+  button, a, input, select, textarea,
+  [role="button"], [tabindex]:not([tabindex="-1"]),
+  .nav-item, .seg, .v-chip, .iconbtn, .linklike, .v-menu-item,
+  .g-blank-trigger, .g-word, .g-cell
+):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 4px var(--accent);
+  border-radius: var(--r-sm);
+  position: relative;
+  z-index: 1;
+}
+
 .g-blank-trigger:hover { filter: brightness(1.12); }
 .g-word:hover { border-color: var(--accent) !important; }
 .g-cell:hover .g-cell-hoverable { color: var(--fg); }

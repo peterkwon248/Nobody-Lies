@@ -124,37 +124,37 @@
    },
    {
     "file": "app/src/App.jsx",
-    "line": 2155,
+    "line": 2156,
     "text": "badgeStyle: { fontSize: '10px', fontWeight: 700, color: e.type === 'empty' ? 'var(--fg-3)' : '#0A0A0B', backgr",
     "value": "#0A0A0B"
    },
    {
     "file": "app/src/App.jsx",
-    "line": 2184,
+    "line": 2185,
     "text": "badgeStyle: e.type === 'empty' ? { fontSize: '10px', fontWeight: 700, color: 'var(--fg-3)', background: 'var(-",
     "value": "#0A0A0B"
    },
    {
     "file": "app/src/App.jsx",
-    "line": 2331,
+    "line": 2332,
     "text": "chipStyle: { background: 'var(--accent)', color: '#fff' },",
     "value": "#fff"
    },
    {
     "file": "app/src/App.jsx",
-    "line": 2536,
+    "line": 2537,
     "text": "const base = { width: size + 'px', height: size + 'px', borderRadius: '6px', flex: 'none', display: 'inline-fl",
     "value": "#0A0A0B"
    },
    {
     "file": "app/src/App.jsx",
-    "line": 2706,
+    "line": 2707,
     "text": "if (sel.length === 2) { const status = this.invStatusFor('alibi', sel); alibi = { show: true, names: sel.map(i",
     "value": "#0A0A0B"
    },
    {
     "file": "app/src/App.jsx",
-    "line": 3504,
+    "line": 3505,
     "text": "dangerBtnStyle: { background: 'var(--label-red)', borderColor: 'transparent', color: '#fff', fontWeight: 600 }",
     "value": "#fff"
    },
@@ -174,13 +174,13 @@
   "spacing": [
    {
     "file": "app/src/App.jsx",
-    "line": 4052,
+    "line": 4053,
     "text": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"var(--fg-4)\" strokeWidth=\"1.6\" style={S(\"p",
     "value": 11
    },
    {
     "file": "app/src/App.jsx",
-    "line": 4742,
+    "line": 4743,
     "text": "{(V.toast)?(<><div style={S(\"position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:120;backgr",
     "value": 74
    }
