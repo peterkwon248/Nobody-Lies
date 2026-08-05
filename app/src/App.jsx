@@ -2046,10 +2046,11 @@ export default class App extends React.Component {
    * A/B — 중 카드의 시각 형태와 중↔대 경계를 **주소로** 가른다.
    *
    * ```
-   * (없음)          기본. 3단계 · 카드는 아래서 올라온다
-   * ?reveal=pop     시안 B. 카드가 중앙에서 뜬다
+   * (없음)          기본. 3단계 · 카드는 아래서 올라온다 (시안 A 확정)
    * ?reveal=heavy   중을 대로 승격 — 테스터 절반이 이걸로 돈다
    * ```
+   * ⛳ 시안 B(`?reveal=pop`)는 **지웠다** — 2026-08-06에 A 로 확정됐고,
+   *   안 고른 갈래를 설정값으로 남기면 죽은 배선이다.
    * ⛳ **설정값 하나로 가른다** — 경계가 코드에 흩어지면 A/B 를 못 돌린다.
    *   주소를 쓰는 이유는 테스터에게 **URL 만 다르게 보내면 되기 때문**이다.
    */
@@ -2057,7 +2058,7 @@ export default class App extends React.Component {
     try {
       const p = new URLSearchParams((location.hash.split('?')[1] || '') + '&' + location.search.slice(1));
       const v = p.get('reveal') || '';
-      return v === 'pop' || v === 'heavy' ? v : 'rise';
+      return v === 'heavy' ? v : 'rise';
     } catch (e) { return 'rise'; }
   }
   buildCard() {
@@ -4921,14 +4922,28 @@ export default class App extends React.Component {
             </div>
           </>):null}
 
+          {/* 지목 직전 — **대로 승격했다** (2026-08-06 · DESIGN-NOTES §확정 결정 2).
+              전에는 420px 일반 모달이라 「사건이 꺾이는 곳」이 다른 대화상자와
+              같은 무게였다. 이제 전체 화면 · 인터루드 어휘(--read-*)를 쓴다.
+              ⛔ **배경 탭은 「취소」다.** 대·중은 탭 한 번에 닫히는 것이 원칙인데
+                 여기서 「닫힘 = 제출」이면 오조작이 곧 종결이다 — 되돌릴 수 없다.
+                 **안전한 방향으로만 스킵한다.** 제출은 명시 버튼 하나뿐이다. */}
           {(V.confirmFinish)?(<>
-            <div className="scrim" style={S("z-index:95;align-items:center;padding-top:0")}><div className="modal" style={S("width:420px")}>
-              <div style={S("padding:20px 20px 8px")}><div className="v-h3" style={S("color:var(--fg)")}>{V.ui.finishConfirmT}</div><div className="v-body" style={S("color:var(--fg-3);margin-top:8px;line-height:1.6")}>{V.ui.finishConfirmD}</div>{(V.finishUnfilled)?(<><div className="v-meta" style={S("color:var(--status-progress);margin-top:12px;font-weight:600")}>{V.finishUnfilled}</div></>):null}</div>
-              <div className="modal-foot" style={S("justify-content:flex-end")}>
-                <Button variant="ghost" onClick={V.onCancelFinish}>{V.ui.cancel}</Button>
-                <Button variant="primary" onClick={V.onDoFinish}>{V.ui.submit}</Button>
+            <div className="rv-accuse" onClick={V.onCancelFinish}>
+              <div className="rv-accuse-inner" onClick={V.stop}>
+                <div className="v-caption rv-accuse-kicker">{V.ui.finishReport}</div>
+                <div className="rv-accuse-title">{V.ui.finishConfirmT}</div>
+                <div className="rv-accuse-body">{V.ui.finishConfirmD}</div>
+                {/* 미채움 공란 경고 — 승격하면서 한 번 떨어뜨렸고 `port-check` 이 잡았다.
+                    **되돌릴 수 없는 자리라 경고가 본체다** — 무게만 올리고 이걸
+                    잃으면 승격이 아니라 퇴보다 */}
+                {(V.finishUnfilled)?(<><div className="rv-accuse-warn">{V.finishUnfilled}</div></>):null}
+                <div className="rv-accuse-foot">
+                  <Button variant="ghost" onClick={V.onCancelFinish}>{V.ui.cancel}</Button>
+                  <Button variant="primary" onClick={V.onDoFinish}>{V.ui.submit}</Button>
+                </div>
               </div>
-            </div></div>
+            </div>
           </>):null}
           {/* 중 — 반화면 카드. 자동 닫힘 없음 · 어디를 눌러도 닫힌다
               ⛔ **토스트 옆(최상위)에 둔다** — 처음에 인터루드 옆에 뒀더니
