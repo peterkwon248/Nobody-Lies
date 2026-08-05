@@ -4326,7 +4326,7 @@ export default class App extends React.Component {
 
               
               {(V.isResult)?(<>
-                <div style={S("padding:30px 24px 60px;max-width:600px;margin:0 auto")}>
+                <div style={S("padding:var(--read-pad-y) var(--read-pad-x) 60px;max-width:var(--read-measure);margin:0 auto")}>
                   <div style={S("display:flex;align-items:center;gap:10px;margin-bottom:22px")}>
                     <span className="v-h1">{V.result.endTitle}</span>
                     {(V.result.stuck)?(<><span style={S("font-size:11px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);background:rgba(235,87,87,.14);color:var(--g-contradict)")}>{V.ui.difficulty}</span></>):null}
@@ -4337,13 +4337,13 @@ export default class App extends React.Component {
                     <div style={S("margin-bottom:22px")}>
                       <div className="v-micro" style={S("color:var(--g-contradict);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px")}>{V.result.mineLabel}</div>
                       <div style={S("display:flex;flex-direction:column;gap:16px")}>
-                        {arr(V.result.narrMine).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:16px;line-height:1.9;color:var(--fg-3);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
+                        {arr(V.result.narrMine).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-3);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                       </div>
                     </div>
                     <div style={S("border-top:1px solid var(--border);padding-top:20px;margin-bottom:8px")}>
                       <div className="v-micro" style={S("color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px")}>{V.result.realLabel}</div>
                       <div style={S("display:flex;flex-direction:column;gap:16px")}>
-                        {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:16px;line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
+                        {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                       </div>
                       <div style={S("margin-top:16px")}>
                         <div onClick={V.result.onToggleFold} style={S("display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none")}>
@@ -4363,7 +4363,7 @@ export default class App extends React.Component {
                   </>):null}
                   {(V.result.allCorrect)?(<>
                     <div style={S("display:flex;flex-direction:column;gap:20px;margin-bottom:34px")}>
-                      {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:16px;line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
+                      {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                     </div>
                   </>):null}
 
@@ -4700,9 +4700,9 @@ export default class App extends React.Component {
               </>):null}
               
               {(V.isOverview)?(<>
-                <div style={S("max-width:640px;margin:0 auto;padding:38px 24px 60px")}>
+                <div style={S("max-width:var(--read-measure);margin:0 auto;padding:var(--read-pad-y) var(--read-pad-x) 60px")}>
                   <div className="v-caption" style={S("color:var(--fg-4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;display:block")}>{V.ui.caseTitle}</div>
-                  <div style={S("position:relative")} onMouseUp={V.ovQuote.onSelect}>{arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p className="g-stmt-para" style={S("font-size:16px;line-height:1.9;color:var(--fg-2);margin:0 0 18px;text-wrap:pretty;cursor:text")}>{pp.text}</p></React.Fragment>))}{(V.ovQuote.showTb)?(<><span className="g-seltoolbar" style={V.ovQuote.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:3px;box-shadow:var(--shadow-popover)")}><span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span><span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span></span></span></>):null}</div>
+                  <div style={S("position:relative")} onMouseUp={V.ovQuote.onSelect}>{arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p className="g-stmt-para" style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);margin:0 0 18px;text-wrap:pretty;cursor:text")}>{pp.text}</p></React.Fragment>))}{(V.ovQuote.showTb)?(<><span className="g-seltoolbar" style={V.ovQuote.tbStyle}><span style={S("display:inline-flex;align-items:center;gap:2px;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:3px;box-shadow:var(--shadow-popover)")}><span onClick={V.selTb.onQuote} title={V.ui.quoteMemo} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 4H3v3h2V4zM5 4c0 2-.5 3-2 3.5M11 4H9v3h2V4zM11 4c0 2-.5 3-2 3.5" /></svg></span><span onClick={V.selTb.onCopy} title={V.ui.copyText} style={S("display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--fg-3)")}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="5" y="5" width="8" height="8" rx="1" /><path d="M3 10V3h7" /></svg></span></span></span></>):null}</div>
                   <div style={S("border-top:1px solid var(--border);margin-top:28px;padding-top:24px")}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px;display:block")}>{V.ui.ovBrief}</div>
                     <div style={S("border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden")}>
@@ -4880,19 +4880,19 @@ export default class App extends React.Component {
               </div>
 
               {(V.stageProlog)?(<>
-                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:40px 24px")}>
-                  <div style={S("max-width:600px;width:100%")}>
+                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x)")}>
+                  <div style={S("max-width:var(--read-measure);width:100%")}>
                     <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.ui.caseTitle}</div>
-                    {arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:17px;line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
+                    {arr(V.prologParas).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:var(--read-fs);line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.onPrologContinue}>{V.ui.prologContinue}</Button></div>
                   </div>
                 </div>
               </>):null}
               {(V.stageInterlude && V.interlude.open)?(<>
-                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:40px 24px")}>
-                  <div style={S("max-width:600px;width:100%")}>
+                <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:var(--read-pad-y) var(--read-pad-x)")}>
+                  <div style={S("max-width:var(--read-measure);width:100%")}>
                     <div className="v-caption" style={S("color:var(--fg-4);margin-bottom:26px;letter-spacing:.1em;text-transform:uppercase")}>{V.interlude.chapter}</div>
-                    {arr(V.interlude.paras).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:17px;line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
+                    {arr(V.interlude.paras).map((pp,$index)=>(<React.Fragment key={$index}><p style={S("font-size:var(--read-fs);line-height:1.95;color:var(--fg-2);margin:0 0 20px;text-wrap:pretty")}>{pp.text}</p></React.Fragment>))}
                     {(V.interlude.hasDest)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:26px;padding-top:16px;border-top:1px solid var(--border)")}>{V.interlude.dest}</div></>):null}
                     <div style={S("margin-top:24px")}><Button variant="primary" onClick={V.interlude.onNext}>{V.ui.prologContinue}</Button></div>
                   </div>
@@ -4918,7 +4918,7 @@ export default class App extends React.Component {
 
               {(V.stageRead)?(<>
                 <div style={S("flex:1;display:flex;flex-direction:column;align-items:center;overflow:auto;padding:8px 20px 28px")}>
-                  <div style={S("max-width:640px;width:100%")}>
+                  <div style={S("max-width:var(--read-measure);width:100%")}>
                     <div style={S("display:flex;align-items:center;gap:12px;margin-bottom:16px")}>
                       <span className="v-meta" style={S("color:var(--fg-4);font-variant-numeric:tabular-nums")}>{V.readCard.idx} / {V.readCard.total}</span>
                       <span style={S("flex:1")}></span>
@@ -5125,7 +5125,7 @@ export default class App extends React.Component {
                 <div style={S("padding:22px 24px")}>
                   <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:14px")}><span style={V.invResultCard.badgeStyle}>{V.invResultCard.typeLabel}</span><span className="v-micro" style={S("color:var(--fg-4)")}>{V.invResultCard.target}</span></div>
                   <div className="v-h3" style={S("color:var(--fg);margin-bottom:12px")}>{V.invResultCard.title}</div>
-                  <div style={S("font-size:16px;line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.invResultCard.body}</div>
+                  <div style={S("font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.invResultCard.body}</div>
                   <div style={S("display:flex;justify-content:flex-end;margin-top:20px")}><Button variant="primary" onClick={V.invResultCard.onClose}>{V.invResultCard.saveLabel}</Button></div>
                 </div>
               </div>
