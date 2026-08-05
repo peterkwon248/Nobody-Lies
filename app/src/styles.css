@@ -34,6 +34,22 @@
   --g-suspect: var(--status-progress);
   --g-contradict: var(--label-red);
 }
+/* ===== 터치 타깃 최소 44px (2026-08-06 · 기본 디자인 감사 #2) =====
+   감사 실측: 모바일 12화면 × 6개 = **72개가 가로·세로 둘 다 44 미만**이었고
+   여섯이 전부 상단 크롬이다 — 뒤로 · 나란히보기 · 설정(26) · 설정(28) ·
+   EN(38×24) · ◑(29×24). 손가락이 실제로 빗나가는 부류다.
+
+   ⛳ **DS 번들이 아니라 여기서 덮는다** — `.iconbtn`·`.seg` 의 원본은
+   `_ds/.../app.css` 인데 그건 벤더 파일이라 다음 DS 동기화가 덮어쓴다.
+
+   ⛳ **`width/height` 가 아니라 `min-*` 이다** — ◑ 처럼 인라인으로
+   `width:auto;height:24px` 를 든 자리가 있는데, `min-*` 은 `height` 와 다른
+   속성이라 인라인에 지지 않고 바닥만 올린다. 자리마다 인라인을 쫓아다니지 않는다.
+
+   ⛳ **칠은 안 커진다** — 둘 다 기본 배경이 투명이라 커지는 것은 **누르는 상자**이고
+   보이는 것은 hover·active 일 때뿐이다. */
+.iconbtn, .seg { min-width: 44px; min-height: 44px; }
+
 .g-blank-trigger:hover { filter: brightness(1.12); }
 .g-word:hover { border-color: var(--accent) !important; }
 .g-cell:hover .g-cell-hoverable { color: var(--fg); }

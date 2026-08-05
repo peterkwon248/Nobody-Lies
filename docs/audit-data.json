@@ -202,46 +202,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 8,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 7,
     "narrowOnly": 0
    },
    "motion": {
@@ -453,46 +416,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 10,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 9,
     "narrowOnly": 0
    },
    "motion": {
@@ -698,46 +624,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 4,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 3,
     "narrowOnly": 0
    },
    "motion": {
@@ -1003,46 +892,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -1269,46 +1121,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -1317,6 +1132,361 @@
      {
       "rule": "left, top, opacity 0.45s, 0.45s, 0.3s cubic-bezier(0.32, 0.72, 0, 1), cubic-bezier(0.32, 0",
       "n": 10
+     }
+    ]
+   }
+  },
+  "log-empty-mobile": {
+   "counts": {
+    "elements": 140,
+    "interactive": 7,
+    "inlineStyled": 96,
+    "animated": 0
+   },
+   "typo": {
+    "combos": 17,
+    "tiny": [
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui",
+      "text": "조사 기록"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num",
+      "text": "6 / 6"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta",
+      "text": "수행한 조사와 결과가 여기 누적됩니다"
+     },
+     {
+      "combo": "12|400|19.2|0",
+      "n": 1,
+      "sample": "DIV",
+      "text": "아직 수행한 조사가 없습니다. 왼쪽에서 행동"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN",
+      "text": "보고서"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active",
+      "text": "한국어"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn",
+      "text": "◑"
+     },
+     {
+      "combo": "13|400|18.85|0",
+      "n": 1,
+      "sample": "v-body",
+      "text": "모든 진술을 의심하라"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption",
+      "text": "캠페인"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num",
+      "text": "01"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 5,
+      "sample": "v-micro",
+      "text": "20–30분"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge",
+      "text": "hard"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN",
+      "text": "미플레이"
+     }
+    ],
+    "top": [
+     {
+      "combo": "14|500|20.3|0",
+      "n": 9,
+      "sample": "v-title"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 5,
+      "sample": "v-micro"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num"
+     }
+    ]
+   },
+   "density": {
+    "bodyOverflowX": false,
+    "overflow": [],
+    "padCombos": 15
+   },
+   "states": {
+    "ruleSelectors": {
+     "hover": 97,
+     "focusVisible": 0,
+     "focus": 3,
+     "disabled": 0,
+     "active": 4
+    },
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
+    "narrowOnly": 0
+   },
+   "motion": {
+    "combos": 0,
+    "list": []
+   }
+  },
+  "log-mid-mobile": {
+   "counts": {
+    "elements": 150,
+    "interactive": 7,
+    "inlineStyled": 104,
+    "animated": 0
+   },
+   "typo": {
+    "combos": 18,
+    "tiny": [
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui",
+      "text": "조사 기록"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num",
+      "text": "5 / 6"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta",
+      "text": "수행한 조사와 결과가 여기 누적됩니다"
+     },
+     {
+      "combo": "10|700|normal|0",
+      "n": 1,
+      "sample": "SPAN",
+      "text": "무고한 자의 비밀"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 7,
+      "sample": "v-micro",
+      "text": "발견"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN",
+      "text": "보고서"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active",
+      "text": "한국어"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn",
+      "text": "◑"
+     },
+     {
+      "combo": "13|400|18.85|0",
+      "n": 1,
+      "sample": "v-body",
+      "text": "모든 진술을 의심하라"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption",
+      "text": "캠페인"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num",
+      "text": "01"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge",
+      "text": "hard"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN",
+      "text": "미플레이"
+     }
+    ],
+    "top": [
+     {
+      "combo": "14|500|20.3|0",
+      "n": 10,
+      "sample": "v-title"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 7,
+      "sample": "v-micro"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num"
+     }
+    ]
+   },
+   "density": {
+    "bodyOverflowX": false,
+    "overflow": [],
+    "padCombos": 16
+   },
+   "states": {
+    "ruleSelectors": {
+     "hover": 97,
+     "focusVisible": 0,
+     "focus": 3,
+     "disabled": 0,
+     "active": 4
+    },
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
+    "narrowOnly": 0
+   },
+   "motion": {
+    "combos": 1,
+    "list": [
+     {
+      "rule": "background, border-color 0.2s, 0.2s ease, ease",
+      "n": 1
      }
     ]
    }
@@ -1522,46 +1692,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -1734,46 +1867,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -1958,46 +2054,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 3,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 2,
     "narrowOnly": 0
    },
    "motion": {
@@ -2199,46 +2258,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 4,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 3,
     "narrowOnly": 0
    },
    "motion": {
@@ -2422,46 +2444,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -2664,46 +2649,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -2888,46 +2836,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 7,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 6,
     "narrowOnly": 0
    },
    "motion": {
@@ -3139,46 +3050,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 8,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 7,
     "narrowOnly": 0
    },
    "motion": {
@@ -3390,46 +3264,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 10,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 9,
     "narrowOnly": 0
    },
    "motion": {
@@ -3635,46 +3472,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 4,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 3,
     "narrowOnly": 0
    },
    "motion": {
@@ -3900,46 +3700,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -4160,46 +3923,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -4208,6 +3934,361 @@
      {
       "rule": "left, top, opacity 0.45s, 0.45s, 0.3s cubic-bezier(0.32, 0.72, 0, 1), cubic-bezier(0.32, 0",
       "n": 10
+     }
+    ]
+   }
+  },
+  "log-empty-tablet": {
+   "counts": {
+    "elements": 140,
+    "interactive": 7,
+    "inlineStyled": 96,
+    "animated": 0
+   },
+   "typo": {
+    "combos": 17,
+    "tiny": [
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui",
+      "text": "조사 기록"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num",
+      "text": "6 / 6"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta",
+      "text": "수행한 조사와 결과가 여기 누적됩니다"
+     },
+     {
+      "combo": "12|400|19.2|0",
+      "n": 1,
+      "sample": "DIV",
+      "text": "아직 수행한 조사가 없습니다. 왼쪽에서 행동"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN",
+      "text": "보고서"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active",
+      "text": "한국어"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn",
+      "text": "◑"
+     },
+     {
+      "combo": "13|400|18.85|0",
+      "n": 1,
+      "sample": "v-body",
+      "text": "모든 진술을 의심하라"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption",
+      "text": "캠페인"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num",
+      "text": "01"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 5,
+      "sample": "v-micro",
+      "text": "20–30분"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge",
+      "text": "hard"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN",
+      "text": "미플레이"
+     }
+    ],
+    "top": [
+     {
+      "combo": "14|500|20.3|0",
+      "n": 9,
+      "sample": "v-title"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 5,
+      "sample": "v-micro"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num"
+     }
+    ]
+   },
+   "density": {
+    "bodyOverflowX": false,
+    "overflow": [],
+    "padCombos": 15
+   },
+   "states": {
+    "ruleSelectors": {
+     "hover": 97,
+     "focusVisible": 0,
+     "focus": 3,
+     "disabled": 0,
+     "active": 4
+    },
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
+    "narrowOnly": 0
+   },
+   "motion": {
+    "combos": 0,
+    "list": []
+   }
+  },
+  "log-mid-tablet": {
+   "counts": {
+    "elements": 150,
+    "interactive": 7,
+    "inlineStyled": 104,
+    "animated": 0
+   },
+   "typo": {
+    "combos": 18,
+    "tiny": [
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui",
+      "text": "조사 기록"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num",
+      "text": "5 / 6"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta",
+      "text": "수행한 조사와 결과가 여기 누적됩니다"
+     },
+     {
+      "combo": "10|700|normal|0",
+      "n": 1,
+      "sample": "SPAN",
+      "text": "무고한 자의 비밀"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 7,
+      "sample": "v-micro",
+      "text": "발견"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN",
+      "text": "보고서"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active",
+      "text": "한국어"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn",
+      "text": "◑"
+     },
+     {
+      "combo": "13|400|18.85|0",
+      "n": 1,
+      "sample": "v-body",
+      "text": "모든 진술을 의심하라"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption",
+      "text": "캠페인"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num",
+      "text": "01"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge",
+      "text": "hard"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN",
+      "text": "미플레이"
+     }
+    ],
+    "top": [
+     {
+      "combo": "14|500|20.3|0",
+      "n": 10,
+      "sample": "v-title"
+     },
+     {
+      "combo": "11|500|13.75|0",
+      "n": 7,
+      "sample": "v-micro"
+     },
+     {
+      "combo": "12|600|normal|0",
+      "n": 7,
+      "sample": "pr-badge"
+     },
+     {
+      "combo": "10|500|normal|0",
+      "n": 5,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|400|normal|-0.13px",
+      "n": 5,
+      "sample": "v-num"
+     },
+     {
+      "combo": "11|600|normal|0",
+      "n": 4,
+      "sample": "SPAN"
+     },
+     {
+      "combo": "13|500|16.25|0",
+      "n": 3,
+      "sample": "v-ui"
+     },
+     {
+      "combo": "12|500|15|0",
+      "n": 3,
+      "sample": "v-meta"
+     },
+     {
+      "combo": "12|600|12|0",
+      "n": 3,
+      "sample": "v-caption"
+     },
+     {
+      "combo": "11|500|normal|0",
+      "n": 2,
+      "sample": "seg active"
+     },
+     {
+      "combo": "13|400|normal|0",
+      "n": 2,
+      "sample": "iconbtn"
+     },
+     {
+      "combo": "12|400|normal|-0.12px",
+      "n": 1,
+      "sample": "v-num"
+     }
+    ]
+   },
+   "density": {
+    "bodyOverflowX": false,
+    "overflow": [],
+    "padCombos": 16
+   },
+   "states": {
+    "ruleSelectors": {
+     "hover": 97,
+     "focusVisible": 0,
+     "focus": 3,
+     "disabled": 0,
+     "active": 4
+    },
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
+    "narrowOnly": 0
+   },
+   "motion": {
+    "combos": 1,
+    "list": [
+     {
+      "rule": "background, border-color 0.2s, 0.2s ease, ease",
+      "n": 1
      }
     ]
    }
@@ -4413,46 +4494,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -4625,46 +4669,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -4849,46 +4856,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 3,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 2,
     "narrowOnly": 0
    },
    "motion": {
@@ -5090,46 +5060,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 4,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 3,
     "narrowOnly": 0
    },
    "motion": {
@@ -5313,46 +5246,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -5555,46 +5451,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 1,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 0,
     "narrowOnly": 0
    },
    "motion": {
@@ -5779,46 +5638,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "설정"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 6,
-    "shortOnly": 7,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 6,
     "narrowOnly": 0
    },
    "motion": {
@@ -6036,52 +5858,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 19,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 18,
     "narrowOnly": 0
    },
    "motion": {
@@ -6303,52 +6082,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 21,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 20,
     "narrowOnly": 0
    },
    "motion": {
@@ -6564,52 +6300,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 15,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 14,
     "narrowOnly": 0
    },
    "motion": {
@@ -6847,52 +6540,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -7130,52 +6780,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -7375,52 +6982,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -7616,52 +7180,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -7885,52 +7406,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -8126,52 +7604,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -8367,52 +7802,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 14,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 13,
     "narrowOnly": 0
    },
    "motion": {
@@ -8624,52 +8016,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 15,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 14,
     "narrowOnly": 0
    },
    "motion": {
@@ -8875,52 +8224,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -9146,52 +8452,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -9393,52 +8656,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 18,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 17,
     "narrowOnly": 0
    },
    "motion": {
@@ -9660,52 +8880,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 19,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 18,
     "narrowOnly": 0
    },
    "motion": {
@@ -9927,52 +9104,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 21,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 20,
     "narrowOnly": 0
    },
    "motion": {
@@ -10188,52 +9322,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 15,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 14,
     "narrowOnly": 0
    },
    "motion": {
@@ -10471,52 +9562,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -10754,52 +9802,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -10999,52 +10004,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -11240,52 +10202,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -11509,52 +10428,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -11750,52 +10626,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -11991,52 +10824,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 14,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 13,
     "narrowOnly": 0
    },
    "motion": {
@@ -12248,52 +11038,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 15,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 14,
     "narrowOnly": 0
    },
    "motion": {
@@ -12499,52 +11246,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -12770,52 +11474,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 12,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 11,
     "narrowOnly": 0
    },
    "motion": {
@@ -13017,52 +11678,9 @@
      "disabled": 0,
      "active": 4
     },
-    "smallTargets": [
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "사이드바"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "뒤로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 26,
-      "h": 26,
-      "label": "앞으로"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "나란히 보기"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 28,
-      "h": 28,
-      "label": "설정"
-     },
-     {
-      "cls": "seg",
-      "w": 38,
-      "h": 24,
-      "label": "EN"
-     },
-     {
-      "cls": "iconbtn",
-      "w": 29,
-      "h": 24,
-      "label": "◑"
-     }
-    ],
-    "smallTargetCount": 7,
-    "shortOnly": 18,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "shortOnly": 17,
     "narrowOnly": 0
    },
    "motion": {
@@ -13084,10 +11702,5 @@
    }
   }
  },
- "errors": [
-  "log-empty-mobile: nav '조사 기록' 못 찾음",
-  "log-mid-mobile: nav '조사 기록' 못 찾음",
-  "log-empty-tablet: nav '조사 기록' 못 찾음",
-  "log-mid-tablet: nav '조사 기록' 못 찾음"
- ]
+ "errors": []
 }

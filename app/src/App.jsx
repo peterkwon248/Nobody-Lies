@@ -1864,18 +1864,40 @@ export default class App extends React.Component {
   }
   buildBottomNav(view) {
     const t = this.T();
+    // 칩은 「시트 안의 화면을 보고 있을 때」 켜진다 — 목록은 MORE_ITEMS 하나뿐이다
+    const inMore = this.MORE_ITEMS().some((m) => m.v === view);
     return [
       this.bottomItem(view, 'narrative', 'n', t.navNarrative, 'report', () => this.setView('narrative')),
       this.bottomItem(view, 'statements', 's', t.navStatements, 'depo', () => this.setView('statements')),
       this.bottomItem(view, 'map', 'm', t.navMap, 'map', () => this.setView('map')),
       this.bottomItem(view, 'profile', 'p', t.navProfile, 'suspect', () => this.setView('profile')),
-      { label: t.more || '더보기', icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '7px 2px 8px', cursor: 'pointer', color: (['overview', 'memo', 'map', 'reference'].indexOf(view) >= 0) ? 'var(--accent)' : 'var(--fg-3)', background: (['overview', 'memo', 'map', 'reference'].indexOf(view) >= 0) ? 'var(--accent-soft)' : 'transparent' } },
+      { label: t.more || '더보기', icon: this.ICO('more'), onClick: () => this.setState({ moreOpen: true }), style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px', padding: '7px 2px 8px', cursor: 'pointer', color: inMore ? 'var(--accent)' : 'var(--fg-3)', background: inMore ? 'var(--accent-soft)' : 'transparent' } },
+    ];
+  }
+  /**
+   * 「더 보기」 시트에 든 화면들 — **시트 내용과 칩의 활성 판정이 이 한 목록에서 난다.**
+   *
+   * ⛔ **둘이 갈라져 있었다** (2026-08-05 감사 #7): 칩의 활성 목록이
+   * `['overview','memo','map','reference']` 였는데 `map` 은 **직접 탭**이고
+   * `graph` 는 **시트 안**이라, 칩이 엉뚱한 화면에서 켜지고 정작 자기 화면에서 꺼졌다.
+   * 목록이 둘이면 한쪽만 고치는 일이 또 난다 — 그래서 **자리를 하나로 합쳤다.**
+   *
+   * ★ `log`(조사 기록)가 여기 **맨 앞**에 있다 (감사 #1). 그전까지 `buildBottomNav`
+   * 넷에도 이 시트에도 없었고 사이드바는 `isNarrow` 에서 숨으므로,
+   * **좁은 폭에서 조사 기록으로 가는 길이 아예 없었다.**
+   */
+  MORE_ITEMS() {
+    const t = this.T();
+    return [
+      { v: 'log', label: t.invLogTitle, icon: 'invest' },
+      { v: 'overview', label: t.navOverview, icon: 'overview' },
+      { v: 'memo', label: t.navMemo, icon: 'memo' },
+      { v: 'graph', label: t.navGraph, icon: 'graph' },
+      { v: 'reference', label: t.navReference, icon: 'guide' },
     ];
   }
   buildMoreNav(view) {
-    const t = this.T();
-    const item = (v, label, icon) => ({ label, icon: this.ICO(icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(v)), style: { display: 'flex', alignItems: 'center', gap: '10px', color: view === v ? 'var(--accent)' : 'var(--fg-2)' } });
-    return [ item('overview', t.navOverview, 'overview'), item('memo', t.navMemo, 'memo'), item('graph', t.navGraph, 'graph'), item('reference', t.navReference, 'guide') ];
+    return this.MORE_ITEMS().map((m) => ({ label: m.label, icon: this.ICO(m.icon), onClick: () => this.setState({ moreOpen: false }, () => this.setView(m.v)), style: { display: 'flex', alignItems: 'center', gap: '10px', minHeight: '44px', color: view === m.v ? 'var(--accent)' : 'var(--fg-2)' } }));
   }
   markProfileSeen() { const seen = (this.state.seenClues || []).slice(); (this.state.invLog || []).forEach(e => { const arr = this.CLUE_MAP[e.action + ':' + e.key]; if (!arr) return; arr.forEach(c => { const k = e.action + ':' + e.key + '|' + c.p + '|' + c.slot; if (seen.indexOf(k) < 0) seen.push(k); }); }); this.setState({ seenClues: seen }); }
   openProfileDetail(pid) { this.setState({ openProfile: pid }); }
@@ -1967,8 +1989,29 @@ export default class App extends React.Component {
   skipRead() { this.finishRead(); }
   toggleHi(key) { const h = Object.assign({}, this.state.readHi); h[key] = !h[key]; this.setState({ readHi: h }); }
   setMemo(pid, v) { const m = Object.assign({}, this.state.readMemos); m[pid] = v; this.setState({ readMemos: m }); }
+  /**
+   * 정독 카드가 **설 수 없을 때** 돌려주는 빈 자리. 모양은 `buildReadCard` 와 같다 —
+   * 키가 하나라도 빠지면 `stageRead` 가 참인 순간 템플릿이 `undefined` 를 읽는다.
+   */
+  emptyReadCard() {
+    return { idx: 0, total: (this.PEOPLE || []).length, name: '', ini: '', avStyle: {}, meta: '',
+      gesturePre: '', gesturePost: '', hasPre: false, hasPost: false, gestureStyle: {}, gesturePostStyle: {},
+      paras: [], memo: '', onMemo: () => {}, isLast: true, notLast: false,
+      onNext: () => {}, onPrev: () => {}, onSkip: () => this.skipRead(), prevStyle: {}, dots: [] };
+  }
+  /**
+   * ⛔ **`renderVals` 가 화면과 무관하게 매번 부른다**(호출부 `readCard:` 한 줄).
+   * `stageRead` 가 아니어도 여기까지 오므로 `PEOPLE` 이 비었거나 `readIdx` 가 범위
+   * 밖이면 `p.id` 에서 **앱이 통째로 죽는다** — 정독 화면 하나가 아니라 **전 화면**이다.
+   * 2026-08-05 기본 디자인 감사 중 실제로 재현됐다.
+   *
+   * ★ **가드가 호출부가 아니라 여기 있는 이유** — 호출부에 걸면 다음 호출부가
+   * 생길 때 같은 자리에서 다시 죽는다. 죽는 곳이 막아야 한다.
+   */
   buildReadCard() {
-    const p = this.PEOPLE[this.state.readIdx], t = this.T(), ln = this.state.lang;
+    const p = (this.PEOPLE || [])[this.state.readIdx];
+    if (!p || !this.STMT || !this.STMT[p.id]) return this.emptyReadCard();
+    const t = this.T(), ln = this.state.lang;
     const paras = this.STMT[p.id].map((par, i) => { const key = p.id + '-' + i; const hi = !!this.state.readHi[key];
       return { text: par, onClick: () => this.toggleHi(key), style: { margin: '0 -8px 10px', padding: '3px 8px', borderRadius: '6px', fontSize: '15px', lineHeight: '1.85', color: 'var(--fg-2)', cursor: 'pointer', background: hi ? 'var(--accent-soft)' : 'transparent', boxShadow: hi ? 'inset 3px 0 0 var(--accent)' : 'none', textWrap: 'pretty' } }; });
     const last = this.state.readIdx === this.PEOPLE.length - 1;
