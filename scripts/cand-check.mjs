@@ -53,10 +53,7 @@ const KIND_SRC = { 장소: 'place', 시각: 'time' } // 나머지 라벨은 전�
 
 function poolsOf(c) {
   return {
-    person: [
-      ...(c.people ?? []).map((p) => p.name),
-      ...(c.victimProfile?.name ? [c.victimProfile.name] : []),
-    ],
+    person: (c.people ?? []).map((p) => p.name),
     place: (c.locations ?? []).map((l) => l.label || l.id),
     time: (c.slots ?? []).map((s) => s.label || s.id),
   }
@@ -114,6 +111,22 @@ for (const f of files) {
       }
     }
   }
+  /**
+   * ⛔ **피해자는 인물 후보에 없어야 한다** (2026-08-06 · 경훈 확정)
+   *
+   * 「처음 문을 연 것은 [인물]」에 죽은 사람이 떠 있었다. 실측상 피해자가 정답인
+   * 인물 공란은 **전 사건 0개**이고 오답 후보로서도 값이 0이다(누구나 즉시 배제).
+   *
+   * ★ **이 줄이 「규칙을 다시 열 때까지」의 계약이다** ★ 엔진은 피해자를 인물 답으로
+   * 허용한다(`verifier.ts` §answerPersonIds). 그러니 앱이 안 쓰는 것은 **선언이어야
+   * 하고 침묵이면 안 된다** — 되돌아오면 여기서 운다. 정말 필요해지면 위 §1 정합이
+   * 먼저 exit 1 로 서므로, 그때 이 줄과 함께 연다.
+   */
+  if (c.victimProfile?.name && pools.person.includes(c.victimProfile.name)) {
+    fail(`${f}  피해자 「${c.victimProfile.name}」 이 인물 후보에 들어 있다`
+      + '\n       → 죽은 사람은 답이 될 수 없다. 여는 것이 옳다고 판단되면 이 검사도 같이 연다')
+  }
+
   closedTotal += closed
   missTotal += miss
   console.log(`  ${miss === 0 ? '✅' : '⛔'} ${f.replace('.json', '').padEnd(22)}`
