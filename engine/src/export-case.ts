@@ -2,6 +2,7 @@ import { writeFileSync, mkdirSync, readdirSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { loadCaseFile } from './load-case.js'
 import { verify } from './verifier.js'
+import { emitDerived } from './emit-derived.js'
 
 /**
  * 사건 YAML → 정적 JSON.
@@ -86,8 +87,13 @@ for (const { input, output } of jobs) {
    *
    * `_` 접두는 이 저장소의 규약이다 — 「앱이 표시용으로 붙인 것이지 사건이 아니다」.
    * `caseYaml` 의 왕복 대조가 `_` 로 시작하는 키를 걷어내므로 **내보내기도 안 깨진다.**
+   *
+   * ⛳ **2026-08-06에 파생 필드가 넷이 되면서 `emit-derived.ts` 로 옮겼다** —
+   * `_difficulty`·`_oracle` 에 `_proof`(증명 사슬)·`_epilogue`(트릭 재구성)가 붙었다.
+   * **나가는 문이 둘이라서**다(여기 · `cli.ts --emit`). 여기만 고쳤다가 생성 사건의
+   * 해설이 빌 뻔했고 `cand-check §3` 이 잡았다. 근거는 그 파일에 적혀 있다.
    */
-  const emitted = { ...c, _difficulty: r.difficulty, _oracle: r.minActions }
+  const emitted = emitDerived(c, r)
 
   mkdirSync(dirname(output), { recursive: true })
   writeFileSync(output, JSON.stringify(emitted, null, 2), 'utf8')
@@ -104,7 +110,12 @@ for (const { input, output } of jobs) {
     oracle: r.minActions,
   })
 
-  const bytes = JSON.stringify(c).length
+  /**
+   * ⛔ **`c` 가 아니라 `emitted` 를 잰다** (2026-08-06 정정). 전에는 파생 필드를
+   * 붙이기 **전**을 재서, `_proof`·`_epilogue` 를 실어 보낸 뒤에도 인쇄가 옛 숫자를
+   * 그대로 냈다(24.6KB ↔ 실물 31.3KB). **나가는 것을 재야 나가는 것을 안다.**
+   */
+  const bytes = JSON.stringify(emitted).length
   console.log(`  ${input} → ${output}  (${(bytes / 1024).toFixed(1)} KB · ${r.difficulty})`)
   if (r.warnings.length) r.warnings.forEach((w) => console.log(`   ! ${w}`))
 }

@@ -137,6 +137,59 @@ for (const f of files) {
 console.log(`  ── 합계: 정답 누락 ${missTotal} / 닫힌 공란 ${closedTotal}`)
 
 /* ══════════════════════════════════════════════════════════════════════════
+ *  §3 관측 표면 — 파생 채널이 실제로 실려 나가나 (2026-08-06)
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * 테스터: *"보고서 공란을 풀 수 없다"* · *"정답을 봐도 트릭·동기 납득 안 감"*.
+ * 둘 다 엔진이 **이미 계산하는데** 앱에 안 가던 것이었다 — `proveBlanks` 는
+ * `proof-check` 안에서만 살고 끝났고 에필로그는 아무도 낸 적이 없다.
+ *
+ * ★ **값과 방어를 같이 넣는다** (§defense-ships-with-the-value) ★ `export-case` 가
+ * 파생 필드를 붙이는 것은 **한 줄**이라 조용히 빠지기 쉽다. 빠지면 화면이 그냥
+ * 비고, 그 비어 있음은 「데이터가 없는 사건」과 구별되지 않는다 —
+ * 이 저장소가 반복해서 데인 그 모양이다.
+ */
+console.log('\n§3 관측 표면 — 파생 채널이 실려 나가나')
+
+for (const f of files) {
+  const c = JSON.parse(fs.readFileSync(path.join(CASE_DIR, f), 'utf8'))
+  const name = f.replace('.json', '')
+  const problems = []
+
+  if (!Array.isArray(c._proof) || !c._proof.length) problems.push('_proof 가 비었다')
+  else {
+    const closed = (c.chapters ?? []).flatMap((ch) => ch.blanks ?? []).length
+    // 사슬이 걸음 없이 통째로 비면 화면에 「왜 이 답인가」가 한 줄도 안 뜬다
+    if (!c._proof.some((p) => (p.steps ?? []).length)) problems.push('_proof 에 걸음이 하나도 없다')
+    if (c._proof.length > closed) problems.push(`_proof ${c._proof.length} > 공란 ${closed}`)
+  }
+
+  const e = c._epilogue
+  if (!e) problems.push('_epilogue 가 없다')
+  else {
+    if (!e.culprit?.name) problems.push('_epilogue.culprit 이 빔')
+    if (!e.scene?.label) problems.push('_epilogue.scene 이 빔')
+    // 인상이 하나도 없으면 「무슨 일이 있었나」가 동선 한 줄로 끝난다
+    if (!(e.illusions ?? []).length && !e.exit) problems.push('_epilogue 에 트릭 재구성이 없다')
+    // ⛳ 참조가 있는데 대상이 비는 부류를 여기서 문다 (이 저장소의 재발 결함)
+    const dangling = [
+      ...(e.illusions ?? []).flatMap((il) => [...(il.madeBy ?? []), ...(il.brokenBy ?? [])]),
+      ...(e.exit ? [...(e.exit.enabledBy ?? []), ...(e.exit.brokenBy ?? [])] : []),
+      ...(e.facts ?? []).flatMap((x) => x.revealedBy ?? []),
+    ].filter((r) => !r.description || r.description === r.id)
+    if (dangling.length) problems.push(`물증 참조 ${dangling.length}개가 이름을 못 찾았다 (${dangling.slice(0, 3).map((x) => x.id).join(' · ')})`)
+  }
+
+  if (problems.length) for (const p of problems) fail(`${f}  ${p}`)
+  else {
+    console.log(`  ✅ ${name.padEnd(22)}_proof ${String(c._proof.length).padStart(2)}건`
+      + ` · 걸음 ${c._proof.reduce((n, p) => n + (p.steps?.length ?? 0), 0)}`
+      + ` · 인상 ${(e.illusions ?? []).length} · 사실 ${(e.facts ?? []).length}`
+      + ` · 거짓말 ${e.lie ? e.lie.slotLabel : '(없음)'}`)
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
  *  §2 배선 — 사건 데이터성 전역을 `applyCase` 가 갈아끼우나
  * ══════════════════════════════════════════════════════════════════════════
  *

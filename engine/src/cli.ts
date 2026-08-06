@@ -1,6 +1,7 @@
 import { loadCaseFile } from './load-case.js'
 import { verify } from './verifier.js'
 import { claimGrid, tellsTruth, trueLocationAt } from './deriver.js'
+import { emitDerived } from './emit-derived.js'
 import type { RunOptions } from './orchestrate.js'
 
 // tsx src/cli.ts [--case <경로>]                사건 하나 검증
@@ -65,7 +66,19 @@ if (genFlag >= 0) {
 
     if (!asYaml) {
       for (const p of batch.passed) {
-        writeFileSync(`${emitDir}/${p.case.id}.json`, JSON.stringify(p.case, null, 2), 'utf8')
+        /**
+         * ⛔ **`export-case` 와 같은 파생 필드를 붙인다** (2026-08-06).
+         *
+         * 전에는 `p.case` 를 날것으로 썼다 — 그래서 `--emit` 으로 뽑은 사건은
+         * `_proof`·`_epilogue` 가 없어 **해설 화면이 통째로 비었다.** 저작 방출
+         * (`export-case`)만 고치고 이쪽을 잊은 것이라 §one-value-two-places 다.
+         * `cand-check §3` 이 같은 날 잡았다.
+         */
+        writeFileSync(
+          `${emitDir}/${p.case.id}.json`,
+          JSON.stringify(emitDerived(p.case, p.result), null, 2),
+          'utf8',
+        )
       }
       console.log(`  ${batch.passed.length}건 방출 → ${emitDir}/<id>.json`)
       // 해시가 정본이다 — 쿼리도 아직 읽지만, 파일로 연 앱에서는 해시만 산다
