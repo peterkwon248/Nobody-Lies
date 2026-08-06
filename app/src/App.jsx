@@ -2011,10 +2011,17 @@ export default class App extends React.Component {
    * ★ `log`(조사 기록)가 여기 **맨 앞**에 있다 (감사 #1). 그전까지 `buildBottomNav`
    * 넷에도 이 시트에도 없었고 사이드바는 `isNarrow` 에서 숨으므로,
    * **좁은 폭에서 조사 기록으로 가는 길이 아예 없었다.**
+   *
+   * ⛔ **`investigate`(조사) 가 같은 자리에 또 있었다** (2026-08-06). 감사 #1 을
+   * 고칠 때 `log` 만 넣고 **그 옆 화면을 안 봤다.** 사이드바에도 없었으므로
+   * (`invCls`·`onInv` 는 뷰모델에 있는데 JSX 가 안 씀) **어느 폭에서도 조사 화면에
+   * 못 갔다.** 테스터 전찬웅 3차의 *"소지품 확인 수단도 0"* 이 여기서 왔다.
+   * ★ **같은 부류를 두 번 밟았다 — 한 번 열 때 그 절을 통째로 세는 이유다.**
    */
   MORE_ITEMS() {
     const t = this.T();
     return [
+      { v: 'investigate', label: t.navInvestigate, icon: 'invest' },
       { v: 'log', label: t.invLogTitle, icon: 'invest' },
       { v: 'overview', label: t.navOverview, icon: 'overview' },
       { v: 'memo', label: t.navMemo, icon: 'memo' },
