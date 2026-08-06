@@ -2015,7 +2015,18 @@ export default class App extends React.Component {
        * 산장은 `relKo` 가 언제나 있으므로 **한 글자도 안 바뀐다.**
        */
       const relV = ln === 'ko' ? p.relKo : p.relEn;
-      return { id: p.id, name: p.name, color: p.color, ini: p.ini, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: this.sexAgeOf(p), rel: relV ? ' · ' + relV : '', claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0, noClues: d.clues.length === 0,
+      return { id: p.id, name: p.name, color: p.color, ini: p.ini, avStyle: this.avStyle(p, 30), job: ln === 'ko' ? p.jobKo : p.jobEn, age: this.sexAgeOf(p), rel: relV ? ' · ' + relV : '', claim: p.claimKo, clues: d.clues.map(c => ({ text: c.text, action: c.action, isNew: c.isNew, onJump: () => this.goToLog(c.logKey) })), hasClues: d.clues.length > 0,
+      /**
+       * ⛳ **「단서 없음」은 조사 결과문도 없을 때만이다** (2026-08-06).
+       *
+       * `CLUE_MAP` 이 채우는 「발견된 단서」는 사건 넷 중 **산장에만** 데이터가 있다
+       * (전수 0/37 · 산장 9/20). 그래서 다른 사건은 조사를 해도 이 자리가 **영영
+       * 안 채워지고**, 화면은 *"아직 조사로 확보한 단서가 없습니다"* 라는 **빈 약속**을
+       * 계속 건다. 그 인물 대상 조사 결과문(`narr`)이 있으면 그것을 대신 그리므로
+       * 여기서 같이 뺀다 — **판정을 빌더에 두고 마크업은 이식 원형 그대로 둔다**
+       * (`port-check` 가 보는 것은 갈래 이름이다).
+       */
+      noClues: d.clues.length === 0 && !(narrBy[p.id] || []).length,
       narr: narrBy[p.id] || [], hasNarr: !!(narrBy[p.id] || []).length,
       memos: memos.map(m => ({ quote: m.quote, hasQuote: !!m.quote, content: m.content })), hasMemos: memos.length > 0, noMemos: memos.length === 0, memoCount: memos.length,
       onOpen: () => this.openProfileDetail(p.id), onAddMemo: () => this.addMemoForPerson(p.id),
@@ -2027,7 +2038,15 @@ export default class App extends React.Component {
         return { label: t[act.k], cost: a.cost, status: st, disabled: st !== 'ok', done: st === 'used',
           hint: st === 'used' ? t.invDone : st === 'nobudget' ? t.reasonBudget : (t.cost + ' ' + a.cost),
           onRun: st === 'ok' ? (() => this.askInvestigate(act.id, [p.id])) : (() => {}),
-          style: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
+          style: { display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' },
+          /**
+           * 목록 카드용 — 폭을 안 채우는 칩꼴. 상세의 `style` 과 **같은 상태 어휘**를
+           * 쓴다(완료는 초록 테두리 · 예산 부족은 흐림). 두 자리가 다른 색을 쓰면
+           * 같은 것이 다르게 보인다.
+           *
+           * ⛳ 터치 타깃 44 를 지킨다 — 감사 #2 로 `.iconbtn/.seg` 를 44로 올린 그 규칙.
+           */
+          cardStyle: { display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '44px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
       slots: sd.map(s => { const f = d.slots[s.k]; return { label: s.l, filled: !!f, empty: !f, text: f ? f.text : '', isNew: f ? f.isNew : false, onJump: f ? (() => this.goToLog(f.logKey)) : (() => {}) }; }) }; });
   }
   goToLog(logKey) { this.setState({ view: 'investigate', openProfile: null, hlLog: logKey || null }); if (logKey) { clearTimeout(this._hlT); this._hlT = setTimeout(() => { if (this.state.hlLog === logKey) this.setState({ hlLog: null }); }, 2200); } }
@@ -4617,10 +4636,27 @@ export default class App extends React.Component {
                         <span className="v-micro" style={S("color:var(--fg-4);margin-right:2px")}>{V.ui.verdictLabel}</span>
                         {arr(pf.verdictOpts).map((vo,$index)=>(<React.Fragment key={$index}><span onClick={vo.onPick} style={vo.chipStyle}><span style={vo.dot}></span>{vo.label}</span></React.Fragment>))}
                       </div>
+                      {/* 조사 진입구 — 목록 카드에서 바로 (2026-08-06 · 발견성 수리)
+                          전에는 카드를 눌러 **상세를 연 뒤에야** 나왔다. 테스터가
+                          *"소지품 확인 수단도 0"* 이라고 보고했는데 수단은 있었고
+                          2단계 깊이에 숨어 있었다. `표기 안내` 는 이미
+                          *"카드에서 소지품 검사·통화내역 실행"* 이라고 약속하고 있었다 —
+                          **문서가 옳았고 화면이 그것을 안 지켰다.** */}
+                      <div onClick={pf.stopProp} style={S("display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px")}>
+                        {arr(pf.invActions).map((ia,$index)=>(<React.Fragment key={$index}><button onClick={ia.onRun} style={ia.cardStyle}><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg><span>{ia.label}</span><span style={S("color:var(--fg-4);font-size:11px")}>{ia.hint}</span></button></React.Fragment>))}
+                      </div>
                       <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px")}>{V.ui.pClaim}</div>
                       <div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;margin-bottom:16px")}>{pf.claim}</div>
                       <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pClues}</div>
                       {(pf.hasClues)?(<><div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:16px")}>{arr(pf.clues).map((cl,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;align-items:flex-start;gap:8px")}><span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:8px;flex:none")}></span><div style={S("min-width:0")}><span className="v-meta" style={S("color:var(--fg-2)")}>{cl.text}</span>{(cl.isNew)?(<><span style={S("font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:0 4px;margin-left:4px")}>{V.ui.pNew}</span></>):null}<div className="v-micro" style={S("color:var(--fg-4);margin-top:1px")}>{cl.action}</div></div></div></React.Fragment>))}</div></>):null}
+                      {/* 조사 결과문을 여기로 끌어온다 (2026-08-06 · §1 표 13행 임시안)
+                          `CLUE_MAP` 이 채우는 「발견된 단서」는 **사건 넷 중 산장만**
+                          데이터가 있다(전수 0/37 · 산장 9/20). 그래서 나머지에서는
+                          조사를 해도 이 자리가 **영영 안 채워진다** — 빈 약속이다.
+                          `narr`(그 인물 대상 소지품·통화 결과문)은 이미 계산돼 있으니
+                          그것을 물린다. **있는 데이터가 빈 약속보다 낫다.**
+                          clues 저작이 끝나면 이 갈래는 걷어낸다. */}
+                      {(pf.hasNarr)?(<><div style={S("display:flex;flex-direction:column;gap:10px;margin-bottom:16px")}>{arr(pf.narr).map((nr,$index)=>(<React.Fragment key={$index}><div style={S(`border-left:2px solid ${nr.barColor};padding-left:10px`)}><div className="v-meta" style={S("color:var(--fg);font-weight:600")}>{nr.title}<span style={S("color:var(--fg-4);font-weight:400;font-size:11px;margin-left:6px")}>{nr.actionLabel}</span></div><div className="v-meta" style={S("color:var(--fg-2);line-height:1.55;margin-top:2px")}>{nr.desc}</div></div></React.Fragment>))}</div></>):null}
                       {(pf.noClues)?(<><div className="v-meta" style={S("color:var(--fg-4);margin-bottom:16px;line-height:1.5")}>{V.ui.pNoClues}</div></>):null}
                       {(pf.hasMemos)?(<><div style={S("border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px")}><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.ui.pMemos}</div><div style={S("display:flex;flex-direction:column;gap:8px")}>{arr(pf.memos).map((mo,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--accent);padding-left:8px")}>{(mo.hasQuote)?(<><div className="v-meta" style={S("color:var(--fg-3);font-style:italic;line-height:1.5")}>“{mo.quote}”</div></>):null}<div className="v-meta" style={S("color:var(--fg-2);margin-top:2px;line-height:1.5")}>{mo.content}</div></div></React.Fragment>))}</div></div></>):null}
                       <div style={S("display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px")}>
