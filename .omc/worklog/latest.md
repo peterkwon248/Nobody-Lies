@@ -1,5 +1,5 @@
 ---
-session_date: "2026-08-06"
+session_date: "2026-08-06 심야 ~ 2026-08-07"
 project: "노바디 라이즈 (Nobody Lies)"
 working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
 machine: "KWONKYUNGHUN"
@@ -114,7 +114,7 @@ df4a13e  연습실 닫힘 — 폴백 0
 ```
 docs/MEMORY.md          §서사 심화 주간 신설
 docs/NEXT-ACTION.md     머리말 갱신 + §다음 즉시 액션 교체(1막 초안 → 진술 틀 풀)
-docs/SESSION-LOG.md     2026-08-06 심야 절 추가
+docs/SESSION-LOG.md     2026-08-06 심야 ~ 08-07 절 추가
 .omc/worklog/latest.md  덮어쓰기 (이 파일)
 ```
 
