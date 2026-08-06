@@ -35,6 +35,7 @@
     "censor-check": "npm run censor-check -w engine",
     "solve-check": "npm run solve-check -w engine -- 40",
     "censor": "npm run censor -w engine --",
+    "candidates": "npm run candidates -w engine --",
     "space-audit": "npm run space-audit -w engine",
     "design-audit": "node scripts/design-audit.mjs",
     "token-audit": "node scripts/token-audit.mjs",
