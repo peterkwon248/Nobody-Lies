@@ -76,7 +76,21 @@ const files = fs.existsSync(CASE_DIR)
   ? fs.readdirSync(CASE_DIR).filter((f) => f.endsWith('.json') && f !== 'index.json').sort()
   : []
 
-if (!files.length) fail(`사건 파일이 없다 (${CASE_DIR}) — 검사가 vacuous 하다`)
+/**
+ * ⛔ **없으면 운다 — 이 세 줄이 배포를 한 번 죽였고 그게 옳았다** (2026-08-06)
+ *
+ * `app/public/cases/` 는 `.gitignore` 에 있고 `npm run case`(export-case)가 만든다.
+ * **로컬에는 늘 있고 깨끗한 클론에는 없다** — Vercel 첫 빌드에서 0건이 됐다.
+ * 게이트 순서를 고쳐(`npm run case && npm run cand-check`) 전제를 명시했다.
+ *
+ * ★ **이 가드가 없었으면 배포가 초록으로 지나갔다** — 검사가 0건을 재고 「통과」를
+ * 인쇄했을 것이다. 이 저장소가 가장 비싸게 데인 부류(§초록인데 아무것도 안 문다)라
+ * **셀 것이 없으면 통과가 아니라 실패다.**
+ */
+if (!files.length) {
+  fail(`사건 파일이 없다 (${CASE_DIR}) — 검사가 vacuous 하다`
+    + '\n       → `npm run case` 로 먼저 내보낸다 (이 디렉터리는 gitignore 산출물이다)')
+}
 
 let closedTotal = 0
 let missTotal = 0
