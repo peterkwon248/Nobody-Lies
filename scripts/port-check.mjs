@@ -131,6 +131,12 @@ const APP_ONLY = new Set([
   'result.epi.hasFacts', 'result.epi.facts', 'f.hasFrom',
   'result.epi.hasChains', 'result.epi.chains', 'ch.steps', 'st.hasElim',
 
+  // 물증 기록 (2026-08-06) — 엔진 `evidence[].record` 가 16/16 채워져 있는데
+  // 앱은 `yieldsTerms` **하나만** 읽고 있었다. 프로토타입에 그릴 자리가 없다.
+  // ⛳ 조사 결과문(`e.desc`)과 **다른 글**이다 — 결과문은 발견 순간, 기록은 카드에
+  //    남는 한 줄. 07-31에 「일부러 쓴 짝」으로 남긴 그 둘이다
+  'e.hasRecords', 'e.records',
+
   // 홈 목록에서 만든 사건을 지운다 (2026-07-29) — 캠페인 생성기가 생기기 전에는
   // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
   // `confirmDel` 은 그 행이 「지울까?」를 묻는 동안의 갈래다

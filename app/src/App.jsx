@@ -360,6 +360,11 @@ export default class App extends React.Component {
   PROOF = [];
   EPILOGUE = null;
   /**
+   * 물증 id → **기록 산문**. `applyCase` 가 엔진 `evidence[].record` 에서 만든다.
+   * 조사 결과문과 다른 글이다 — 결과문은 발견 순간, 기록은 카드에 남는 한 줄.
+   */
+  EVIDENCE_RECORD = {};
+  /**
    * 확보 단어 풀. **`applyCase` 가 엔진 `terms` 순서로 다시 만든다** — 이 값은
    * 사건 데이터가 없을 때의 기본값이다.
    *
@@ -1142,6 +1147,20 @@ export default class App extends React.Component {
     if (c.actions?.length && c.evidence?.length) {
       const yields = {}
       for (const e of c.evidence) if (e.yieldsTerms?.length) yields[e.id] = e.yieldsTerms
+
+      /**
+       * ⛔ **물증 기록(`record`)이 파기되고 있었다** (2026-08-06 · §1 표 5행).
+       *
+       * 앱은 `c.evidence` 에서 `yieldsTerms` **하나만** 읽었다. 사건 넷 전부
+       * `record` 가 16/16 채워져 있는데(저작 산문이다) **화면에 그릴 자리가 없었다.**
+       * 테스터: *"결정적 단서·논리적 연결고리 부족"* — 부족한 게 아니라 안 보였다.
+       *
+       * 조사 결과문(`result.body`)과 **다른 글이다** — 결과문은 발견 순간의 서술이고
+       * 기록은 카드에 남는 짧은 문장이다(§07-31 「일부러 쓴 짝」). 둘 다 낸다.
+       */
+      const rec = {}
+      for (const e of c.evidence) if (e.record) rec[e.id] = ko(e.record)
+      if (Object.keys(rec).length) this.EVIDENCE_RECORD = rec
       const inPool = new Set(this.COLLECTED_POOL)
       const seeds = new Set(this.SEED_TERMS || [])
       const map = {}
@@ -2547,7 +2566,16 @@ export default class App extends React.Component {
     else if (mode !== 'none' && s.targets.length !== need) reason = mode === 'place' ? t.invPickPlace : mode === 'pair' ? t.invPickPair : t.invPickPerson;
     else { const key = this.targetKey(s.action, s.targets); if ((this.state.invLog || []).some(e => e.action === s.action && e.key === key)) reason = t.reasonUsed; else if (a.cost > remaining) reason = t.reasonBudget; else can = true; }
     const tm = { solution: { lab: t.resSolution, c: 'var(--g-confirm)' }, redherring: { lab: t.resRed, c: 'var(--status-progress)' }, exclusion: { lab: t.resExcl, c: 'var(--accent)' }, empty: { lab: t.resEmpty, c: 'var(--fg-4)' }, sealed: { lab: t.sealRecord, c: 'var(--g-lock-mark)' } };
-    const log = (this.state.invLog || []).slice().reverse().map(e => { const terms = this.TERM_MAP[e.action + ':' + e.key] || []; const hasTerm = terms.length > 0; return ({ title: e.title, desc: e.desc, actionLabel: e.actionLabel, targetLabel: e.targetLabel, hasTarget: !!e.targetLabel, hasTerm: hasTerm, onOpen: hasTerm ? (() => this.openTerm(terms[0])) : (() => {}), typeLabel: tm[e.type].lab, isEmpty: e.type === 'empty', emptyTag: t.resEmptyTag,
+    const log = (this.state.invLog || []).slice().reverse().map(e => { const terms = this.TERM_MAP[e.action + ':' + e.key] || []; const hasTerm = terms.length > 0;
+      /**
+       * 이 조사가 준 **물증 기록**을 같이 낸다 (2026-08-06 · §1 표 5행 파기 중단).
+       * `CASE_ACTIONS` 가 이미 엔진 조사 전체를 들고 있으므로 `gives` 를 따라가면
+       * 된다 — **새 상태를 안 만든다**(`invLog` 에서 도출).
+       */
+      const gives = (this.CASE_ACTIONS?.[e.action + ':' + e.key]?.gives) || [];
+      const records = gives.map(id => this.EVIDENCE_RECORD[id]).filter(Boolean);
+      return ({ title: e.title, desc: e.desc, actionLabel: e.actionLabel, targetLabel: e.targetLabel, hasTarget: !!e.targetLabel, hasTerm: hasTerm, onOpen: hasTerm ? (() => this.openTerm(terms[0])) : (() => {}), typeLabel: tm[e.type].lab, isEmpty: e.type === 'empty', emptyTag: t.resEmptyTag,
+      records: records.map(r => ({ text: r })), hasRecords: records.length > 0, recordsLabel: this.state.lang === 'ko' ? '물증 기록' : 'Evidence record',
       badgeStyle: e.type === 'empty' ? { fontSize: '10px', fontWeight: 700, color: 'var(--fg-3)', background: 'var(--bg-elevated-2)', borderRadius: 'var(--r-pill)', padding: '2px 8px' } : { fontSize: '10px', fontWeight: 700, color: '#0A0A0B', background: tm[e.type].c, borderRadius: 'var(--r-pill)', padding: '2px 8px' },
       barStyle: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: tm[e.type].c, borderRadius: 'var(--r-md) 0 0 var(--r-md)' },
       cardStyle: { position: 'relative', border: '1px solid ' + (this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent)' : 'var(--border)'), borderRadius: 'var(--r-md)', padding: '12px 16px 12px 16px', marginBottom: '8px', background: this.state.hlLog === (e.action + ':' + e.key) ? 'var(--accent-soft)' : 'transparent', cursor: hasTerm ? 'pointer' : 'default', transition: 'background .2s, border-color .2s' } }); });
@@ -3937,6 +3965,8 @@ export default class App extends React.Component {
         mapCls: navCls('map'), mapSeg: segCls(isMap), onMap: () => this.setView('map'),
         graphCls: navCls('graph'), graphSeg: segCls(isGraph), onGraph: () => this.setView('graph'),
         logCls: navCls('log'), logSeg: segCls(isLog), onLog: () => this.setView('log'), logBadge: (s.invLog || []).length ? ('' + (s.invLog || []).length) : '',
+        /** 남은 조사 횟수를 배지로 — 「여기서 무엇을 할 수 있나」가 항목 이름만으로는 안 보인다 */
+        invBadge: '' + Math.max(0, this.BUDGET - this.invSpent()),
         narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length, invBadge: '' + (this.BUDGET - this.invSpent()),
       },
       bottomNav: this.buildBottomNav(view),
@@ -4212,6 +4242,17 @@ export default class App extends React.Component {
                   <span>{V.ui.navGraph}</span>
                 </div>
                 <div className="nav-caption" style={S("margin-top:8px")}>{V.ui.navTool}</div>
+                {/* ⛔ 「조사」가 네비에 없었다 (2026-08-06 · 발견성 수리)
+                    `invCls`·`onInv` 는 **뷰모델에 진작 계산돼 있었는데**(`:3959`·`:3961`)
+                    JSX 어디서도 안 쓰였다. 그래서 조사 화면은 단서 점프(`goToLog`)로만
+                    닿을 수 있었고, 조사는 프로필·평면도·관계도의 **인라인 진입구**로만
+                    돌았다. 테스터가 *"소지품 확인 수단도 0"* 이라 보고한 뿌리 중 하나다.
+                    ★ 「도구」 캡션은 있는데 그 아래 첫 항목이 없던 셈이다 —
+                      **배선만 없던 것**의 또 한 판본. */}
+                <div className={V.nav.invCls} {...press(V.nav.onInv, V.nav.invCls, V.ui.navInvestigate)}>
+                  <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M8 2v12M2 8h12" /></svg>
+                  <span>{V.ui.navInvestigate}</span><span className="count">{V.nav.invBadge}</span>
+                </div>
                 <div className={V.nav.logCls} {...press(V.nav.onLog, V.nav.logCls, V.ui.invLogTitle)}>
                   <svg className="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7" r="4" /><path d="M10 10l3.5 3.5" /></svg>
                   <span>{V.ui.invLogTitle}</span><span className="count">{V.nav.logBadge}</span>
@@ -4650,6 +4691,13 @@ export default class App extends React.Component {
                       <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:8px")}><span style={e.badgeStyle}>{e.typeLabel}</span>{(e.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4)")}>{e.emptyTag}</span></>):null}<span style={S("flex:1")}></span>{(e.hasTerm)?(<><span className="v-micro" style={S("color:var(--fg-4);display:inline-flex;align-items:center;gap:4px")}><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M6 4l4 4-4 4"></path></svg>{V.ui.termFound}</span></>):null}<span className="v-micro" style={S("color:var(--fg-4)")}>{e.actionLabel}{(e.hasTarget)?(<> · {e.targetLabel}</>):null}</span></div>
                       <div className="v-title" style={S("color:var(--fg);margin-bottom:4px")}>{e.title}</div>
                       <div style={S("font-size:14px;line-height:1.8;color:var(--fg-2);text-wrap:pretty")}>{e.desc}</div>
+                      {/* 물증 기록 — 조사 결과문과 **다른 글**이다 (2026-08-06 · 파기 중단).
+                          결과문은 발견 순간의 서술이고 기록은 카드에 남는 짧은 문장이다.
+                          엔진에 16/16 채워져 있었는데 앱이 읽는 자리가 없었다. */}
+                      {(e.hasRecords)?(<><div style={S("margin-top:10px;padding-left:10px;border-left:2px solid var(--border-strong)")}>
+                        <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px")}>{e.recordsLabel}</div>
+                        {arr(e.records).map((rc,$index)=>(<React.Fragment key={$index}><div className="v-meta" style={S("color:var(--fg-2);line-height:1.6")}>{rc.text}</div></React.Fragment>))}
+                      </div></>):null}
                     </div></React.Fragment>))}
                   </div>
                 </div>
