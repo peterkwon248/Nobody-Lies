@@ -657,6 +657,16 @@ facts:
     content: 분배금 다툼 + 폭로 임박
     # 5장 '동기' 의 답. content 안에 **부분 문자열로 묻혀** 있어 파싱으로는 못 꺼낸다
     value: 폭로 임박
+    # ★ 인과 세 칸 — 1막 동기 비트가 읽는다 (2026-08-06 · types.ts §Fact.story)
+    # ⛳ **이 사건의 저작물에서만 뽑았다.** 세 칸 다 출처가 이 파일 안에 있다:
+    #   background ← content '분배금 다툼'
+    #   trigger    ← 5장 epilogue '다인이 모든 것을 털어놓으려 하자'
+    #   resolve    ← 5장 report '그는 조직이 드러나는 것을 막으려는'
+    # ⚠ 문안은 잠정이다 (화면이 그렇게 표기한다)
+    story:
+      background: 분배금을 두고 셈이 어긋난 지 오래였다
+      trigger: 그날, 다인이 모든 것을 털어놓으려 한다는 걸 알았다
+      resolve: 조직이 드러나기 전에 막는 길은 하나뿐이라고 여겼다
     revealed_by: []
     requires: [f_sakura_is_alias]
 

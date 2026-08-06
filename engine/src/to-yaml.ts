@@ -168,6 +168,8 @@ export function caseToRaw(c: Case): Raw {
       id: f.id, kind: f.kind, subject: f.subject, content: f.content,
       // 「이 사실의 값」— `asks: factValue` 가 읽는다. types.ts §Fact.value 참조
       value: f.value,
+      // 인과 세 칸 — 1막 동기 비트. 왕복에서 빠지면 저작물이 조용히 증발한다
+      story: f.story,
       revealed_by: f.revealedBy, requires: f.requires, available_after: f.availableAfter,
     })),
 

@@ -320,6 +320,30 @@ export type Fact = {
    * `Blank.asks`·`Evidence.pointsAt` 과 같은 부류다(`MANIFESTO §정보 이중화 원칙`).
    */
   value?: string
+  /**
+   * ★ 인과 세 칸 — **동기가 「명사구 하나」로 끝나던 것을 편다** ★ (2026-08-06 신설)
+   *
+   * 발단: 테스터 5차 *"여전히 딱딱한 진실 나열"*. 진단은 **틀이 아니라 재료**였다 —
+   * 1막 문장틀을 아무리 비트로 짜도 동기가 `content: '퍼진 소문'` 한 줄이면
+   * **채울 인과가 없다**(`docs/ACT1-MEASUREMENT.md` §3 · 10건 전부 명사구였다).
+   *
+   * ```
+   * background  무엇이 쌓였나      trigger  그날 무엇이 터졌나
+   * resolve     왜 그 방법이었나
+   * ```
+   *
+   * ⛳ **`content` 를 대체하지 않는다.** `content`(= 짧은 명사구)는 「동기」 공란의
+   * **정답이자 확보 단어**다(`generate.ts` 의 공란·terms). 문장으로 바꾸면 드롭다운과
+   * 단어 은행이 깨진다 — 그래서 **옆에 붙인다.**
+   *
+   * ⛳ **표현이지 사실이 아니다**(`MANIFESTO.md` §가름 축). 「무엇과 대조하면 틀렸다고
+   * 말할 수 있나」에 대답이 없다 — 취향이다. 그래서 코드는 **자리만** 만들고 문안은
+   * 저작(팔레트 · 사건 파일)에서 온다. 비면 1막이 짧은 폴백 한 줄로 돌아간다.
+   *
+   * ⚠ 오늘은 `kind: 'motive'` 사실만 쓴다. 다른 kind 에 다는 것을 막지는 않지만
+   * **읽는 쪽이 없다** — 쓰기 전에 읽는 자리를 먼저 만든다.
+   */
+  story?: { background: string; trigger: string; resolve: string }
   /** 비어 있으면 진술에서 무료 획득 */
   revealedBy: EvidenceId[]
   requires?: FactId[]

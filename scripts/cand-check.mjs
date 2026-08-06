@@ -151,6 +151,13 @@ console.log(`  ── 합계: 정답 누락 ${missTotal} / 닫힌 공란 ${close
  */
 console.log('\n§3 관측 표면 — 파생 채널이 실려 나가나')
 
+/**
+ * 1막 동기 비트가 **폴백 한 줄**로 나가는 사건. 결함이 아니라 **저작 큐**다 —
+ * 세 칸이 아직 안 쓰인 사건이라는 뜻이라 실패시키지 않고 **센다.**
+ * ⛳ 세지 않으면 「전부 인과로 나간다」와 구별이 안 된다.
+ */
+const act1Fallback = []
+
 for (const f of files) {
   const c = JSON.parse(fs.readFileSync(path.join(CASE_DIR, f), 'utf8'))
   const name = f.replace('.json', '')
@@ -193,13 +200,32 @@ for (const f of files) {
       if (holes.length) problems.push(`act1 문장 ${holes.length}개에 치환 안 된 자리가 남았다 (${holes[0].ko.slice(0, 40)})`)
       /**
        * 현장이 재구성에서 통째로 빠지면 「어디서 일어났나」를 안 말하는 해설이 된다.
-       * ⛳ **두 갈래를 다 받는다** — 범인이 발견 장소에 간 사건은 `atScene`,
-       * 안 간 사건(`body_moved` — 시신을 옮겼다)은 `moved`. 첫 판에서 `atScene`
-       * 만 물었다가 `gen-4` 를 거짓 실패로 잡았다. **검사가 사건 종류를 몰랐다.**
+       * ⛳ **두 갈래를 다 받는다** — 범인이 발견 장소에 간 사건은 `scene`,
+       * 안 간 사건(`body_moved` — 시신을 옮겼다)은 `sceneMoved`. 첫 판에서 한쪽만
+       * 물었다가 `gen-4` 를 거짓 실패로 잡았다. **검사가 사건 종류를 몰랐다.**
+       * (2026-08-06 비트 틀 교체로 이름이 `atScene`·`moved` 에서 바뀌었다)
        */
-      if (!a1.lines.some((l) => l.kind === 'atScene' || l.kind === 'moved')) {
-        problems.push('act1 에 현장 줄이 없다 (atScene · moved 둘 다 없음)')
+      if (!a1.lines.some((l) => l.kind === 'scene' || l.kind === 'sceneMoved')) {
+        problems.push('act1 에 현장 줄이 없다 (scene · sceneMoved 둘 다 없음)')
       }
+      /**
+       * ★ **범행 문장은 한 번뿐이어야 한다** ★ (2026-08-06 신설 · 실패 사례가 있다)
+       *
+       * 옛 틀은 범인이 현장에 머무는 **칸마다** 「사건은 여기서 일어났다」를 붙였고,
+       * 산장이 두 칸 머물러서 **두 번** 말했다(`ACT1-MEASUREMENT.md` §1). 범행 시각은
+       * 거짓말이 난 칸 하나다. 새 틀은 비트4 안에서 한 번만 내는데, **그 성질을
+       * 검사가 물지 않으면 다음 개편에서 조용히 돌아온다.**
+       */
+      const murders = a1.lines.filter((l) => l.kind === 'murder' || l.kind === 'murderMoved').length
+      if (murders > 1) problems.push(`act1 범행 문장이 ${murders}번 — lie.slot 한 칸이어야 한다`)
+      /**
+       * 동기 비트가 통째로 빠지면 코다가 없다. 세 칸이 있든(`motive`) 없든
+       * (`motiveShort`) **둘 중 하나는 나가야 한다** — `f_motive` 는 14/14 다.
+       */
+      if (!a1.lines.some((l) => l.kind === 'motive' || l.kind === 'motiveShort')) {
+        problems.push('act1 에 동기 줄이 없다 (motive · motiveShort 둘 다 없음)')
+      }
+      if (a1.lines.some((l) => l.kind === 'motiveShort')) act1Fallback.push(name)
     }
   }
 
@@ -228,6 +254,9 @@ for (const f of files) {
       + ` · 거짓말 ${e.lie ? e.lie.slotLabel : '(없음)'}`)
   }
 }
+
+console.log(`  ── 1막 동기: 인과 ${files.length - act1Fallback.length}건 · 폴백 ${act1Fallback.length}건`
+  + (act1Fallback.length ? `  (${act1Fallback.join(' · ')} — 세 칸 미저작)` : ''))
 
 /* ══════════════════════════════════════════════════════════════════════════
  *  §2 배선 — 사건 데이터성 전역을 `applyCase` 가 갈아끼우나

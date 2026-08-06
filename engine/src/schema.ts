@@ -354,11 +354,26 @@ export function parseCase(raw: unknown, source: string): Case {
       p.add(`${at}.subject`, `인물 '${f.subject}' 가 people 에 없다`)
     for (const e of arr(f?.revealed_by))
       if (!evidenceIds.has(e)) p.add(`${at}.revealed_by`, `물증 '${e}' 가 없다`)
+    /**
+     * 인과 세 칸 (types.ts §Fact.story). **반쪽을 막는다** — 하나라도 비면 1막
+     * 동기 비트가 `'. . . 기록에 적힌 동기는…'` 으로 나간다. 빈 문자열은 문장을
+     * 안 지우고 **마침표만 남긴다**. 아예 없는 것은 정상이다(폴백 한 줄로 간다).
+     */
+    if (f?.story) {
+      const miss = ['background', 'trigger', 'resolve'].filter((k) => !String(f.story[k] ?? '').trim())
+      if (miss.length) p.add(`${at}.story`, `세 칸 중 ${miss.join('·')} 가 비었다 — 반쪽이면 1막이 마침표만 남는다`)
+    }
     return {
       id: f?.id, kind: f?.kind, subject: f?.subject, content: f?.content,
       // 「이 사실의 값」 — `asks: factValue` 의 답 채널 (types.ts §Fact.value).
       // 답의 사본이 아니라 저작물의 속성이다. 없으면 factValue 가 null 을 낸다
       ...(f?.value !== undefined ? { value: String(f.value) } : {}),
+      // 인과 세 칸 — 1막 동기 비트가 읽는다. types.ts §Fact.story 참조
+      ...(f?.story ? { story: {
+        background: String(f.story.background ?? ''),
+        trigger: String(f.story.trigger ?? ''),
+        resolve: String(f.story.resolve ?? ''),
+      } } : {}),
       revealedBy: arr(f?.revealed_by),
       ...(f?.requires ? { requires: f.requires } : {}),
       ...(f?.available_after !== undefined ? { availableAfter: f.available_after } : {}),

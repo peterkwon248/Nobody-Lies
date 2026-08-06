@@ -132,13 +132,47 @@ export type PlaceSpec = {
   fixture?: string
 }
 
+/**
+ * 동기 — **짧은 이름표 + 인과 세 칸** (2026-08-06).
+ *
+ * ⛔ **`label` 을 문장으로 쓰면 안 된다.** 이것은 「동기」 공란의 **정답**이자
+ * **확보 단어**다(아래 `blanks` · `terms`). 문장이 되면 드롭다운과 단어 은행이
+ * 깨진다. 인과는 옆의 세 칸이 맡는다 — `types.ts §Fact.story` 로 실려 나간다.
+ *
+ * ★ **맨 문자열도 계속 받는다** — `rooms`·`places` 와 같은 규약이다. 옛 팔레트가
+ * 그대로 돌고, 세 칸이 없으면 1막 동기 비트가 **짧은 폴백 한 줄**로 간다.
+ */
+export type MotiveSpec = {
+  /** 공란 답 · 확보 단어. 「채무 관계」 정도의 짧은 명사구 */
+  label: string
+  /** 무엇이 쌓였나 */
+  background: string
+  /** 그날 무엇이 터졌나 */
+  trigger: string
+  /** 왜 그 방법이었나 */
+  resolve: string
+}
+
+/** 맨 문자열 팔레트를 같은 꼴로 올린다. 세 칸은 빈 채로 둔다 */
+const asMotive = (m: string | MotiveSpec): MotiveSpec =>
+  typeof m === 'string' ? { label: m, background: '', trigger: '', resolve: '' } : m
+
+/**
+ * 세 칸이 **다 찼을 때만** 사실에 붙인다.
+ * 반쪽이면 1막이 마침표만 남은 문장을 낸다 — `schema.ts` 가 저작 쪽에서 같은 것을 문다.
+ */
+const storyOf = (m: MotiveSpec) =>
+  m.background?.trim() && m.trigger?.trim() && m.resolve?.trim()
+    ? { background: m.background.trim(), trigger: m.trigger.trim(), resolve: m.resolve.trim() }
+    : undefined
+
 export type Palette = {
   /** 무대 이름. 제목에 쓰인다 */
   setting?: string
   names?: string[]
   jobs?: string[]
   items?: string[]
-  motives?: string[]
+  motives?: (string | MotiveSpec)[]
   /**
    * 장소 이름표. 구조(모이는 곳·현장·진입로·부지 밖)는 고정이고 이름만 바뀐다.
    *
@@ -250,7 +284,33 @@ const DEFAULT_PALETTE: Required<Omit<Palette, 'setting'>> & { setting: string } 
   names: ['서지안', '한유빈', '오나경', '백리원', '문세라', '윤다인', '임하늘', '남주원'],
   jobs: ['사진가', '번역가', '조리사', '학예사', '정비사', '약사'],
   items: ['만년필', '손목시계', '열쇠고리', '스카프', '라이터', '수첩'],
-  motives: ['채무 관계', '자리 다툼', '오래된 약속', '지분 다툼'],
+  /**
+   * ★ 세 칸이 붙었다 (2026-08-06 · 경훈 초안) ★ 전에는 이름표 네 개뿐이라
+   * 1막이 *"이유는 퍼진 소문이었다."* 한 줄로 끝났다 —
+   * **서사의 인과 밀도는 데이터의 인과 밀도에 묶인다**(`ACT1-MEASUREMENT.md` §3).
+   *
+   * ⛳ `resolve` 넷의 **문형을 일부러 다 다르게** 했다. 같은 꼴로 넷을 쓰면
+   * 생성 사건을 여러 개 돌린 사람에게 합창으로 들린다 — 진술 말투에서 이미
+   * 한 번 데인 자리다(`PALETTE-BRIEF` §gestures 의 「같은 온도」와 반대 방향).
+   */
+  motives: [
+    { label: '채무 관계',
+      background: '갚으라는 말과 갚겠다는 말이 몇 해를 오갔다',
+      trigger: '그날, 더는 미루지 못한다는 통보가 왔다',
+      resolve: '빚은 갚거나, 받을 사람이 없어지거나 — 둘 중 하나라고 생각했다' },
+    { label: '자리 다툼',
+      background: '한 자리를 두고 두 사람의 이름이 오르내렸다',
+      trigger: '그날, 결정이 상대 쪽으로 기울었다는 말이 돌았다',
+      resolve: '결정이 나기 전에 후보를 하나로 만들기로 했다' },
+    { label: '오래된 약속',
+      background: '오래전의 약속 하나가 두 사람 사이에만 남아 있었다',
+      trigger: '그날, 그 약속을 없던 일로 하자는 말이 나왔다',
+      resolve: '약속은 지키는 것보다 묻는 쪽이 쉬웠다' },
+    { label: '지분 다툼',
+      background: '나눠야 할 몫을 두고 셈이 몇 번이고 어긋났다',
+      trigger: '그날, 제 몫을 줄이는 서류가 만들어지고 있다는 걸 알았다',
+      resolve: '서류가 완성되기 전의 밤을 골랐다' },
+  ],
   /**
    * ⚠ **설비 이름이 여기에도 있어야 한다** (2026-07-29 밤).
    *
@@ -798,7 +858,13 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
   const innocents = ids.filter((x) => x !== culprit)
 
   const tool = pick(nonEmpty(P.items, DEFAULT_PALETTE.items))
-  const motive = pick(nonEmpty(P.motives, DEFAULT_PALETTE.motives))
+  /**
+   * 동기. **이름표와 인과를 갈라 쥔다** — `motive`(문자열)는 공란 답·확보 단어·
+   * 물증 기록이 쓰던 그대로고, 세 칸은 `f_motive.story` 로만 간다.
+   * 옛 팔레트(맨 문자열)면 세 칸이 없고 1막이 폴백 한 줄로 간다.
+   */
+  const motiveSpec = asMotive(pick(nonEmpty(P.motives, DEFAULT_PALETTE.motives)))
+  const motive = motiveSpec.label
   const alias = names[SUSPECTS]
 
   /**
@@ -2059,7 +2125,7 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
     annexBox, approachBox, awayBox, chapters,
     claimLoc, claimPerson, culprit, deathCells,
     ids, innocentPresence, innocents, jobs,
-    locIds, motive, names, onSite,
+    locIds, motive, motiveSpec, names, onSite,
     person, pick, placeFixture, placeLabel,
     places, r, rooms, secretObject,
     secretOf, seed, slotLabel, strands,
@@ -2081,7 +2147,7 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
     annexBox, approachBox, awayBox, chapters,
     claimLoc, claimPerson, culprit, deathCells,
     ids, innocentPresence, innocents, jobs,
-    locIds, motive, names, onSite,
+    locIds, motive, motiveSpec, names, onSite,
     person, pick, placeFixture, placeLabel,
     places, r, rooms, secretObject,
     secretOf, seed, slotLabel, strands,
@@ -2875,7 +2941,11 @@ export function buildGameLayer(w: ReturnType<typeof buildWorld>): Case {
       //   가 이미 답을 가른다. 여기서 하는 일은 **파기 중단**뿐이다.
       { id: 'f_identity', kind: 'identity', subject: culprit, content: `${alias} = 범인`, value: alias, revealedBy: ['e_alias', 'e_alias2'] },
       { id: 'f_means', kind: 'means', subject: culprit, content: '도구를 다룰 수 있었다', revealedBy: ['e_tool', 'e_toolmark'] },
-      { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, value: motive, revealedBy: ['e_motive'], requires: ['f_identity'] },
+      // ★ `story` 는 인과 세 칸이고 1막 동기 비트가 읽는다 ★ `content`·`value` 는
+      // 이름표 그대로다 — 공란 답·확보 단어라 문장으로 바꾸면 은행이 깨진다
+      { id: 'f_motive', kind: 'motive', subject: culprit, content: motive, value: motive,
+        ...(storyOf(motiveSpec) ? { story: storyOf(motiveSpec) } : {}),
+        revealedBy: ['e_motive'], requires: ['f_identity'] },
       // 레드 헤링 — **다섯 전원**의 비밀. 수상해 보이지만 사건과 무관하다.
       // `context` 라 유죄 계산에 안 낀다 — 범인이 하나 더 갖는다고 논리는 안 바뀐다.
       // ⚠ 위 §HERRING 과 **같은 순서(`ids`)여야** `e_herring{i}` 짝이 맞는다
