@@ -343,6 +343,14 @@ export default class App extends React.Component {
     ] },
   ];
 
+  /**
+   * 닫힌 공란(`candidates: closed`)의 후보. **`applyCase` 가 사건에서 다시 만든다** —
+   * 이 값은 사건 데이터가 없을 때의 기본값이고 **산장 사건의 것**이다.
+   *
+   * ⛔ **2026-07-26 ~ 2026-08-06 동안 이 자리가 안 갈아끼워졌다.** 산장 아닌 사건을
+   * 열면 인물·장소·시각 후보가 전부 산장이라 **정답이 목록에 없었다**(71/99).
+   * 고친 자리는 `applyCase` 맨 끝, 무는 검사는 `npm run cand-check`.
+   */
   CAND = { person: ['서지안', '한유빈', '문세라', '오나경', '백리원', '윤다인'], place: ['본채', '다인의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
   /**
    * 확보 단어 풀. **`applyCase` 가 엔진 `terms` 순서로 다시 만든다** — 이 값은
@@ -402,6 +410,13 @@ export default class App extends React.Component {
    * 기본값이다. 2026-07-27 이관 당시 도출값이 이것과 **정확히 같음을 실측했다.**
    */
   TERM_MAP = { 'autopsy:body': ['일산화탄소 중독'], 'search:annex': ['별채 대포폰', '김선생', '폭로 임박'], 'belongings:sakura': ['유서'], 'belongings:wonyoung': ['김선생', '마약', '폭로 임박'], 'belongings:yuri': ['마약', '치정'] };
+  /**
+   * 조사 「수색」의 대상 칩. **`applyCase` 가 `LOCATIONS` 에서 다시 만든다** —
+   * 이 값은 사건 데이터가 없을 때의 기본값이고 **산장 사건의 것**이다.
+   *
+   * ⛔ **`CAND` 와 같은 병을 같은 기간 앓았다** (2026-08-06 전수 감사에서 둘째로
+   * 나왔다). 산장 아닌 사건에서 수색 대상이 「본채·다인의 방·별채·진입로」로 떴다.
+   */
   PLACES = [{ id: 'main', ko: '본채', en: 'Main house' }, { id: 'room', ko: '다인의 방', en: "Chae-won's room" }, { id: 'annex', ko: '별채', en: 'Annex' }, { id: 'approach', ko: '진입로', en: 'Approach' }];
   /**
    * 조사 예산. 엔진 `Case.budget` 과 같아야 한다.
@@ -1696,6 +1711,55 @@ export default class App extends React.Component {
       }
       this.CLAIMS = claims
     }
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  공란 후보와 수색 대상을 사건에서 **다시 만든다** (2026-08-06)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * ⛔ **이 둘이 빠져 있어서 산장 아닌 사건은 전부 산장 이름표를 달고 있었다.**
+     * 테스터 보고(전찬웅): *"시각 장소 인물 다 잘못들어간듯"* · *"이건 플레이
+     * 못하겠다"*. 실측하니 닫힌 공란 99개 중 **71개(72%)에서 정답이 드롭다운에
+     * 아예 없었다.** `closing-theater`·`pipe-organ-workshop`·`practice-room` 은
+     * **10/10 · 10/10 · 8/8** 이라 완주가 불가능했다. 산장만 0/11 이었다 —
+     * 리터럴이 산장 데이터라서다.
+     *
+     * ★ 왜 게이트가 못 봤나 ★ `applyCase` 는 `PEOPLE`·`LOCATIONS`·`TIMES`·
+     * `BLANKS` 를 전부 다시 만든다. **읽는 쪽이 그것들을 안 보고 별도 리터럴을
+     * 봤다.** `discovered` 공란이 멀쩡했던 것도 같은 이유의 거울상이다 —
+     * 그쪽은 `COLLECTED_POOL` 을 보는데 그건 다시 만들어진다.
+     * 이 부류를 상설로 무는 것이 `npm run cand-check` 다.
+     *
+     * ⚠ **`CAND.place` 는 `this.LOCATIONS` 가 아니라 엔진 `label` 이다.**
+     * 앱 이름에는 UI 설명이 붙는다(`자택` ← 엔진 · `자택 (현장 밖)` ← 앱,
+     * §장소는 이름표만 받는다). 공란의 답은 `nameOf('장소', id)` 가 만들고 그것이
+     * 엔진 `label` 이므로 **후보도 같은 출처여야 문자열이 맞는다.**
+     *
+     * ⚠ **빈 배열로 덮는 것을 막지 않는다.** `if (length)` 가드를 걸면 사건에
+     * 장소가 없을 때 **산장 것이 그대로 남는다** — 그것이 지금 고치는 병이다.
+     * 후보가 비면 비는 것이 사실이고, 검증기가 그런 사건을 애초에 막는다.
+     *
+     * ⛳ **피해자를 인물 후보에 넣는다** — 산장이 그랬다(용의자 5 + 윤다인).
+     * 전 사건 실측상 피해자가 정답인 닫힌 공란은 **0건**이라 오답 후보 전용이다.
+     * `PEOPLE` 에는 안 넣는다(§피해자는 용의자로 보이면 안 된다).
+     */
+    this.CAND = {
+      person: [
+        ...this.PEOPLE.map((p) => p.name),
+        ...(c.victimProfile?.name ? [c.victimProfile.name] : []),
+      ],
+      place: (c.locations ?? []).map((l) => l.label || l.id),
+      time: (c.slots ?? []).map((s) => s.label || s.id),
+    }
+
+    /**
+     * 수색 대상 칩(`invest` 화면 `mode === 'place'`). **`LOCATIONS` 에서 온다.**
+     *
+     * `CAND.place` 와 출처가 다른 것이 맞다 — 이쪽은 **id 로 대조**하고 화면에는
+     * 앱 이름을 그리며, 도면에 자리가 없는 장소는 `LOCATIONS` 단계에서 이미
+     * 떨어져 나갔다(§갈 수 없다). **갈 수 없는 곳을 칩으로 내밀지 않는다.**
+     */
+    this.PLACES = this.LOCATIONS.map((l) => ({ id: l.id, ko: l.ko, en: l.en || l.ko }))
   }
 
   constructor(props) {
@@ -2373,6 +2437,24 @@ export default class App extends React.Component {
   reviewCaseOLD() { this.setState({ route: 'play', stage: 'free' }); }
   abandon() { this.setState({ route: 'home', confirmAbandon: false, started: false, stage: 'brief', readDone: false, readIdx: 0, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, blanks: {}, invLog: [], invSel: { action: null, targets: [] }, evidence: {}, cellMarks: {}, msg: {}, view: 'narrative' }); }
   statusChip(st) { const t = this.T(); const m = { clear: t.cleared, inProgress: t.inProgress, unplayed: t.unplayed, locked: t.locked }[st] || ''; const c = st === 'clear' ? 'var(--g-lock-mark)' : st === 'inProgress' ? 'var(--status-progress)' : 'var(--fg-3)'; const bg = st === 'clear' ? 'var(--g-lock-bg)' : st === 'inProgress' ? 'rgba(242,201,76,.14)' : 'var(--bg-elevated-2)'; return { label: m, style: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', color: c, background: bg } }; }
+  /**
+   * 보고서 머리의 사건번호. **홈 목록이 부르는 번호와 같은 값**이다 —
+   * `applyCatalog` 가 `cases/index.json` 순서로 `n` 을 매기고 홈이 `01`·`02` 로
+   * 찍는다. 두 화면이 같은 사건을 다른 번호로 부르면 그 자체가 거짓말이다.
+   *
+   * ⛔ **`'CASE-001'` 하드코딩이 두 곳에 있었다** (2026-08-06 · 테스터 전찬웅:
+   * *"지금보니까 사건번호도 다 케이스 1이네"*). 한 값이 두 곳 — §one-value-two-places.
+   *
+   * ⛳ **목록에 없는 사건은 번호가 없는 것이 사실이다** — 들여오기·생성 직후가
+   * 그렇다. 지어내지 않고 id 를 보인다. 사건 파일 자체가 없으면(내장 산장)
+   * 옛 값을 그대로 쓴다.
+   */
+  caseNo() {
+    const hit = (this.CASES || []).find((x) => x.id === this.CASE_ID);
+    if (hit && typeof hit.n === 'number') return 'CASE-' + ('00' + hit.n).slice(-3);
+    return this.CASE_ID ? 'CASE-' + String(this.CASE_ID).toUpperCase() : 'CASE-001';
+  }
+
   buildHome() {
     const t = this.T(), ln = this.state.lang, status = this.caseStatus();
     const narrow = !!this.state.isNarrow;
@@ -3731,13 +3813,13 @@ export default class App extends React.Component {
       narrShowBank: s.narrMode === 'prose',
       preventDefault: (e) => { if (e && e.preventDefault) e.preventDefault(); },
       reportHead: {
-        caseNo: 'CASE-001', subject: ln === 'ko' ? '윤다인 (30)' : 'Kim Chae-won (30)',
+        caseNo: this.caseNo(), subject: this.VICTIM_LINE ? (ln === 'ko' ? this.VICTIM_LINE.ko : this.VICTIM_LINE.en) : (ln === 'ko' ? '윤다인 (30)' : 'Kim Chae-won (30)'),
         author: ln === 'ko' ? '담당 수사관' : 'Lead investigator',
         statusLabel: solvedCount === this.SECTIONS.length ? (ln === 'ko' ? '작성 완료' : 'Complete') : (ln === 'ko' ? '작성 중' : 'In progress'),
         statusDone: solvedCount === this.SECTIONS.length,
         statusChipStyle: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--r-pill)', background: solvedCount === this.SECTIONS.length ? 'var(--g-lock-bg)' : 'var(--bg-elevated-2)', color: solvedCount === this.SECTIONS.length ? 'var(--g-lock-mark)' : 'var(--fg-3)' },
         fields: [
-          { k: ln === 'ko' ? '사건번호' : 'Case no.', v: 'CASE-001' },
+          { k: ln === 'ko' ? '사건번호' : 'Case no.', v: this.caseNo() },
           { k: ln === 'ko' ? '대상' : 'Subject', v: this.VICTIM_LINE ? (ln === 'ko' ? this.VICTIM_LINE.ko : this.VICTIM_LINE.en) : (ln === 'ko' ? '윤다인 (30) · 소설가' : 'Kim Chae-won (30) · Novelist') },
           { k: ln === 'ko' ? '작성' : 'Prepared by', v: ln === 'ko' ? '담당 수사관' : 'Lead investigator' },
         ],
