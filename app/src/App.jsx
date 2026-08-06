@@ -4036,7 +4036,7 @@ export default class App extends React.Component {
         logCls: navCls('log'), logSeg: segCls(isLog), onLog: () => this.setView('log'), logBadge: (s.invLog || []).length ? ('' + (s.invLog || []).length) : '',
         /** 남은 조사 횟수를 배지로 — 「여기서 무엇을 할 수 있나」가 항목 이름만으로는 안 보인다 */
         invBadge: '' + Math.max(0, this.BUDGET - this.invSpent()),
-        narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length, invBadge: '' + (this.BUDGET - this.invSpent()),
+        narrProgress: solvedCount + '/' + this.SECTIONS.length + (ln === 'ko' ? '장 · ' : ' · ') + filledBlanks + '/' + Object.keys(this.BLANKS).length,
       },
       bottomNav: this.buildBottomNav(view),
       moreNav: this.buildMoreNav(view),

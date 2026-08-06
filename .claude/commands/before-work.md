@@ -71,17 +71,23 @@ npm install
 npm run build
 ```
 
-**15단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
+**16단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
 tmpl-check · brief-check · prose-lock · censor-check · solve-check · matrix-check ·
-port-check · build`
+cand-check · port-check · build`
 (07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
-08-02에 `clue-check`·`prose-lock`·`censor-check`, **08-05에 `solve-check`**).
+08-02에 `clue-check`·`prose-lock`·`censor-check`, 08-05에 `solve-check`,
+**08-06에 `cand-check`**).
+> ⚠ **`build` 의 명령은 17개인데 단은 16이다.** `matrix-check` 과 `cand-check` 사이의
+> `npm run case` 는 **검사가 아니라 산출물 생성**이다(`export-case` — `cand-check` 이
+> 그 산출물을 읽으므로 앞에 선다). 세다가 어긋나면 `package.json` 을 믿는다.
 > ⚠ 이 줄이 08-04까지 **13단**으로 낡아 있었다 — `censor-check` 이 빠져 있었다.
-> **숫자만 고치고 목록을 안 고치면 같은 줄이 자기와 모순된다** — 08-05에 그 자리를
-> 한 번 더 지났다.
+> 08-05에 15단으로 고쳤는데 **08-06에 또 낡았다** — 그날 세션이 `cand-check` 으로
+> 게이트를 늘리고 이 줄을 안 고쳤다. **숫자만 고치고 목록을 안 고치면 같은 줄이
+> 자기와 모순된다** — 08-06 밤에 그 자리를 **세 번째로** 지났다.
 **초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 옵션 공간 속성 통과 + YAML 왕복 동일 +
 **모든 공란이 조사로 갈림** + 저작 서식 통과 + **서식이 든 숫자가 산장 실측과 같음** +
-**행렬이 가리키는 검사가 실재함** + 이식 회귀 없음 + 린트 오류 0.
+**행렬이 가리키는 검사가 실재함** + **닫힌 공란의 정답이 후보 안에 있고 파생 채널이
+화면으로 실려 나감** + 이식 회귀 없음 + 린트 오류 0.
 
 > ⚠ `gen-check`(생성기) 와 `tmpl-check`(**손저작 서식**) 는 **별개 단**이다 —
 > 사건이 생기는 길이 둘이라서다. `MANIFESTO.md` §사건이 생기는 길은 셋이다.
