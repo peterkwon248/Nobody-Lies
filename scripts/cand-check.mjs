@@ -209,6 +209,28 @@ for (const f of files) {
         problems.push('act1 에 현장 줄이 없다 (scene · sceneMoved 둘 다 없음)')
       }
       /**
+       * ★ 앞뒤 칸 갈래 — `gap`(다른 곳) · `gapSame`(같은 곳) (2026-08-06 신설)
+       *
+       * `body_moved` 는 t0·t2 가 둘 다 hall 이라 **구조적으로 늘 같은 곳**이다.
+       * 갈래가 하나뿐이던 동안 그 사건들은 「중앙 로비에서, 다시 중앙 로비로 —
+       * 그 사이가 비어 있었다」로 나갔다(대비가 죽는다).
+       *
+       * ⛳ **둘 다 없는 것은 정상이다** — 거짓말이 첫 칸에 난 사건은 앞 칸이 없다.
+       * 무는 것은 **틀린 갈래를 쓰는 것**이다: 같은 곳인데 `gap` 을 쓰면 실패.
+       */
+      const culprit = (c.people ?? []).find((p) => p.id === c.culprit)
+      const order = new Map((c.slots ?? []).map((s, i) => [s.id, i]))
+      const walk = [...(culprit?.presence ?? [])].sort(
+        (a, b) => (order.get(a.slot) ?? 0) - (order.get(b.slot) ?? 0))
+      const li = e.lie ? walk.findIndex((p) => p.slot === e.lie.slot) : -1
+      const before = li > 0 ? walk[li - 1] : undefined
+      const after = li >= 0 && li < walk.length - 1 ? walk[li + 1] : undefined
+      const want = !before || !after ? null : before.location === after.location ? 'gapSame' : 'gap'
+      const got = a1.lines.find((l) => l.kind === 'gap' || l.kind === 'gapSame')?.kind ?? null
+      if (want !== got) {
+        problems.push(`act1 앞뒤 칸 갈래가 틀렸다 — 기대 ${want ?? '(없음)'} · 실제 ${got ?? '(없음)'}`)
+      }
+      /**
        * ★ **범행 문장은 한 번뿐이어야 한다** ★ (2026-08-06 신설 · 실패 사례가 있다)
        *
        * 옛 틀은 범인이 현장에 머무는 **칸마다** 「사건은 여기서 일어났다」를 붙였고,

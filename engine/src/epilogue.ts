@@ -63,6 +63,11 @@ export const ACT1_TEMPLATES = {
 
     /* ── 비트2 인상의 세계 (승) ── 인상은 여럿일 수 있고, 「만들어 둔 이야기」는 한 번만 */
     impression: '그날의 현장은 한 가지 이야기를 하고 있었다 — 「{impression}」.',
+    /**
+     * 인상이 둘 이상이면 **한 문장으로 묶는다** (2026-08-06 · 경훈 확정).
+     * 산장은 인상이 셋이라 같은 문장이 세 번 반복됐다 — 묶으면 한 줄이 된다.
+     */
+    impressions: '그날의 현장은 이런 이야기들을 하고 있었다 — {list}.',
     staged: '{culprit|이/가} 그렇게 읽히도록 만들어 둔 이야기였다.',
     /** 곁가지 — 위장물이 없으면 이 절만 빠지고 위 둘은 남는다 */
     stagedBy: '{stagingEvidence|은/는} 그 이야기를 위해 놓였다.',
@@ -80,6 +85,14 @@ export const ACT1_TEMPLATES = {
      * 바로 그 부류다: **문장을 만드는 쪽마다 조사가 필요하다.**
      */
     gap: '{beforeTime} {beforePlace}에서, {afterTime}에는 다시 {afterPlace|으로/로} — 그 사이가 비어 있었다.',
+    /**
+     * ★ 앞뒤 칸이 **같은 장소**면 「…에서, 다시 …로」의 대비가 죽는다 ★
+     * (2026-08-06 · 경훈 확정) `body_moved` 는 t0·t2 가 둘 다 hall 이라 **구조적으로**
+     * 늘 그렇게 나온다 — 문안 취향이 아니라 **갈래 누락**이었다.
+     * ⛳ 새 주장이 0이다: 두 앵커는 진실이고, 「그 사이」가 거짓의 자리라는 것은
+     * 바로 위 `truth` 가 이미 말했다.
+     */
+    gapSame: '{beforeTime}에도, {afterTime}에도 {place}에 있었다 — 문제는 그 사이였다.',
     /** 곁가지 — `trick.exit.method` 는 6/14 */
     exit: '그리고 {exitMethod}.',
     murder: '사건은 그 방에서, 그 시각에 일어났다.',
@@ -103,6 +116,7 @@ export const ACT1_TEMPLATES = {
     sceneMoved: '{victim} was found at {foundPlace} — but that is not where it happened. The story begins a few hours earlier, in another room.',
 
     impression: 'The scene told one story that day — “{impression}”.',
+    impressions: 'The scene told several stories that day — {listEn}.',
     staged: '{culprit} had arranged for it to read that way.',
     stagedBy: '{stagingEvidence} was placed to serve that story.',
 
@@ -111,6 +125,7 @@ export const ACT1_TEMPLATES = {
 
     truth: '{murderTime}: {culprit} was not at {claimedPlace}, but at {truePlace}.',
     gap: '{beforeTime} at {beforePlace}, and by {afterTime} back at {afterPlace} — the hours between are missing.',
+    gapSame: 'At {beforeTime} and again at {afterTime}, at {place} — the hours between are the question.',
     exit: 'And then: {exitMethod}.',
     murder: 'It happened in that room, at that hour.',
     murderMoved: 'It happened at {truePlace}, at that hour.',
@@ -124,9 +139,9 @@ export const ACT1_TEMPLATES = {
 
 type Act1Kind =
   | 'scene' | 'sceneMoved'
-  | 'impression' | 'staged' | 'stagedBy'
+  | 'impression' | 'impressions' | 'staged' | 'stagedBy'
   | 'crack' | 'question'
-  | 'truth' | 'gap' | 'exit' | 'murder' | 'murderMoved'
+  | 'truth' | 'gap' | 'gapSame' | 'exit' | 'murder' | 'murderMoved'
   | 'motive' | 'motiveShort'
 
 type Act1Line = { kind: Act1Kind; ko: string; en: string }
@@ -290,7 +305,16 @@ export function buildEpilogue(c: Case): Epilogue {
    * 인상 문장만 반복하고 「만들어 둔 이야기」는 **한 번**이다 (경훈 초안).
    * 여럿일 때 매번 붙이면 범인이 같은 말을 세 번 하는 꼴이 된다. */
   const illusions = (t?.illusions ?? []).filter((il) => ko(il.impression))
-  for (const il of illusions) say('impression', { impression: ko(il.impression) })
+  if (illusions.length === 1) {
+    say('impression', { impression: ko(illusions[0]!.impression) })
+  } else if (illusions.length > 1) {
+    // 여럿이면 한 문장으로 묶는다 — 산장이 같은 문장을 세 번 말하던 자리다
+    const xs = illusions.map((il) => ko(il.impression))
+    say('impressions', {
+      list: xs.map((x) => `「${x}」`).join(' · '),
+      listEn: xs.map((x) => `“${x}”`).join(' · '),
+    })
+  }
   if (illusions.length) {
     say('staged', { culprit: culpritName })
     /**
@@ -326,10 +350,18 @@ export function buildEpilogue(c: Case): Epilogue {
     const before = li > 0 ? walk[li - 1] : undefined
     const after = li >= 0 && li < walk.length - 1 ? walk[li + 1] : undefined
     if (before && after) {
-      say('gap', {
-        beforeTime: slotLabel(before.slot), beforePlace: locLabel(before.location),
-        afterTime: slotLabel(after.slot), afterPlace: locLabel(after.location),
-      })
+      // 앞뒤가 같은 곳이면 대비가 죽는다 — 갈래를 갈아 끼운다 (§gapSame)
+      if (before.location === after.location) {
+        say('gapSame', {
+          beforeTime: slotLabel(before.slot), afterTime: slotLabel(after.slot),
+          place: locLabel(before.location),
+        })
+      } else {
+        say('gap', {
+          beforeTime: slotLabel(before.slot), beforePlace: locLabel(before.location),
+          afterTime: slotLabel(after.slot), afterPlace: locLabel(after.location),
+        })
+      }
     }
   }
   /** 곁가지 — 퇴장 방법 */

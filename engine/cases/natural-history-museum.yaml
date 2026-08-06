@@ -1,0 +1,1385 @@
+id: natural-history-museum
+title: 특별전 전날 밤의 자연사 박물관 사건
+scale: daily
+budget: 11
+incident:
+  kind: homicide
+  subject: victim
+  description: 특별 전시실에서의 사망
+  scene: room
+  scene_state: 다음 날 개관 직전, 특별 전시실에서 발견됐다.
+prose:
+  source: template
+floor_plan:
+  view_box:
+    w: 1000
+    h: 625
+  scale:
+    x: 96
+    len: 90
+    'y': 610
+    label: 5m
+  buildings:
+    - id: b_main
+      x: 70
+      'y': 60
+      w: 553
+      h: 518
+      poche: var(--fg-3)
+    - id: b_annex
+      x: 681
+      'y': 396
+      w: 240
+      h: 150
+      poche: var(--accent)
+      revealed_after: 1
+  rooms:
+    - id: r_hall
+      x: 70
+      'y': 60
+      w: 312
+      h: 105
+      label: 중앙 로비
+      building: b_main
+      loc: hall
+      primary: true
+    - id: r_room
+      x: 308
+      'y': 241
+      w: 315
+      h: 337
+      label: 특별 전시실
+      building: b_main
+      loc: room
+      scene: true
+      tint: rgba(235,87,87,.10)
+      primary: true
+    - id: r_loc1
+      x: 382
+      'y': 60
+      w: 241
+      h: 105
+      label: 수장고
+      building: b_main
+      loc: loc1
+      primary: true
+    - id: r_loc2
+      x: 70
+      'y': 241
+      w: 238
+      h: 195
+      label: 복원실
+      building: b_main
+      loc: loc2
+      primary: true
+    - id: r_loc3
+      x: 681
+      'y': 396
+      w: 240
+      h: 150
+      label: 기획 전시실
+      building: b_annex
+      loc: loc3
+      primary: true
+    - id: r_loc2side
+      x: 70
+      'y': 436
+      w: 238
+      h: 142
+      label: 교육실
+      building: b_main
+      loc: loc2
+    - id: r_hallside
+      x: 70
+      'y': 165
+      w: 312
+      h: 76
+      label: 자료 보관실
+      building: b_main
+      loc: hall
+    - id: r_loc1side
+      x: 382
+      'y': 165
+      w: 241
+      h: 76
+      label: 사무실
+      building: b_main
+      loc: loc1
+  zones:
+    - id: z_approach
+      x: 681
+      'y': 70
+      w: 240
+      h: 145
+      label: 야외 조각 정원
+      loc: approach
+      hatch: true
+      primary: true
+    - id: z_away
+      x: 681
+      'y': 246
+      w: 240
+      h: 120
+      label: 박물관 주차장
+      loc: away
+      hatch: true
+      offsite: true
+      primary: true
+  doors:
+    - id: d_loc1
+      x1: 382
+      y1: 84
+      x2: 382
+      y2: 142
+      open: true
+      building: b_main
+    - id: d_r_hallside
+      x1: 186
+      y1: 165
+      x2: 266
+      y2: 165
+      open: true
+      building: b_main
+    - id: d_r_loc1side
+      x1: 463
+      y1: 165
+      x2: 543
+      y2: 165
+      open: true
+      building: b_main
+    - id: d_room
+      x1: 325
+      y1: 241
+      x2: 366
+      y2: 241
+      hinge: p2
+      swing: -1
+      building: b_main
+    - id: d_loc2
+      x1: 149
+      y1: 241
+      x2: 229
+      y2: 241
+      open: true
+      building: b_main
+    - id: d_r_loc2side
+      x1: 308
+      y1: 468
+      x2: 308
+      y2: 546
+      hinge: p2
+      swing: -1
+      building: b_main
+    - id: d_front
+      x1: 623
+      y1: 438
+      x2: 623
+      y2: 504
+      hinge: p2
+      swing: -1
+      ext: true
+      building: b_main
+    - id: d_back
+      x1: 623
+      y1: 109
+      x2: 623
+      y2: 151
+      hinge: p2
+      swing: -1
+      ext: true
+      building: b_main
+    - id: d_annex
+      x1: 681
+      y1: 451
+      x2: 681
+      y2: 491
+      hinge: p1
+      swing: -1
+      ext: true
+      building: b_annex
+  windows:
+    - x1: 171
+      y1: 60
+      x2: 281
+      y2: 60
+      building: b_main
+    - x1: 623
+      y1: 355
+      x2: 623
+      y2: 465
+      building: b_main
+    - x1: 70
+      y1: 294
+      x2: 70
+      y2: 384
+      building: b_main
+    - x1: 746
+      y1: 396
+      x2: 856
+      y2: 396
+      building: b_annex
+    - x1: 135
+      y1: 578
+      x2: 244
+      y2: 578
+      building: b_main
+    - x1: 623
+      y1: 186
+      x2: 623
+      y2: 221
+      building: b_main
+  walks:
+    - x1: 623
+      y1: 471
+      x2: 681
+      y2: 471
+      building: b_annex
+      from: hall
+      to: loc3
+      min: 10
+    - x1: 623
+      y1: 130
+      x2: 681
+      y2: 143
+      building: z_approach
+      from: hall
+      to: approach
+      min: 2
+  fixtures:
+    hall:
+      x: 226
+      'y': 118
+      label: 안내 데스크
+      loc: hall
+    room:
+      x: 465
+      'y': 429
+      label: 중앙 좌대
+      loc: room
+    loc1:
+      x: 502
+      'y': 118
+      label: 항온항습 수납장
+      loc: loc1
+    loc2:
+      x: 189
+      'y': 350
+      label: 작업 조명대
+      loc: loc2
+    loc3:
+      x: 801
+      'y': 480
+      label: 전시 진열장
+      loc: loc3
+    approach:
+      x: 801
+      'y': 151
+      label: 야외 안내판
+      loc: approach
+    away:
+      x: 801
+      'y': 313
+      label: 주차 정산기
+      loc: away
+    body:
+      x: 415
+      'y': 342
+      label: 시신
+      loc: room
+      body: true
+relation_graph:
+  nodes:
+    - id: victim
+      kind: victim
+      x: 50
+      'y': 50
+      label: 오서윤
+    - id: p1
+      kind: person
+      x: 22
+      'y': 22
+    - id: p2
+      kind: person
+      x: 50
+      'y': 15
+    - id: p3
+      kind: person
+      x: 80
+      'y': 30
+    - id: p4
+      kind: person
+      x: 82
+      'y': 72
+    - id: p5
+      kind: person
+      x: 24
+      'y': 78
+  edges: []
+  discoveries: []
+seed_terms:
+  - 무전기
+prologue:
+  - 시립 자연사 박물관. 오서윤은 그곳에서 지내고 있었다.
+  - 그곳에는 다섯 사람이 더 머물고 있었다. 폐관 준비, 중앙 로비에는 불이 켜져 있었다.
+  - 다음 날 개관 직전, 가장 먼저 일어난 사람이 특별 전시실 문을 열었다.
+  - 오서윤은 이미 숨을 쉬지 않았다.
+terms:
+  - word: 무전기
+    source: 특별 전시실 수색 · 시신 검사
+    note: 바닥에 떨어져 있었다.
+  - word: 한재민
+    source: 서류 조사 · 장부 조사
+    note: 여러 기록에 반복 등장했다.
+  - word: 예산 갈등
+    source: 서류 조사
+    note: 금전 기록에 남아 있었다.
+  - word: 야간 순찰 일지
+    source: 야간 순찰 일지 확인
+    note: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+  - word: 반출 신청서
+    source: 반출 신청서 확인
+    note: 중앙 로비가 적힌 줄이 남아 있었다.
+  - word: 보안 카드 기록
+    source: 보안 카드 기록 확인
+    note: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+slots:
+  - id: t0
+    label: 폐관 준비
+  - id: t1
+    label: 야간 순찰 시간
+    window: true
+  - id: t2
+    label: 다음 날 개관 직전
+locations:
+  - id: hall
+    label: 중앙 로비
+    at_lodge: true
+  - id: room
+    label: 특별 전시실
+    at_lodge: true
+  - id: loc1
+    label: 수장고
+    at_lodge: true
+  - id: loc2
+    label: 복원실
+    at_lodge: true
+  - id: loc3
+    label: 기획 전시실
+    at_lodge: true
+  - id: approach
+    label: 야외 조각 정원
+    at_lodge: true
+  - id: away
+    label: 박물관 주차장
+    at_lodge: false
+people:
+  - id: p1
+    name: 문하린
+    age: 34
+    job: 청소 직원
+    claim_summary: 야간 순찰 시간에는 박물관 주차장에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: away
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 소매 끝을 자꾸 매만졌다.
+        post: 짧게 숨을 고르고 입을 다물었다.
+      paragraphs:
+        - 일지에 적어둬서 확실합니다. 폐관 준비에는 중앙 로비에 있었습니다.
+        - 야간 순찰 시간에는 박물관 주차장에 가 있었습니다.
+        - 다음 날 개관 직전에는 중앙 로비로 옮겼습니다.
+  - id: p2
+    name: 최나림
+    age: 33
+    job: 청소 직원
+    claim_summary: 야간 순찰 시간에는 박물관 주차장에 있었다고 진술.
+    hidden_role: ringleader
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: hall
+      - slot: t2
+        at: hall
+    claim:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: away
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 팔짱을 낀 채 담담하게 말했다.
+        post: 말끝이 조금 흐려졌다.
+      paragraphs:
+        - 글쎄요, 폐관 준비에는 중앙 로비에 있었습니다.
+        - 야간 순찰 시간에는 박물관 주차장에 가 있었습니다.
+        - 다음 날 개관 직전에는 중앙 로비로 옮겼습니다.
+  - id: p3
+    name: 장수빈
+    age: 31
+    job: 시설 관리원
+    claim_summary: 야간 순찰 시간에는 기획 전시실에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: loc3
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 목에 건 출입증 줄을 만지작거렸다.
+        post: 그러고는 잠깐, 복도 쪽으로 시선을 돌렸다.
+      paragraphs:
+        - 몇 번을 말씀드렸지만, 폐관 준비에는 중앙 로비에 있었습니다.
+        - 야간 순찰 시간에는 기획 전시실에 가 있었습니다. 중앙 로비에서 걸어서 10분 거리입니다.
+        - 다음 날 개관 직전에는 중앙 로비로 옮겼습니다.
+  - id: p4
+    name: 백현우
+    age: 38
+    job: 시설 관리원
+    claim_summary: 야간 순찰 시간에는 복원실에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: loc2
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 손끝으로 탁자를 두어 번 두드리며 입을 열었다.
+        post: 되묻는 목소리가 조금 낮아졌다.
+      paragraphs:
+        - 기억나는 대로 말씀드리면, 폐관 준비에는 중앙 로비에 있었습니다.
+        - 야간 순찰 시간에는 복원실에 가 있었습니다.
+        - 다음 날 개관 직전에는 중앙 로비로 옮겼습니다.
+  - id: p5
+    name: 임태성
+    age: 37
+    job: 학예연구사
+    claim_summary: 야간 순찰 시간에는 수장고에 있었다고 진술.
+    hidden_role: unaware
+    presence:
+      - slot: t0
+        at: hall
+      - slot: t1
+        at: loc1
+      - slot: t2
+        at: hall
+    statement:
+      gesture:
+        pre: 한참 뜸을 들이다가 고개를 들었다.
+        post: 말을 마치고도 한동안 앉아 있었다.
+      paragraphs:
+        - 그날은 정신이 없어서요. 폐관 준비에는 중앙 로비에 있었습니다.
+        - 야간 순찰 시간에는 수장고에 가 있었습니다.
+        - 다음 날 개관 직전에는 중앙 로비로 옮겼습니다.
+victim: victim
+victim_profile:
+  name: 오서윤
+  age: 34
+  job: 시설 관리원
+culprit: p2
+trick:
+  types:
+    - body_moved
+  props:
+    - e_tool
+  staging:
+    - e_arranged
+  illusions:
+    - id: il_here
+      kind: place
+      impression: 발견된 자리에서 그대로 죽었다
+      made_by:
+        - e_arranged
+      broken_by:
+        - e_drag
+        - e_lividity
+  flaw:
+    text: 그 자리에서 그랬다면 왜 바닥에 끌린 자국이 중앙 로비에서부터 이어지는가?
+    planted_in:
+      - p2
+evidence:
+  - id: e_tool
+    description: 무전기
+    found_at: 특별 전시실
+    record: 바닥에 떨어져 있었다.
+    yields_terms:
+      - 무전기
+  - id: e_toolmark
+    description: 도구가 남긴 자국
+    record: 같은 폭의 자국이 남아 있었다.
+    yields_terms:
+      - 무전기
+  - id: e_alias
+    description: '''한재민'' 라는 이름의 기록'
+    record: 여러 장에 같은 이름이 적혀 있었다 — 「한재민」.
+    yields_terms:
+      - 한재민
+  - id: e_alias2
+    description: '''한재민'' 가 적힌 두 번째 기록'
+    record: 장부에도 같은 이름이 있었다 — 「한재민」.
+    yields_terms:
+      - 한재민
+  - id: e_motive
+    description: 금전 기록
+    record: 금액과 날짜가 반복해 적혀 있었다 — 「예산 갈등」.
+    yields_terms:
+      - 예산 갈등
+  - id: e_mutual
+    description: 넷의 상호 보증
+    record: 네 사람이 말한 중앙 로비 자리가 서로 맞물렸다.
+  - id: e_herring1
+    description: 개인적인 편지
+    record: 사건과 무관한 사연이 적혀 있었다.
+  - id: e_herring2
+    description: 오래된 사진
+    record: 오래전에 찍힌 사진이었다.
+  - id: e_herring3
+    description: 접힌 영수증
+    record: 여러 번 접힌 자국이 있었다.
+  - id: e_herring4
+    description: 지워진 기록
+    record: 일부가 지워진 채 남아 있었다.
+  - id: e_herring5
+    description: 낡은 명함
+    record: 오래 지니고 다닌 자국이 있었다.
+  - id: e_arranged
+    description: 정돈된 자리
+    record: 주변이 지나치게 정돈돼 있었다.
+    is_staging: true
+  - id: e_drag
+    description: 끌린 자국
+    record: 중앙 로비에서 특별 전시실까지 바닥에 끌린 자국이 이어졌다.
+  - id: e_lividity
+    description: 시반의 방향
+    record: 시반이 놓인 자세와 맞지 않는 쪽에 몰려 있었다.
+  - id: e_rec1
+    description: 야간 순찰 일지
+    record: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+    points_at:
+      location: hall
+    yields_terms:
+      - 야간 순찰 일지
+  - id: e_rec2
+    description: 반출 신청서
+    record: 중앙 로비가 적힌 줄이 남아 있었다.
+    points_at:
+      location: hall
+    yields_terms:
+      - 반출 신청서
+  - id: e_rec3
+    description: 보안 카드 기록
+    record: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+    points_at:
+      location: hall
+    yields_terms:
+      - 보안 카드 기록
+facts:
+  - id: f_opp
+    kind: opportunity
+    subject: p2
+    content: 새벽에 부지 안에 있었다
+    revealed_by:
+      - e_drag
+      - e_lividity
+  - id: f_no_p1
+    kind: no_opportunity
+    subject: p1
+    content: 중앙 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p3
+    kind: no_opportunity
+    subject: p3
+    content: 중앙 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p4
+    kind: no_opportunity
+    subject: p4
+    content: 중앙 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p5
+    kind: no_opportunity
+    subject: p5
+    content: 중앙 로비에 함께 있었다
+    revealed_by: []
+  - id: f_no_p1_ok
+    kind: no_opportunity
+    subject: p1
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p3_ok
+    kind: no_opportunity
+    subject: p3
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p4_ok
+    kind: no_opportunity
+    subject: p4
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_no_p5_ok
+    kind: no_opportunity
+    subject: p5
+    content: 머문 자리 상호 일치
+    revealed_by:
+      - e_mutual
+  - id: f_identity
+    kind: identity
+    subject: p2
+    content: 한재민 = 범인
+    value: 한재민
+    revealed_by:
+      - e_alias
+      - e_alias2
+  - id: f_means
+    kind: means
+    subject: p2
+    content: 도구를 다룰 수 있었다
+    revealed_by:
+      - e_tool
+      - e_toolmark
+  - id: f_motive
+    kind: motive
+    subject: p2
+    content: 예산 갈등
+    value: 예산 갈등
+    story:
+      background: 한 해 예산이 한쪽으로만 흘렀다
+      trigger: 그날, 내년 배정에서 제 이름이 빠진 걸 봤다
+      resolve: 배정표를 다시 쓰게 할 방법은 하나뿐이라고 믿었다
+    revealed_by:
+      - e_motive
+    requires:
+      - f_identity
+  - id: f_h1
+    kind: context
+    subject: p1
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring1
+  - id: f_h2
+    kind: context
+    subject: p2
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring2
+  - id: f_h3
+    kind: context
+    subject: p3
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring3
+  - id: f_h4
+    kind: context
+    subject: p4
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring4
+  - id: f_h5
+    kind: context
+    subject: p5
+    content: 감추는 것이 있다
+    revealed_by:
+      - e_herring5
+  - id: f_rec1
+    kind: context
+    subject: p2
+    content: 야간 순찰 일지에 남은 정황
+    revealed_by:
+      - e_rec1
+  - id: f_rec2
+    kind: context
+    subject: p2
+    content: 반출 신청서에 남은 정황
+    revealed_by:
+      - e_rec2
+  - id: f_rec3
+    kind: context
+    subject: p2
+    content: 보안 카드 기록에 남은 정황
+    revealed_by:
+      - e_rec3
+actions:
+  - id: a_room
+    label: 특별 전시실 수색
+    verb: search
+    cost: 1
+    gives:
+      - e_tool
+    salience: 0.5
+    yield: solution
+    target:
+      kind: location
+      id: room
+    result:
+      title: 바닥에 떨어진 것
+      body: 특별 전시실 바닥에 물건 하나가 떨어져 있었다.
+  - id: a_body
+    label: 시신 검사
+    verb: autopsy
+    cost: 1
+    gives:
+      - e_toolmark
+    salience: 0.6
+    yield: solution
+    target:
+      kind: fixture
+      id: body
+    result:
+      title: 같은 폭의 자국
+      body: 같은 폭으로 눌린 자국이 남아 있었다.
+  - id: a_papers
+    label: 서류 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_alias
+      - e_motive
+    salience: 0.3
+    yield: solution
+    target:
+      kind: location
+      id: hall
+    result:
+      title: 반복되는 이름
+      body: 여러 장에 같은 이름과 금전 기록이 적혀 있었다.
+  - id: a_ledger
+    label: 장부 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_alias2
+    salience: 0.3
+    yield: solution
+    target:
+      kind: location
+      id: loc1
+    result:
+      title: 두 번째 기록
+      body: 장부에 같은 이름이 한 번 더 적혀 있었다.
+  - id: a_h1
+    label: 소지품 검사 · 문하린
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring1
+    salience: 0.85
+    yield: redherring
+    target:
+      kind: person
+      id: p1
+    result:
+      title: 개인적인 편지
+      body: 소지품에서 개인적인 편지 한 통이 나왔다. 자격 요건 하나를 부풀려 적었다는 것을 확인했다.
+  - id: a_h2
+    label: 소지품 검사 · 최나림
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring2
+    salience: 0.8
+    yield: redherring
+    target:
+      kind: person
+      id: p2
+    result:
+      title: 오래된 사진
+      body: 소지품에서 오래된 사진 한 장이 나왔다. 다른 관에 이직 면접을 봤다는 것을 확인했다.
+  - id: a_h3
+    label: 소지품 검사 · 장수빈
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring3
+    salience: 0.75
+    yield: redherring
+    target:
+      kind: person
+      id: p3
+    result:
+      title: 접힌 영수증
+      body: 소지품에서 접힌 영수증 한 장이 나왔다. 관람객 분실물을 신고하지 않고 뒀다는 것을 확인했다.
+  - id: a_h4
+    label: 소지품 검사 · 백현우
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring4
+    salience: 0.7
+    yield: redherring
+    target:
+      kind: person
+      id: p4
+    result:
+      title: 지워진 기록
+      body: 소지품에서 일부가 지워진 기록이 나왔다. 동료의 근태를 대신 찍어줬다는 것을 확인했다.
+  - id: a_h5
+    label: 소지품 검사 · 임태성
+    verb: belongings
+    cost: 1
+    gives:
+      - e_herring5
+    salience: 0.65
+    yield: redherring
+    target:
+      kind: person
+      id: p5
+    result:
+      title: 낡은 명함
+      body: 소지품에서 낡은 명함 한 장이 나왔다. 근무 중에 자리를 비우고 담배를 피웠다는 것을 확인했다.
+  - id: a_alibi
+    label: 알리바이 대조 · 문하린 ↔ 장수빈
+    verb: alibi
+    cost: 1
+    gives:
+      - e_mutual
+    salience: 0.45
+    yield: exclusion
+    pair:
+      - p1
+      - p3
+    result:
+      title: 맞물리는 자리
+      body: 네 사람이 말한 중앙 로비 자리가 서로 맞물렸다.
+  - id: a_hall
+    label: 복도 조사
+    verb: search
+    cost: 1
+    gives:
+      - e_drag
+    salience: 0.4
+    yield: solution
+    target:
+      kind: location
+      id: loc2
+    result:
+      title: 바닥에 이어진 자국
+      body: 중앙 로비에서 특별 전시실 쪽으로 끌린 자국이 이어졌다.
+  - id: a_lividity
+    label: 시신 자세 검사
+    verb: autopsy
+    cost: 1
+    gives:
+      - e_lividity
+      - e_arranged
+    salience: 0.3
+    yield: solution
+    target:
+      kind: fixture
+      id: hall
+    result:
+      title: 맞지 않는 쪽
+      body: 시반이 놓인 자세와 맞지 않는 쪽에 몰려 있었다.
+  - id: a_rec1
+    label: 야간 순찰 일지 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec1
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: loc3
+    result:
+      title: 야간 순찰 일지
+      body: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+  - id: a_rec2
+    label: 반출 신청서 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec2
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: approach
+    result:
+      title: 반출 신청서
+      body: 중앙 로비가 적힌 줄이 남아 있었다.
+  - id: a_rec3
+    label: 보안 카드 기록 확인
+    verb: search
+    cost: 1
+    gives:
+      - e_rec3
+    salience: 0.32
+    yield: solution
+    target:
+      kind: location
+      id: away
+    result:
+      title: 보안 카드 기록
+      body: 야간 순찰 시간으로 적힌 줄이 남아 있었다.
+  - id: a_e1
+    label: 안내 데스크 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.22
+    yield: empty
+    target:
+      kind: fixture
+      id: hall
+  - id: a_e2
+    label: 중앙 좌대 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.212
+    yield: empty
+    target:
+      kind: fixture
+      id: room
+  - id: a_e3
+    label: 항온항습 수납장 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.20400000000000001
+    yield: empty
+    target:
+      kind: fixture
+      id: loc1
+  - id: a_e4
+    label: 작업 조명대 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.196
+    yield: empty
+    target:
+      kind: fixture
+      id: loc2
+  - id: a_e5
+    label: 전시 진열장 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.188
+    yield: empty
+    target:
+      kind: fixture
+      id: loc3
+  - id: a_e6
+    label: 야외 안내판 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.18
+    yield: empty
+    target:
+      kind: fixture
+      id: approach
+  - id: a_e7
+    label: 주차 정산기 조사
+    verb: fixture
+    cost: 1
+    gives: []
+    salience: 0.172
+    yield: empty
+    target:
+      kind: fixture
+      id: away
+  - id: a_e8
+    label: 통화내역 조회 · 문하린
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.164
+    yield: empty
+    target:
+      kind: person
+      id: p1
+  - id: a_e9
+    label: 통화내역 조회 · 최나림
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.156
+    yield: empty
+    target:
+      kind: person
+      id: p2
+  - id: a_e10
+    label: 통화내역 조회 · 장수빈
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.148
+    yield: empty
+    target:
+      kind: person
+      id: p3
+  - id: a_e11
+    label: 통화내역 조회 · 백현우
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.14
+    yield: empty
+    target:
+      kind: person
+      id: p4
+  - id: a_e12
+    label: 통화내역 조회 · 임태성
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.132
+    yield: empty
+    target:
+      kind: person
+      id: p5
+  - id: a_e13
+    label: 소지품 검사 · 오서윤
+    verb: belongings
+    cost: 1
+    gives: []
+    salience: 0.124
+    yield: empty
+    target:
+      kind: person
+      id: victim
+  - id: a_e14
+    label: 통화내역 조회 · 오서윤
+    verb: phone
+    cost: 1
+    gives: []
+    salience: 0.11599999999999999
+    yield: empty
+    target:
+      kind: person
+      id: victim
+  - id: a_e15
+    label: 알리바이 대조 · 문하린 ↔ 최나림
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.108
+    yield: empty
+    pair:
+      - p1
+      - p2
+  - id: a_e16
+    label: 알리바이 대조 · 문하린 ↔ 백현우
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.1
+    yield: empty
+    pair:
+      - p1
+      - p4
+  - id: a_e17
+    label: 알리바이 대조 · 문하린 ↔ 임태성
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.092
+    yield: empty
+    pair:
+      - p1
+      - p5
+  - id: a_e18
+    label: 알리바이 대조 · 최나림 ↔ 장수빈
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.08399999999999999
+    yield: empty
+    pair:
+      - p2
+      - p3
+  - id: a_e19
+    label: 알리바이 대조 · 최나림 ↔ 백현우
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.07599999999999998
+    yield: empty
+    pair:
+      - p2
+      - p4
+  - id: a_e20
+    label: 알리바이 대조 · 최나림 ↔ 임태성
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.068
+    yield: empty
+    pair:
+      - p2
+      - p5
+  - id: a_e21
+    label: 알리바이 대조 · 장수빈 ↔ 백현우
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.06
+    yield: empty
+    pair:
+      - p3
+      - p4
+  - id: a_e22
+    label: 알리바이 대조 · 장수빈 ↔ 임태성
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.05199999999999999
+    yield: empty
+    pair:
+      - p3
+      - p5
+  - id: a_e23
+    label: 알리바이 대조 · 백현우 ↔ 임태성
+    verb: alibi
+    cost: 1
+    gives: []
+    salience: 0.04400000000000001
+    yield: empty
+    pair:
+      - p4
+      - p5
+chapters:
+  - order: 1
+    title: 발견
+    opening: 먼저 그 자리에 무엇이 있었는지를 적는다.
+    requires_facts:
+      - f_no_p1
+      - f_no_p3
+      - f_no_p4
+      - f_no_p5
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p1
+        asks:
+          kind: belongingsOwner
+          item: 개인적인 편지
+      - label: 장소
+        candidates: closed
+        answer: room
+        asks:
+          kind: scene
+      - label: 시각
+        candidates: closed
+        answer: t2
+        asks:
+          kind: discoveryTime
+      - label: 도구
+        candidates: discovered
+        answer: 무전기
+        particle: 이/가
+        asks:
+          kind: murderWeapon
+          evidence: e_tool
+    report:
+      - blank: 2
+      - ', '
+      - blank: 1
+      - '에서 '
+      - blank: 3
+      - ' 발견됐다. '
+      - '소지품에서 개인적인 편지가 나온 것은 '
+      - blank: 0
+      - .
+    epilogue_order: 1
+  - order: 2
+    title: 야간 순찰 일지
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec1
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p3
+        asks:
+          kind: belongingsOwner
+          item: 접힌 영수증
+      - label: 물품
+        candidates: discovered
+        answer: 야간 순찰 일지
+        particle: 이/가
+        asks:
+          kind: strandTerm
+          evidence: e_rec1
+      - label: 시각
+        candidates: closed
+        answer: t1
+        particle: 을/를
+        asks:
+          kind: murderCell
+    report:
+      - '기록에 '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다. '
+      - '소지품에서 접힌 영수증이 나온 것은 '
+      - blank: 0
+      - .
+    epilogue_order: 2
+  - order: 3
+    title: 반출 신청서
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec2
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p4
+        asks:
+          kind: belongingsOwner
+          item: 지워진 기록
+      - label: 접촉수단
+        candidates: discovered
+        answer: 반출 신청서
+        particle: 이/가
+        asks:
+          kind: strandTerm
+          evidence: e_rec2
+      - label: 장소
+        candidates: closed
+        answer: hall
+        particle: 을/를
+        asks:
+          kind: recordPlace
+          evidence: e_rec2
+    report:
+      - '기록에 '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다. '
+      - '소지품에서 지워진 기록이 나온 것은 '
+      - blank: 0
+      - .
+    epilogue_order: 3
+  - order: 4
+    title: 보안 카드 기록
+    opening: 다음으로 기록에 남은 것을 적는다.
+    requires_facts:
+      - f_rec3
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p5
+        asks:
+          kind: belongingsOwner
+          item: 낡은 명함
+      - label: 은닉처
+        candidates: discovered
+        answer: 보안 카드 기록
+        particle: 이/가
+        asks:
+          kind: strandTerm
+          evidence: e_rec3
+      - label: 시각
+        candidates: closed
+        answer: t1
+        particle: 을/를
+        asks:
+          kind: murderCell
+    report:
+      - '기록에 '
+      - blank: 1
+      - ' 남아 있었고, '
+      - blank: 2
+      - ' 가리켰다. '
+      - '소지품에서 낡은 명함이 나온 것은 '
+      - blank: 0
+      - .
+    epilogue_order: 4
+  - order: 5
+    title: 이름과 이유
+    opening: 남은 것은 이름과 이유다.
+    requires_facts:
+      - f_motive
+      - f_opp
+      - f_means
+    blanks:
+      - label: 인물
+        candidates: closed
+        answer: p2
+        is_accusation: true
+        asks:
+          kind: culprit
+      - label: 정체
+        candidates: discovered
+        answer: 한재민
+        asks:
+          kind: culpritAlias
+          evidence: e_alias
+      - label: 동기
+        candidates: discovered
+        answer: 예산 갈등
+        asks:
+          kind: culpritMotive
+          evidence: e_motive
+    report:
+      - '모든 정황이 한 사람을 가리켰다. 진범은 '
+      - blank: 0
+      - '. 기록에 남은 이름은 '
+      - blank: 1
+      - ', 그리고 그를 움직인 것은 '
+      - blank: 2
+      - .
+    epilogue_order: 5
+reveals:
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 1
+    yield: path
+    surface: map
+    actions:
+      - a_ledger
+    narration: 다음 날 개관 직전의 정황이 정리됐다. 장부가 한 권 더 있다는 것을 뒤늦게 들었다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 2
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p1
+        content: 야간 순찰 시간에 박물관 주차장에 있었던 것은 제 일 때문입니다. 그 밖에 보탤 것은 없습니다.
+        target: statement
+    narration: 기록에 대한 정리가 끝나자, 문하린이 한마디를 보탰다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 3
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p2
+        content: 다시 여쭈시니 말씀드리면, 야간 순찰 시간에 제가 있던 곳은 박물관 주차장입니다.
+        target: statement
+    narration: 기록에 대한 정리가 끝나자, 최나림이 한마디를 보탰다.
+  - trigger:
+      'on': chapterComplete
+      chapter_order: 4
+    yield: flavor
+    surface: statement
+    add_claims:
+      - speaker: p3
+        content: 기획 전시실에 있던 시간에 대해서는 앞서 말씀드린 그대로입니다.
+        target: statement
+    narration: 기록에 대한 정리가 끝나자, 장수빈이 한마디를 보탰다.
+reopen_per_chapter: 1

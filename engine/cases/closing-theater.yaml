@@ -504,7 +504,7 @@ trick:
     broken_by:
       - e_gap
   flaw:
-    text: 안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가
+    text: 안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가?
     planted_in:
       - p4
 evidence:

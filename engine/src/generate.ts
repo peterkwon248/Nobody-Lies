@@ -464,7 +464,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
       madeBy: [], brokenBy: ['e_trace', 'e_log'],
     },
     props: ['e_tool'], staging: [],
-    flaw: '그 시각에 현장에 없었다면 왜 아침에 가장 먼저 알았는가',
+    flaw: '그 시각에 현장에 없었다면 왜 아침에 가장 먼저 알았는가?',
     evidence: [
       { id: 'e_trace', description: '새벽의 흔적', record: '복도 끝에 젖은 자국이 남아 있었다.' },
       { id: 'e_log', description: '출입 기록', record: '문이 새벽에 한 번 여닫혔다.' },
@@ -492,7 +492,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
     exit: { slot: 't1', method: '창을 넘어 나갔다', enabledBy: ['e_staged'], brokenBy: ['e_sill'] },
     space: { sceneWindow: true },   // 넘어갈 창이 도면에 실재해야 한다
     props: ['e_tool'], staging: ['e_staged'],
-    flaw: '스스로 그랬다면 왜 문이 안에서만 잠겨 있지 않았는가',
+    flaw: '스스로 그랬다면 왜 문이 안에서만 잠겨 있지 않았는가?',
     evidence: [
       { id: 'e_staged', description: '남겨진 쪽지', record: '글씨가 본인의 다른 기록과 달랐다.', isStaging: true },
       { id: 'e_sill', description: '창턱의 자국', record: '창턱 바깥쪽에 눌린 자국이 있었다.' },
@@ -520,7 +520,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
     exit: { slot: 't1', method: '잠금이 걸리기 전에 빠져나갔다', enabledBy: ['e_seal'], brokenBy: ['e_gap'] },
     space: { sceneLocked: true },    // 잠기는 문이 도면에 실재해야 한다
     props: ['e_tool'], staging: ['e_seal'],
-    flaw: '안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가',
+    flaw: '안에서만 잠글 수 있었다면 왜 열쇠가 바깥에 있었는가?',
     evidence: [
       { id: 'e_seal', description: '안쪽에서 걸린 잠금', record: '잠금장치가 안쪽으로 걸려 있었다.', isStaging: true },
       { id: 'e_gap', description: '문틀의 틈', record: '문틀 아래쪽에 손가락 하나 폭의 틈이 있었다.' },
@@ -558,7 +558,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
       madeBy: ['e_pried'], brokenBy: ['e_shards'],
     },
     props: ['e_tool'], staging: ['e_pried'],
-    flaw: '바깥에서 비틀었다면 왜 부스러기가 안쪽 바닥에만 떨어져 있는가',
+    flaw: '바깥에서 비틀었다면 왜 부스러기가 안쪽 바닥에만 떨어져 있는가?',
     evidence: [
       { id: 'e_pried', description: '비틀린 잠금장치', record: '바깥으로 난 문의 잠금장치에 비튼 자국이 있었다.', isStaging: true },
       { id: 'e_shards', description: '떨어진 부스러기', record: '부스러기가 문 안쪽 바닥에만 떨어져 있었다.' },
@@ -599,7 +599,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
       madeBy: ['e_spill'], brokenBy: ['e_angle'],
     },
     props: ['e_tool'], staging: ['e_spill'],
-    flaw: '넘어져서 그렇게 됐다면 왜 손을 짚은 자국이 어디에도 없는가',
+    flaw: '넘어져서 그렇게 됐다면 왜 손을 짚은 자국이 어디에도 없는가?',
     evidence: [
       { id: 'e_spill', description: '엎질러진 자리', record: '바닥에 엎질러진 자국이 넓게 번져 있었다.', isStaging: true },
       { id: 'e_angle', description: '맞지 않는 각도', record: '다친 자리가 넘어진 방향과 반대쪽이었다.' },
@@ -626,7 +626,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
     },
     props: ['e_tool'], staging: ['e_arranged'],
     // ⛔ 「홀」·「방」을 그대로 쓰면 안 된다 — 기본 팔레트 이름이다. 아래 §자리표 참조
-    flaw: '그 자리에서 그랬다면 왜 바닥에 끌린 자국이 {hall}에서부터 이어지는가',
+    flaw: '그 자리에서 그랬다면 왜 바닥에 끌린 자국이 {hall}에서부터 이어지는가?',
     evidence: [
       { id: 'e_arranged', description: '정돈된 자리', record: '주변이 지나치게 정돈돼 있었다.', isStaging: true },
       { id: 'e_drag', description: '끌린 자국', record: '{hall}에서 {room}까지 바닥에 끌린 자국이 이어졌다.' },
@@ -659,7 +659,7 @@ const TRICKS: Record<string, () => TrickBuild> = {
       madeBy: [], brokenBy: ['e_device', 'e_timer'],
     },
     props: ['e_device'], staging: [],
-    flaw: '그 시각에 아무도 없었다면 무엇이 그것을 시작했는가',
+    flaw: '그 시각에 아무도 없었다면 무엇이 그것을 시작했는가?',
     evidence: [
       { id: 'e_device', description: '설치된 장치', record: '방 한쪽에 미리 놓인 장치가 있었다.' },
       { id: 'e_timer', description: '맞춰진 눈금', record: '눈금이 새벽 시각에 맞춰져 있었다.' },

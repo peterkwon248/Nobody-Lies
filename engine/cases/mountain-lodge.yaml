@@ -433,7 +433,7 @@ trick:
     broken_by: [e_receipt, e_dryice]
 
   flaw:
-    text: 자살할 사람이 왜 그날 손님들을 초대했는가
+    text: 자살할 사람이 왜 그날 손님들을 초대했는가?
     # 허점은 반드시 실제로 심긴 자리를 가리킨다.
     # 자유 텍스트로 두면 작가 머릿속에만 있는 허점을 적을 수 있다.
     planted_in: [yujin, e_victim_phone]

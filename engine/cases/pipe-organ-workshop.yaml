@@ -487,7 +487,7 @@ trick:
         - e_trace
         - e_log
   flaw:
-    text: 그 시각에 현장에 없었다면 왜 아침에 가장 먼저 알았는가
+    text: 그 시각에 현장에 없었다면 왜 아침에 가장 먼저 알았는가?
     planted_in:
       - p3
 evidence:
