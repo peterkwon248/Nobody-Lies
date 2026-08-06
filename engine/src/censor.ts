@@ -73,6 +73,22 @@ export function passages(c: Case): Passage[] {
   })
   for (const [i, p] of (c.prologue ?? []).entries())
     out.push({ where: `prologue[${i}]`, text: ko(p) })
+  /**
+   * ★ 동기 인과 세 칸 (2026-08-06 · `types.ts §Fact.story`) ★
+   *
+   * **새 산문 채널이라 관할에 안 들어와 있었다** — 이 저장소가 반복해 데인 「채널
+   * 결손」의 또 한 판본이다. 넣는 이유는 `leak` 이 아니라 **`contradiction`** 이다:
+   * 세 칸은 대부분 **닻 없이 새로 태어나는 명제**(결심 문장은 원리상 전부 그렇다)라
+   * 기존 산문과 어긋날 수 있는 유일한 자리다.
+   *
+   * ⛳ **누설 위험은 낮다** — 1막은 채점 뒤에 뜬다. 그래도 같이 본다: 세 칸이
+   * 조사로 얻어야 할 단어를 말하면 그건 저작 실수고, 벽 5칸이 이미 그것을 잰다.
+   */
+  for (const f of c.facts ?? []) {
+    if (!f.story) continue
+    for (const k of ['background', 'trigger', 'resolve'] as const)
+      out.push({ where: `facts[${f.id}].story.${k}`, text: f.story[k] })
+  }
   return out.filter((p) => p.text.trim())
 }
 

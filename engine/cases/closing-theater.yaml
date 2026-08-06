@@ -649,6 +649,19 @@ facts:
     kind: motive
     subject: p4
     content: 퍼진 소문
+    # ★ 인과 세 칸 — 1막 동기 비트 (2026-08-06 · 경훈 저작 확정판)
+    # 닻:
+    #   background ← terms 「퍼진 소문」 note 원문
+    #   trigger    ← e_motive 「마지막 줄은 폐관 발표가 있던 달에서 끊겨」 + 폐관 두 주 설정
+    #                ⚠ 신설: 「그날 정산이 그 줄까지 들춘다」는 시점. 폐관 서류철이
+    #                  이미 묶여 있고(a_papers 결과문) 모순 없다
+    #   resolve    ← ⚠ 신설. 결심 문장은 원리상 전부 신설이다.
+    #                ⛳ 물증을 없앤 것이 아니라 「아는 사람」을 지운 것 — e_motive 가
+    #                  그대로 남아 있는 세계와 정합해야 해서 이 꼴이다
+    story:
+      background: 정산 밖에서 오간 돈을 두고 극장 안에 말이 돌았다
+      trigger: 그날, 폐관 정산이 그 몇 줄까지 들추게 되어 있었다
+      resolve: 장부가 닫히기 전에, 그 줄을 아는 사람을 지우는 쪽을 골랐다
     revealed_by:
       - e_motive
     requires:

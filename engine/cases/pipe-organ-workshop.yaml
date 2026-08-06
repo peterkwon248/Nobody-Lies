@@ -629,6 +629,18 @@ facts:
     kind: motive
     subject: p3
     content: 채무 관계
+    # ★ 인과 세 칸 — 1막 동기 비트 (2026-08-06 · 경훈 저작 확정판)
+    # 닻:
+    #   background ← e_motive 「장부 뒷장에 사람별로 적힌 … 지워지지 않은 줄이 남아 있다」
+    #   trigger    ← reveals narration 「공방에는 손으로 적어두는 장부가 한 권 더 있다」
+    #                ⚠ 신설: 범인이 **그날** 알았다는 시점. 저 narration 이 말하는 것은
+    #                  **수사가** 안 시점이라 충돌하지 않는다 — 오히려 중반 공개가
+    #                  엔딩에서 회수되는 첫 떡밥이 된다 (경훈 판단)
+    #   resolve    ← ⚠ 신설. 결심 문장은 원리상 전부 신설이다
+    story:
+      background: 장부 뒷장에는 지워지지 않은 줄이 남아 있었다
+      trigger: 그날, 그 줄이 적힌 장부가 한 권 더 있다는 걸 알았다
+      resolve: 장부가 두 권이 되기 전에, 셈을 아는 사람을 하나로 줄이기로 했다
     revealed_by:
       - e_motive
     requires:
