@@ -625,16 +625,17 @@ const TRICKS: Record<string, () => TrickBuild> = {
       madeBy: ['e_arranged'], brokenBy: ['e_drag', 'e_lividity'],
     },
     props: ['e_tool'], staging: ['e_arranged'],
-    flaw: '그 자리에서 그랬다면 왜 바닥에 끌린 자국이 홀에서부터 이어지는가',
+    // ⛔ 「홀」·「방」을 그대로 쓰면 안 된다 — 기본 팔레트 이름이다. 아래 §자리표 참조
+    flaw: '그 자리에서 그랬다면 왜 바닥에 끌린 자국이 {hall}에서부터 이어지는가',
     evidence: [
       { id: 'e_arranged', description: '정돈된 자리', record: '주변이 지나치게 정돈돼 있었다.', isStaging: true },
-      { id: 'e_drag', description: '끌린 자국', record: '홀에서 방까지 바닥에 끌린 자국이 이어졌다.' },
+      { id: 'e_drag', description: '끌린 자국', record: '{hall}에서 {room}까지 바닥에 끌린 자국이 이어졌다.' },
       { id: 'e_lividity', description: '시반의 방향', record: '시반이 놓인 자세와 맞지 않는 쪽에 몰려 있었다.' },
     ],
     actions: [
       { id: 'a_hall', label: '복도 조사', cost: 1, gives: ['e_drag'], salience: 0.4, yield: 'solution',
         verb: 'search', target: { kind: 'location', id: 'hall' },
-        result: res('바닥에 이어진 자국', '홀에서 방 쪽으로 끌린 자국이 이어졌다.') },
+        result: res('바닥에 이어진 자국', '{hall}에서 {room} 쪽으로 끌린 자국이 이어졌다.') },
       { id: 'a_lividity', label: '시신 자세 검사', cost: 1, gives: ['e_lividity', 'e_arranged'], salience: 0.3, yield: 'solution',
         // ★ 부검은 **시신**을 겨눈다 — 방이 아니다 ★ 산장이 그렇고
       // (`mountain-lodge.yaml:665`), 앱 `targetKey` 가 부검 키를 **언제나 `body`**
@@ -930,10 +931,35 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
       { slot: LAST, location: at.get('t2')! },
     ]
   }
+  /**
+   * ★ **자리표** — 아키타입 문안의 장소 이름을 팔레트 것으로 바꾼다 ★ (2026-08-06)
+   *
+   * ⛔ `body_moved` 의 문안 셋이 「홀」·「방」을 **고유명사로** 박아두고 있었다.
+   * 기본 팔레트에서는 우연히 맞지만 `museum` 팔레트에는 「홀」이라는 곳이 없다
+   * (「중앙 로비」다) — **물증 기록 · 조사 결과문 · 트릭 허점 셋이 동시에 거짓말한다.**
+   * 플레이 중에도 보이고 엔딩 1막의 「균열」 비트에도 그대로 실려 나간다.
+   *
+   * 후보 감사에서 **museum × body_moved 를 실제로 눌러보고** 잡았다 — 기본 팔레트만
+   * 돌리는 `gen-check` 40건은 이 결함을 **영영 못 본다**(거기선 홀·방이 맞는 이름이다).
+   *
+   * ⛳ `TRICKS` 를 인자 받는 함수로 바꾸지 않는다 — 위 §TRICKS 주석이 금한다.
+   * `presence`·`claim` 을 여기서 늘리는 것과 **같은 자리, 같은 방식**이다.
+   */
+  const fillPlaces = (s: string) =>
+    s.replace(/\{hall\}/g, places.hall!).replace(/\{room\}/g, places.room!)
+
   const t = {
     ...tRaw,
     presence: expandCells(tRaw.presence),
     claim: expandCells(tRaw.claim),
+    flaw: fillPlaces(tRaw.flaw),
+    evidence: tRaw.evidence.map((e) => ({ ...e, ...(e.record ? { record: fillPlaces(e.record) } : {}) })),
+    actions: tRaw.actions.map((a) => ({
+      ...a,
+      ...(a.result
+        ? { result: { title: { ko: fillPlaces(a.result.title.ko) }, body: { ko: fillPlaces(a.result.body.ko) } } }
+        : {}),
+    })),
     // 빠져나간 시점은 **갈림의 마지막 칸**이다 — 그 뒤 `LAST` 에는 홀에 있다
     ...(tRaw.exit ? { exit: { ...tRaw.exit, slot: WIN[WIN.length - 1]! } } : {}),
   }
