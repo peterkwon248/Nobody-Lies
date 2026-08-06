@@ -353,6 +353,13 @@ export default class App extends React.Component {
    */
   CAND = { person: ['서지안', '한유빈', '문세라', '오나경', '백리원', '윤다인'], place: ['본채', '다인의 방', '별채', '진입로'], time: ['전날 밤', '새벽 3시', '새벽 3~8시', '오전'] };
   /**
+   * 증명 사슬(`_proof`)과 트릭 재구성(`_epilogue`). **엔진이 계산해 실어 보낸다** —
+   * `applyCase` 가 채우고, 사건 파일이 없으면 비어 있다(내장 산장이 그 경우다).
+   * 비면 해설 화면의 해당 절이 통째로 안 뜬다 — **없는 것을 지어내지 않는다.**
+   */
+  PROOF = [];
+  EPILOGUE = null;
+  /**
    * 확보 단어 풀. **`applyCase` 가 엔진 `terms` 순서로 다시 만든다** — 이 값은
    * 사건 데이터가 없을 때의 기본값이다.
    *
@@ -1776,6 +1783,19 @@ export default class App extends React.Component {
      * 떨어져 나갔다(§갈 수 없다). **갈 수 없는 곳을 칩으로 내밀지 않는다.**
      */
     this.PLACES = this.LOCATIONS.map((l) => ({ id: l.id, ko: l.ko, en: l.en || l.ko }))
+
+    /**
+     * 관측 표면 — 엔진이 계산한 **증명 사슬**과 **트릭 재구성**을 받는다 (2026-08-06).
+     *
+     * 테스터: *"정답을 봐도 트릭·동기 납득 안 감"* · *"보고서 공란을 풀 수 없다"*.
+     * 둘 다 엔진이 이미 아는 것이었고 **앱까지 오는 길이 없었다.**
+     * `export-case`·`cli --emit` 둘 다 `emit-derived.ts` 를 지나므로 언제나 온다
+     * (`cand-check §3` 이 문다).
+     *
+     * ⛳ **여기서 다시 계산하지 않는다** — 같은 규칙이 두 벌이면 갈라진다.
+     */
+    this.PROOF = Array.isArray(c._proof) ? c._proof : []
+    this.EPILOGUE = c._epilogue || null
   }
 
   constructor(props) {
@@ -2048,6 +2068,87 @@ export default class App extends React.Component {
            */
           cardStyle: { display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '44px', padding: '0 12px', borderRadius: 'var(--r-sm)', border: '1px solid ' + (st === 'used' ? 'var(--g-confirm)' : 'var(--border-strong)'), background: st === 'used' ? 'rgba(76,183,130,.08)' : (st === 'ok' ? 'var(--bg-elevated)' : 'transparent'), color: st === 'ok' ? 'var(--fg)' : 'var(--fg-4)', cursor: st === 'ok' ? 'pointer' : 'default', font: '500 12px var(--font-sans)' } }; }),
       slots: sd.map(s => { const f = d.slots[s.k]; return { label: s.l, filled: !!f, empty: !f, text: f ? f.text : '', isNew: f ? f.isNew : false, onJump: f ? (() => this.goToLog(f.logKey)) : (() => {}) }; }) }; });
+  }
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  해설 — 「무슨 일이 있었나」 (2026-08-06 · 관측 표면 수리)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * 테스터 전찬웅 3차: *"정답을 봐도 트릭·동기 납득 안 감"*. 채점 화면이 **답만**
+   * 보여주고 **왜 그 답인지**를 안 보여줬다.
+   *
+   * ⛔ **정답 나열이 아니라 사슬의 재생이다** (경훈 확정). 공란마다
+   * `_proof` 의 걸음(무엇을 보고 → 어느 규칙이 → 누가 지워지고 → 몇이 남나)을
+   * 그대로 펴 놓는다. **새 산문을 짓지 않는다** — `proof.ts` 와 `epilogue.ts` 가
+   * 이미 계산한 것의 파기를 멈추는 것이고, 문장 조립만 여기서 결정론적으로 한다.
+   *
+   * ⛳ **데이터가 없으면 그 절을 안 그린다.** 내장 산장(사건 파일 없이 여는 경우)이
+   * 그렇다 — 빈 제목만 남기면 「있는데 비었다」로 읽혀 이 저장소가 반복해서 데인
+   * 모양이 된다.
+   */
+  buildEpilogueView() {
+    const e = this.EPILOGUE;
+    if (!e) return null;
+    const ln = this.state.lang, ko = ln === 'ko';
+    const names = (arr) => (arr || []).map(x => x.description).filter(Boolean).join(' · ');
+
+    // ① 그날 — 현장 한 줄 + 거짓말이 난 자리. 그 자리가 곧 범행 시각이다
+    const scene = e.scene && e.scene.state ? e.scene.state : '';
+    const lie = e.lie
+      ? (ko
+        ? `${e.culprit.name}은 ${e.lie.slotLabel}에 ${e.lie.claimedLabel}에 있었다고 진술했다. 실제로는 ${e.lie.actualLabel}에 있었다.`
+        : `${e.culprit.name} claimed to be at ${e.lie.claimedLabel} during ${e.lie.slotLabel}. In fact: ${e.lie.actualLabel}.`)
+      : '';
+
+    // ② 트릭 — 인상 하나마다 「무엇이 만들었나 / 무엇이 깨나」
+    const illusions = (e.illusions || []).map(il => ({
+      impression: il.impression,
+      madeBy: names(il.madeBy), hasMade: !!(il.madeBy || []).length,
+      brokenBy: names(il.brokenBy), hasBroken: !!(il.brokenBy || []).length,
+      madeLabel: ko ? '만든 것' : 'Built by', brokenLabel: ko ? '깨는 것' : 'Broken by',
+    }));
+    const exit = e.exit && e.exit.method
+      ? { method: e.exit.method, brokenBy: names(e.exit.brokenBy), hasBroken: !!(e.exit.brokenBy || []).length,
+        label: ko ? '빠져나간 방법' : 'Exit', brokenLabel: ko ? '깨는 것' : 'Broken by' }
+      : null;
+    const flaw = e.flaw && e.flaw.text
+      ? { text: e.flaw.text, label: ko ? '트릭의 허점' : 'The flaw' }
+      : null;
+
+    /**
+     * ③ 동기·기회·수단 — **범인의 것만** 고른다.
+     * 무고한 넷의 `no_opportunity` 까지 늘어놓으면 해설이 배제표가 되고,
+     * 「무슨 일이 있었나」가 아니라 「누가 아닌가」를 말하게 된다.
+     */
+    const WANT = { motive: ko ? '동기' : 'Motive', means: ko ? '수단' : 'Means', opportunity: ko ? '기회' : 'Opportunity', identity: ko ? '정체' : 'Identity' };
+    const facts = (e.facts || [])
+      .filter(f => WANT[f.kind] && f.subject === e.culprit.id)
+      .map(f => ({ label: WANT[f.kind], content: f.content, from: names(f.revealedBy), hasFrom: !!(f.revealedBy || []).length }));
+
+    // ④ 공란별 증명 사슬 — 걸음이 있는 것만. 걸음 없는 사슬은 보여줄 것이 없다
+    const chains = (this.PROOF || [])
+      .filter(p => (p.steps || []).length)
+      .map(p => ({
+        head: `${p.chapter}장 · ${p.label}`, answer: p.answerLabel,
+        costLabel: p.cost > 0 ? (ko ? `조사 ${p.cost}회` : `${p.cost} inv.`) : (ko ? '조사 없이' : 'free'),
+        steps: (p.steps || []).map(s => ({
+          observation: s.observation, rule: s.rule,
+          eliminates: (s.eliminates || []).join(' · '), hasElim: !!(s.eliminates || []).length,
+          remaining: ko ? `남음 ${s.remaining}` : `${s.remaining} left`,
+        })),
+      }));
+
+    return {
+      title: ko ? '무슨 일이 있었나' : 'What really happened',
+      scene, hasScene: !!scene, lie, hasLie: !!lie,
+      illusions, hasIllusions: illusions.length > 0,
+      exit, hasExit: !!exit, flaw, hasFlaw: !!flaw,
+      facts, hasFacts: facts.length > 0, factsTitle: ko ? '범인' : 'The culprit',
+      culprit: e.culprit.name,
+      chains, hasChains: chains.length > 0,
+      chainsTitle: ko ? '각 공란은 이렇게 좁혀진다' : 'How each blank narrows',
+      trickTitle: ko ? '트릭' : 'The trick',
+    };
   }
   goToLog(logKey) { this.setState({ view: 'investigate', openProfile: null, hlLog: logKey || null }); if (logKey) { clearTimeout(this._hlT); this._hlT = setTimeout(() => { if (this.state.hlLog === logKey) this.setState({ hlLog: null }); }, 2200); } }
   setMode(m) { this.setState({ stmtMode: m, openCell: null }); }
@@ -2944,7 +3045,9 @@ export default class App extends React.Component {
     const narrMine = mkNarr('mine'), narrReal = mkNarr('real');
     Object.keys(this.BLANKS).forEach(id => { const d = this.BLANKS[id]; const mine = this.state.blanks[id]; if (mine !== d.ans) corrections.push({ label: (ln === 'ko' ? (catL[d.kind] || '') : d.kind), mine: mine || (ln === 'ko' ? '미입력' : 'blank'), right: d.ans }); });
     const anyWrong = corrections.length > 0;
+    const epi = this.buildEpilogueView();
     return { done, stuck, correct, total, spent, narrMine, narrReal, anyWrong, allCorrect: !anyWrong, corrections, nomId,
+      epi: epi, hasEpi: !!epi,
       foldOpen: this.state.resultFold, onToggleFold: () => this.setState({ resultFold: !this.state.resultFold }),
       foldLabel: (this.state.resultFold ? (ln === 'ko' ? '바로잡기 접기' : 'Hide corrections') : (ln === 'ko' ? ('바로잡기 ' + corrections.length + '곳') : (corrections.length + ' corrections'))), foldChevron: this.state.resultFold ? '▾' : '▸',
       mineLabel: ln === 'ko' ? '내가 재구성한 이야기' : 'My reconstruction', realLabel: ln === 'ko' ? '실제' : 'Actual',
@@ -4424,6 +4527,52 @@ export default class App extends React.Component {
                       {arr(V.result.narrReal).map((sec,$index)=>(<React.Fragment key={$index}><p style={S("margin:0;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{arr(sec.runs).map((r,$index)=>(<React.Fragment key={$index}>{(r.isText)?(<><span>{r.text}</span></>):null}{(r.isBlank)?(<><span style={r.style}>{r.disp}</span></>):null}</React.Fragment>))}</p></React.Fragment>))}
                     </div>
                   </>):null}
+
+                  {/* 해설 — 「무슨 일이 있었나」 (2026-08-06 · 테스터 ③)
+                      정답 나열이 아니라 **사슬의 재생**이다. 엔진이 이미 계산한
+                      `_epilogue`(트릭 재구성)와 `_proof`(공란별 증명)를 편다.
+                      데이터가 없으면 이 절이 통째로 안 뜬다 — 빈 제목을 남기지 않는다. */}
+                  {(V.result.hasEpi)?(<><div style={S("border-top:1px solid var(--border);padding-top:24px;margin-bottom:28px")}>
+                    <div className="v-h2" style={S("color:var(--fg);margin-bottom:16px")}>{V.result.epi.title}</div>
+                    {(V.result.epi.hasScene)?(<><p style={S("margin:0 0 10px;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.result.epi.scene}</p></>):null}
+                    {(V.result.epi.hasLie)?(<><p style={S("margin:0 0 20px;font-size:var(--read-fs);line-height:1.9;color:var(--fg);text-wrap:pretty")}>{V.result.epi.lie}</p></>):null}
+
+                    {(V.result.epi.hasIllusions)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px")}>{V.result.epi.trickTitle}</div></>):null}
+                    {arr(V.result.epi.illusions).map((il,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--g-suspect);padding-left:12px;margin-bottom:14px")}>
+                      <div className="v-meta" style={S("color:var(--fg);font-weight:600;line-height:1.6")}>{il.impression}</div>
+                      {(il.hasMade)?(<><div className="v-meta" style={S("color:var(--fg-3);margin-top:4px")}>{il.madeLabel} · {il.madeBy}</div></>):null}
+                      {(il.hasBroken)?(<><div className="v-meta" style={S("color:var(--g-confirm)")}>{il.brokenLabel} · {il.brokenBy}</div></>):null}
+                    </div></React.Fragment>))}
+                    {(V.result.epi.hasExit)?(<><div style={S("border-left:2px solid var(--border-strong);padding-left:12px;margin-bottom:14px")}><div className="v-meta" style={S("color:var(--fg-4)")}>{V.result.epi.exit.label}</div><div className="v-meta" style={S("color:var(--fg-2);line-height:1.6")}>{V.result.epi.exit.method}</div>{(V.result.epi.exit.hasBroken)?(<><div className="v-meta" style={S("color:var(--g-confirm)")}>{V.result.epi.exit.brokenLabel} · {V.result.epi.exit.brokenBy}</div></>):null}</div></>):null}
+                    {(V.result.epi.hasFlaw)?(<><div style={S("border-left:2px solid var(--g-contradict);padding-left:12px;margin-bottom:20px")}><div className="v-meta" style={S("color:var(--fg-4)")}>{V.result.epi.flaw.label}</div><div className="v-meta" style={S("color:var(--fg-2);line-height:1.6")}>{V.result.epi.flaw.text}</div></div></>):null}
+
+                    {(V.result.epi.hasFacts)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px")}>{V.result.epi.factsTitle} · {V.result.epi.culprit}</div>
+                    <div style={S("display:flex;flex-direction:column;gap:8px;margin-bottom:20px")}>
+                      {arr(V.result.epi.facts).map((f,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:10px;align-items:flex-start")}>
+                        <span className="v-micro" style={S("color:var(--fg-4);width:44px;flex:none;padding-top:2px")}>{f.label}</span>
+                        <span className="v-meta" style={S("color:var(--fg-2);flex:1;line-height:1.6")}>{f.content}{(f.hasFrom)?(<><span style={S("color:var(--fg-4);font-size:11px;margin-left:6px")}>— {f.from}</span></>):null}</span>
+                      </div></React.Fragment>))}
+                    </div></>):null}
+
+                    {(V.result.epi.hasChains)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px")}>{V.result.epi.chainsTitle}</div>
+                    <div style={S("display:flex;flex-direction:column;gap:14px")}>
+                      {arr(V.result.epi.chains).map((ch,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-sm);padding:12px")}>
+                        <div style={S("display:flex;align-items:baseline;gap:8px;margin-bottom:8px")}>
+                          <span className="v-micro" style={S("color:var(--fg-4)")}>{ch.head}</span>
+                          <span className="v-meta" style={S("color:var(--accent);font-weight:600;flex:1")}>{ch.answer}</span>
+                          <span className="v-micro" style={S("color:var(--fg-4)")}>{ch.costLabel}</span>
+                        </div>
+                        {arr(ch.steps).map((st,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:8px;align-items:flex-start;margin-top:6px")}>
+                          <span style={S("width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none")}></span>
+                          <div style={S("min-width:0;flex:1")}>
+                            <span className="v-meta" style={S("color:var(--fg-2)")}>{st.observation}</span>
+                            <span className="v-micro" style={S("color:var(--fg-4);margin-left:6px")}>{st.rule}</span>
+                            {(st.hasElim)?(<><div className="v-micro" style={S("color:var(--fg-4);margin-top:2px")}>{st.eliminates} 제외 · {st.remaining}</div></>):null}
+                          </div>
+                        </div></React.Fragment>))}
+                      </div></React.Fragment>))}
+                    </div></>):null}
+                  </div></>):null}
 
                   <div style={S("border-top:1px solid var(--border);padding-top:24px")}>
                     <div style={S("display:flex;align-items:center;gap:8px;margin-bottom:16px")}><span className="v-ui" style={S("color:var(--fg);flex:1")}>{V.result.nomLabel}</span><span style={V.result.nomStyle}>{V.result.nomResult}</span></div>

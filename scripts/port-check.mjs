@@ -118,6 +118,19 @@ const APP_ONLY = new Set([
   //    그것이 이 대조기가 지키려는 것이다.
   'pf.invActions', 'pf.hasNarr', 'pf.narr',
 
+  // 해설 화면 「무슨 일이 있었나」 (2026-08-06) — 테스터 *"정답을 봐도 트릭·동기
+  // 납득 안 감"*. 프로토타입의 채점 화면은 **답과 바로잡기까지**이고 해설이 없다.
+  // 엔진이 계산한 `_epilogue`(트릭 재구성)와 `_proof`(공란별 증명 사슬)를 편다 —
+  // **새 산문이 아니라 파기 중단**이다.
+  // ⛳ 갈래가 열일곱인 것은 **없는 절을 안 그리기** 위해서다. 데이터가 비면 제목만
+  //    남기는 편이 쉽지만, 그러면 「있는데 비었다」로 읽힌다(이 저장소의 재발 부류).
+  'result.hasEpi',
+  'result.epi.hasScene', 'result.epi.hasLie',
+  'result.epi.hasIllusions', 'result.epi.illusions', 'il.hasMade', 'il.hasBroken',
+  'result.epi.hasExit', 'result.epi.exit.hasBroken', 'result.epi.hasFlaw',
+  'result.epi.hasFacts', 'result.epi.facts', 'f.hasFrom',
+  'result.epi.hasChains', 'result.epi.chains', 'ch.steps', 'st.hasElim',
+
   // 홈 목록에서 만든 사건을 지운다 (2026-07-29) — 캠페인 생성기가 생기기 전에는
   // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
   // `confirmDel` 은 그 행이 「지울까?」를 묻는 동안의 갈래다
