@@ -137,6 +137,18 @@ const APP_ONLY = new Set([
   //    남는 한 줄. 07-31에 「일부러 쓴 짝」으로 남긴 그 둘이다
   'e.hasRecords', 'e.records',
 
+  // 해설 3막 (2026-08-06) — 테스터 4차 *"엔딩이 답만 알려주고 띡"* ·
+  // *"모범 추리 과정을 내 추리와 대조하고 싶다"*. 프로토타입 채점 화면에 없다.
+  //   1막 `act1`   엔진 문장틀(`ACT1_TEMPLATES`)이 만든 재구성. **잠정 표기 동반**
+  //   3막 `act3`   오라클 최단 경로 ↔ 내 조사 기록을 2열로. `isDecoy`·`isEmpty` 는
+  //                내 열에만 붙는 꼬리표다
+  // ⛔ **판정·점수는 없다** (경훈 확정) — 그래서 「맞음/틀림」 갈래가 여기 없다.
+  //    있으면 그것이 곧 훈계가 된다
+  'result.epi.hasAct1', 'result.epi.act1',
+  'result.epi.hasAct3', 'result.epi.act3.stats',
+  'result.epi.act3.model', 'result.epi.act3.mine', 'result.epi.act3.noMine',
+  'm.hasConfirm', 'm.isDecoy', 'm.isEmpty',
+
   // 홈 목록에서 만든 사건을 지운다 (2026-07-29) — 캠페인 생성기가 생기기 전에는
   // 지울 것이 없었다. `canDel` 은 만든 사건 행에만 달리고(앱 제공 사건은 안 달린다),
   // `confirmDel` 은 그 행이 「지울까?」를 묻는 동안의 갈래다

@@ -138,12 +138,12 @@ function stagedFeasible(c: Case, subset: Action[]): boolean {
 }
 
 /** 최단 경로 — 오라클 기준. 단계별 제약을 지킨다 */
-function findMinPath(c: Case): { size: number; path: string[] } {
+function findMinPath(c: Case): { size: number; path: string[]; ids: string[] } {
   // empty 행동은 정답에 기여하지 않으므로 탐색에서 제외한다
   const cand = c.actions.filter((a) => a.yield !== 'empty')
   const n = cand.length
-  if (n > 22) return { size: -1, path: ['탐색 생략 · 후보 과다'] }
-  let best = { size: Infinity, path: [] as string[] }
+  if (n > 22) return { size: -1, path: ['탐색 생략 · 후보 과다'], ids: [] }
+  let best = { size: Infinity, path: [] as string[], ids: [] as string[] }
   for (let mask = 0; mask < 1 << n; mask++) {
     const chosen: Action[] = []
     let cost = 0
@@ -153,9 +153,72 @@ function findMinPath(c: Case): { size: number; path: string[] } {
         cost += cand[i].cost
       }
     if (cost >= best.size) continue
-    if (stagedFeasible(c, chosen)) best = { size: cost, path: chosen.map((a) => a.label) }
+    if (stagedFeasible(c, chosen)) best = { size: cost, path: chosen.map((a) => a.label), ids: chosen.map((a) => a.id) }
   }
   return best
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ *  오라클 경로를 **단계별로** 편다 — 해설 3막의 재료 (2026-08-06)
+ * ─────────────────────────────────────────────────────────────
+ *
+ * 테스터 전찬웅 4차: *"모범 추리 과정을 내 추리와 대조하고 싶다."*
+ *
+ * ⛔ **`simulate()` 가 아니라 `findMinPath()` 다.** 지시서는 `simulate` 를 「오라클
+ * 경로」로 불렀지만 그 함수의 주석이 스스로 부정한다 — *"최단 경로(오라클)가 아니라
+ * 이쪽이다"*. `simulate` 는 **salience 내림차순으로 밟는 탐욕 플레이어**이고,
+ * salience 최상위는 전부 `redherring` 이다(§decoyActions). 그것을 「모범 수사」라고
+ * 내놓으면 **미끼를 밟는 경로를 모범이라 부르는 꼴**이 된다.
+ *
+ * ⛳ **순서를 지어내지 않는다.** `findMinPath` 가 고르는 것은 **집합**이지 열이 아니다.
+ * 그래서 그 집합을 `stagedFeasible` 과 **같은 걸음**으로 다시 걸어 「장 확인 전까지
+ * 무엇을 했나」로 묶는다 — 계산된 단계지 서술상의 순서가 아니다.
+ *
+ * ⚠ 후보가 22개를 넘으면 `findMinPath` 가 탐색을 생략한다. 그때는 빈 배열이고,
+ * 화면은 3막을 안 그린다(없는 것을 지어내지 않는다).
+ */
+export type OracleStage = {
+  /** 이 단계 뒤에 확인되는 장. 마지막 묶음은 `null` */
+  confirmsChapter: number | null
+  actions: { id: string; label: string; cost: number; gives: string[] }[]
+}
+
+export function oraclePath(c: Case): { size: number; stages: OracleStage[] } {
+  const min = findMinPath(c)
+  if (!min.ids?.length || min.size < 0) return { size: min.size ?? -1, stages: [] }
+
+  const byId = new Map(c.actions.map((a) => [a.id, a]))
+  const pool = min.ids.map((id) => byId.get(id)).filter(Boolean) as Action[]
+  const evidence = new Set<string>()
+  const done = new Set<number>()
+  const stages: OracleStage[] = []
+  let guard = 0
+
+  while (done.size < c.chapters.length && guard++ < 200) {
+    const facts = deriveFacts(c, evidence, done.size)
+    const idx = confirmableChapter(c, facts, deriveTerms(c, evidence), done)
+    if (idx >= 0) {
+      done.add(idx)
+      if (stages.length) stages[stages.length - 1].confirmsChapter = c.chapters[idx].order
+      else stages.push({ confirmsChapter: c.chapters[idx].order, actions: [] })
+      continue
+    }
+    const usable = pool.filter((a) => (a.availableAfter ?? 0) <= done.size)
+    if (!usable.length) break
+    /**
+     * ⛳ **한 번에 하나씩 집는다.** `stagedFeasible` 은 「가능한가」만 물으므로 쓸 수
+     * 있는 것을 한 라운드에 전부 털어도 답이 같다. 그런데 그 걸음을 그대로 옮기면
+     * 화면에 **「단계2 · 여섯 개를 한꺼번에」** 로 뭉쳐 나온다(실측). 해설의 3막은
+     * 「이 순서로 가면 여기서 장이 열린다」를 보여주는 자리라 **한 걸음씩**이 맞다.
+     * 순서는 사건 파일의 조사 순서로 결정론적이고, **지어낸 것이 아니다.**
+     */
+    const a = usable[0]
+    a.gives.forEach((e) => evidence.add(e))
+    pool.splice(pool.indexOf(a), 1)
+    stages.push({ confirmsChapter: null, actions: [{ id: a.id, label: a.label, cost: a.cost, gives: [...a.gives] }] })
+  }
+  return { size: min.size, stages }
 }
 
 /**

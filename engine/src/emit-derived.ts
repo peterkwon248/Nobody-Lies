@@ -26,6 +26,7 @@
 import type { Case } from './types.js'
 import { proveBlanks } from './proof.js'
 import { buildEpilogue } from './epilogue.js'
+import { oraclePath } from './verifier.js'
 
 /**
  * 증명 사슬 중 **화면이 읽는 것만** 남긴다.
@@ -64,5 +65,15 @@ export function emitDerived(c: Case, r: Judgement) {
     _oracle: r.minActions,
     _proof: trimProof(c),
     _epilogue: buildEpilogue(c),
+    /**
+     * 해설 3막 — **모범 수사**의 단계별 경로 (2026-08-06).
+     *
+     * ⛔ `simulate()` 가 아니라 `oraclePath()`(= `findMinPath` 기반)다.
+     * `simulate` 는 salience 내림차순 탐욕 플레이어이고 salience 최상위는 전부
+     * 미끼다 — 그것을 「모범」이라 부르면 **미끼 밟는 길을 모범이라 부르는 꼴**이다.
+     *
+     * ⚠ 후보 22개 초과면 탐색이 생략되어 `stages` 가 빈다. 화면은 3막을 안 그린다.
+     */
+    _oraclePath: oraclePath(c),
   }
 }

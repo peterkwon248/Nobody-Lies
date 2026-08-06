@@ -359,6 +359,8 @@ export default class App extends React.Component {
    */
   PROOF = [];
   EPILOGUE = null;
+  /** 모범 수사(오라클) 경로 — 해설 3막. `applyCase` 가 채운다 */
+  ORACLE = null;
   /**
    * 물증 id → **기록 산문**. `applyCase` 가 엔진 `evidence[].record` 에서 만든다.
    * 조사 결과문과 다른 글이다 — 결과문은 발견 순간, 기록은 카드에 남는 한 줄.
@@ -1815,6 +1817,7 @@ export default class App extends React.Component {
      */
     this.PROOF = Array.isArray(c._proof) ? c._proof : []
     this.EPILOGUE = c._epilogue || null
+    this.ORACLE = c._oraclePath || null
   }
 
   constructor(props) {
@@ -2164,8 +2167,67 @@ export default class App extends React.Component {
         })),
       }));
 
+    /**
+     * 1막 — 그날의 재구성. 엔진이 `ACT1_TEMPLATES` 로 만든 문장을 그대로 받는다.
+     * ⚠ **잠정 문안이라 화면에 그렇게 표기한다**(트릭 붕괴 인터루드 선례).
+     */
+    const a1 = e.act1 || { lines: [] };
+    const act1 = (a1.lines || []).map(l => ({ text: ko ? l.ko : l.en, isScene: l.kind === 'atScene' || l.kind === 'moved', isClaim: l.kind === 'claimed' }));
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  3막 — 모범 수사와 나의 수사 (2026-08-06 · 테스터 4차)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * ⛔ **판정하지 않는다** (경훈 확정: *"뭉개면 자랑이 훈계가 된다"*).
+     * 점수도 등급도 없다. **나란히 놓기만 한다** — *"이 디테일에서 틀렸네"* 는
+     * 플레이어가 스스로 하는 말이고, 그 만족감이 요구의 본체다.
+     *
+     * ⛳ 모범은 **오라클 최단 경로**다(`findMinPath`). `simulate` 가 아니다 —
+     * 그쪽은 salience 순으로 미끼부터 밟는 탐욕 플레이어다.
+     */
+    const orc = this.ORACLE;
+    let act3 = null;
+    if (orc && (orc.stages || []).length) {
+      const mineLog = (this.state.invLog || []);
+      const mineIds = mineLog.map(x => (this.CASE_ACTIONS?.[x.action + ':' + x.key] || {}).id).filter(Boolean);
+      const mineSet = new Set(mineIds);
+      const orcActions = (orc.stages || []).flatMap(s => s.actions || []);
+      const orcSet = new Set(orcActions.map(a => a.id));
+      const decoys = mineLog.filter(x => (this.CASE_ACTIONS?.[x.action + ':' + x.key] || {}).yield === 'redherring').length;
+      act3 = {
+        title: ko ? '모범 수사와 나의 수사' : 'The model investigation, and yours',
+        note: ko ? '점수는 없다. 나란히 두었을 뿐이다.' : 'No score. Just side by side.',
+        modelLabel: ko ? `모범 · 조사 ${orc.size}회` : `Model · ${orc.size} investigations`,
+        mineLabel: ko ? `나 · 조사 ${mineLog.length}회` : `You · ${mineLog.length}`,
+        model: (orc.stages || []).map((s, i) => ({
+          n: i + 1,
+          label: (s.actions || []).map(a => a.label).join(' · ') || (ko ? '조사 없이' : 'no investigation'),
+          empty: !(s.actions || []).length,
+          confirms: s.confirmsChapter ? (ko ? `${s.confirmsChapter}장 확인` : `ch.${s.confirmsChapter}`) : '',
+          hasConfirm: !!s.confirmsChapter,
+        })),
+        mine: mineLog.map((x, i) => {
+          const a = this.CASE_ACTIONS?.[x.action + ':' + x.key] || {};
+          return { n: i + 1, label: [x.actionLabel, x.targetLabel].filter(Boolean).join(' · '),
+            inModel: !!a.id && orcSet.has(a.id), isDecoy: a.yield === 'redherring', isEmpty: x.type === 'empty' };
+        }),
+        hasMine: mineLog.length > 0,
+        noMine: mineLog.length === 0,
+        noMineLabel: ko ? '조사를 한 번도 하지 않았다.' : 'No investigations were made.',
+        stats: [
+          { label: ko ? '모범과 겹친 조사' : 'Shared with model', v: '' + orcActions.filter(a => mineSet.has(a.id)).length + ' / ' + orcActions.length },
+          { label: ko ? '모범이 갔는데 안 간 곳' : 'Model went, you did not', v: '' + orcActions.filter(a => !mineSet.has(a.id)).length },
+          { label: ko ? '미끼에 쓴 횟수' : 'Spent on decoys', v: '' + decoys },
+        ],
+      };
+    }
+
     return {
       title: ko ? '무슨 일이 있었나' : 'What really happened',
+      act1, hasAct1: act1.length > 0,
+      act1Provisional: ko ? (a1.provisionalKo || '') : (a1.provisionalEn || ''),
+      act3, hasAct3: !!act3,
       scene, hasScene: !!scene, lie, hasLie: !!lie,
       illusions, hasIllusions: illusions.length > 0,
       exit, hasExit: !!exit, flaw, hasFlaw: !!flaw,
@@ -4585,6 +4647,14 @@ export default class App extends React.Component {
                     {(V.result.epi.hasScene)?(<><p style={S("margin:0 0 10px;font-size:var(--read-fs);line-height:1.9;color:var(--fg-2);text-wrap:pretty")}>{V.result.epi.scene}</p></>):null}
                     {(V.result.epi.hasLie)?(<><p style={S("margin:0 0 20px;font-size:var(--read-fs);line-height:1.9;color:var(--fg);text-wrap:pretty")}>{V.result.epi.lie}</p></>):null}
 
+                    {/* 1막 — 그날의 재구성 (2026-08-06 · 테스터 4차 *"답만 알려주고 띡"*)
+                        엔진이 문장틀(`ACT1_TEMPLATES`)로 만든 줄을 그대로 받는다.
+                        **자유 작문 아님** — 값 자리만 채워진 고정 문안이고, 잠정이라 표기한다. */}
+                    {(V.result.epi.hasAct1)?(<><div style={S("border-left:2px solid var(--accent);padding-left:14px;margin:0 0 22px")}>
+                      {arr(V.result.epi.act1).map((ln,$index)=>(<React.Fragment key={$index}><p style={S(`margin:0 0 6px;font-size:var(--read-fs);line-height:1.9;text-wrap:pretty;color:${ln.isScene?'var(--fg)':(ln.isClaim?'var(--g-contradict)':'var(--fg-2)')}`)}>{ln.text}</p></React.Fragment>))}
+                      <div className="v-micro" style={S("color:var(--fg-4);margin-top:8px")}>{V.result.epi.act1Provisional}</div>
+                    </div></>):null}
+
                     {(V.result.epi.hasIllusions)?(<><div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px")}>{V.result.epi.trickTitle}</div></>):null}
                     {arr(V.result.epi.illusions).map((il,$index)=>(<React.Fragment key={$index}><div style={S("border-left:2px solid var(--g-suspect);padding-left:12px;margin-bottom:14px")}>
                       <div className="v-meta" style={S("color:var(--fg);font-weight:600;line-height:1.6")}>{il.impression}</div>
@@ -4619,6 +4689,29 @@ export default class App extends React.Component {
                           </div>
                         </div></React.Fragment>))}
                       </div></React.Fragment>))}
+                    </div></>):null}
+
+                    {/* 3막 — 모범 수사와 나의 수사 (2026-08-06 · 테스터 4차)
+                        ⛔ **판정하지 않는다.** 점수도 등급도 없다 — 나란히 두기만 한다.
+                           *"이 디테일에서 틀렸네"* 는 플레이어가 스스로 하는 말이고
+                           그 만족감이 요구의 본체다. 뭉개면 자랑이 훈계가 된다. */}
+                    {(V.result.epi.hasAct3)?(<><div style={S("border-top:1px solid var(--border);margin-top:24px;padding-top:20px")}>
+                      <div className="v-h2" style={S("color:var(--fg);margin-bottom:4px")}>{V.result.epi.act3.title}</div>
+                      <div className="v-micro" style={S("color:var(--fg-4);margin-bottom:14px")}>{V.result.epi.act3.note}</div>
+                      <div style={S("display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px")}>
+                        {arr(V.result.epi.act3.stats).map((st,$index)=>(<React.Fragment key={$index}><div style={S("border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;min-width:96px")}><div className="v-micro" style={S("color:var(--fg-4)")}>{st.label}</div><div className="v-num" style={S("color:var(--fg);font-size:15px")}>{st.v}</div></div></React.Fragment>))}
+                      </div>
+                      <div style={S("display:flex;gap:16px;flex-wrap:wrap")}>
+                        <div style={S("flex:1 1 220px;min-width:0")}>
+                          <div className="v-micro" style={S("color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.result.epi.act3.modelLabel}</div>
+                          {arr(V.result.epi.act3.model).map((m,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:8px;align-items:baseline;margin-bottom:6px")}><span className="v-micro" style={S("color:var(--fg-4);width:16px;flex:none")}>{m.n}</span><span className="v-meta" style={S(`flex:1;line-height:1.5;color:${m.empty?'var(--fg-4)':'var(--fg-2)'}`)}>{m.label}</span>{(m.hasConfirm)?(<><span className="v-micro" style={S("color:var(--g-confirm);flex:none")}>{m.confirms}</span></>):null}</div></React.Fragment>))}
+                        </div>
+                        <div style={S("flex:1 1 220px;min-width:0")}>
+                          <div className="v-micro" style={S("color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px")}>{V.result.epi.act3.mineLabel}</div>
+                          {(V.result.epi.act3.noMine)?(<><div className="v-meta" style={S("color:var(--fg-4)")}>{V.result.epi.act3.noMineLabel}</div></>):null}
+                          {arr(V.result.epi.act3.mine).map((m,$index)=>(<React.Fragment key={$index}><div style={S("display:flex;gap:8px;align-items:baseline;margin-bottom:6px")}><span className="v-micro" style={S("color:var(--fg-4);width:16px;flex:none")}>{m.n}</span><span className="v-meta" style={S(`flex:1;line-height:1.5;color:${m.inModel?'var(--fg)':'var(--fg-3)'}`)}>{m.label}</span>{(m.isDecoy)?(<><span className="v-micro" style={S("color:var(--status-progress);flex:none")}>미끼</span></>):null}{(m.isEmpty)?(<><span className="v-micro" style={S("color:var(--fg-4);flex:none")}>빈손</span></>):null}</div></React.Fragment>))}
+                        </div>
+                      </div>
                     </div></>):null}
                   </div></>):null}
 

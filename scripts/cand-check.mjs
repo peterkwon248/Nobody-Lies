@@ -178,6 +178,46 @@ for (const f of files) {
       ...(e.facts ?? []).flatMap((x) => x.revealedBy ?? []),
     ].filter((r) => !r.description || r.description === r.id)
     if (dangling.length) problems.push(`물증 참조 ${dangling.length}개가 이름을 못 찾았다 (${dangling.slice(0, 3).map((x) => x.id).join(' · ')})`)
+
+    /**
+     * 1막 — 그날의 재구성 (2026-08-06 · 테스터 4차 *"답만 알려주고 띡"*).
+     * 문장틀이 값을 못 받으면 **빈 자리가 남은 문장**이 화면에 나간다 — 그것이
+     * 가장 나쁜 꼴이라(틀렸다는 것도 안 보인다) 여기서 문다.
+     */
+    const a1 = e.act1
+    if (!a1 || !(a1.lines ?? []).length) problems.push('_epilogue.act1 이 비었다')
+    else {
+      const empty = a1.lines.filter((l) => !l.ko || !l.en)
+      if (empty.length) problems.push(`act1 문장 ${empty.length}개가 비었다`)
+      const holes = a1.lines.filter((l) => /\{\w+/.test(l.ko) || /\{\w+/.test(l.en))
+      if (holes.length) problems.push(`act1 문장 ${holes.length}개에 치환 안 된 자리가 남았다 (${holes[0].ko.slice(0, 40)})`)
+      /**
+       * 현장이 재구성에서 통째로 빠지면 「어디서 일어났나」를 안 말하는 해설이 된다.
+       * ⛳ **두 갈래를 다 받는다** — 범인이 발견 장소에 간 사건은 `atScene`,
+       * 안 간 사건(`body_moved` — 시신을 옮겼다)은 `moved`. 첫 판에서 `atScene`
+       * 만 물었다가 `gen-4` 를 거짓 실패로 잡았다. **검사가 사건 종류를 몰랐다.**
+       */
+      if (!a1.lines.some((l) => l.kind === 'atScene' || l.kind === 'moved')) {
+        problems.push('act1 에 현장 줄이 없다 (atScene · moved 둘 다 없음)')
+      }
+    }
+  }
+
+  /**
+   * 3막 — 모범 수사 경로 (`_oraclePath`).
+   *
+   * ⛔ **`simulate()` 로 만들면 안 된다** — 그쪽은 salience 내림차순 탐욕 플레이어라
+   * 미끼를 먼저 밟는다. 여기서 무는 것은 **조사 수가 오라클(`_oracle`)과 같은가**다:
+   * 다르면 다른 경로를 「모범」이라 부르고 있다는 뜻이다.
+   */
+  const op = c._oraclePath
+  if (!op) problems.push('_oraclePath 가 없다')
+  else if (op.size >= 0) {
+    const acted = (op.stages ?? []).reduce((n, s) => n + (s.actions ?? []).length, 0)
+    if (!acted) problems.push('_oraclePath 에 조사가 하나도 없다')
+    if (typeof c._oracle === 'number' && op.size !== c._oracle) {
+      problems.push(`_oraclePath.size(${op.size}) 가 _oracle(${c._oracle}) 과 다르다 — 다른 경로를 모범이라 부르고 있다`)
+    }
   }
 
   if (problems.length) for (const p of problems) fail(`${f}  ${p}`)
