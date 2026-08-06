@@ -247,7 +247,20 @@ evidence:
 
   - id: e_chat
     description: 남아 있던 대화
-    record: 주고받은 말이 두 달치 남아 있었다. 뒤로 갈수록 답이 짧아졌고, 마지막 며칠은 한쪽만 말했다.
+    # 2026-08-06 개정 (경훈) — 「한쪽」이 누구인지 침묵하고 있었다. 신설이 아니라
+    # 기존 이미지의 해상도를 올린 것이다. 이 침묵 때문에 1막 동기 trigger 가
+    # 닻을 못 잡고 한 번 반려됐다.
+    #
+    # ⛔ **범인 이름은 못 적는다** — 「…마지막 며칠은 서채린만 말하고 있었다」로
+    #   썼다가 검증기에 죽었다:
+    #     x 물증 'e_chat' 의 기록이 용의자 중 범인 한 사람만 부른다
+    #       — 카드를 열면 답이 드러난다
+    #   물증 카드 하나가 지목을 끝내버린다. §페어플레이의 반대편(누설)이다.
+    # ⛳ **피해자만 부른다.** 도미나는 용의자가 아니라 규칙에 안 걸리고,
+    #   trigger 의 닻(「답이 오지 않았다」 = 도미나의 답이 멎었다)은 그대로 생긴다.
+    #   말하던 쪽은 안 적어도 e_memo(서채린이 있던 방에서 나온, 같은 이름이 여러 번
+    #   적힌 종이)와 f_motive.subject 가 가리킨다.
+    record: 주고받은 말이 두 달치 남아 있었다. 뒤로 갈수록 도미나의 답이 짧아졌고, 마지막 며칠은 한쪽만 말했다.
     yields_terms: [쌓인 반감]
 
   - id: e_herring1
@@ -279,7 +292,22 @@ facts:
   - { id: f_no_p5_ok, kind: no_opportunity, subject: p5, content: 왕복 시간이 맞물린다, revealed_by: [e_mutual] }
 
   - { id: f_means,  kind: means,  subject: p1, content: 과도를 쥘 수 있었다, revealed_by: [e_knife, e_trail] }
-  - { id: f_motive, kind: motive, subject: p1, content: 쌓인 반감,          revealed_by: [e_memo, e_chat] }
+  # ★ 인과 세 칸 — 1막 동기 비트 (2026-08-06 · 경훈 확정판)
+  # 닻:
+  #   background ← e_chat record 원문
+  #   trigger    ← ⚠ 신설. 「답」은 **위 대화의 답**이다 — 진술 셋이 말하는
+  #                「언니가 와서 한마디 하고 갔다」와 층이 다르다(한 소리 ≠ 답).
+  #                e_chat 이 방향을 적기 전에는 이 닻이 없어서 한 번 반려됐다
+  #   resolve    ← ⚠ 신설. 결심 문장은 원리상 전부 신설이다
+  - id: f_motive
+    kind: motive
+    subject: p1
+    content: 쌓인 반감
+    story:
+      background: 주고받던 말이 두 달에 걸쳐 짧아졌고, 마지막 며칠은 한쪽만 말하고 있었다
+      trigger: 그날, 모두가 모인 자리에서도 끝내 답은 오지 않았다
+      resolve: 말로 닫히지 않은 것을 그날 밤, 다른 방식으로 닫기로 했다
+    revealed_by: [e_memo, e_chat]
 
   - { id: f_h1, kind: context, subject: p2, content: 감추는 것이 있다, revealed_by: [e_herring1] }
   - { id: f_h2, kind: context, subject: p3, content: 감추는 것이 있다, revealed_by: [e_herring2] }
@@ -312,6 +340,12 @@ actions:
       verb: search, target: { kind: location, id: dance },
       result: { title: "접힌 종이", body: "구석에 접힌 종이 한 장이 떨어져 있었다. 네 번 접혀 있었고, 모서리가 여러 번 만져진 자국이 있었다." } }
 
+  # ⛔ **대상을 p1(범인)으로 옮기려다 검증기에 죽었다** (2026-08-06 · 시도하고 되돌린 기록)
+  #     x 'phone' 조사에서 범인만 혼자 결과를 준다 (용의자 5명 중 1명)
+  #       — 같은 조사를 사람마다 눌러보면 답이 나온다
+  #   **전화기를 다섯 번 눌러보는 것만으로 범인이 나온다.** p4 로 되돌렸다.
+  #   ⛳ 옮기려던 이유(record 가 범인을 부르니 남의 전화기와 안 맞는다)는
+  #     record 쪽에서 사라졌다 — 이제 피해자만 부른다. 위 e_chat 주석 참조
   - { id: a_chat, label: 통화내역 조회, cost: 1, gives: [e_chat], salience: 0.3, yield: solution,
       verb: phone, target: { kind: person, id: p4 },
       result: { title: "남아 있던 대화", body: "지워지지 않은 대화가 남아 있었다. 최근 몇 달치가 이어져 있었고, 같은 이야기가 여러 번 되풀이되어 있었다." } }
