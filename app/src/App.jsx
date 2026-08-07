@@ -3360,9 +3360,40 @@ export default class App extends React.Component {
     const sx = v => (v / SW * 100), sy = v => (v / SH * 100);
     const planViewBox = OX + ' ' + OY + ' ' + SW + ' ' + SH;
     const CARD_MIN = 34; // 방 이름 1줄 + 범례 1줄 (실측)
+    /**
+     * ⑨-c **미리보기 높이 상향** (2026-08-08 · 지시서 §3)
+     *
+     * ⑨ⓑ 합격선이 보수적이었다 — 375 실측(미술관 · 현장):
+     * ```
+     * 시간대 탭 159~204 · 도면 상자 220~465(245px) · 캡션 521~557 · 탭바 760
+     *                                        캡션 아래로 «203px» 이 빈 검정
+     * ```
+     * 새 목표: **도면 하단 여백 ≤ (범례 + 캡션)** — 탭 아래부터 범례 위까지 도면이 쓴다.
+     * `CHROME` 이 그 「범례 + 캡션 + 탭바 + 위쪽 껍데기」의 실측 합이다.
+     *
+     * ⛔ **상한이 필요하다 — 「전면 늘림」은 이미 한 번 반증됐다.** ⑨ 착수 때
+     * 스펙 문면(55vh 전면 늘림)이 실측에서 **왜곡 1.9배**로 접혔다(`e660220`).
+     * 여기서 상한을 안 걸면 미술관이 245 → 432 로 **1.76배**가 되어 그 실패를
+     * 그대로 재현한다. 그래서 자연 높이의 `MAX_STRETCH` 배를 넘지 않는다.
+     *
+     * ⛳ **배수 상수를 「늘림」에 쓰는 것이 아니다** — ⑨ⓑ 의 금지는 「늘림량을 상수로
+     * 박지 마라」였고 여기 상수는 **천장**이다. 실제 높이는 여전히 `min()` 이
+     * 「있는 공간」과 「자연 높이」에서 계산한다. 세로형(연습실)은 자연 높이가 이미
+     * 커서 천장에 안 닿고 늘림 0 으로 남는다 — 검증에서 확인한다.
+     */
+    const CHROME = 380; // 도면 위 껍데기 + 범례 + 캡션 + 탭바 (375 실측 합)
+    const MAX_STRETCH = 1.45;
+    const natural = '(100vw - 48px) * ' + (SH / SW).toFixed(4);
     const planBoxStyle = fitBox
       ? { position: 'relative', width: '100%',
-          height: 'min(62vh, max(calc((100vw - 48px) * ' + (SH / SW).toFixed(4) + '), ' + Math.ceil(CARD_MIN * SH / fitBox.minRoom) + 'px))',
+          /**
+           * 읽는 순서 — 안에서 밖으로:
+           *   ① min(있는 공간, 자연×천장)   얼마나 키울까 (둘 중 «작은» 쪽)
+           *   ② max(자연, 카드바닥, ①)      «절대 줄이지 않는다» — ①이 작으면 자연을 쓴다
+           *   ③ min(62vh, ②)               기존 하드 캡은 그대로 둔다
+           * ②가 없으면 화면이 짧을 때 도면이 «자연 높이보다 작아지는» 축소 회귀가 난다.
+           */
+          height: 'min(62vh, max(calc(' + natural + '), ' + Math.ceil(CARD_MIN * SH / fitBox.minRoom) + 'px, min(calc(100vh - ' + CHROME + 'px), calc((' + natural + ') * ' + MAX_STRETCH + '))))',
           border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', overflow: 'hidden' }
       : { position: 'relative', width: '100%', aspectRatio: '16/10', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', overflow: 'hidden' };
     /**
