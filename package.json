@@ -37,6 +37,7 @@
     "censor": "npm run censor -w engine --",
     "candidates": "npm run candidates -w engine --",
     "space-audit": "npm run space-audit -w engine",
+    "statement-audit": "node scripts/statement-audit.mjs",
     "design-audit": "node scripts/design-audit.mjs",
     "token-audit": "node scripts/token-audit.mjs",
     "focus-check": "node scripts/focus-check.mjs",
