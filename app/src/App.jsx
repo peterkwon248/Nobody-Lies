@@ -3250,6 +3250,27 @@ export default class App extends React.Component {
     const G = this.GEO, VW = G.vb.w, VH = G.vb.h;
     const px = v => (v / VW * 100), py = v => (v / VH * 100);
     /**
+     * ─────────────────────────────────────────────────────────────
+     *  §다이어트 — 좁은 폭 미리보기는 «덜» 그린다 (2026-08-07)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * 근거는 경훈 스크린샷 4장(`PLAYTEST.md` 2026-08-05): 극장 로비에 5인이 모이면
+     * 점이 뭉치고 이름 라벨 다섯이 겹쳐 *"하경석·문선호·조태식·표미숙·서준기"* 가
+     * 한 덩어리가 됐다. 방 이름은 폭이 좁아 **글자마다 줄바꿈**(「분/장/실」)됐다.
+     *
+     * ★ **`lean` 이 곧 「미리보기 + 좁은 폭」이다.** 탭-확대(`planZoom`)가 열리면
+     * 확대 판이 미리보기를 «덮으므로» 그때는 전부 켠다 — 같은 뷰모델이 둘을
+     * 먹이지만 동시에 보이지 않으므로 플래그 하나로 갈린다.
+     *
+     * ⛔ **JSX 에 분기를 새로 만들지 않는다.** `port-check` 는 프로토타입과 앱의
+     * `sc-if`/`sc-for` **이름 집합**을 대조하므로 앱에만 있는 갈래는 실패로 잡힌다.
+     * 그래서 결정은 전부 여기서 «스타일 값»으로 낸다 — 이 저장소의 뷰모델 구조와도
+     * 맞는 방향이다(JSX 는 그리기만 한다).
+     */
+    const lean = !!this.state.isNarrow && !this.state.planZoom;
+    /** 라벨을 지우는 방법 — `display:none` 이면 자리도 안 먹는다 */
+    const HIDE = { display: 'none' };
+    /**
      * 가려진 건물의 **조건**은 엔진이 준다(`floor_plan.buildings[].revealed_after`).
      *
      * ★ 여기 있던 문자열 `'annex'` 일곱 개가 사라졌다 (2026-07-29 오후) ★
@@ -3437,13 +3458,55 @@ export default class App extends React.Component {
       const gatedNew = !!gateLoc[a.loc] && annexOn;
       return {
         id: a.id, primary: !!a.primary, name: ln === 'ko' ? a.ko : a.en,
-        nameColor: a.scene ? 'var(--g-contradict)' : a.offsite ? 'var(--fg-4)' : 'var(--fg-2)',
         onSearch: searchable ? (() => this.askInvestigate('search', [a.loc])) : (() => {}),
         isNew: !!gatedNew, revealNote: gatedNew ? (ln === 'ko' ? '1장 완성으로 공개' : 'Revealed · sec 1') : '',
-        statusLabel: found ? (ln === 'ko' ? '물증' : 'Found') : searched ? (ln === 'ko' ? '빈손' : 'Empty') : (ln === 'ko' ? '미조사' : 'Unsearched'),
-        statusStyle: { fontSize: '9px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 4px' },
+        /**
+         * ★ **좁은 폭에서 「미조사」는 낱말이 아니라 «빗금»이다** ★ (2026-08-07)
+         *
+         * 방 이름 옆에 세 글자 배지가 붙으면 이름이 밀려 세로로 깨졌다(「분/장/실」).
+         * 빗금은 이 앱에서 이미 **「아직 모르는 자리」**의 뜻으로 쓰인다(`sHatch` —
+         * 공개 안 된 방). 같은 어휘를 재사용하므로 새로 배울 것이 없다.
+         *
+         * ⛳ **물증·빈손은 낱말을 지킨다** — 그 둘은 «결과»라서 읽을 값이 있다.
+         * 미조사는 결과가 아니라 **부재**이고, 부재는 질감으로 말하는 것이 짧다.
+         */
+        statusLabel: (lean && !found && !searched) ? '' : (found ? (ln === 'ko' ? '물증' : 'Found') : searched ? (ln === 'ko' ? '빈손' : 'Empty') : (ln === 'ko' ? '미조사' : 'Unsearched')),
+        /**
+         * ⛔ **좁은 폭에서는 상태 표시를 «행에서 빼낸다»** (실측으로 세 번째 판)
+         *
+         * 같은 flex 행에 두면 46px 짜리 방에서 배지 + 간격이 30px 을 먹고 이름에
+         * **5px** 만 남았다(패딩을 줄인 뒤에도). 이름이 한 글자도 못 나오면
+         * 「말줄임」이 아니라 그냥 안 보이는 것이다.
+         *
+         * 방 상자가 이미 `position:absolute` 이므로 여기서 절대 배치하면 **모서리로
+         * 빠지고 이름이 행을 통째로 갖는다.** 새 요소도, 새 분기도 필요 없다.
+         */
+        statusStyle: lean
+          ? Object.assign(
+              { position: 'absolute', right: '3px', top: '3px', boxSizing: 'border-box' },
+              (!found && !searched)
+                ? { width: '12px', height: '9px', borderRadius: '2px', border: '1px solid ' + col, backgroundImage: 'repeating-linear-gradient(45deg, ' + col + ' 0 1px, transparent 1px 4px)' }
+                : { fontSize: '8px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 3px' })
+          : { flex: '0 0 auto', fontSize: '9px', fontWeight: 700, color: col, background: 'var(--bg-app)', border: '1px solid ' + col, borderRadius: 'var(--r-pill)', padding: '0 4px' },
+        /**
+         * 방 이름 — **한 줄로 자르고 말줄임**. 폭이 좁으면 브라우저가 글자마다
+         * 줄바꿈해서 「분/장/실」이 됐다. `min-width:0` 이 없으면 flex 안에서
+         * 안 줄어들어 말줄임이 안 걸린다.
+         */
+        /**
+         * ⛔ **`flex: '0 1 auto'` 로 짰다가 폭이 0 이 됐다** (실측으로 잡았다) —
+         * 같은 행에 `flex:1` 스페이서가 있어서 **자유 공간을 그쪽이 다 먹고**
+         * 이름이 0까지 줄었다(「로비」·「분장실」·「영사실」 전부 보이지 않았다).
+         * 성장 계수를 크게 줘서 이름이 먼저 자리를 잡게 한다.
+         */
+        nameStyle: { fontSize: lean ? '10px' : '11px', color: a.scene ? 'var(--g-contradict)' : a.offsite ? 'var(--fg-4)' : 'var(--fg-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flex: '20 1 auto' },
         clues: cluesByLoc[a.loc] || [], hasClues: (cluesByLoc[a.loc] || []).length > 0,
-        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
+        /**
+         * ⛳ **좁은 폭에서 패딩이 진짜 범인이었다** — 로비가 46px 인데 좌우 패딩이
+         * 24px 이라 **글자가 쓸 폭이 22px** 밖에 없었다. 세로 깨짐(「분/장/실」)의
+         * 뿌리가 글꼴이 아니라 여백이다. 미리보기에서는 여백을 줄인다.
+         */
+        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: lean ? '4px 5px' : '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
       };
     });
 
@@ -3457,18 +3520,100 @@ export default class App extends React.Component {
       return { id: f.id, name: ln === 'ko' ? f.ko : f.en, body: !!f.body, done, iconPath: f.body ? '' : this.termIconPath(f.icon),
         onRun: okc ? (() => this.askInvestigate(actId, f.body ? [] : [f.id])) : (() => {}),
         markStyle: { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: okc ? 'pointer' : 'default', background: 'transparent', border: 'none', zIndex: 3 },
-        labelStyle: { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
+        // 좁은 폭 미리보기에서는 설비 이름을 안 쓴다 — 마커와 미조사 표시만 남긴다
+        labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
     });
 
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  §인물 배지 — **방 아래 모서리에 줄 세운다** (2026-08-07)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * ## 전에 무엇이었나
+     *
+     * 3열 격자로 방 중앙 근처에 **뿌렸다**(`(col-1) * a.w * 0.18` · `row * a.h * 0.12`).
+     * 방이 좁으면 열 간격이 점 지름보다 작아져 **뭉치고**, 라벨은 점보다 훨씬 넓어서
+     * 다섯이면 반드시 겹쳤다. 경훈 스크린샷의 그 덩어리다.
+     *
+     * ## 왜 줄서기인가 — **데이터가 방 단위이므로 화면도 방 단위다**
+     *
+     * 이 게임의 위치 정보는 「누가 어느 «방»에 있었다」이고 방 안의 좌표는 **없다.**
+     * 그런데 화면은 방 안에 좌표가 있는 척 뿌리고 있었다 — **없는 정보를 그린 것**이고
+     * 그 대가로 겹침을 얻었다. 아래 모서리에 균등 배치하면 다섯이 한 방이어도
+     * **겹침이 0**이고, 「같은 방에 몇 명」이 오히려 한눈에 읽힌다.
+     *
+     * 총원을 먼저 세는 이유가 그것이다 — 줄을 세우려면 몇 명인지 알아야 간격이 나온다.
+     */
+    const countInLoc = {};
+    this.PEOPLE.forEach(p => { const l = (this.CLAIM_LOC[p.id] || {})[tsel]; if (l && anchorByLoc[l]) countInLoc[l] = (countInLoc[l] || 0) + 1; });
     const idxInLoc = {};
     const personMarkers = this.PEOPLE.map(p => {
       const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const a = lid ? anchorByLoc[lid] : null;
       const shown = !!a;
-      let cx = VW / 2, cy = VH / 2;
-      if (shown) { const n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1; const col = n % 3, row = Math.floor(n / 3); cx = a.x + a.w / 2 + (col - 1) * a.w * 0.18; cy = a.y + a.h * 0.6 + row * a.h * 0.12; }
+      let cx = VW / 2, cy = VH / 2, n = 0;
+      const dot = lean ? 11 : 15;
+      /**
+       * ⛔ **한 줄로는 안 된다 — 좁은 방이 다섯을 못 담는다** (첫 판에서 실측으로 잡았다)
+       *
+       * 극장 로비를 375 에서 재보니 줄은 섰는데(y 전부 344) **중심 간격이 7~8px**
+       * 이고 점이 11px 이라 **겹침 4**였다. 방 너비가 124 단위(≈46px)라
+       * 다섯 × 11px 이 물리적으로 안 들어간다. **줄서기만으로는 부족하다.**
+       *
+       * 그래서 «칸에 맞춰 줄바꿈»한다. `MIN` 은 중심 간 최소 간격(viewBox 단위)이고
+       * 폭에 따라 갈린다 — 좁은 폭은 1px ≈ 2.67 단위라 같은 px 이 더 큰 단위를 먹는다.
+       * 넘치면 아래에서 위로 줄을 쌓는다.
+       */
+      const MIN = lean ? 40 : 26;
+      if (shown) {
+        n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1;
+        const total = countInLoc[lid] || 1;
+        const perRow = Math.max(1, Math.min(total, Math.floor(a.w / MIN) - 1));
+        const rows = Math.ceil(total / perRow);
+        const row = Math.floor(n / perRow), col = n % perRow;
+        const inRow = Math.min(perRow, total - row * perRow);
+        cx = a.x + (a.w / (inRow + 1)) * (col + 1);
+        /**
+         * 줄 간격 — `MIN * 0.85` 였을 때 실측 **중심 거리 11px = 점 지름**이라
+         * 겹치진 않아도 **맞닿았다.** 1.15 로 벌리고, 쌓은 높이가 방을 넘지 않게
+         * 방 높이의 62% 안으로 가둔다(넘치면 간격을 줄여서라도 방 안에 있는다).
+         */
+        const rowStep = rows > 1
+          ? Math.min(MIN * 1.15, Math.max(MIN * 0.8, (a.h * 0.62) / (rows - 1)))
+          : 0;
+        cy = a.y + a.h - Math.min(a.h * 0.22, 30) - (rows - 1 - row) * rowStep;
+      }
+      /**
+       * 이름표는 **세 갈래**다 — 경훈 지시가 세 자리를 따로 정했다.
+       *
+       * ```
+       * 좁은 폭 미리보기   안 그린다. 하단 범례가 정본이다 (②)
+       * 탭-확대           알약형으로 «방마다 세로 스택» (③)
+       * 데스크톱          «무변경» — 점 아래 평문 (①만 받는다)
+       * ```
+       *
+       * ★ **확대에서 알약을 쌓는 이유** — 점 아래에 각각 붙이면 확대해도 이름끼리
+       * 부딪힌다. 간격은 «방 너비»가 정하므로 배율을 올려도 상대적으로 그대로다.
+       * 방 안쪽에서 아래로 쌓으면 충돌이 0이 된다.
+       *
+       * ⛔ **데스크톱에 알약을 넣지 않는다** — 첫 판에서 그렇게 짰다가 「데스크톱
+       * 무변경」을 어겼다. 데스크톱이 받는 변화는 ①(줄서기)뿐이다.
+       */
+      const zoomed = !!this.state.planZoom;
+      const labelStyle = !shown ? Object.assign({}, HIDE)
+        : lean ? Object.assign({}, HIDE)
+        : zoomed ? {
+            position: 'absolute',
+            left: px(a.x + a.w / 2) + '%',
+            top: 'calc(' + py(a.y + a.h - Math.min(a.h * 0.22, 30)) + '% - ' + (18 * (countInLoc[lid] - n) + 6) + 'px)',
+            transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600,
+            color: 'var(--fg)', background: 'var(--bg-elevated)',
+            border: '1px solid ' + p.color, borderRadius: 'var(--r-pill)', padding: '1px 6px',
+            whiteSpace: 'nowrap', opacity: 1, transition: 'opacity .3s', zIndex: 5, pointerEvents: 'none',
+          }
+        : { position: 'absolute', left: px(cx) + '%', top: 'calc(' + py(cy) + '% + 11px)', transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600, color: p.color, whiteSpace: 'nowrap', opacity: 1, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' };
       return { id: p.id, name: p.name, shown,
-        style: { position: 'absolute', left: px(cx) + '%', top: py(cy) + '%', transform: 'translate(-50%,-50%)', width: '15px', height: '15px', borderRadius: '50%', background: p.color, border: '2px solid var(--bg-app)', boxShadow: '0 1px 3px rgba(0,0,0,.4)', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' },
-        labelStyle: { position: 'absolute', left: px(cx) + '%', top: 'calc(' + py(cy) + '% + 11px)', transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600, color: p.color, whiteSpace: 'nowrap', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' } };
+        style: { position: 'absolute', left: px(cx) + '%', top: py(cy) + '%', transform: 'translate(-50%,-50%)', width: dot + 'px', height: dot + 'px', borderRadius: '50%', background: p.color, border: '2px solid var(--bg-app)', boxShadow: '0 1px 3px rgba(0,0,0,.4)', opacity: shown ? 1 : 0, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' },
+        labelStyle };
     });
 
     const times = this.TIMES.map(tm => ({ id: tm.id, label: ln === 'ko' ? tm.ko : tm.en, active: tm.id === tsel, onClick: () => this.setState({ mapTime: tm.id }),
@@ -4179,7 +4324,7 @@ export default class App extends React.Component {
                     </svg>
                     {arr(V.floor.sWalk).map((w,$index)=>(<React.Fragment key={$index}><span style={S(`position:absolute;left:${w.mx}%;top:${w.my}%;transform:translate(-50%,-50%);font-size:10px;color:var(--fg-4);background:var(--bg-subtle);padding:0 4px`)}>{w.label}</span></React.Fragment>))}
                     {arr(V.floor.locs).map((l,$index)=>(<React.Fragment key={$index}><div style={l.boxStyle} onClick={l.onSearch}>
-                      <div style={S("display:flex;align-items:center;gap:8px")}><span style={S(`font-size:11px;color:${l.nameColor}`)}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 4px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
+                      <div style={S("display:flex;align-items:center;gap:8px")}><span style={l.nameStyle}>{l.name}</span>{(l.isNew)?(<><span style={S("font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:var(--r-pill);padding:1px 4px")}>{l.revealNote}</span></>):null}<span style={S("flex:1")}></span>{(l.primary)?(<><span style={l.statusStyle}>{l.statusLabel}</span></>):null}</div>
                       {(l.hasClues)?(<><div style={S("display:flex;flex-wrap:wrap;gap:4px;margin-top:8px")}>{arr(l.clues).map((c,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 8px;border-radius:var(--r-pill);background:var(--accent-soft);border:1px solid var(--accent);font-size:10px;color:var(--accent)")}><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={c.iconPath}></path></svg>{c.label}</span></React.Fragment>))}</div></>):null}
                     </div></React.Fragment>))}
                     {arr(V.floor.fixtures).map((f,$index)=>(<React.Fragment key={$index}><span onClick={f.onRun} style={f.markStyle}>{(f.body)?(<><svg width="26" height="26" viewBox="0 0 26 26"><path d="M7 7 L19 19 M19 7 L7 19" stroke="var(--g-contradict)" strokeWidth="3" strokeLinecap="round"></path></svg></>):null}{(f.iconPath)?(<><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"><path d={f.iconPath}></path></svg></>):null}</span></React.Fragment>))}
