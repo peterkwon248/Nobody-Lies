@@ -3550,65 +3550,124 @@ export default class App extends React.Component {
     const personMarkers = this.PEOPLE.map(p => {
       const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const a = lid ? anchorByLoc[lid] : null;
       const shown = !!a;
-      let cx = VW / 2, cy = VH / 2, n = 0;
-      const dot = lean ? 11 : 15;
       /**
-       * ⛔ **한 줄로는 안 된다 — 좁은 방이 다섯을 못 담는다** (첫 판에서 실측으로 잡았다)
+       * ─────────────────────────────────────────────────────────────
+       *  §방 안 범례 — 「점 + 이름」 한 줄을 방 안에 «세로로 쌓는다» (2026-08-07)
+       * ─────────────────────────────────────────────────────────────
        *
-       * 극장 로비를 375 에서 재보니 줄은 섰는데(y 전부 344) **중심 간격이 7~8px**
-       * 이고 점이 11px 이라 **겹침 4**였다. 방 너비가 124 단위(≈46px)라
-       * 다섯 × 11px 이 물리적으로 안 들어간다. **줄서기만으로는 부족하다.**
-       *
-       * 그래서 «칸에 맞춰 줄바꿈»한다. `MIN` 은 중심 간 최소 간격(viewBox 단위)이고
-       * 폭에 따라 갈린다 — 좁은 폭은 1px ≈ 2.67 단위라 같은 px 이 더 큰 단위를 먹는다.
-       * 넘치면 아래에서 위로 줄을 쌓는다.
-       */
-      const MIN = lean ? 40 : 26;
-      if (shown) {
-        n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1;
-        const total = countInLoc[lid] || 1;
-        const perRow = Math.max(1, Math.min(total, Math.floor(a.w / MIN) - 1));
-        const rows = Math.ceil(total / perRow);
-        const row = Math.floor(n / perRow), col = n % perRow;
-        const inRow = Math.min(perRow, total - row * perRow);
-        cx = a.x + (a.w / (inRow + 1)) * (col + 1);
-        /**
-         * 줄 간격 — `MIN * 0.85` 였을 때 실측 **중심 거리 11px = 점 지름**이라
-         * 겹치진 않아도 **맞닿았다.** 1.15 로 벌리고, 쌓은 높이가 방을 넘지 않게
-         * 방 높이의 62% 안으로 가둔다(넘치면 간격을 줄여서라도 방 안에 있는다).
-         */
-        const rowStep = rows > 1
-          ? Math.min(MIN * 1.15, Math.max(MIN * 0.8, (a.h * 0.62) / (rows - 1)))
-          : 0;
-        cy = a.y + a.h - Math.min(a.h * 0.22, 30) - (rows - 1 - row) * rowStep;
-      }
-      /**
-       * 이름표는 **세 갈래**다 — 경훈 지시가 세 자리를 따로 정했다.
+       * ## ⛔ 앞의 두 판이 왜 부족했나
        *
        * ```
-       * 좁은 폭 미리보기   안 그린다. 하단 범례가 정본이다 (②)
-       * 탭-확대           알약형으로 «방마다 세로 스택» (③)
-       * 데스크톱          «무변경» — 점 아래 평문 (①만 받는다)
+       * 1판  방 중앙 근처에 3열 격자로 «뿌렸다»   → 점이 뭉치고 라벨이 한 덩어리
+       * 2판  방 아래 모서리에 «줄 세웠다»         → 겹침 0. 그런데 이름이 여전히 안 맞는다
+       *      · 좁은 폭: 라벨을 아예 걷었다 (범례·확대로 옮겼다)
+       *      · 확대  : 알약을 «방 중심 고정 앵커»에 개수만큼 쌓았다
+       *                → 사람이 많으면 방을 «벗어난다». 274% 실기기에서 그게 드러났다
        * ```
        *
-       * ★ **확대에서 알약을 쌓는 이유** — 점 아래에 각각 붙이면 확대해도 이름끼리
-       * 부딪힌다. 간격은 «방 너비»가 정하므로 배율을 올려도 상대적으로 그대로다.
-       * 방 안쪽에서 아래로 쌓으면 충돌이 0이 된다.
+       * ★ **2판 계측이 `pillOverlaps: 0` 을 인쇄했고 그것은 참이었다.** 같은 출력에
+       * `x:-28` 이 다섯 개 있었는데 *"확대는 패닝되니 정상"* 으로 설명해 넘겼다 —
+       * **겹침만 셌고 「방 안에 있나」를 안 셌다.** 참인 명제가 결함을 가린 자리다.
        *
-       * ⛔ **데스크톱에 알약을 넣지 않는다** — 첫 판에서 그렇게 짰다가 「데스크톱
-       * 무변경」을 어겼다. 데스크톱이 받는 변화는 ①(줄서기)뿐이다.
+       * ## 3판 — 한 줄에 점과 이름을 나란히, 방 «안»에 가둔다
+       *
+       * 치수는 실측으로 골랐다(극장 로비 375 · 방 45×85px): 평문 라벨을 점 아래에 두면
+       * 겹침 2 · 라벨만 세로로 쌓으면 100px 로 방을 넘고 · **「점 + 이름」 한 줄 목록은
+       * 34×55px 로 들어간다.**
+       *
+       * 미리보기와 확대가 **같은 계산**을 쓴다(배율만 다르다) — 갈래가 둘이면 한쪽만
+       * 고쳐지는 그 부류가 또 난다(§one-value-two-places).
        */
       const zoomed = !!this.state.planZoom;
+      /**
+       * ⛳ **데스크톱은 무변경이다** (공통 원칙). 탭-확대는 `isNarrow` 에서만 열리므로
+       * 「목록 배치를 쓰는 조건」은 **좁은 폭 하나**로 갈린다 — 미리보기든 확대든.
+       * 데스크톱은 1단계의 아래-모서리 줄서기를 그대로 유지한다(아래 §데스크톱 갈래).
+       */
+      const useList = !!this.state.isNarrow;
+      const dot = lean ? 9 : zoomed ? 11 : 15;
+      /**
+       * 한 줄 높이(viewBox 단위). 좁은 폭은 1px ≈ 2.67 단위라 같은 px 이 더 큰 단위를 먹는다.
+       *
+       * ⚠ **30 이었을 때 실측 간격 10px 인데 라벨 높이가 11px 이라 겹침 4** 였다.
+       * 라벨 높이 + 여유 3px ≈ 14px 이 필요하고 375 에서 1px ≈ 2.67 단위다.
+       * 5줄 × 38 = 190 이고 로비의 쓸 수 있는 높이가 215 라 그대로 들어간다.
+       */
+      /**
+       * ⚠ **목록 배치에서는 폭에 관계없이 한 값이다** — `lean ? 38 : 26` 이었을 때
+       * 탭-확대 s=1 에서 간격 10.7px 인데 라벨 높이가 10px 이라 **겹침 4** 였다.
+       * 확대는 여는 순간의 배율이 가장 촘촘하므로 그 최악에 맞춘다.
+       */
+      const LINE = 38;
+      /**
+       * ⛔ **가로 여백은 점 «반지름»보다 커야 한다** (실측으로 잡았다). 점은
+       * `translate(-50%,-50%)` 로 중앙 정렬이라 `cx = a.x + PAD` 면 왼쪽으로
+       * 반지름만큼 삐져나온다 — 첫 판에서 로비 왼쪽 벽을 **2px** 넘었다.
+       *
+       * 좁은 폭이 최악이다(1px ≈ 2.67 단위 · 점 9px ≈ 24 단위 · 반지름 12 단위).
+       * `PADX = 18` 이면 좁은 폭에서도 확대 s=1 에서도 남는다(확대는 점이 11px ·
+       * 반지름 8 단위)에서도 남는다. **세로 여백과 갈라야 한다** — 세로를 14 로
+       * 올리면 다섯 줄이 방 높이를 넘어 2열 폴백이 헛돈다.
+       */
+      const PADX = 18;
+      const PAD = lean ? 6 : 10;
+      let cx = VW / 2, cy = VH / 2, n = 0, col = 0, cols = 1;
+      if (shown && !useList) {
+        /**
+         * §데스크톱 갈래 — 1단계(아래 모서리 줄서기)를 «그대로» 둔다. 실측 근거:
+         * 1280 에서 중심 거리 48px · 점 15px · 겹침 0 · 라벨 겹침 0.
+         */
+        n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1;
+        const total = countInLoc[lid] || 1;
+        const MIN = 26;
+        const perRow = Math.max(1, Math.min(total, Math.floor(a.w / MIN) - 1));
+        const rows = Math.ceil(total / perRow);
+        const row = Math.floor(n / perRow), c = n % perRow;
+        const inRow = Math.min(perRow, total - row * perRow);
+        cx = a.x + (a.w / (inRow + 1)) * (c + 1);
+        const rowStep = rows > 1 ? Math.min(MIN * 1.15, Math.max(MIN * 0.8, (a.h * 0.62) / (rows - 1))) : 0;
+        cy = a.y + a.h - Math.min(a.h * 0.22, 30) - (rows - 1 - row) * rowStep;
+      } else if (shown) {
+        n = (idxInLoc[lid] = (idxInLoc[lid] || 0) + 1) - 1;
+        const total = countInLoc[lid] || 1;
+        /**
+         * 세로로 다 들어가나 — 안 들어가면 **2열 폴백**(경훈 지시).
+         * 쓸 수 있는 높이는 방 높이에서 위아래 여백을 뺀 것이다.
+         */
+        const usable = Math.max(LINE, a.h - PAD * 2);
+        const fit = Math.max(1, Math.floor(usable / LINE));
+        cols = total > fit ? 2 : 1;
+        const perCol = Math.ceil(total / cols);
+        col = Math.floor(n / perCol);
+        const row = n % perCol;
+        const inCol = Math.min(perCol, total - col * perCol);
+        // 열 안에서 세로 중앙 정렬 — 방을 벗어나지 않는 것이 이 계산의 계약이다
+        const blockH = Math.min(inCol * LINE, usable);
+        const step = inCol > 1 ? blockH / inCol : 0;
+        const top = a.y + Math.max(PAD, (a.h - blockH) / 2);
+        cy = top + step * row + step / 2;
+        if (inCol === 1) cy = a.y + a.h / 2;
+        cx = a.x + PADX + (cols > 1 ? col * (a.w - PADX * 2) / 2 : 0);
+      }
+      /**
+       * 이름 자리 — 목록 배치에서는 점 **오른쪽에 왼쪽 정렬**(한 줄이 되는 요점),
+       * 데스크톱에서는 **점 아래 중앙**(1단계 그대로).
+       *
+       * ★ 좁은 폭 미리보기에서도 이름을 그린다 — 2판에서 걷었던 것을 되살린다.
+       * 경훈 판정: *"줄서기로 겹침이 0 이 됐으니 걷는 대신 라벨도 줄 세우는 자리"*.
+       * 한 줄 목록은 이름이 점 «옆»에 오므로 세로 간격만 지키면 충돌이 원리상 0이다.
+       */
+      const nameLeft = cx + dot * (lean ? 1.6 : 1.1) + 2;
       const labelStyle = !shown ? Object.assign({}, HIDE)
-        : lean ? Object.assign({}, HIDE)
-        : zoomed ? {
-            position: 'absolute',
-            left: px(a.x + a.w / 2) + '%',
-            top: 'calc(' + py(a.y + a.h - Math.min(a.h * 0.22, 30)) + '% - ' + (18 * (countInLoc[lid] - n) + 6) + 'px)',
-            transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600,
-            color: 'var(--fg)', background: 'var(--bg-elevated)',
-            border: '1px solid ' + p.color, borderRadius: 'var(--r-pill)', padding: '1px 6px',
-            whiteSpace: 'nowrap', opacity: 1, transition: 'opacity .3s', zIndex: 5, pointerEvents: 'none',
+        : useList ? {
+            position: 'absolute', left: px(nameLeft) + '%', top: py(cy) + '%',
+            transform: 'translate(0,-50%)',
+            fontSize: (lean ? 8 : 9) + 'px', fontWeight: 600,
+            color: lean ? 'var(--fg-2)' : 'var(--fg)',
+                maxWidth: px(Math.max(24, (a.w - PADX * 2) / cols - dot * 2)) + '%',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            opacity: 1, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s',
+            zIndex: 5, pointerEvents: 'none',
           }
         : { position: 'absolute', left: px(cx) + '%', top: 'calc(' + py(cy) + '% + 11px)', transform: 'translate(-50%,0)', fontSize: '9px', fontWeight: 600, color: p.color, whiteSpace: 'nowrap', opacity: 1, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s', zIndex: 4, pointerEvents: 'none' };
       return { id: p.id, name: p.name, shown,
