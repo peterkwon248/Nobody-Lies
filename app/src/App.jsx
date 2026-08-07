@@ -4501,8 +4501,11 @@ export default class App extends React.Component {
                 <div style={S("display:flex;align-items:center;gap:4px;flex:none")}>
                   <span className="v-num" style={S("font-size:12px;color:var(--fg-3);margin-right:2px;white-space:nowrap")}>{V.status.budget}</span>
                   <button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /></svg></button>
-                  <span className="g-settings" style={S("position:relative")}><button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
-                  {/* ⛔ 설정 패널이 여기에도 있었다 — 상단 크롬이 두 겹이라 **두 벌이 겹쳐 떴다** (2026-08-06 · 경훈 캡처). `.tabbar`(44)와 `.viewheader`(48)가 좁은 폭에서 동시에 보이고, 각자 자기 `.g-settings` 를 갖는데 둘 다 같은 `settingsOpen` 을 본다. 버튼은 남기고(같은 상태를 토글한다) **패널은 아래 `viewheader` 것 하나만** 그린다. ⛳ 상단 바가 두 겹인 것 자체는 구조 백로그다 — 여기서는 겹침만 끊는다. */}</span>
+                  {/* ⛔ **설정 버튼도 여기서 지웠다 — 정본은 `viewheader` 쪽 하나다** (2026-08-07 · 경훈 실기기).
+                      08-06 에 «패널»의 겹침만 끊고 **버튼은 둘 다 남겼다**(어느 쪽을 눌러도 같은 상태를 토글하므로).
+                      그런데 실기기에서 **같은 기어 아이콘이 세로로 두 개**로 보였다 — 실측 (319,0)·(315,46).
+                      기능이 아니라 «모양»이 결함이었다. 패널이 `viewheader` 에 있으므로 그쪽이 정본이고 이쪽을 뺀다.
+                      ⛳ 상단 바가 두 겹인 것 자체는 여전히 구조 백로그다(감사 #22 와 같은 뿌리). */}
                 </div>
               </div>
             </>):null}
