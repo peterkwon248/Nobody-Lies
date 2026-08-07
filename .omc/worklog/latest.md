@@ -5,6 +5,22 @@ working_directory: "C:/Users/kkh94/OneDrive/Desktop/Nobody Lies"
 machine: "KWONKYUNGHUN"
 ---
 
+> # ⛔ 이 파일은 **한 세션 낡았다** — 아래는 「08-06 심야~08-07」 세션이다
+>
+> **다음 세션(커밋 열하나 · `1fe0b1a` · `DESKTOP-JCJTAH8`)이 이 파일을 안 덮어썼다.**
+> 그 세션의 after-work 커밋은 `docs/MEMORY.md`·`NEXT-ACTION.md`·`SESSION-LOG.md`
+> **셋만** 갱신했다 — 인계 파일 넷 중 워크로그가 빠졌다.
+>
+> ```
+> 빠진 세션의 정본   docs/SESSION-LOG.md §2026-08-07 · docs/NEXT-ACTION.md 머리말
+> 한 줄 요약        진술이 사람의 말이 됐고(복제 47% → 0%) 모바일 결함 넷이 닫혔다
+> 게이트            그 세션에 16단 → 17단 (voice-check)
+> ```
+>
+> ⛳ **아래 본문의 「게이트 16단」은 이 세션 시점에 참이었다 — 안 고친다.**
+> 낡은 것은 값이 아니라 **파일 전체가 가리키는 세션**이다.
+> (2026-08-07 저녁 세션이 단 배너. 다음 after-work 가 이 파일을 덮으면 같이 사라진다)
+
 ## Completed Work
 
 **게이트 16단 exit 0 · 커밋 여덟 + 이 인계 · 배포 READY · 트리 깨끗.**

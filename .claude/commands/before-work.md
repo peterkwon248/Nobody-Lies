@@ -15,6 +15,25 @@ git status && git pull && git log --oneline -5
 
 브랜치는 `main`. 이 저장소는 **직접 main 푸시**다 (feature 브랜치·PR 없음).
 
+## 1-b. 직전 세션의 인계가 **정말** 한 커밋에 실렸는지 센다
+
+```
+foreach ($f in @("docs/MEMORY.md","docs/NEXT-ACTION.md","docs/SESSION-LOG.md",".omc/worklog/latest.md")) { "{0,-26} {1}" -f $f, (git log -1 --format="%ad  %h  %s" --date=short -- $f) }
+```
+
+**넷의 해시가 전부 같아야 한다.** 하나라도 다르면 **직전 세션이 그 파일을 빠뜨린 것**이고,
+그 파일은 **낡은 세션을 가리킨 채 인계 파일 행세를 한다.**
+
+> ⛔ **날짜로 세지 마라 — 이 저장소는 같은 날 세션이 둘·셋 돈다.** `1fe0b1a` 누락 때
+> 낡은 `bae64dc` 도 날짜가 08-07 이라 **날짜로 셌으면 통과했다.** 가르는 것은 해시다.
+>
+> ★ **그리고 워크로그 §인계 대조 줄이 있는지 본다**(`after-work` §2-c).
+> **줄이 없으면 「불이행」으로 센다** — 있는데 해시가 갈리면 그 줄이 **거짓 주장**이다.
+> 둘 다 이번 세션에 보고한다. **「돌렸나」를 묻지 않고 「돌린 흔적이 있나」를 묻는다.**
+>
+> 실측: 워크로그 누락은 **네 번**이다(`6f6dccb` · `94f25c1` · `a59e413` · `1fe0b1a`).
+> **네 번째는 검사가 서 있는 채로 났다** — 그래서 이 절이 검사 쪽이 아니라 **읽는 쪽**에 있다.
+
 ## 2. 신원과 의존성을 맞춘다
 
 ```
@@ -71,19 +90,23 @@ npm install
 npm run build
 ```
 
-**16단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
-tmpl-check · brief-check · prose-lock · censor-check · solve-check · matrix-check ·
-cand-check · port-check · build`
+**17단** — `typecheck · lint · yaml-check · verify · gen-check · prop-check · clue-check ·
+tmpl-check · brief-check · prose-lock · censor-check · solve-check · voice-check ·
+matrix-check · cand-check · port-check · build`
 (07-31에 `lint`·`prop-check`, 08-01에 `brief-check`·`matrix-check`,
 08-02에 `clue-check`·`prose-lock`·`censor-check`, 08-05에 `solve-check`,
-**08-06에 `cand-check`**).
-> ⚠ **`build` 의 명령은 17개인데 단은 16이다.** `matrix-check` 과 `cand-check` 사이의
+08-06에 `cand-check`, **08-07에 `voice-check`**).
+> ⚠ **`build` 의 명령은 18개인데 단은 17이다.** `matrix-check` 과 `cand-check` 사이의
 > `npm run case` 는 **검사가 아니라 산출물 생성**이다(`export-case` — `cand-check` 이
 > 그 산출물을 읽으므로 앞에 선다). 세다가 어긋나면 `package.json` 을 믿는다.
+> ⛔ **규약은 이 한 줄뿐이다 — 「명령 수에서 `npm run case` 를 뺀 것이 단수」.**
+> 08-07에 처음으로 **반대 방향**으로 틀렸다: 그날 세션이 `voice-check` 하나를 더하고
+> **16 → 18** 이라고 적었다(`case` 를 단으로 셈). 검사 하나로 +2 가 될 수 없다.
+> docs 넷이 그 값을 물려 썼고 **같은 날 저녁 세션**이 되돌렸다.
 > ⚠ 이 줄이 08-04까지 **13단**으로 낡아 있었다 — `censor-check` 이 빠져 있었다.
-> 08-05에 15단으로 고쳤는데 **08-06에 또 낡았다** — 그날 세션이 `cand-check` 으로
-> 게이트를 늘리고 이 줄을 안 고쳤다. **숫자만 고치고 목록을 안 고치면 같은 줄이
-> 자기와 모순된다** — 08-06 밤에 그 자리를 **세 번째로** 지났다.
+> 08-05에 15단으로 고쳤는데 **08-06에 또 낡았고**(`cand-check`), **08-07에 또 낡았다**
+> (`voice-check`). **숫자만 고치고 목록을 안 고치면 같은 줄이 자기와 모순된다** —
+> 이 자리를 **네 번째로** 지났다.
 **초록의 뜻**: 골든 케이스 통과 + 생성기 100% + 옵션 공간 속성 통과 + YAML 왕복 동일 +
 **모든 공란이 조사로 갈림** + 저작 서식 통과 + **서식이 든 숫자가 산장 실측과 같음** +
 **행렬이 가리키는 검사가 실재함** + **닫힌 공란의 정답이 후보 안에 있고 파생 채널이
@@ -118,6 +141,8 @@ cand-check · port-check · build`
 - **다음 하나** — NEXT-ACTION §다음 즉시 액션
 - **막힌 것** — 워크로그 Blockers
 - **게이트 상태** — exit 0 인지
+- **인계 대조** — §1-b 의 해시 넷 + 워크로그 §인계 대조 줄의 유무.
+  **어긋나면 그 줄을 보고에 «반드시» 인쇄한다** — 침묵은 통과와 구별되지 않는다
 
 읽다가 **문서끼리 어긋나면 그 자리에서 지적한다.** 닫힌 일이 열린 채 남아 있거나,
 낡은 표가 살아 있는 목록인 척하고 있으면 그것부터 말한다 — `b9f49b4` 가 그렇게 걸렸다.
