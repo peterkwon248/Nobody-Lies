@@ -78,6 +78,48 @@ function structureProblems(c: Case, label: string): string[] {
   return p
 }
 
+/**
+ * §0 결 규칙 — **프로필 틀에 「말씀드리-」 가 없어야 한다** (2026-08-07 · 경훈 정본)
+ *
+ * 그 동사는 **오프너의 소유**다. 오프너는 팔레트 몫(진입의 결)이고 프로필 `first` 는
+ * 내용의 결이다. 둘이 같은 낱말을 쓰면 겹말이 나온다 — 첫 판에서 35편 중 **15편(43%)**.
+ *
+ * ⛳ **문자열 검사인데 「렌더 재독」이 아니다.** 재독은 «만들어진 산문»을 되짚어
+ * 뜻을 추론하는 것이고, 이건 **정본이 「낱말 금지」 계약 그 자체**라 계약과 검사의
+ * 표현이 같은 것이 정상이다(경훈 확인). 그리고 보는 대상이 산문이 아니라 **틀 상수**다.
+ *
+ * ★ **`cand-check` 이 아니라 여기 둔 이유** — 저쪽은 방출된 사건 JSON 을 읽으므로
+ * `generate.ts` 소스를 정규식으로 긁어야 한다. 여기는 `VOICES` 에 **타입으로** 닿아서
+ * 틀을 직접 센다. 「구조 검사가 어려우면 문자열 허용」이라 했는데 **구조로 됐다.**
+ */
+const BANNED = ['말씀드리', '말씀드립', '말씀드렸']
+function dictionProblems(profiles: typeof VOICES): string[] {
+  const p: string[] = []
+  for (const v of profiles) {
+    const slots: [string, string[]][] = [
+      ['first', [v.first]], ['move', v.move], ['same', v.same],
+      ['absent', [v.absent]], ['flesh', [...v.flesh]], ['spec', [v.spec]],
+    ]
+    for (const [where, texts] of slots) {
+      for (const t of texts) {
+        const hit = BANNED.find((b) => t.includes(b))
+        if (hit) p.push(`${v.id}.${where} 에 「${hit}」 — 그 동사는 오프너의 소유다: ${t.slice(0, 42)}`)
+      }
+    }
+  }
+  return p
+}
+
+console.log('\n§0 결 규칙 — 프로필 틀에 「말씀드리-」 가 없나')
+const diction = dictionProblems(VOICES)
+for (const m of diction) console.log(`  ⛔ ${m}`)
+if (!diction.length) console.log(`  ✓ ${VOICES.length}종 전부 — first·move·same·absent·flesh·spec 어디에도 없다`)
+/** 심기 — 규칙이 죽어 있으면 초록인지 본다 */
+const dictionPlant = dictionProblems(VOICES.map((v, i) =>
+  i === 0 ? { ...v, flesh: ['순서대로 말씀드리는 게 편합니다.', v.flesh[1]] as [string, string] } : v))
+if (dictionPlant.length) console.log('  ✓ 심기 — 되돌린 문안을 물었다')
+else { console.log('  ⛔ 심기 — 「말씀드리는」 을 되돌렸는데 통과했다'); diction.push('심기 실패') }
+
 console.log(`\n§1 구조 — 사건 안에서 다섯이 서로 다른 프로필을 하나씩 쓰나 (${N}건)`)
 const rows: Row[] = []
 let structFails = 0
@@ -178,9 +220,9 @@ for (const pl of plants) {
   else { plantFails++; console.log(`  ⛔ ${pl.id.padEnd(18)} 심었는데 통과했다 (${pl.why})`) }
 }
 
-const total = structFails + distFails + plantFails
+const total = diction.length + structFails + distFails + plantFails
 if (total) {
-  console.error(`\n⛔ voice-check 실패 — 구조 ${structFails} · 분포 ${distFails} · 심기 ${plantFails}\n`)
+  console.error(`\n⛔ voice-check 실패 — 결 ${diction.length} · 구조 ${structFails} · 분포 ${distFails} · 심기 ${plantFails}\n`)
   process.exit(1)
 }
-console.log(`\n✅ voice-check 통과 — 구조 ${N}건 · 분포 5종 · 심기 ${plants.length}/${plants.length} 물림\n`)
+console.log(`\n✅ voice-check 통과 — 결 ${VOICES.length}종 · 구조 ${N}건 · 분포 5종 · 심기 ${plants.length + 1}/${plants.length + 1} 물림\n`)
