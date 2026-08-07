@@ -3670,6 +3670,17 @@ export default class App extends React.Component {
       };
     });
 
+    /**
+     * ⑦-b **이름 띠는 범례와 설비가 «같은 값»을 봐야 한다** (2026-08-08)
+     *
+     * 아래 §인물 배지가 이 띠만큼 아래에서 시작하고, 설비 마커는 그 띠 «안»으로
+     * 올라간다. 두 곳이 각자 상수를 들면 한쪽만 고쳐지고 그것이 이 저장소의 재발
+     * 부류다(`MEMORY.md` §검사와 수리가 같은 표현을 쓰면 사각도 같다 의 사촌).
+     */
+    const LEG_LINE = 38;
+    const LEG_PAD = lean ? 6 : 10;
+    const LEG_BAND = LEG_PAD + (lean ? 10 : 11) * 1.45 * 2.67; // 글꼴 px → 줄 높이 → viewBox 단위
+
     const revealedLocs = {}; areas.forEach(a => revealedLocs[a.loc] = true);
     const fixtures = this.FIXTURES.filter(f => revealedLocs[f.loc]).map(f => {
       const pos = G.fixtures[f.id] || { x: 500, y: 312 };
@@ -3680,7 +3691,24 @@ export default class App extends React.Component {
       return { id: f.id, name: ln === 'ko' ? f.ko : f.en, body: !!f.body, done, iconPath: f.body ? '' : this.termIconPath(f.icon),
         // ⑤ 같은 렌즈 — 고정물·시신도 시트로 간다 (완료분 포함. §locs 주석 참조)
         onRun: (st === 'na') ? (() => {}) : (() => this.openPlanSheet(actId, f.body ? [] : [f.id], ln === 'ko' ? f.ko : f.en)),
-        markStyle: { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: (st === 'na') ? 'default' : 'pointer', background: 'transparent', border: 'none', zIndex: 3 },
+        /**
+         * ⑦-b **좁은 폭에서는 설비를 「이름 띠」 안으로 올리고 줄인다** (2026-08-08)
+         *
+         * 경훈 실기기에서 설비 마커가 인물 줄(백현우·임태성)을 물었다. 실측:
+         * ```
+         * 중앙 로비 115×47px  띠의 빈 가로 72.3~130.5 (58px) · 세로 21px
+         * 설비 마커 26px      세로가 21px 을 넘어 범례로 흘러내렸다
+         * ```
+         * **「비는 사분면으로 이동」이 이 방에서는 불가능하다** — 26px 이 들어갈
+         * 자리가 없다. 그래서 띠에 맞게 줄인다.
+         *
+         * ⛳ **줄여도 탭이 안 죽는다** — 미리보기에서는 마커가 탭 대상이 아니다.
+         * 래퍼(`plan.tapToZoom`)가 클릭을 먹어 확대를 열고, 조사는 거기서 한다.
+         * 확대는 `lean` 이 거짓이라 26px 그대로다.
+         */
+        markStyle: lean
+          ? { position: 'absolute', left: px(pos.x) + '%', top: py((anchorByLoc[f.loc] ? anchorByLoc[f.loc].y + LEG_BAND / 2 : pos.y)) + '%', transform: 'translate(-50%,-50%)', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: 'default', background: 'transparent', border: 'none', zIndex: 3 }
+          : { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: (st === 'na') ? 'default' : 'pointer', background: 'transparent', border: 'none', zIndex: 3 },
         // 좁은 폭 미리보기에서는 설비 이름을 안 쓴다 — 마커와 미조사 표시만 남긴다
         labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
     });
@@ -3796,9 +3824,38 @@ export default class App extends React.Component {
          * 세로로 다 들어가나 — 안 들어가면 **2열 폴백**(경훈 지시).
          * 쓸 수 있는 높이는 방 높이에서 위아래 여백을 뺀 것이다.
          */
-        const usable = Math.max(LINE, a.h - PAD * 2);
+        /**
+         * ⑦-b **이름 띠 — 범례는 「방 이름 아래」에서 시작한다** (2026-08-08)
+         *
+         * 경훈 실기기(미술관 중앙 로비 5인)에서 목록 첫 줄이 방 이름과 **완전히
+         * 포개졌다**. 전에는 목록을 방 «전체» 높이에 세로 중앙 정렬했는데,
+         * 이름은 방 **맨 위**에 살아서 사람이 많을수록 블록이 위로 자라 이름을 먹었다.
+         *
+         * ⛔ **인물↔인물 겹침은 그동안 «참으로» 0 이었다** — ⑦⑧ 계측이 그 쌍만 셌다.
+         * **안 세는 쌍은 없는 쌍이 아니다.** 이제 범례↔이름·설비·배지까지 센다.
+         *
+         * 띠 높이는 **이름의 글꼴에서 나온다** — 고정 오프셋이 아니다.
+         * `PAD`(상자 위 여백) + 이름 한 줄 + 숨돌림. 시스템 글꼴 배율이 얹히면
+         * 이름이 커지므로 배율분을 미리 실어둔다(검증에서 1.0·1.3 둘 다 잰다).
+         */
+        const NAME_BAND = LEG_BAND; // 위 §이름 띠 — 설비 마커와 «같은 값»을 본다
+        /**
+         * ⛳ **방이 띠와 한 줄을 동시에 못 담으면 띠를 포기한다** — 여기서는
+         * 「이름과 겹침」보다 **「방 밖으로 나감」이 더 나쁘다**(⑦⑧이 닫은 결함이다).
+         * 어느 방이 이 폴백을 타는지는 검증에서 센다.
+         */
+        const band = (a.h - PAD) > (NAME_BAND + LINE) ? NAME_BAND : PAD;
+        const usable = Math.max(LINE, a.h - band - PAD);
         const fit = Math.max(1, Math.floor(usable / LINE));
-        cols = total > fit ? 2 : 1;
+        /**
+         * ⛔ **열 수가 「2」로 박혀 있었다** — 띠를 확보하자 중앙 로비(115×47px)에서
+         * 5인이 2열에 안 들어가 **행 간격이 눌리고 인물↔인물 겹침이 0 → 4** 가 됐다.
+         * 한 겹침을 다른 겹침과 맞바꾼 것이다(실측 y 0.9~1.5px).
+         *
+         * 열 수는 **겹침이 0이 되는 최소값**이다 — 상수가 아니라 계산이다.
+         * 3열이 상한인 것은 폭 때문이다(그 이상은 이름이 한 글자도 안 남는다).
+         */
+        cols = Math.min(3, Math.max(1, Math.ceil(total / fit)));
         const perCol = Math.ceil(total / cols);
         col = Math.floor(n / perCol);
         const row = n % perCol;
@@ -3806,10 +3863,11 @@ export default class App extends React.Component {
         // 열 안에서 세로 중앙 정렬 — 방을 벗어나지 않는 것이 이 계산의 계약이다
         const blockH = Math.min(inCol * LINE, usable);
         const step = inCol > 1 ? blockH / inCol : 0;
-        const top = a.y + Math.max(PAD, (a.h - blockH) / 2);
+        const top = a.y + band + Math.max(0, (usable - blockH) / 2);
         cy = top + step * row + step / 2;
-        if (inCol === 1) cy = a.y + a.h / 2;
-        cx = a.x + PADX + (cols > 1 ? col * (a.w - PADX * 2) / 2 : 0);
+        if (inCol === 1) cy = a.y + band + usable / 2;
+        // 열 간격도 「2」가 박혀 있었다 — cols 로 나눠야 3열에서 셋째 열이 방을 안 넘는다
+        cx = a.x + PADX + (cols > 1 ? col * (a.w - PADX * 2) / cols : 0);
       }
       /**
        * 이름 자리 — 목록 배치에서는 점 **오른쪽에 왼쪽 정렬**(한 줄이 되는 요점),
@@ -4824,8 +4882,15 @@ export default class App extends React.Component {
                 </div>
                 <div style={S("display:flex;align-items:center;gap:4px;flex:none")}>
                   <span className="v-num" style={S("font-size:12px;color:var(--fg-3);margin-right:2px;white-space:nowrap")}>{V.status.budget}</span>
-                  <button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /></svg></button>
-                  {/* ⛔ **설정 버튼도 여기서 지웠다 — 정본은 `viewheader` 쪽 하나다** (2026-08-07 · 경훈 실기기).
+                  {/* ⛔ **「나란히 보기」를 좁은 폭에서 뺐다 — 기어가 이 자리를 갖는다** (2026-08-08 · 경훈 재판정)
+                      그 버튼은 두 패널을 «나란히» 놓는 기능인데 375 에는 나란히 놓을 폭이 없다.
+                      **좁은 폭에서 존재 이유가 없는 버튼이 좁은 폭의 제일 좋은 자리를 쓰고 있었다.**
+                      데스크톱은 그대로다(아래 §viewheader 의 `isWide` 갈래).
+                      ⛳ 08-07 에는 여기서 «기어»를 뺐는데(같은 아이콘이 세로로 둘이라) 판정이 뒤집혔다 —
+                      경훈이 이틀 써보고 *"빠져나와 떠 있다"* 고 했다. 뜬 인상의 정체는 위치가 아니라
+                      **소속감**이었다: 뷰헤더 기어는 바 «안»이 아니라 콘텐츠 «위»로 읽힌다. */}
+                  <button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
+                  {/* ⛔ 옛 주석 — 08-07 에 여기서 설정을 뺐던 근거 (기록으로 남긴다).
                       08-06 에 «패널»의 겹침만 끊고 **버튼은 둘 다 남겼다**(어느 쪽을 눌러도 같은 상태를 토글하므로).
                       그런데 실기기에서 **같은 기어 아이콘이 세로로 두 개**로 보였다 — 실측 (319,0)·(315,46).
                       기능이 아니라 «모양»이 결함이었다. 패널이 `viewheader` 에 있으므로 그쪽이 정본이고 이쪽을 뺀다.
@@ -4840,7 +4905,9 @@ export default class App extends React.Component {
               <span className="spacer"></span>
               <span className="toolbar-icons g-settings" style={S("position:relative")}>
                 {(V.isWide)?(<><button className="iconbtn" onClick={V.shell.onToggleRight} title={V.ui.crossRef} style={V.shell.rightStyle}><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="3" width="14" height="12" rx="4" stroke="currentColor" strokeWidth="1.6" /><line x1="11" y1="3.6" x2="11" y2="14.4" stroke="currentColor" strokeWidth="1.6" /><rect x="11.2" y="3.8" width="4" height="10.4" rx="2.4" fill="currentColor" opacity="0.18" /></svg></button></>):null}
-                <button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button>
+                {/* ⛳ 좁은 폭에서는 기어가 «상단 바»에 있다(위 §tabbar) — 전 화면 1개 보장.
+                    패널은 여기 한 벌만 둔다. 두 벌이면 한쪽만 고쳐지고 그것이 재발 부류다. */}
+                {(V.isWide)?(<><button className="iconbtn" onClick={V.shell.onSettings} title={V.ui.settings}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg></button></>):null}
                 {(V.shell.settingsOpen)?(<>
                   <div className="panel" style={S("position:absolute;right:0;top:36px;width:220px;z-index:60")}>
                     <div className="panel-caption">{V.ui.language}</div>
