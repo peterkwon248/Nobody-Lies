@@ -20,7 +20,8 @@
     "candidates": "tsx src/candidates.ts",
     "censor-check": "tsx src/censor-check.ts",
     "solve-check": "tsx src/solve-check.ts",
-    "space-audit": "tsx src/space-audit.ts"
+    "space-audit": "tsx src/space-audit.ts",
+    "voice-check": "tsx src/voice-check.ts"
   },
   "devDependencies": {
     "@types/d3-hierarchy": "^3.1.7",

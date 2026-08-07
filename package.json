@@ -8,7 +8,7 @@
     "app"
   ],
   "scripts": {
-    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run censor-check && npm run solve-check && npm run matrix-check && npm run case && npm run cand-check && npm run port-check && npm run build -w nobody-lies-app",
+    "build": "npm run typecheck -w engine && npm run lint && npm run yaml-check && npm run verify -w engine && npm run gen-check && npm run prop-check && npm run clue-check && npm run tmpl-check && npm run brief-check && npm run prose-lock && npm run censor-check && npm run solve-check && npm run voice-check && npm run matrix-check && npm run case && npm run cand-check && npm run port-check && npm run build -w nobody-lies-app",
     "typecheck": "npm run typecheck -w engine",
     "lint": "biome lint",
     "prop-check": "npm run prop-check -w engine",
@@ -23,7 +23,7 @@
     "cand-check": "node scripts/cand-check.mjs",
     "yaml-check": "node scripts/yaml-comma-check.mjs",
     "brief-check": "node scripts/brief-check.mjs",
-    "voice-check": "node scripts/voice-check.mjs",
+    "voice-check": "npm run voice-check -w engine",
     "world-check": "node scripts/world-check.mjs",
     "plan-check": "npm run plan-check -w engine --",
     "lock-fix": "node scripts/lock-peer-restore.mjs",

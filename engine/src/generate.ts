@@ -1,6 +1,7 @@
 import type { Case, PersonId, TrickType, IllusionKind, BlankLabel } from './types.js'
 // 되먹임 3단째. `clues.ts` → `proof.ts` → `types.js` 로만 가므로 순환이 없다
 import { closeClues } from './clues.js'
+import { fill } from './particle.js'
 
 /**
  * 작가 — 논리 골격 생성기.
@@ -764,6 +765,153 @@ export function generateCase(seed: number, palette?: Palette, opts?: GenerateOpt
   closeClues(c)
   return c
 }
+
+/**
+ * ─────────────────────────────────────────────────────────────────────
+ *  말투 프로필 5종 — 진술이 「격자의 낭독」에서 「인물의 말」로 (2026-08-07)
+ * ─────────────────────────────────────────────────────────────────────
+ *
+ * ## 왜 있나 — 실측 (`docs/STATEMENT-MEASUREMENT.md`)
+ *
+ * ```
+ * 진술 글자 수 중앙 64 대 손저작 296 (21.6%)
+ * 다섯 진술 중 문단 «절반»이 글자까지 복제 (7/15 · 47%)
+ * statement.voice 0/35 — 스키마에 있는 필드인데 생성기만 안 채웠다
+ * ```
+ *
+ * 뿌리는 `statementOf` 의 틀 선택이 `SAME[nth % 3]` 이고 그 **`nth` 가 슬롯
+ * 인덱스**였던 것이다. 사람에 안 걸리니 같은 칸에서 같은 이동 유형이면
+ * **다섯이 같은 틀을 지나 글자까지 같아진다.** 옛 주석이 *"연달아 같은 문장이
+ * 안 나오게"* 라고 적어놨는데, 그 「연달아」는 **한 사람 안의 세로 방향**이지
+ * **다섯 사람의 가로 방향**이 아니었다.
+ *
+ * ## ⛔ 팔레트가 아니다
+ *
+ * **팔레트는 어휘, 말투는 골격**이다(사용자 확정). 여기 있는 것은 문장의 **꼴**이고
+ * 사건 어휘를 하나도 안 담는다 — 그래서 팔레트를 갈아도 말투 분포가 안 흔들린다
+ * (§rng 주석의 「팔레트가 논리 분포를 흔든 사고」와 같은 이유로 갈라둔다).
+ *
+ * ## ⛔ 정보를 담지 않는다 — 이 배치의 경계
+ *
+ * `살`(무해한 살) 문장에 **구체 명사가 0개**다. 심경·태도뿐이다. 이유:
+ *
+ * ```
+ * ④ seedTerms   조사로 얻을 단어를 진술이 말하면 안 된다 (verifier §9-7 계열)
+ * ⑧ R3         진술의 «타인 언급»이 「인물」 공란의 증명 경로가 된다 (proof.ts:276)
+ *              지금 생성 진술은 타인을 0번 부르므로 R3 이 한 번도 발화하지 않는다.
+ *              이름을 부르기 시작하면 R3 이 켜지고 증명 경로가 바뀐다
+ * ```
+ *
+ * 그래서 **관계·동기·물건은 여기 없다.** 그것이 「살 비트」이고 **별도 배치**다
+ * (기준선 `proof-check`·`clue-check`·`solve-check` 를 먼저 찍고 연다).
+ *
+ * ## 살 배치 규약 — ⑥·⑦ 을 지킨다
+ *
+ * **첫 문단 뒤 하나 · 마지막 문단 뒤 하나.** 다섯 전원이 같은 개수를 받으므로
+ * 문단 수가 사람마다 갈리지 않는다 — 「길이가 곧 유용도 표시」(§절대 규칙 ·
+ * `verifier:1530` §9-9)를 건드리지 않는다.
+ *
+ * ## ④ 페어플레이 — 「범인만 다른 틀」이 가능해진 순간
+ *
+ * 전원이 똑같던 동안은 그 검사가 **자동으로 참**이었다. 틀을 사람마다 갈리게 하는
+ * 순간 참이 아니게 되므로 `voice-check` 가 **같은 커밋에** 들어간다.
+ * 배정은 «사람 인덱스» 만 보고 **범인 여부를 입력으로 받지 않는다** — 그것을
+ * 렌더 재독이 아니라 **구조로** 확인한다.
+ */
+export type VoiceProfile = {
+  id: string
+  /** `statement.voice` 에 그대로 들어가는 규격 문안 */
+  spec: string
+  first: string
+  move: string[]
+  same: string[]
+  absent: string
+  /** 무해한 살 — [첫 문단 뒤, 마지막 문단 뒤] */
+  flesh: [string, string]
+}
+
+export const VOICES: VoiceProfile[] = [
+  {
+    id: 'ledger',
+    spec: '또박또박, 기록을 짚듯 말한다. 전부 …습니다',
+    first: '{opener} 일지에 적어둔 대로 말씀드립니다. {slot}에는 {place}에 있었습니다.',
+    move: [
+      '{slot}에는 {place}{^place|으로/로} 자리를 옮겼습니다.',
+      '{slot}에는 {place}에 있었던 것으로 적혀 있습니다.',
+      '{slot}에는 {place}에 가 있었습니다.',
+    ],
+    same: ['{slot}에도 자리를 지켰습니다.', '{slot}에도 같은 자리였습니다.'],
+    absent: '{slot}에는 그곳에 없었습니다.',
+    flesh: ['순서대로 말씀드리는 게 편합니다.', '적어둔 것 밖의 일은 잘 모르겠습니다.'],
+  },
+  {
+    id: 'defensive',
+    spec: '먼저 변명부터 깔고 들어간다. 끝은 부탁으로 무른다',
+    first: '{opener} 의심받을 이유가 없다는 것부터 말씀드립니다. {slot}에는 {place}에 있었습니다.',
+    move: [
+      '{slot}에는 {place} 쪽으로 갔습니다. 갈 일이 있어서 간 것뿐입니다.',
+      '{slot}에는 {place}에 있었고요, 별일은 없었습니다.',
+      '{slot}에는 {place}{^place|으로/로} 옮겼습니다.',
+    ],
+    same: ['{slot}에도 거기 그대로 있었습니다. 정말입니다.', '{slot}에도 안 움직였습니다.'],
+    absent: '{slot}에는 거기 없었습니다. 그건 분명히 해두고 싶습니다.',
+    flesh: ['이런 자리가 처음이라 말이 잘 안 나옵니다.', '믿어주실지 모르겠지만, 있는 그대로입니다.'],
+  },
+  {
+    id: 'drifting',
+    spec: '딴 데를 보며 말한다. 가끔 반말처럼 흘리고 존대로 돌아온다',
+    first: '{opener} 그날 일은 드문드문 남아 있어요. {slot}에는 {place}에 있었어요.',
+    move: [
+      // 「…였어요」는 받침에서 갈린다 — 초안 문안 그대로 두면 「복원실였어요」가 나온다
+      '{slot}에는… {place}{^place|이었/였}어요, 아마. 아니, 맞아요.',
+      '{slot}에는 {place}{^place|으로/로} 갔어요. 그냥요.',
+      '{slot}에는 {place}에 있었고요.',
+    ],
+    same: ['{slot}에도 그대로였어요. 움직일 이유가 없었으니까.', '{slot}에도 거기.'],
+    absent: '{slot}에는 거기 없었는데요.',
+    flesh: ['이런 거 오래 하는 자리는 좀 힘들어요.', '무슨 말을 더 해야 하는지 모르겠어요.'],
+  },
+  {
+    id: 'terse',
+    spec: '묻는 것에만 답한다. 문장이 짧다',
+    first: '{opener} {slot}, {place}에 있었습니다.',
+    move: [
+      '{slot}에는 {place}{^place|으로/로}.',
+      '{slot}에는 {place}. 그게 답니다.',
+      '{slot}에는 {place}에 갔습니다.',
+    ],
+    same: ['{slot}에도 같습니다.', '{slot}에도 그대로.'],
+    absent: '{slot}에는 없었습니다.',
+    flesh: ['더 붙일 말은 없습니다.', '물으시면 답하겠습니다.'],
+  },
+  {
+    id: 'verbose',
+    spec: '한 마디면 될 것을 두 마디로 한다. 스스로 되묻는다',
+    first: '{opener} 처음부터 말씀드리는 게 낫겠지요. {slot}에는 {place}에 있었습니다.',
+    move: [
+      '{slot}에는 {place}{^place|으로/로} 옮겼습니다. 왜 옮겼냐고 물으시면, 그럴 시간이었으니까요.',
+      '{slot}에는 {place}에 가 있었습니다. 늘 하던 대로요.',
+      '{slot}에는 {place}{^place|이었/였}습니다. 이건 확실합니다.',
+    ],
+    same: [
+      '{slot}에도 같은 자리에 있었습니다. 지루하게 들리셔도 사실이 그렇습니다.',
+      '{slot}에도 안 옮겼습니다. 옮길 이유가요, 없었습니다.',
+    ],
+    absent: '{slot}에는 그곳에 없었습니다. 그건 누가 봐도 그랬을 겁니다.',
+    flesh: [
+      '이렇게 말하고 보니 별 내용이 없네요. 그날이 그런 날이었습니다.',
+      '기억이라는 게 참, 필요한 것부터 흐려집니다.',
+    ],
+  },
+]
+
+/**
+ * 틀 고르기의 흩뿌림 상수 — `nth = 사람 인덱스 × PRIME + 슬롯 인덱스`.
+ *
+ * `move`(3) · `same`(2) 와 서로소여야 둘 다 고르게 돈다. 7이면
+ * `% 3` 이 0·1·2·0·1 · `% 2` 가 0·1·0·1·0 으로 갈린다.
+ */
+const VOICE_SPREAD = 7
 
 /**
  * ① 진실 세계 — 누가 어디에 있었나, 무엇이 있었나, 무엇이라고 말했나.
@@ -1862,6 +2010,8 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
   const statementOf = (
     cells: { slot: string; location: string }[],
     opener: string,
+    v: VoiceProfile,
+    personIdx: number,
   ) => {
     const at = new Map(cells.map((x) => [x.slot, x.location]))
     /**
@@ -1884,8 +2034,16 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
      * ⚠ **변수 뒤 조사를 안 쓴다** — 자리 이름이 팔레트에서 오므로 끝 글자를
      * 모른다. 「…로/으로」를 피해 「자리를 옮겨 …에」로 쓴다.
      */
-    const line = (s: string, first: boolean, prevLoc?: string, nth = 0) => {
+    const line = (s: string, first: boolean, prevLoc?: string, slotIdx = 0) => {
       const loc = at.get(s)
+      /**
+       * ★ **① 뿌리 수리 — `nth` 가 「사람 + 슬롯」이다** ★ (2026-08-07)
+       *
+       * 전에는 `nth = 슬롯 인덱스` 였다. 그래서 같은 칸에서 같은 이동 유형이면
+       * **다섯이 같은 틀을 지나 글자까지 같은 문단**이 나왔다(47%).
+       * 이제 사람마다 다른 프로필을 쓰고, 그 안에서도 사람 인덱스가 틀을 흩뿌린다.
+       */
+      const nth = personIdx * VOICE_SPREAD + slotIdx
       /**
        * ★ 본채에서 떨어진 자리면 **얼마나 먼지 말한다** ★ (2026-07-29)
        *
@@ -1901,47 +2059,46 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
        * 주장하면 무고한 하나도 같은 문장을 받는다 — 모양으로 안 튄다.
        */
       const far = loc ? SITES.find((x) => x.id === loc)?.walkMin : undefined
-      // 자리를 안 옮겼을 때. 칸 번호로 갈라서 **연달아 같은 문장이 안 나오게** 한다
-      const SAME = [
-        `${slotLabel[s]}에도 같은 자리에 있었습니다.`,
-        `${slotLabel[s]}까지 자리를 뜨지 않았습니다.`,
-        `${slotLabel[s]}에도 그 자리를 지켰습니다.`,
-      ]
-      // 자리를 옮겼을 때. 여기도 갈라야 한다 — 안 그러면 「자리를 옮겨」가 네 번 나온다
-      const MOVE = [
-        `${slotLabel[s]}에는 자리를 옮겨 ${placeLabel[loc!]}에 있었습니다.`,
-        `${slotLabel[s]}에는 ${placeLabel[loc!]}에 가 있었습니다.`,
-        `${slotLabel[s]}에는 ${placeLabel[loc!]}으로 옮겼습니다.`.replace(/([가-힣])으로 옮겼습니다/, (_m, ch) => {
-          /**
-           * 「…로/으로」는 받침으로 갈린다 — 자리 이름이 팔레트에서 오므로 여기서 센다.
-           *
-           * ⚠ **`ㄹ` 받침도 「로」다** (2026-08-01 수정). 받침 없음(`% 28 === 0`)만
-           * 보고 있어서 **「홀으로 옮겼습니다」**가 나왔다. 종성 인덱스에서 `ㄹ` 은 8이다.
-           * 앱 쪽 `particle()` 은 처음부터 맞았다(`App.jsx` — `jong(w) === 8`) —
-           * **같은 규칙이 두 벌이라 한쪽만 틀린** 그 부류다(2026-07-24에 14곳).
-           */
-          const jong = (ch.charCodeAt(0) - 0xac00) % 28
-          return jong === 0 || jong === 8 ? `${ch}로 옮겼습니다` : `${ch}으로 옮겼습니다`
-        }),
-      ]
-      const body = !loc
-        ? `${slotLabel[s]}에는 그곳에 없었습니다.`
-        : loc === prevLoc
-          ? SAME[nth % SAME.length]!
-          : (first ? `${slotLabel[s]}에는 ${placeLabel[loc]}에 있었습니다.` : MOVE[nth % MOVE.length]!) +
-            (far ? ` ${places.hall}에서 걸어서 ${far}분 거리입니다.` : '')
-      return { ko: first ? `${opener} ${body}` : body }
-    }
-    return [
       /**
-       * **축의 칸마다 한 문단.** 다섯이 같은 개수를 받는다 — 위 주석의
-       * *"문단 수가 곧 범인 표시가 된다"* 를 칸 수가 늘어도 지킨다
-       * (§9-9 진술 길이 쏠림도 같은 이유로 안 흔들린다).
+       * 문안은 **프로필이 갖고** 조사는 `fill` 이 푼다.
+       *
+       * ⛳ **여기 있던 인라인 받침 계산을 지웠다** — `${place}으로 옮겼습니다` 를
+       * 정규식으로 되짚어 「로/으로」를 고르던 코드였다. 같은 규칙이 `epilogue.ts`
+       * 에도 있었고 앱에도 있어서 **세 벌**이었다. 이제 `particle.ts` 한 곳이다
+       * (§one-value-two-places). 문장틀은 `{place}{^place|으로/로}` 로 «선언»한다.
        */
-      ...AXIS.map((s, i) => line(s, i === 0, i > 0 ? at.get(AXIS[i - 1]!) : undefined, i)),
-      // ⛔ **여기에 「감추는 것이 있다」 문단을 다시 넣지 마라.** 그것이 제목의 규칙을
-      // 뒤집는다 — 비밀은 말하지 않는 것이지 말하지 않겠다고 말하는 것이 아니다.
-      // 산장 진술 5편에 그런 문장은 0개다. 비밀은 소지품 검사가 드러낸다(§HERRING).
+      const vals = { opener, slot: slotLabel[s] ?? s, place: loc ? (placeLabel[loc] ?? loc) : '' }
+      const body = !loc
+        // 첫 칸이 「없었다」인 경우에도 도입구는 붙는다 — 옛 동작을 그대로 지킨다
+        ? (first ? `${opener} ` : '') + fill(v.absent, vals)
+        : loc === prevLoc
+          ? fill(v.same[nth % v.same.length]!, vals)
+          : fill(first ? v.first : v.move[nth % v.move.length]!, vals) +
+            (far ? ` ${places.hall}에서 걸어서 ${far}분 거리입니다.` : '')
+      return { ko: body }
+    }
+    /**
+     * **축의 칸마다 한 문단.** 다섯이 같은 개수를 받는다 —
+     * *"문단 수가 곧 범인 표시가 된다"* 를 칸 수가 늘어도 지킨다
+     * (§9-9 진술 길이 쏠림도 같은 이유로 안 흔들린다).
+     */
+    const cells2 = AXIS.map((s, i) => line(s, i === 0, i > 0 ? at.get(AXIS[i - 1]!) : undefined, i))
+    /**
+     * ★ **무해한 살 — 첫 문단 뒤 하나, 마지막 문단 뒤 하나** ★ (2026-08-07)
+     *
+     * 다섯 전원이 **같은 자리에 같은 개수**를 받는다. 그래서 문단 수가 사람마다
+     * 갈리지 않고 §9-9 가 안 흔들린다. 살에는 **구체 명사가 0개**다 —
+     * 관계·동기·물건은 `seedTerms`(④)와 `proof.ts` R3(⑧)에 닿으므로 **별도 배치**다.
+     *
+     * ⛔ **여기에 「감추는 것이 있다」 문단을 다시 넣지 마라.** 그것이 제목의 규칙을
+     * 뒤집는다 — 비밀은 말하지 않는 것이지 말하지 않겠다고 말하는 것이 아니다.
+     * 산장 진술 5편에 그런 문장은 0개다. 비밀은 소지품 검사가 드러낸다(§HERRING).
+     */
+    return [
+      cells2[0]!,
+      { ko: v.flesh[0] },
+      ...cells2.slice(1),
+      { ko: v.flesh[1] },
     ]
   }
 
@@ -2090,6 +2247,36 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
    */
   const gestureOf = (i: number) => gestures[i % gestures.length]!
   /**
+   * ★ **말투 프로필 배정 — 다섯이 전부 다른 하나를 받는다(전단사)** ★ (2026-08-07)
+   *
+   * ## ⛔ 왜 `r()` 이 아니라 별 스트림인가
+   *
+   * `shuffled()` 는 `r()` 을 소비한다. 여기서 한 번 돌리면 **그 뒤의 모든 난수가
+   * 밀려** 이름·직업·트릭·평면도까지 통째로 바뀐다 — §rng 주석에 적힌 그 사고
+   * (*"팔레트를 바꾸자 `r()` 호출 횟수가 밀렸고 트릭 아키타입이 5종에서 3종으로
+   * 줄었다"*)의 재판이다. 그러면 ④ 기준선(proof·clue·solve)이 **말투 때문이 아니라
+   * 세계가 바뀌어서** 움직이고, 그 차이는 읽을 수가 없다.
+   *
+   * 그래서 **씨앗에서 갈라낸 독립 스트림**을 쓴다. 세계는 한 글자도 안 바뀐다.
+   *
+   * ## ④ 페어플레이의 근거가 이 두 줄이다
+   *
+   * 입력이 **씨앗과 사람 인덱스뿐**이다 — `culprit` 도, `hiddenRole` 도, `presence` 도
+   * 안 본다. `ids` 는 고정 배열(`p1`..`p5`)이고 범인은 `pick(ids)` 로 따로 뽑히므로
+   * **배정과 범인 여부는 구조적으로 무관**하다. `voice-check` 가 이것을 렌더 재독이
+   * 아니라 **범인을 옮겨보는 방식**으로 확인한다.
+   */
+  const voiceOrder = (() => {
+    const vr = rng(seed ^ 0x5bf03635)
+    const a = [...VOICES]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(vr() * (i + 1))
+      ;[a[i], a[j]] = [a[j]!, a[i]!]
+    }
+    return a
+  })()
+  const voiceOf = (i: number) => voiceOrder[i % voiceOrder.length]!
+  /**
    * 프로필 카드의 **「본인 주장」** 한 줄. (2026-07-29 밤 신설)
    *
    * ★ 없어서 카드에 빈칸이 떴다 ★ 산장은 다섯 다 `claim_summary` 를 갖는데
@@ -2136,7 +2323,16 @@ function buildWorld(seed: number, palette?: Palette, opts?: GenerateOptions) {
       paragraphs: statementOf(
         id === culprit ? t.claim : innocentPresence(id),
         openerOf(i),
+        voiceOf(i),
+        i,
       ),
+      /**
+       * ★ **「다섯 곳 한 벌」의 빈 다섯째가 닫힌다** ★ `types.ts:88`·`schema.ts:308`·
+       * `to-yaml.ts:125` 가 다 받는데 **생성기만 안 채워서 0/35** 였다.
+       * §zero-usage-is-a-question — 실사용 0 을 「안전하다」로 읽고
+       * 「그럼 왜 있나」로는 안 읽고 있었던 자리다.
+       */
+      voice: voiceOf(i).spec,
       gesture: { pre: { ko: gestureOf(i).pre }, post: { ko: gestureOf(i).post } },
     },
   })
