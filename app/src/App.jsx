@@ -3248,7 +3248,78 @@ export default class App extends React.Component {
   buildFloorplan() {
     const ln = this.state.lang, tsel = this.state.mapTime;
     const G = this.GEO, VW = G.vb.w, VH = G.vb.h;
-    const px = v => (v / VW * 100), py = v => (v / VH * 100);
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     *  §⑨ 현장 개요 — 죽은 여백을 잘라내고 «부족분만» 늘린다 (2026-08-07 · ⓑ)
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * ## ⛔ 「빈 검정」의 원인이 둘이었다 — 하나만 고치면 안 낫는다
+     *
+     * ```
+     * ① viewBox 안 죽은 여백   전 사건이 1000×625 «고정»인데 건물 bbox 는 제각각이다
+     *                          미술관 851×518(1.64) · 극장 885×368(2.40) · 연습실 420×500(0.84)
+     * ② 상자가 16:10 고정      내용 비율과 무관하게 잠겨 있다
+     * ```
+     *
+     * ★ **①은 상자를 아무리 늘려도 안 사라진다**(경훈 판독). 첫 진단이 ②만 보고 있었다.
+     *
+     * ## 세 안을 실측으로 산정하고 ⓑ 를 골랐다 (미술관 · 375 · 합격선 34px)
+     *
+     * ```
+     * ⓐ 잘라내기만        25 → 28px   왜곡 0    합격선 미달
+     * ⓑ 잘라내기 + 부족분  → 34px      왜곡 1.12  ← 이것
+     * ⓒ 55vh 전면 늘림    → 24px      왜곡 1.9   목표 미달인데 왜곡만 크다(스펙 문면)
+     * ```
+     *
+     * ## 늘림 배수를 «상수로 안 쓴다» — CSS 가 부족분을 계산한다
+     *
+     * ```
+     * height: min(62vh, max( calc((100vw - 48px) × SH/SW),  ⌈34·SH/최소방높이⌉px ))
+     *                        └ 왜곡 0 높이            └ 합격선 높이
+     * ```
+     *
+     * 큰 쪽이 이기므로 **세로형은 자동으로 늘림 0** 이다 — 경훈 조건이 산수로 지켜진다.
+     * (연습실 0.84: 왜곡 0 높이 414px > 합격선 120px → 그대로. 극장 2.40: 152 > 122 → 그대로.
+     *  미술관 1.64: 218 < 245 → 245px 로 27px 만 늘린다.)
+     *
+     * ⛔ **`preserveAspectRatio="none"` 이 «필요»하다** — 상자 높이를 내용 비율과 다르게
+     * 두는 순간, SVG 는 기본값(meet)으로 레터박스되고 HTML 방 상자는 %로 늘어나서
+     * **벽과 방이 갈라진다.** 둘이 같은 창을 보게 강제한다.
+     *
+     * ## ⛔ `px`/`py` 가 «위치»와 «크기»를 겸하고 있었다 — 전수로 갈랐다
+     *
+     * 원점을 빼도록 고치면 **크기(델타)까지 줄어든다**(방 높이 76 → `(76-46)/546`
+     * = 5.49% → 11px). 첫 시도가 정확히 그렇게 찌그러졌다. 23곳을 세어 갈랐다:
+     * **위치 21곳(`px`·`py`) · 크기 2곳(`sx`·`sy` — 방 상자 w/h · 이름표 maxWidth).**
+     * SVG 도형은 원좌표를 쓰므로 `viewBox` 가 알아서 처리한다.
+     *
+     * ⛳ **데스크톱은 무변경** — 자르지도 늘리지도 않는다(`fitBox` 가 `null`).
+     */
+    const fitBox = (() => {
+      const boxes = (G.rooms || []).concat(G.zones || []);
+      if (!this.state.isNarrow || !boxes.length) return null;
+      const x1 = Math.min(...boxes.map(b => b.x)), y1 = Math.min(...boxes.map(b => b.y));
+      const x2 = Math.max(...boxes.map(b => b.x + b.w)), y2 = Math.max(...boxes.map(b => b.y + b.h));
+      const M = 14; // 테두리에 닿지 않게 두는 여백(viewBox 단위)
+      const bx = Math.max(0, x1 - M), by = Math.max(0, y1 - M);
+      const bw = Math.min(VW - bx, (x2 - x1) + M * 2), bh = Math.min(VH - by, (y2 - y1) + M * 2);
+      /** 합격선 계산은 «방»만 본다 — 읽어야 하는 것은 방 카드(이름 1줄 + 범례 1줄)다 */
+      const minRoom = Math.max(1, Math.min(...(G.rooms || []).map(r => r.h)));
+      return bw > 0 && bh > 0 ? { x: bx, y: by, w: bw, h: bh, minRoom } : null;
+    })();
+    const OX = fitBox ? fitBox.x : 0, OY = fitBox ? fitBox.y : 0;
+    const SW = fitBox ? fitBox.w : VW, SH = fitBox ? fitBox.h : VH;
+    /** 위치 — 원점을 뺀다 */
+    const px = v => ((v - OX) / SW * 100), py = v => ((v - OY) / SH * 100);
+    /** 크기 — **원점을 빼지 않는다.** 이 구별이 이 배치의 급소다 */
+    const sx = v => (v / SW * 100), sy = v => (v / SH * 100);
+    const planViewBox = OX + ' ' + OY + ' ' + SW + ' ' + SH;
+    const CARD_MIN = 34; // 방 이름 1줄 + 범례 1줄 (실측)
+    const planBoxStyle = fitBox
+      ? { position: 'relative', width: '100%',
+          height: 'min(62vh, max(calc((100vw - 48px) * ' + (SH / SW).toFixed(4) + '), ' + Math.ceil(CARD_MIN * SH / fitBox.minRoom) + 'px))',
+          border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', overflow: 'hidden' }
+      : { position: 'relative', width: '100%', aspectRatio: '16/10', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', overflow: 'hidden' };
     /**
      * ─────────────────────────────────────────────────────────────
      *  §다이어트 — 좁은 폭 미리보기는 «덜» 그린다 (2026-08-07)
@@ -3506,7 +3577,7 @@ export default class App extends React.Component {
          * 24px 이라 **글자가 쓸 폭이 22px** 밖에 없었다. 세로 깨짐(「분/장/실」)의
          * 뿌리가 글꼴이 아니라 여백이다. 미리보기에서는 여백을 줄인다.
          */
-        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: px(a.w) + '%', height: py(a.h) + '%', boxSizing: 'border-box', padding: lean ? '4px 5px' : '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
+        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: sx(a.w) + '%', height: sy(a.h) + '%', boxSizing: 'border-box', padding: lean ? '4px 5px' : '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
       };
     });
 
@@ -3664,7 +3735,7 @@ export default class App extends React.Component {
             transform: 'translate(0,-50%)',
             fontSize: (lean ? 8 : 9) + 'px', fontWeight: 600,
             color: lean ? 'var(--fg-2)' : 'var(--fg)',
-                maxWidth: px(Math.max(24, (a.w - PADX * 2) / cols - dot * 2)) + '%',
+                maxWidth: sx(Math.max(24, (a.w - PADX * 2) / cols - dot * 2)) + '%',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             opacity: 1, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s',
             zIndex: 5, pointerEvents: 'none',
@@ -3690,7 +3761,7 @@ export default class App extends React.Component {
     const scb = G.scale, scale = { x: scb.x, x2: scb.x + scb.len, y: scb.y, yt1: scb.y - 4, yt2: scb.y + 4 };
     const scaleLabel = { left: px(scb.x), top: py(scb.y + 18) };
 
-    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings' };
+    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings', planViewBox, planBoxStyle };
   }
   FLOOR_CLUES = [
     { logKey: 'search:annex', loc: 'annex', ko: '대포폰', en: 'Burner' },
@@ -4435,8 +4506,8 @@ export default class App extends React.Component {
    */
   renderPlanFigure(V) {
     return (
-                  <div style={S("position:relative;width:100%;aspect-ratio:16/10;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-subtle);overflow:hidden")}>
-                    <svg viewBox="0 0 1000 625" style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")}>
+                  <div style={V.floor.planBoxStyle}>
+                    <svg viewBox={V.floor.planViewBox} preserveAspectRatio="none" style={S("position:absolute;inset:0;width:100%;height:100%;pointer-events:none")}>
                       <defs><pattern id="fpHatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="9" stroke="var(--border)" strokeWidth="1"></line></pattern></defs>
                       {arr(V.floor.sRoomFills).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill={r.fill}></rect></React.Fragment>))}
                       {arr(V.floor.sHatch).map((r,$index)=>(<React.Fragment key={$index}><rect x={r.x} y={r.y} width={r.w} height={r.h} fill="url(#fpHatch)" stroke="var(--border)" strokeWidth="1" rx="4"></rect></React.Fragment>))}
