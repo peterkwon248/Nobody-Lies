@@ -108,7 +108,7 @@ export default class App extends React.Component {
      * ⛔ **저장하지 않는다** (`SAVED` 에 없다). 보는 동안의 화면 상태이고,
      * 새로고침하면 도면을 다시 여는 것이 맞다.
      */
-    planZoom: null,
+    planZoom: null, planSheet: null,
   };
 
   DICT = {
@@ -2494,6 +2494,49 @@ export default class App extends React.Component {
     this.setState({ pendingInv: { action: actionId, targets: targets } });
   }
   cancelInvestigate() { this.setState({ pendingInv: null }); }
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  ⑤ 평면도 마커 → 하단 시트 (2026-08-07 · 지시서 §2부 ⑤)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * **실행 경로 정본은 하나고 여기는 «렌즈»다.** 시트의 [조사한다]는 조사 목록과
+   * 같은 `askInvestigate` 를 부르고, 그러면 같은 확인 문법(「되돌릴 수 없습니다」)이
+   * 뜬 뒤 `confirmInvestigate → doInvestigate` 로 들어간다. **새 실행 함수 0.**
+   *
+   * ⛳ **완료 마커가 그동안 죽어 있었다** — `onSearch` 가 `searchable` 이 아니면
+   * 빈 함수였다(`App.jsx` §locs). 조사를 마친 자리를 눌러도 아무 일이 없었고
+   * 무엇을 얻었는지 보려면 조사 기록으로 따로 가야 했다. 이 시트가 그 자리를 연다.
+   */
+  openPlanSheet(act, targets, label) { this.setState({ planSheet: { act, targets, label } }); }
+  closePlanSheet() { this.setState({ planSheet: null }); }
+  buildPlanSheet() {
+    const s = this.state.planSheet; if (!s) return { open: false };
+    const t = this.T(), ln = this.state.lang;
+    const a = this.INV_ACTIONS.find(x => x.id === s.act);
+    if (!a) return { open: false };
+    const st = this.invStatusFor(s.act, s.targets);
+    const done = st === 'used', canRun = st === 'ok';
+    const key = this.targetKey(s.act, s.targets);
+    const entry = (this.state.invLog || []).find(e => e.action === s.act && e.key === key) || null;
+    return {
+      open: true, done,
+      actionLabel: t[a.k], targetLabel: s.label || '',
+      // 「1회 사용」 — 값은 조사 목록과 같은 `a.cost` 다. 숫자를 여기서 새로 안 만든다
+      costLabel: ln === 'ko' ? (a.cost + '회 사용') : (a.cost + ' use'),
+      remainLabel: t.invRemaining + ' · ' + Math.max(0, this.BUDGET - this.invSpent()),
+      canRun, blockedLabel: canRun ? '' : (st === 'nobudget' ? t.reasonBudget : ''),
+      runLabel: t.invExec,
+      onRun: canRun ? (() => { this.setState({ planSheet: null }); this.askInvestigate(s.act, s.targets); }) : (() => {}),
+      // 완료 쪽 — 확보 물증은 조사 기록의 «그 항목»을 그대로 보여준다. 새 데이터 0
+      resTitle: entry ? entry.title : '', resDesc: entry ? entry.desc : '',
+      isEmpty: !!entry && entry.type === 'empty',
+      toLogLabel: t.invLogTitle,
+      // 확대가 열려 있으면 같이 닫는다 — 안 닫으면 조사 기록이 확대 «뒤에» 열린다
+      onToLog: () => { this._ptrs = null; this.setState({ planSheet: null, planZoom: null, view: 'log' }); },
+      onClose: () => this.closePlanSheet(),
+      stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+    };
+  }
   confirmInvestigate() { const p = this.state.pendingInv; if (!p) return; const entry = this.doInvestigate(p.action, p.targets); this.setState({ pendingInv: null, invResult: entry || null }); }
   closeInvResult() { this.setState({ invResult: null }); }
   doInvestigate(actionId, targets) {
@@ -3541,7 +3584,12 @@ export default class App extends React.Component {
       const gatedNew = !!gateLoc[a.loc] && annexOn;
       return {
         id: a.id, primary: !!a.primary, name: ln === 'ko' ? a.ko : a.en,
-        onSearch: searchable ? (() => this.askInvestigate('search', [a.loc])) : (() => {}),
+        /**
+         * ⑤ 마커 → 시트. **`searchable` 일 때만 열지 않는다** — 완료한 자리도
+         * 눌러야 확보 물증을 볼 수 있다(그 자리가 그동안 죽어 있었다).
+         * 예산 부족(`nobudget`)도 연다 — 시트가 이유를 말한다.
+         */
+        onSearch: (st === 'na') ? (() => {}) : (() => this.openPlanSheet('search', [a.loc], ln === 'ko' ? a.ko : a.en)),
         isNew: !!gatedNew, revealNote: gatedNew ? (ln === 'ko' ? '1장 완성으로 공개' : 'Revealed · sec 1') : '',
         /**
          * ★ **좁은 폭에서 「미조사」는 낱말이 아니라 «빗금»이다** ★ (2026-08-07)
@@ -3616,7 +3664,7 @@ export default class App extends React.Component {
          * 24px 이라 **글자가 쓸 폭이 22px** 밖에 없었다. 세로 깨짐(「분/장/실」)의
          * 뿌리가 글꼴이 아니라 여백이다. 미리보기에서는 여백을 줄인다.
          */
-        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: sx(a.w) + '%', height: sy(a.h) + '%', boxSizing: 'border-box', padding: lean ? '4px 5px' : '8px 12px', display: 'flex', flexDirection: 'column', cursor: searchable ? 'pointer' : 'default', zIndex: 2 },
+        boxStyle: { position: 'absolute', left: px(a.x) + '%', top: py(a.y) + '%', width: sx(a.w) + '%', height: sy(a.h) + '%', boxSizing: 'border-box', padding: lean ? '4px 5px' : '8px 12px', display: 'flex', flexDirection: 'column', cursor: (st === 'na') ? 'default' : 'pointer', zIndex: 2 },
       };
     });
 
@@ -3628,8 +3676,9 @@ export default class App extends React.Component {
       const done = st === 'used', okc = st === 'ok';
       const col = f.body ? 'var(--g-contradict)' : done ? 'var(--g-confirm)' : okc ? 'var(--accent)' : 'var(--fg-4)';
       return { id: f.id, name: ln === 'ko' ? f.ko : f.en, body: !!f.body, done, iconPath: f.body ? '' : this.termIconPath(f.icon),
-        onRun: okc ? (() => this.askInvestigate(actId, f.body ? [] : [f.id])) : (() => {}),
-        markStyle: { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: okc ? 'pointer' : 'default', background: 'transparent', border: 'none', zIndex: 3 },
+        // ⑤ 같은 렌즈 — 고정물·시신도 시트로 간다 (완료분 포함. §locs 주석 참조)
+        onRun: (st === 'na') ? (() => {}) : (() => this.openPlanSheet(actId, f.body ? [] : [f.id], ln === 'ko' ? f.ko : f.en)),
+        markStyle: { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: (st === 'na') ? 'default' : 'pointer', background: 'transparent', border: 'none', zIndex: 3 },
         // 좁은 폭 미리보기에서는 설비 이름을 안 쓴다 — 마커와 미조사 표시만 남긴다
         labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
     });
@@ -4470,7 +4519,7 @@ export default class App extends React.Component {
       profileDetail: s.openProfile ? (this.buildProfiles().find(p => p.id === s.openProfile)) : null,
       profileOpen: !!s.openProfile, onCloseProfile: () => this.closeProfileDetail(),
       isMemo: isMemo, memo: this.buildMemos(),
-      isMap: isMap, floor: this.buildFloorplan(),
+      isMap: isMap, floor: this.buildFloorplan(), planSheet: this.buildPlanSheet(),
       /**
        * 평면도 탭-확대. **데스크톱에서는 `tapToZoom` 이 거짓이라 아래 값이 하나도
        * 안 읽히고, 마크업도 옛것 그대로 렌더된다** — 무변경이 조건이었다.
@@ -5482,6 +5531,29 @@ export default class App extends React.Component {
               <div style={S("flex:1;position:relative;min-height:0")}>
                 <div ref={V.plan.stageRef} style={V.plan.stageStyle} onPointerDown={V.plan.onDown} onPointerMove={V.plan.onMove} onPointerUp={V.plan.onUp} onPointerCancel={V.plan.onCancel}>
                   <div ref={V.plan.figRef} style={V.plan.figStyle}>{this.renderPlanFigure(V)}</div>
+                </div>
+              </div>
+            </div>
+          </>):null}
+
+          {(V.planSheet.open)?(<>
+            <div className="scrim" style={S("z-index:80;align-items:flex-end")} onClick={V.planSheet.onClose}>
+              <div style={S("width:100%;background:var(--bg-elevated);border-radius:12px 12px 0 0;padding:8px 8px 20px")} onClick={V.planSheet.stop}>
+                <div style={S("width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:8px auto 12px")}></div>
+                <div style={S("padding:0 12px")}>
+                  <div className="v-caption" style={S("color:var(--fg);font-weight:600")}>{V.planSheet.actionLabel}{(V.planSheet.targetLabel)?(<> · {V.planSheet.targetLabel}</>):null}</div>
+                  {(V.planSheet.done)?(<>
+                    <div className="v-meta" style={S("color:var(--fg-4);margin:6px 0 10px")}>{V.planSheet.resTitle}</div>
+                    <div className="v-body" style={S("color:var(--fg-2);line-height:1.6;margin-bottom:14px")}>{V.planSheet.resDesc}</div>
+                    <Button variant="ghost" onClick={V.planSheet.onToLog}>{V.planSheet.toLogLabel}</Button>
+                  </>):(<>
+                    <div className="v-meta" style={S("color:var(--fg-4);margin:6px 0 14px")}>{V.planSheet.costLabel} · {V.planSheet.remainLabel}</div>
+                    {(V.planSheet.canRun)?(<>
+                      <Button onClick={V.planSheet.onRun}>{V.planSheet.runLabel}</Button>
+                    </>):(<>
+                      <div className="v-meta" style={S("color:var(--g-contradict)")}>{V.planSheet.blockedLabel}</div>
+                    </>)}
+                  </>)}
                 </div>
               </div>
             </div>
