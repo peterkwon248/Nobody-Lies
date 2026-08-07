@@ -156,7 +156,8 @@ export default class App extends React.Component {
       locked: '잠김', cleared: '클리어', inProgress: '진행 중', unplayed: '미플레이', start: '시작', review: '다시 보기', abandon: '포기', cancel: '취소', quit: '포기하기',
       detailBack: '사건 목록', budgetLabel: '조사 예산', estTime: '예상 소요', estTimeVal: '40\u201360분', suspects: '용의자', suspectsVal: '5명', clearedLabel: '클리어', more: '더 보기',
       notPlayedYet: '아직 플레이하지 않은 사건입니다. 시작하면 프롤로그부터 진행됩니다.', dailyDesc: '매일 새 사건 · 순위표', prologContinue: '계속',
-      abandonConfirmT: '사건을 포기할까요?', abandonConfirmD: '진행 상황과 점수가 사라지고 처음부터 시작됩니다.', goHome: '홈',
+      abandonConfirmT: '사건을 포기할까요?', abandonConfirmD: '진행은 저장되지 않으며 정답은 공개되지 않습니다. 나중에 처음부터 다시 할 수 있습니다.', goHome: '홈',
+      moreToList: '사건 목록으로', moreQuit: '사건 그만두기',
       planTapHint: '도면을 눌러 크게 보기', planZoomHint: '손가락 두 개로 확대 · 끌어서 이동', planZoomClose: '닫기',
       mapModePlan: '평면도', mapModeGrid: '도식', navProfile: '용의자', mapHint: '평면도에서 시간대별 주장 위치를, 도식 탭에서 주장 대조표를 봅니다 · 둘은 같은 주장을 시각화·구조화한 것',      finishReport: '보고서 제출', finishConfirmT: '이대로 사건을 종결할까요?', finishConfirmD: '제출 후에는 되돌릴 수 없습니다. 완성된 보고서가 사건의 전말이 됩니다.', submit: '제출', resultStory: '사건의 전말', endMine: '내가 재구성한 것', endReal: '실제', resultStuck: '조사 예산을 모두 소진했지만 사건을 종결하지 못했습니다.', backHome: '홈으로', pClaim: '본인 주장', pClues: '발견된 단서', pUnknown: '미확인', slotMotive: '동기', slotOpportunity: '기회', slotMeans: '수단', pNew: '신규', pNoClues: '아직 조사로 확보한 단서가 없습니다.', pNoMemos: '이 인물에 대한 메모가 아직 없습니다.', verdictLabel: '심증', vdCleared: '제외', vdWatching: '주목', vdPrime: '유력', vdNone: '미정', verdictHint: '내 판단일 뿐 · 점수 무관', pGuilt: '유죄 요건', pViewSource: '출처 보기',
       gameTitle: '노바디 라이즈', gameTagline: '모든 진술을 의심하라', soonPrep: '준비 중', playSolo: '혼자 시작', createRoom: '방 만들기', joinRoom: '방 참가', demoOnly: '이 사건은 데모에 포함되지 않았습니다.', narrProg: '진행',
@@ -214,7 +215,8 @@ export default class App extends React.Component {
       locked: 'Locked', cleared: 'Cleared', inProgress: 'In progress', unplayed: 'Not played', start: 'Start', review: 'Review', abandon: 'Abandon', cancel: 'Cancel', quit: 'Abandon',
       detailBack: 'Cases', budgetLabel: 'Budget', estTime: 'Est. time', estTimeVal: '40\u201360 min', suspects: 'Suspects', suspectsVal: '5', clearedLabel: 'cleared', more: 'More',
       notPlayedYet: 'Not played yet. Starting begins from the prologue.', dailyDesc: 'New case daily · leaderboard', prologContinue: 'Continue',
-      abandonConfirmT: 'Abandon this case?', abandonConfirmD: 'Your progress and score are lost and the case resets.', goHome: 'Home',
+      abandonConfirmT: 'Abandon this case?', abandonConfirmD: 'Progress is not saved and the answer is not revealed. You can start over from the beginning later.', goHome: 'Home',
+      moreToList: 'Back to cases', moreQuit: 'Quit this case',
       planTapHint: 'Tap the plan to enlarge', planZoomHint: 'Pinch to zoom · drag to pan', planZoomClose: 'Close',
       mapModePlan: 'Plan', mapModeGrid: 'Diagram', navProfile: 'Suspects', mapHint: 'Compare claimed positions by time on the plan; see the claim grid in the Diagram tab · both are the same claims, visualized and structured',      finishReport: 'Submit report', finishConfirmT: 'Close the case as is?', finishConfirmD: 'This cannot be undone. The completed report becomes the full account.', submit: 'Submit', resultStory: 'The full account', endMine: 'My reconstruction', endReal: 'Actual', resultStuck: 'Budget exhausted before the case could be closed.', backHome: 'Home', pClaim: 'Own claim', pClues: 'Found clues', pUnknown: 'Unconfirmed', slotMotive: 'Motive', slotOpportunity: 'Opportunity', slotMeans: 'Means', pNew: 'New', pNoClues: 'No clues secured through investigation yet.', pNoMemos: 'No notes about this person yet.', verdictLabel: 'Verdict', vdCleared: 'Cleared', vdWatching: 'Watching', vdPrime: 'Prime', vdNone: 'Undecided', verdictHint: 'Your call only · no score effect', pGuilt: 'Guilt criteria', pViewSource: 'View source',
       gameTitle: 'NOBODY LIES', gameTagline: 'Doubt every statement', soonPrep: 'Coming soon', playSolo: 'Start solo', createRoom: 'Create room', joinRoom: 'Join room', demoOnly: 'This case is not part of the demo.', narrProg: 'Progress',
@@ -4491,6 +4493,23 @@ export default class App extends React.Component {
       bottomNav: this.buildBottomNav(view),
       moreNav: this.buildMoreNav(view),
       moreOpen: s.moreOpen, onCloseMore: () => this.setState({ moreOpen: false }), stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+      /**
+       * ① 좁은 폭에 **사건을 빠져나갈 길이 없었다** (2026-08-07 · 경훈 실기기 보고).
+       * 실측: 「보고서·진술·현장·용의자」 넷 어디서도 사건 목록에 못 닿는다.
+       * ‹ 는 홈이 아니라 **이전 화면**으로 가고(용의자 → 현장 → 진술 → 보고서),
+       * **보고서가 고정점**이라 열 번을 눌러도 탭바가 안 사라진다. 「더 보기」 시트에도
+       * 사건 목록·포기가 없었다. 데스크톱은 사이드바에 둘 다 있어서 안 드러났다.
+       *
+       * ⛳ **새 로직을 안 만든다** — `goHome()`·`abandon()`·확인 대화가 이미 있고
+       * 데스크톱이 그것을 쓴다. 좁은 폭에 **입구가 없었을 뿐**이다.
+       * ③-b 의미론(진행 초기화 · 정답 비공개 · 3막은 지목 경로에서만)은
+       * `abandonConfirmD` 문안과 지시서 §포기 경로에 산다.
+       */
+      moreExit: {
+        toListLabel: t.moreToList, quitLabel: t.moreQuit,
+        onToList: () => this.setState({ moreOpen: false }, () => this.goHome()),
+        onQuit: () => this.setState({ moreOpen: false, confirmAbandon: true }),
+      },
       stmt: { gridCls: segCls(s.stmtMode === 'grid'), origCls: segCls(s.stmtMode === 'original'), onGrid: () => this.setMode('grid'), onOriginal: () => this.setMode('original') },
       overview,
       narrLayoutStyle: { display: 'flex', gap: '24px', padding: '24px 24px', flexDirection: s.isNarrow ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'center', maxWidth: '1120px', margin: '0 auto' },
@@ -5564,6 +5583,9 @@ export default class App extends React.Component {
               <div style={S("width:100%;background:var(--bg-elevated);border-radius:12px 12px 0 0;padding:8px 8px 20px")} onClick={V.stop}>
                 <div style={S("width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:8px auto 12px")}></div>
                 {arr(V.moreNav).map((m,$index)=>(<React.Fragment key={$index}><div className="v-menu-item" {...press(m.onClick, m.active ? 'active' : '', m.label)} style={m.style}><span style={S("line-height:0")}>{m.icon}</span>{m.label}</div></React.Fragment>))}
+                <div style={S("height:1px;background:var(--border);margin:8px 0")}></div>
+                <div className="v-menu-item" {...press(V.moreExit.onToList, '', V.moreExit.toListLabel)} style={S("display:flex;align-items:center;gap:12px;min-height:44px;color:var(--fg-2)")}>{V.moreExit.toListLabel}</div>
+                <div className="v-menu-item" {...press(V.moreExit.onQuit, '', V.moreExit.quitLabel)} style={S("display:flex;align-items:center;gap:12px;min-height:44px;color:var(--label-red)")}>{V.moreExit.quitLabel}</div>
               </div>
             </div>
           </>):null}
