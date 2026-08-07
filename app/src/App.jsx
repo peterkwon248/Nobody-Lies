@@ -86,7 +86,7 @@ export default class App extends React.Component {
     lang: 'ko', theme: 'dark', view: 'narrative', stmtMode: 'grid', seenClaims: {},
     viewOpts: { timelineSort: false }, seenClues: [], narrMode: 'prose', verdicts: {},
     annMarks: {}, memos: [], openSent: null, memoFilter: 'all', memoSort: 'recent', memoQuery: '', quotePins: {}, quotePicker: null, editMemoId: null,
-    expanded: {}, hls: [], sel: null, mapTime: 't2', openProfile: null, hlLog: null,
+    expanded: {}, hls: [], sel: null, mapTime: 't2', planNow: false, openProfile: null, hlLog: null,
     blanks: {}, solved: { s1: false, s2: false, s3: false, s4: false, s5: false }, reopenActive: {}, reopenUsed: {}, secExpand: {},
     openPicker: null, openCell: null, openAids: false,
     evidence: {}, cellMarks: {},
@@ -3366,6 +3366,18 @@ export default class App extends React.Component {
     const hid = x => !annexOn && !!x;
     const eps = 0.6;
 
+    /**
+     * ④ 「현재」 탭 — 사실의 현장 (2026-08-07 · 지시서
+     * `docs/DIRECTIVES/2026-08-07-mobile-ux-batch.md` §2부)
+     *
+     * 과거 탭 = **주장의 재생**(현행 · *"지도는 판정하지 않습니다"*)
+     * 현재 탭 = **사실의 현장** — 인물 배지를 걷고 조사 마커와 상태만 남긴다
+     *
+     * ⛔ **`mapTime` 에 `'now'` 를 «넣지 않는다».** 그 값은 `buildGrid` 도 읽는데
+     * (§격자 열 선택 · `App.jsx:3800`) 슬롯이 아닌 값이 들어가면 격자에서
+     * **선택된 열이 통째로 사라진다.** 별개 플래그라야 두 화면이 서로를 안 건드린다.
+     */
+    const nowMode = !!this.state.planNow;
     const secured = {}; (this.state.invLog || []).forEach(e => { secured[e.action + ':' + e.key] = true; });
     const cluesByLoc = {}; this.FLOOR_CLUES.forEach(c => { if (secured[c.logKey]) { (cluesByLoc[c.loc] = cluesByLoc[c.loc] || []).push({ label: ln === 'ko' ? c.ko : c.en, iconPath: this.termIconPath(c.ko) }); } });
 
@@ -3620,7 +3632,8 @@ export default class App extends React.Component {
     const idxInLoc = {};
     const personMarkers = this.PEOPLE.map(p => {
       const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const a = lid ? anchorByLoc[lid] : null;
-      const shown = !!a;
+      // ④ 현재 탭은 「주장」을 안 그린다 — 인물 배지가 통째로 빠진다
+      const shown = !nowMode && !!a;
       /**
        * ─────────────────────────────────────────────────────────────
        *  §방 안 범례 — 「점 + 이름」 한 줄을 방 안에 «세로로 쌓는다» (2026-08-07)
@@ -3746,11 +3759,28 @@ export default class App extends React.Component {
         labelStyle };
     });
 
-    const times = this.TIMES.map(tm => ({ id: tm.id, label: ln === 'ko' ? tm.ko : tm.en, active: tm.id === tsel, onClick: () => this.setState({ mapTime: tm.id }),
-      style: { flex: 1, textAlign: 'center', padding: '8px 4px', fontSize: '12px', fontWeight: tm.id === tsel ? 600 : 500, color: tm.id === tsel ? 'var(--fg)' : 'var(--fg-3)', background: tm.id === tsel ? 'var(--bg-active)' : 'transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer' } }));
+    /**
+     * 탭 서식은 `segTab` 이 정본이다(`App.jsx` §segTab) — 여기에 있던 인라인 복제를
+     * 걷었다. 두 벌이면 한쪽만 고쳐지고 그것이 이 저장소의 재발 부류다.
+     */
+    const tab = (id, label, active, onClick) => ({ id, label, active, onClick, style: this.segTab(active) });
+    const times = this.TIMES
+      .map(tm => tab(tm.id, ln === 'ko' ? tm.ko : tm.en, !nowMode && tm.id === tsel, () => this.setState({ mapTime: tm.id, planNow: false })))
+      .concat([tab('now', ln === 'ko' ? '현재' : 'Now', nowMode, () => this.setState({ planNow: true }))]);
     const dotLegend = this.PEOPLE.map(p => ({ name: p.name, color: p.color }));
     const hasAnyClue = Object.keys(cluesByLoc).length > 0;
-    const scrubHint = ln === 'ko' ? '시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.' : 'Scrub time to move each person to their claimed position. The map does not judge.';
+    /**
+     * ⑥ 예산은 **현재 탭의 범례 자리**에 산다(지시서 §2부 ⑥). 값은 조사 목록과
+     * 같은 식이다 — `BUDGET − invSpent()` (`App.jsx` §invStatusFor 가 쓰는 그 식).
+     *
+     * ⛔ 현재 탭 문안에 **판단을 안 싣는다** — 「여기를 조사하세요」류는 §절대 규칙의
+     * 조사 추천이다. 마커가 무슨 뜻인지만 적는다.
+     */
+    const budgetLeft = Math.max(0, this.BUDGET - this.invSpent());
+    const budgetText = ln === 'ko' ? ('남은 조사 ' + budgetLeft + '회') : ('Investigations left: ' + budgetLeft);
+    const scrubHint = nowMode
+      ? (ln === 'ko' ? '현재 시점의 현장입니다. 빗금은 아직 조사하지 않은 자리, ✓는 조사를 마친 자리입니다.' : 'The scene as it stands. Hatched = not yet investigated, ✓ = investigated.')
+      : (ln === 'ko' ? '시간대를 넘기면 각 인물이 ‘주장한’ 위치로 이동합니다. 지도는 판정하지 않습니다.' : 'Scrub time to move each person to their claimed position. The map does not judge.');
     const fixLoc = {}; this.FIXTURES.forEach(f => { fixLoc[f.id] = f.loc; });
     const locNameById = {}; this.LOCATIONS.forEach(l => locNameById[l.id] = ln === 'ko' ? l.ko : l.en);
     const narrations = (this.state.invLog || []).filter(e => e.desc && (e.action === 'search' || e.action === 'fixture' || e.action === 'autopsy')).map(e => {
@@ -3761,7 +3791,7 @@ export default class App extends React.Component {
     const scb = G.scale, scale = { x: scb.x, x2: scb.x + scb.len, y: scb.y, yt1: scb.y - 4, yt2: scb.y + 4 };
     const scaleLabel = { left: px(scb.x), top: py(scb.y + 18) };
 
-    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings', planViewBox, planBoxStyle };
+    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, nowMode, budgetText, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings', planViewBox, planBoxStyle };
   }
   FLOOR_CLUES = [
     { logKey: 'search:annex', loc: 'annex', ko: '대포폰', en: 'Burner' },
@@ -5095,7 +5125,11 @@ export default class App extends React.Component {
                     </div>
                   </>):(<>{this.renderPlanFigure(V)}</>)}
                   <div style={S("display:flex;flex-wrap:wrap;gap:12px;margin-top:12px")}>
+                    {(V.floor.nowMode)?(<>
+                      <span className="v-caption" style={S("color:var(--fg-2);font-weight:600")}>{V.floor.budgetText}</span>
+                    </>):(<>
                     {arr(V.floor.dotLegend).map((lg,$index)=>(<React.Fragment key={$index}><span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S(`width:10px;height:10px;border-radius:50%;background:${lg.color}`)}></span>{lg.name}</span></React.Fragment>))}
+                    </>)}
                     {(V.floor.hasClueMarks)?(<><span style={S("display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-3)")}><span style={S("width:10px;height:10px;border-radius:3px;background:var(--accent)")}></span>{V.floor.clueLegend}</span></>):null}
                   </div>
                   <div className="v-meta" style={S("color:var(--fg-4);margin:8px 0 0;line-height:1.5")}>{V.floor.scrubHint}</div>
