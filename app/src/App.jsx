@@ -3834,8 +3834,62 @@ export default class App extends React.Component {
     if (kind === 'absent') return S(base + 'color:var(--fg-3);background:transparent;border:1px dashed var(--border-strong)');
     return S(base + 'color:var(--fg-2);background:transparent;border:1px solid var(--border-strong)');
   }
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   *  §진술 화면 배치 — 좁은 폭에서 2단을 접는다 (2026-08-07)
+   * ─────────────────────────────────────────────────────────────────────
+   *
+   * ## ⛔ 실측된 뿌리
+   *
+   * `showOriginal` 블록이 **좌측 레일 `width:172px · flex:none`** + 본문 `flex:1` 이다.
+   * 375 에서 산수가 이렇게 된다:
+   *
+   * ```
+   * 375 − 48(좌우 패딩) − 172(레일) − 20(gap)  =  본문 135px
+   * 본문 안쪽 패딩을 더 빼면                      →  87px
+   * 16px 글자로 한 줄                            →  «7자»   (실측 285자 / 39줄)
+   * 경훈 기기는 접근성 글꼴 배율이 얹혀서          →  5~6자
+   * ```
+   *
+   * ★ **`flex:none` 이라 레일이 «절대» 안 줄어든다.** 화면이 좁아질수록 본문만 깎인다.
+   *
+   * ⚠ **내가 이걸 다섯 조합에서 못 찾았다** — `stage:'read'`(읽기 카드)와 우측 패널만
+   * 쟀고 `view:'statements'` 를 한 번도 안 갔다. **「진술」이라는 이름이 앱에 두 자리에
+   * 있는데 한 자리만 보고 「재현 안 됨」을 인쇄했다.** 경훈이 화면을 특정해줘서 갈렸다.
+   *
+   * ## 수리 — 좁은 폭에서 레일이 «상단 칩 줄»이 된다
+   *
+   * ```
+   * 넓은 폭   flex row     · 레일 172px sticky · 본문 flex:1     ← 무변경
+   * 좁은 폭   flex column  · 레일이 가로 스크롤 칩 줄 · 본문 전폭
+   * ```
+   *
+   * 캡션과 선택 힌트는 칩 줄에 섞이면 스크롤 항목이 되므로 좁은 폭에서 감춘다
+   * (힌트는 드래그 안내라 터치에서는 뜻이 약하다).
+   *
+   * ⛔ **JSX 에 분기를 새로 만들지 않는다** — `port-check` 가 `sc-if`/`sc-for` 이름
+   * 집합을 대조한다. 전부 «스타일 값»으로 낸다.
+   */
+  stmtLayout() {
+    const narrow = !!this.state.isNarrow;
+    return {
+      rowStyle: narrow
+        ? { display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px 12px 40px', maxWidth: '1000px', margin: '0 auto', alignItems: 'stretch' }
+        : { display: 'flex', gap: '20px', padding: '8px 24px 40px', maxWidth: '1000px', margin: '0 auto', alignItems: 'flex-start' },
+      /** 좁은 폭: 가로 스크롤 칩 줄. 넓은 폭: 172px 고정 sticky 레일(원본) */
+      railStyle: narrow
+        ? { display: 'flex', flexDirection: 'row', gap: '6px', overflowX: 'auto', overflowY: 'hidden', width: '100%', padding: '2px 0 6px', WebkitOverflowScrolling: 'touch' }
+        : { width: '172px', flex: 'none', position: 'sticky', top: '8px', display: 'flex', flexDirection: 'column', gap: '2px' },
+      bodyStyle: narrow ? { width: '100%', minWidth: 0 } : { flex: 1, minWidth: 0 },
+      /** 칩 줄에 섞이면 스크롤 항목이 되므로 감춘다 */
+      capStyle: narrow ? { display: 'none' } : { color: 'var(--fg-4)', textTransform: 'uppercase', letterSpacing: '.05em', padding: '2px 8px 8px' },
+      hintStyle: narrow ? { display: 'none' } : { color: 'var(--fg-4)', marginTop: '12px', padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.5 },
+    }
+  }
+
   buildStatements() {
     const t = this.T(), sel = this.state.sel, ln = this.state.lang;
+    const narrow = !!this.state.isNarrow;
     return this.PEOPLE.map(p => {
       const expanded = !!this.state.expanded[p.id];
       const firstSent = this.splitSentences(this.STMT[p.id][0])[0] || '';
@@ -3864,7 +3918,21 @@ export default class App extends React.Component {
         meta: (ln === 'ko' ? (p.age + '세') : ('' + p.age)) + (this.roleOrJob(p) ? ' · ' + this.roleOrJob(p) : ''),
         expanded, collapsed: !expanded, onToggle: () => this.toggleExpand(p.id), chevronRot: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
         railNameColor: expanded ? p.color : 'var(--fg)',
-        railRowStyle: { display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 12px', borderRadius: 'var(--r-sm)', cursor: 'pointer', background: expanded ? 'var(--bg-active)' : 'transparent' },
+        /**
+         * 좁은 폭에서는 **칩**이다 — 줄 하나에 다섯이 가로로 서고 넘치면 스크롤한다.
+         * `flex:'none'` 과 `whiteSpace:'nowrap'` 이 칩이 줄바꿈으로 무너지는 것을 막는다.
+         * 펼친 사람은 테두리 색으로 표시한다(읽음 점은 아래 `expanded` 갈래가 그린다).
+         */
+        railRowStyle: narrow
+          ? { display: 'flex', gap: '6px', alignItems: 'center', padding: '6px 10px', borderRadius: 'var(--r-pill)',
+              cursor: 'pointer', flex: 'none', whiteSpace: 'nowrap', minHeight: '44px', boxSizing: 'border-box',
+              border: '1px solid ' + (expanded ? p.color : 'var(--border-strong)'),
+              background: expanded ? 'var(--bg-active)' : 'transparent' }
+          : { display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 12px', borderRadius: 'var(--r-sm)', cursor: 'pointer', background: expanded ? 'var(--bg-active)' : 'transparent' },
+        /** 칩에서는 관계 캡션을 빼고 이름만 — 폭이 곧 스크롤 길이다 */
+        railRelStyle: narrow ? { display: 'none' } : { fontSize: '12px', color: 'var(--fg-4)', marginTop: '2px' },
+        railNameStyle: { fontSize: narrow ? '13px' : '14.5px', fontWeight: 600, color: expanded ? p.color : 'var(--fg)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        railTextStyle: narrow ? { minWidth: 0 } : { flex: 1, minWidth: 0 },
         preview: firstSent.length > 42 ? firstSent.slice(0, 42) + '…' : firstSent,
         paras: this.STMT[p.id].map((par, pi) => ({
           pi, segs: this.segsFor(p.id, pi, par),
@@ -4169,6 +4237,7 @@ export default class App extends React.Component {
       isWide: !s.isNarrow, isNarrow: s.isNarrow,
       isNarrative: isNarr, isStatements: isStmt, isReference: isRef,
       showOriginal: isStmt,
+      stmtLayout: this.stmtLayout(),
       nav: {
         narrCls: navCls('narrative'), stmtCls: navCls('statements'), refCls: navCls('reference'), invCls: navCls('investigate'), profileCls: navCls('profile'),
         narrSeg: segCls(isNarr), stmtSeg: segCls(isStmt), refSeg: segCls(isRef), invSeg: segCls(isInv), profileSeg: segCls(isProfile),
@@ -4649,17 +4718,17 @@ export default class App extends React.Component {
 
               
               {(V.showOriginal)?(<>
-                <div style={S("display:flex;gap:20px;padding:8px 24px 40px;max-width:1000px;margin:0 auto;align-items:flex-start")}>
-                  <div style={S("width:172px;flex:none;position:sticky;top:8px;display:flex;flex-direction:column;gap:2px")}>
-                    <div className="v-micro" style={S("color:var(--fg-4);text-transform:uppercase;letter-spacing:.05em;padding:2px 8px 8px")}>{V.ui.navStatements} · {V.ui.tapExpand}</div>
+                <div style={V.stmtLayout.rowStyle}>
+                  <div style={V.stmtLayout.railStyle}>
+                    <div className="v-micro" style={V.stmtLayout.capStyle}>{V.ui.navStatements} · {V.ui.tapExpand}</div>
                     {arr(V.statements).map((st,$index)=>(<React.Fragment key={$index}><div onClick={st.onToggle} style={st.railRowStyle}>
                       <span style={S(`width:3px;align-self:stretch;background:${st.color};border-radius:2px;flex:none`)}></span>
-                      <div style={S("flex:1;min-width:0")}><div style={S(`font-size:14.5px;font-weight:600;color:${st.railNameColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`)}>{st.name}</div><div style={S("font-size:12px;color:var(--fg-4);margin-top:2px")}>{st.relation}</div></div>
+                      <div style={st.railTextStyle}><div style={st.railNameStyle}>{st.name}</div><div style={st.railRelStyle}>{st.relation}</div></div>
                       {(st.expanded)?(<><span style={S("width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none")}></span></>):null}
                     </div></React.Fragment>))}
-                    <div className="v-micro" style={S("color:var(--fg-4);margin-top:12px;padding:0 8px;display:flex;align-items:center;gap:8px;line-height:1.5")}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><path d="M2.5 5h7M2.5 8h11M2.5 11h9" /></svg>{V.ui.selectHint}</div>
+                    <div className="v-micro" style={V.stmtLayout.hintStyle}><svg className="icon-sm" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={S("flex:none")}><path d="M2.5 5h7M2.5 8h11M2.5 11h9" /></svg>{V.ui.selectHint}</div>
                   </div>
-                  <div style={S("flex:1;min-width:0")}>
+                  <div style={V.stmtLayout.bodyStyle}>
                     {arr(V.statements).map((st,$index)=>(<React.Fragment key={$index}><div style={S("border-top:1px solid var(--border)")}>
                       <div onClick={st.onToggle} style={S("display:flex;align-items:center;gap:12px;padding:16px 4px;cursor:pointer")}>
                         <span style={S(`width:3px;height:34px;background:${st.color};border-radius:2px;flex:none`)}></span>
