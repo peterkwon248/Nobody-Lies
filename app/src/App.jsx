@@ -3371,15 +3371,22 @@ export default class App extends React.Component {
      * 새 목표: **도면 하단 여백 ≤ (범례 + 캡션)** — 탭 아래부터 범례 위까지 도면이 쓴다.
      * `CHROME` 이 그 「범례 + 캡션 + 탭바 + 위쪽 껍데기」의 실측 합이다.
      *
-     * ⛔ **상한이 필요하다 — 「전면 늘림」은 이미 한 번 반증됐다.** ⑨ 착수 때
-     * 스펙 문면(55vh 전면 늘림)이 실측에서 **왜곡 1.9배**로 접혔다(`e660220`).
-     * 여기서 상한을 안 걸면 미술관이 245 → 432 로 **1.76배**가 되어 그 실패를
-     * 그대로 재현한다. 그래서 자연 높이의 `MAX_STRETCH` 배를 넘지 않는다.
+     * ## `MAX_STRETCH` 는 **왜곡 상한 「계약」**이다 (2026-08-08 경훈 재선언)
      *
-     * ⛳ **배수 상수를 「늘림」에 쓰는 것이 아니다** — ⑨ⓑ 의 금지는 「늘림량을 상수로
-     * 박지 마라」였고 여기 상수는 **천장**이다. 실제 높이는 여전히 `min()` 이
-     * 「있는 공간」과 「자연 높이」에서 계산한다. 세로형(연습실)은 자연 높이가 이미
-     * 커서 천장에 안 닿고 늘림 0 으로 남는다 — 검증에서 확인한다.
+     * ⛔ **처음엔 이것이 사실상 배수 상수였다 — 자기 적발이다.** 천장이 네 사건
+     * «전부»에서 먼저 물어서 「있는 공간」이 아니라 천장이 높이를 정하고 있었고,
+     * 그건 ⑨ⓑ 가 금지한 「늘림량을 상수로 박기」와 구별되지 않았다.
+     *
+     * **계약으로 다시 읽는다:**
+     * ```
+     * 부족분 계산   살아 있다 — 공간이 모자라면 «덜» 늘린다(min 의 첫 항)
+     * 상한          왜곡이 1.45 를 넘는 늘림은 «거부»한다. 목표를 위해 이 선을 안 넘는다
+     * 남는 빈칸      도면이 아니라 ㉣(조사 기록 블록)이 쓴다
+     * ```
+     * **목표가 「빈칸 ≤ 92px」에서 「왜곡 상한 내 최대 활용 + 잔여는 ㉣」로 개정됐다**
+     * (지시서 §3 개정 이력 참조). 빈칸을 도면으로 메우려면 1.76~2.14 가 필요한데
+     * 그건 `e660220` 이 실측으로 반증한 구간이다 — **개요여도 문 원호가 뭉개지면
+     * 개요가 아니다.**
      */
     const CHROME = 380; // 도면 위 껍데기 + 범례 + 캡션 + 탭바 (375 실측 합)
     const MAX_STRETCH = 1.45;
@@ -3875,7 +3882,23 @@ export default class App extends React.Component {
          * 「이름과 겹침」보다 **「방 밖으로 나감」이 더 나쁘다**(⑦⑧이 닫은 결함이다).
          * 어느 방이 이 폴백을 타는지는 검증에서 센다.
          */
-        const band = (a.h - PAD) > (NAME_BAND + LINE) ? NAME_BAND : PAD;
+        /**
+         * ⛔ **우선순위를 명시한다 — 셋이 동시에 안 되는 방이 있다** (2026-08-08 실측)
+         *
+         * 산장 「오전」에서 인물↔인물 겹침 **6** 이 났다. 넷째 사건에서야 잡혔다 —
+         * 지시서가 「넷 사건 전수」를 요구한 이유가 이것이다.
+         *
+         * ```
+         * ① 방 밖으로 나감      절대 안 된다 (⑦⑧ 이 닫은 결함)
+         * ② 인물끼리 겹침       읽을 수 없게 된다 — 목록의 존재 이유가 사라진다
+         * ③ 방 이름과 겹침      ①②를 지킬 수 없을 때만 감수한다
+         * ```
+         * 띠를 두고 3열까지 써도 행이 눌리면 **띠를 포기한다.** 이름 위에 얹히는 것이
+         * 나쁘지만, 이름 다섯이 서로 겹쳐 덩어리가 되는 것보다는 낫다.
+         */
+        const bandFit = Math.max(1, Math.floor((a.h - NAME_BAND - PAD) / LINE));
+        const bandOK = (a.h - PAD) > (NAME_BAND + LINE) && Math.ceil(total / bandFit) <= 3;
+        const band = bandOK ? NAME_BAND : PAD;
         const usable = Math.max(LINE, a.h - band - PAD);
         const fit = Math.max(1, Math.floor(usable / LINE));
         /**
@@ -3958,7 +3981,20 @@ export default class App extends React.Component {
     const scb = G.scale, scale = { x: scb.x, x2: scb.x + scb.len, y: scb.y, yt1: scb.y - 4, yt2: scb.y + 4 };
     const scaleLabel = { left: px(scb.x), top: py(scb.y + 18) };
 
-    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, nowMode, budgetText, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings', planViewBox, planBoxStyle };
+    return { locs, sRoomFills, sHatch, sOffsite, sPoche, sWalls, sDoorErase, sDoorLeaf, sDoorArc, sWin, sWalk, doorLabels, winLabels, fixtures, personMarkers, times, dotLegend, scrubHint, nowMode, budgetText, hasClueMarks: hasAnyClue, clueLegend: ln === 'ko' ? '확보 물증' : 'Evidence', scale, scaleLabel, scaleText: '0 ─ ' + (G.scale.label || '5m'), narrations, hasNarr: narrations.length > 0, narrTitle: ln === 'ko' ? '현장 조사 기록' : 'Scene findings',
+      /**
+       * ㉣ **빈 상태가 그 자리의 주인이다** (2026-08-08 · 경훈 판정)
+       *
+       * 전에는 `hasNarr` 가 거짓이면 블록이 **통째로 안 그려졌고**, 그래서 새 판에서
+       * 캡션 아래 154~203px 이 빈 검정이었다. 경훈 캡처가 «사건 진입 직후» 판이었다 —
+       * 즉 그 검정은 **일시 상태**지 도면이 작아서가 아니다.
+       *
+       * ⛔ **일시 상태를 메우려고 도면을 영구히 왜곡하지 않는다.** 1.76~2.14 는
+       * `e660220` 이 반증한 구간이다. 대신 **빈 상태를 쓴다** — 「아직 없다」는
+       * 정보고(§감사 축3), 조사가 쌓이면 같은 자리를 기록이 이어받는다.
+       */
+      narrEmpty: ln === 'ko' ? '아직 이 현장에서 나온 것이 없습니다. 조사를 수행하면 결과가 여기에 쌓입니다.' : 'Nothing from this scene yet. Findings accumulate here as you investigate.',
+      planViewBox, planBoxStyle };
   }
   FLOOR_CLUES = [
     { logKey: 'search:annex', loc: 'annex', ko: '대포폰', en: 'Burner' },
@@ -5342,8 +5378,9 @@ export default class App extends React.Component {
                     {this.renderClaimGridFigure(V)}
                   </div>
                   </>):null}
-                  {(V.mapPlanMode)?(<>{(V.floor.hasNarr)?(<><div style={S("margin-top:24px")}>
+                  {(V.mapPlanMode)?(<><div style={S("margin-top:16px")}>
                     <div className="v-caption" style={S("color:var(--fg-2);margin-bottom:12px;display:block")}>{V.floor.narrTitle}</div>
+                    {(V.floor.hasNarr)?(<>
                     <div style={S("display:flex;flex-direction:column;gap:12px")}>
                       {arr(V.floor.narrations).map((n,$index)=>(<React.Fragment key={$index}><div style={S("position:relative;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 16px 12px 20px")}>
                         <div style={S(`position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r-md) 0 0 var(--r-md);background:${n.barColor}`)}></div>
@@ -5351,7 +5388,10 @@ export default class App extends React.Component {
                         <div style={S("font-size:16px;line-height:1.7;color:var(--fg-2);text-wrap:pretty")}>{n.desc}</div>
                       </div></React.Fragment>))}
                     </div>
-                  </div></>):null}</>):null}
+                    </>):(<>
+                    <div className="v-body" style={S("color:var(--fg-4);line-height:1.7;border:1px dashed var(--border);border-radius:var(--r-md);padding:16px")}>{V.floor.narrEmpty}</div>
+                    </>)}
+                  </div></>):null}
                 </div>
               </>):null}
 
