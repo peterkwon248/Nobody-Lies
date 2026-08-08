@@ -127,7 +127,7 @@ const MEASURE = (opt) => {
       const rg = document.createRange(); rg.selectNodeContents(el)
       const tr = rg.getBoundingClientRect()
       if (tr.width > 0 && tr.height > 0) t = { x: tr.left, y: tr.top, r: tr.right, b: tr.bottom }
-    } catch (e) { /* 글자가 없으면 상자를 쓴다 */ }
+    } catch (_e) { /* 글자가 없으면 상자를 쓴다 */ }
     const x = Math.max(box.x, t.x), y = Math.max(box.y, t.y)
     const r2 = Math.min(box.r, t.r), b2 = Math.min(box.b, t.b)
     if (r2 - x <= 0 || b2 - y <= 0) return null
@@ -379,8 +379,21 @@ if (ordered.length) {
   for (const [k, n] of ordered) console.log(`   ${String(k).padEnd(18)} ${String(n).padStart(4)}`)
 }
 console.log(`합계 겹침 ${TOTAL_BAD}  ·  사건 ${CASES.length} · 판 ${ROWS.length}`)
+/**
+ * ⛔ **한 판도 못 쟀는데 초록이 뜨는 구멍** (2026-08-08 · 실제로 밟았다)
+ *
+ * `App.jsx` 에 구문 오류를 내서 앱이 죽자 React 인스턴스를 못 잡아 **판 0**이 됐는데,
+ * `TOTAL_BAD === 0` 이라 **「✓ 전수 0」이 인쇄됐다.** 오늘 하루 종일 쫓던
+ * «가짜 초록»을 계측기가 스스로 만든 것이다 — 「안 보는 검사는 없는 검사다」의 극단.
+ *
+ * **0 은 「안 겹쳤다」와 「안 쟀다」를 구별하지 못한다.** 그래서 잰 판 수를 «먼저» 묻는다.
+ */
+if (ROWS.length === 0) {
+  console.log('⛔ 한 판도 못 쟀다 — 이것은 「겹침 0」이 «아니다» (앱이 떴는지, dev 서버가 사는지 보라)')
+  process.exit(2)
+}
 if (TOTAL_BAD > 0) {
   console.log('⛔ 겹침이 있다 — 위 목록이 자리다')
   process.exit(1)
 }
-console.log('✓ 전수 0')
+console.log(`✓ 전수 0  (판 ${ROWS.length}개를 «실제로» 재고 낸 값이다)`)

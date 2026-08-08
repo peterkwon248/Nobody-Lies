@@ -3781,6 +3781,16 @@ export default class App extends React.Component {
       const done = st === 'used', okc = st === 'ok';
       const col = f.body ? 'var(--g-contradict)' : done ? 'var(--g-confirm)' : okc ? 'var(--accent)' : 'var(--fg-4)';
       return { id: f.id, name: ln === 'ko' ? f.ko : f.en, body: !!f.body, done, iconPath: f.body ? '' : this.termIconPath(f.icon),
+        /**
+         * ⑦-e **풀린 좌표를 그대로 들고 나간다** — 아래 §목록 자리 고르기가 읽는다.
+         * 다시 계산하면 두 곳이 갈라지고, 그것이 이 저장소의 재발 부류다.
+         * 크기는 «그림»(svg) 기준이다 — 26px 상자가 아니라(⑨ 오계수 판례).
+         */
+        _loc: f.loc, _cx: lean ? bandX : pos.x, _cy: lean ? bandY : pos.y,
+        _ink: (f.body ? 26 : 14) * U,
+        _lw: lean ? 0 : nameInkW(ln === 'ko' ? f.ko : f.en, 9) * U,
+        _lh: lean ? 0 : 9 * 1.45 * U,
+        _loff: (f.body ? 16 : 9) * U,
         // ⑤ 같은 렌즈 — 고정물·시신도 시트로 간다 (완료분 포함. §locs 주석 참조)
         onRun: (st === 'na') ? (() => {}) : (() => this.openPlanSheet(actId, f.body ? [] : [f.id], ln === 'ko' ? f.ko : f.en)),
         /**
@@ -3836,6 +3846,145 @@ export default class App extends React.Component {
     const countInLoc = {};
     this.PEOPLE.forEach(p => { const l = (this.CLAIM_LOC[p.id] || {})[tsel]; if (l && anchorByLoc[l]) countInLoc[l] = (countInLoc[l] || 0) + 1; });
     const idxInLoc = {};
+
+    /**
+     * ─────────────────────────────────────────────────────────────
+     *  ⑦-e §목록 «자리»도 계산이다 — 상수 앵커를 걷는다 (2026-08-08 경훈 지시)
+     * ─────────────────────────────────────────────────────────────
+     *
+     * ## 무엇이 못 옮기고 무엇이 옮겨도 되나
+     *
+     * ```
+     * 설비 마커·이름표   «참좌표»가 정보다 — 그 자리에 있다는 것이 단서다. 못 옮긴다
+     * 방 이름           방 상자에 매인다. 못 옮긴다
+     * 인물 목록         방 «안»의 좌표는 이 게임에 «없다»(위 §방 안 범례 주석)
+     *                   ⇒ 임의다. 그러니 «양보하는 쪽»은 언제나 여기다
+     * ```
+     *
+     * ⛔ **오늘 실패한 두 시도는 «둘 다 정보를 옮기려» 했다** — 설비 이름표를 마커
+     * 위로(확대 77→더 악화) · 확대 마커를 이름 띠로(미리보기 0→36 파괴).
+     * 되돌렸고, 그 자국이 이 절이 존재하는 이유다.
+     *
+     * ## 어떻게 고르나 — 열 수를 「겹침 0이 되는 최소」로 «계산»한 그 문법의 위치판
+     *
+     * 방마다 후보 여섯(가로 왼·오른 × 세로 위·중간·아래)을 놓고, 못 옮기는 것들과의
+     * **충돌 «면적»**이 최소인 자리를 고른다. 방 밖은 면적과 비교하지 않는다 —
+     * 우선순위 ①이라 어떤 겹침보다 나쁘다(백만 배 가중).
+     *
+     * ⛳ **동점이면 오늘까지의 배치가 이긴다** — 후보 순회의 첫 항이 기존 기본값이고
+     * 갱신은 «엄격한» 부등호다. 그래서 안 부딪히는 방은 한 픽셀도 안 움직인다.
+     */
+    const LINE = 38;
+    const PADX = 18;
+    const PAD = lean ? 6 : 10;
+    const DOT = lean ? 9 : this.state.planZoom ? 11 : 15;
+
+    const peopleInLoc = {};
+    this.PEOPLE.forEach(p => { const l = (this.CLAIM_LOC[p.id] || {})[tsel]; if (l && anchorByLoc[l]) (peopleInLoc[l] = peopleInLoc[l] || []).push(p); });
+
+    const areaOf = (A, B) => {
+      const w = Math.min(A.r, B.r) - Math.max(A.x, B.x);
+      const h = Math.min(A.b, B.b) - Math.max(A.y, B.y);
+      return w > 0 && h > 0 ? w * h : 0;
+    };
+    /** 못 옮기는 것들의 사각형 — 설비 마커 · 설비 이름표 · 방 이름 */
+    const fixedByLoc = {};
+    const addFixed = (loc, r, isText) => { r.t = !!isText; (fixedByLoc[loc] = fixedByLoc[loc] || []).push(r); };
+    fixtures.forEach(f => {
+      addFixed(f._loc, { x: f._cx - f._ink / 2, y: f._cy - f._ink / 2, r: f._cx + f._ink / 2, b: f._cy + f._ink / 2 }, false);
+      if (f._lw > 0) addFixed(f._loc, { x: f._cx - f._lw / 2, y: f._cy + f._loff, r: f._cx + f._lw / 2, b: f._cy + f._loff + f._lh }, true);
+    });
+    areas.forEach(a => {
+      if (!a.primary) return;
+      const fs = lean ? 10 : 11;
+      const padT = (lean ? 4 : 8) * U, padL = (lean ? 5 : 12) * U;
+      const w = nameInkW(ln === 'ko' ? a.ko : a.en, fs) * U, h = fs * 1.45 * U;
+      addFixed(a.loc, { x: a.x + padL, y: a.y + padT, r: a.x + padL + w, b: a.y + padT + h }, true);
+      /**
+       * 미조사/✓ 배지도 «못 옮기는 것»이다 — 머리줄 오른쪽 끝(확대는 flex 항목,
+       * 미리보기는 `right:3px` 절대 배치). 넣기 전에는 목록이 그 위로 옮겨 앉아
+       * `인물↔배지` 가 «새로» 생겼다(2 개). 넉넉히 잡는다 — 과하게 비우는 것은
+       * 자리를 조금 옮길 뿐이고, 덜 잡으면 결함이 된다.
+       */
+      const bw = (lean ? 16 : 42) * U, bh = (lean ? 11 : 15) * U;
+      const bTop = lean ? a.y + 3 * U : a.y + padT;
+      addFixed(a.loc, { x: a.x + a.w - padL - bw, y: bTop, r: a.x + a.w - padL, b: bTop + bh }, true);
+    });
+
+    /** 방 하나의 목록 골격 — 아래 §인물 배지와 «같은 식»을 쓴다(갈래가 둘이면 한쪽만 고쳐진다) */
+    const geomFor = (a, total) => {
+      const bandFit = Math.max(1, Math.floor((a.h - LEG_BAND - PAD) / LINE));
+      const bandOK = (a.h - PAD) > (LEG_BAND + LINE) && Math.ceil(total / bandFit) <= 3;
+      const band = bandOK ? LEG_BAND : PAD;
+      const usable = Math.max(LINE, a.h - band - PAD);
+      const fit = Math.max(1, Math.floor(usable / LINE));
+      const cols = Math.min(3, Math.max(1, Math.ceil(total / fit)));
+      return { band, bandOK, usable, cols, perCol: Math.ceil(total / cols) };
+    };
+    /** n 번째 사람의 사각형 — 화면 코드와 «같은 수식»이라야 고른 자리가 그대로 그려진다 */
+    const itemRect = (a, g, list, n, hm, vm) => {
+      const col = Math.floor(n / g.perCol), row = n % g.perCol;
+      const inCol = Math.min(g.perCol, list.length - col * g.perCol);
+      const blockH = Math.min(inCol * LINE, g.usable);
+      const step = blockH / inCol;
+      const slack = Math.max(0, g.usable - blockH);
+      // vm 은 0(맨 위)~1(맨 아래) 사이의 «비율»이다 — 자리를 촘촘히 훑기 위해서다
+      const cy = a.y + g.band + slack * vm + step * row + step / 2;
+      const colStep = (a.w - PADX * 2) / g.cols;
+      const cap = Math.max(24, colStep - DOT * 2);
+      const lw = Math.min(cap, nameInkW(list[n].name, lean ? 8 : 9) * U);
+      const itemW = DOT * (lean ? 1.6 : 1.1) + 2 + lw;
+      const cx = hm === 'left'
+        ? a.x + PADX + (g.cols > 1 ? col * colStep : 0)
+        : a.x + a.w - PADX - itemW - (g.cols - 1 - col) * colStep;
+      const h = (lean ? 8 : 9) * 1.45 * U;
+      return { cx, cy, x: cx - DOT / 2, y: cy - h / 2, r: cx + itemW, b: cy + h / 2 };
+    };
+
+    const placeByLoc = {};
+    for (const lid of Object.keys(peopleInLoc)) {
+      const a = anchorByLoc[lid]; if (!a) continue;
+      const list = peopleInLoc[lid];
+      const g = geomFor(a, list.length);
+      const fixed = fixedByLoc[lid] || [];
+      let best = null;
+      /**
+       * 세로는 «비율»로 촘촘히 훑는다 — 여섯 자리로는 못 피하는 방이 남았다(확대 46).
+       * 첫 항이 기존 기본값(띠가 서면 가운데, 포기했으면 아래)이라 동점이면 안 움직인다.
+       */
+      const VS = [g.bandOK ? 0.5 : 1, 0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
+      for (const vm of VS) {
+        for (const hm of ['left', 'right']) {
+          let cost = 0, out = 0, hits = 0, textHits = 0;
+          for (let n = 0; n < list.length; n++) {
+            const r = itemRect(a, g, list, n, hm, vm);
+            for (const q of fixed) {
+              const ov = areaOf(r, q);
+              if (ov <= 0) continue;
+              cost += ov; hits++; if (q.t) textHits++;
+            }
+            if (r.x < a.x - 1 || r.r > a.x + a.w + 1 || r.y < a.y - 1 || r.b > a.y + a.h + 1) out++;
+          }
+          /**
+           * ⛔ **점수는 «합격 기준»과 같은 것을 세야 한다** (2026-08-08 실측으로 잡았다)
+           *
+           * 처음엔 «면적»만 최소화했는데 게이트는 «쌍 수»를 센다. 그래서 큰 겹침 하나를
+           * 작은 겹침 여럿과 바꾸며 47에서 안 내려갔다 — **목적함수와 판정이 다르면
+           * 최적화가 판정을 «비껴간다».**
+           *
+           * ```
+           * ① 방 밖         우선순위 ① — 어떤 겹침보다 나쁘다
+           * ② 글자↔글자     읽을 수 없는 텍스트 두 벌 = 정보 0 (§겹침 우선순위 ③의 단서)
+           * ③ 그 밖의 쌍     글자가 아이콘 위 — 가림으로 다룰 여지가 있다
+           * ④ 면적          동점을 가르는 데만 쓴다
+           * ```
+           */
+          const score = out * 1e9 + textHits * 1e6 + hits * 1e3 + cost;
+          if (!best || score < best.score - 1e-6) best = { hm, vm, score };
+        }
+      }
+      placeByLoc[lid] = best;
+    }
     const personMarkers = this.PEOPLE.map(p => {
       const lid = (this.CLAIM_LOC[p.id] || {})[tsel]; const a = lid ? anchorByLoc[lid] : null;
       // ④ 현재 탭은 「주장」을 안 그린다 — 인물 배지가 통째로 빠진다
@@ -3888,7 +4037,6 @@ export default class App extends React.Component {
        * 탭-확대 s=1 에서 간격 10.7px 인데 라벨 높이가 10px 이라 **겹침 4** 였다.
        * 확대는 여는 순간의 배율이 가장 촘촘하므로 그 최악에 맞춘다.
        */
-      const LINE = 38;
       /**
        * ⛔ **가로 여백은 점 «반지름»보다 커야 한다** (실측으로 잡았다). 점은
        * `translate(-50%,-50%)` 로 중앙 정렬이라 `cx = a.x + PAD` 면 왼쪽으로
@@ -3898,9 +4046,10 @@ export default class App extends React.Component {
        * `PADX = 18` 이면 좁은 폭에서도 확대 s=1 에서도 남는다(확대는 점이 11px ·
        * 반지름 8 단위)에서도 남는다. **세로 여백과 갈라야 한다** — 세로를 14 로
        * 올리면 다섯 줄이 방 높이를 넘어 2열 폴백이 헛돈다.
+       *
+       * ⛳ `LINE`·`PADX`·`PAD` 는 위 §목록 자리 고르기에서 «한 번» 선언한다 —
+       * 자리를 «고르는» 쪽과 «그리는» 쪽이 같은 값을 봐야 고른 자리가 그대로 그려진다.
        */
-      const PADX = 18;
-      const PAD = lean ? 6 : 10;
       let cx = VW / 2, cy = VH / 2, n = 0, col = 0, cols = 1;
       if (shown && !useList) {
         /**
@@ -3938,7 +4087,7 @@ export default class App extends React.Component {
          * `PAD`(상자 위 여백) + 이름 한 줄 + 숨돌림. 시스템 글꼴 배율이 얹히면
          * 이름이 커지므로 배율분을 미리 실어둔다(검증에서 1.0·1.3 둘 다 잰다).
          */
-        const NAME_BAND = LEG_BAND; // 위 §이름 띠 — 설비 마커와 «같은 값»을 본다
+        // 띠 높이(`LEG_BAND`)와 골격 계산은 위 §목록 자리 고르기의 `geomFor` 가 정본이다
         /**
          * ⛳ **방이 띠와 한 줄을 동시에 못 담으면 띠를 포기한다** — 여기서는
          * 「이름과 겹침」보다 **「방 밖으로 나감」이 더 나쁘다**(⑦⑧이 닫은 결함이다).
@@ -3958,11 +4107,15 @@ export default class App extends React.Component {
          * 띠를 두고 3열까지 써도 행이 눌리면 **띠를 포기한다.** 이름 위에 얹히는 것이
          * 나쁘지만, 이름 다섯이 서로 겹쳐 덩어리가 되는 것보다는 낫다.
          */
-        const bandFit = Math.max(1, Math.floor((a.h - NAME_BAND - PAD) / LINE));
-        const bandOK = (a.h - PAD) > (NAME_BAND + LINE) && Math.ceil(total / bandFit) <= 3;
-        const band = bandOK ? NAME_BAND : PAD;
-        const usable = Math.max(LINE, a.h - band - PAD);
-        const fit = Math.max(1, Math.floor(usable / LINE));
+        /**
+         * ⛳ **골격도 자리도 «위»에서 계산해 내려온다** (⑦-e · 2026-08-08).
+         * `geomFor` 와 `itemRect` 가 정본이고 여기서는 그것을 «읽기만» 한다 —
+         * 같은 수식을 두 벌 두면 한쪽만 고쳐지고, 그러면 「고른 자리」와
+         * 「그린 자리」가 갈려서 계측이 영원히 안 맞는다.
+         */
+        const g = geomFor(a, total);
+        const pl = placeByLoc[lid] || { hm: 'left', vm: g.bandOK ? 0.5 : 1 };
+        const r = itemRect(a, g, peopleInLoc[lid] || [p], n, pl.hm, pl.vm);
         /**
          * ⛔ **열 수가 「2」로 박혀 있었다** — 띠를 확보하자 중앙 로비(115×47px)에서
          * 5인이 2열에 안 들어가 **행 간격이 눌리고 인물↔인물 겹침이 0 → 4** 가 됐다.
@@ -3971,14 +4124,8 @@ export default class App extends React.Component {
          * 열 수는 **겹침이 0이 되는 최소값**이다 — 상수가 아니라 계산이다.
          * 3열이 상한인 것은 폭 때문이다(그 이상은 이름이 한 글자도 안 남는다).
          */
-        cols = Math.min(3, Math.max(1, Math.ceil(total / fit)));
-        const perCol = Math.ceil(total / cols);
-        col = Math.floor(n / perCol);
-        const row = n % perCol;
-        const inCol = Math.min(perCol, total - col * perCol);
-        // 열 안에서 세로 중앙 정렬 — 방을 벗어나지 않는 것이 이 계산의 계약이다
-        const blockH = Math.min(inCol * LINE, usable);
-        const step = inCol > 1 ? blockH / inCol : 0;
+        cols = g.cols;
+        col = Math.floor(n / g.perCol);
         /**
          * ⛔ **띠를 포기한 방에서는 목록을 «아래로 붙인다»** (2026-08-08 경훈 판정)
          *
@@ -3993,13 +4140,13 @@ export default class App extends React.Component {
          *
          * 아래로 붙이면 남는 여백이 «위»로 몰려 이름이 그 여백을 쓴다. 방을 벗어나지
          * 않는 것은 그대로다 — 블록 높이가 `usable` 을 못 넘게 이미 잘려 있다.
+         *
+         * ★ **그리고 그 「아래로 붙임」은 이제 «후보 하나»다** (⑦-e) — 세로 세 자리
+         * (위·중간·아래)와 가로 두 자리 중 충돌 면적이 최소인 것을 고른다.
+         * 띠를 포기한 방의 기본값이 여전히 「아래」라 이 수리의 결과는 보존된다.
          */
-        const slack = Math.max(0, usable - blockH);
-        const top = a.y + band + (bandOK ? slack / 2 : slack);
-        cy = top + step * row + step / 2;
-        if (inCol === 1) cy = a.y + band + usable / 2;
-        // 열 간격도 「2」가 박혀 있었다 — cols 로 나눠야 3열에서 셋째 열이 방을 안 넘는다
-        cx = a.x + PADX + (cols > 1 ? col * (a.w - PADX * 2) / cols : 0);
+        cx = r.cx;
+        cy = r.cy;
       }
       /**
        * 이름 자리 — 목록 배치에서는 점 **오른쪽에 왼쪽 정렬**(한 줄이 되는 요점),
