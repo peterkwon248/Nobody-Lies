@@ -291,6 +291,32 @@ for (const id of CASES) {
     const m = await page.evaluate(MEASURE, { zoom: has('zoom'), inkAudit: has('ink-audit') })
     if (m.err) { console.log(`  ⛔ ${sl.ko} — 계측 중단: ${m.err}`); TOTAL_BAD++; continue }
     if (m.pick && sl === slots[0]) console.log(`     골랐다: ${m.pick}`)
+    /**
+     * `--ruler` — **「자가 틀렸다」 진단의 검산** (2026-08-08 경훈 지시 · 수리 아님)
+     *
+     * `App.jsx` 는 `U = 2.67`(1px ≈ 2.67 viewBox 단위)를 두 화면에 쓴다. 그 값은
+     * 375 «미리보기» 상자에서 나왔다. 확대는 같은 viewBox 를 더 큰 상자에 «펴므로»
+     * 단위/px 이 다르다 — 그러면 px 로 정해진 것(마커 14/26 · 글꼴 9)을 단위로 옮긴
+     * 계산이 확대에서 틀린다. 얼마나 틀리는지를 여기서 «숫자»로 낸다.
+     *
+     * ⛳ `preserveAspectRatio="none"` 이라 **가로·세로 배율이 서로 다르다** —
+     * 한 상수로 두 축을 덮는 것 자체가 근사다. 둘 다 인쇄한다.
+     */
+    if (has('ruler') && sl === slots[0]) {
+      const vb = String(m.vb || '').trim().split(/\s+/).map(Number)
+      const uw = vb[2] / m.box.w, uh = vb[3] / m.box.h
+      const pad = has('zoom') ? 10 : 6, fs = has('zoom') ? 11 : 10
+      const band = pad + fs * 1.45 * 2.67
+      const px9 = 9 * 2.67
+      const pc = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%'
+      console.log(`     ── 자 (${has('zoom') ? '확대' : '미리보기'}) ──`)
+      console.log(`        상자        ${m.box.w.toFixed(1)} × ${m.box.h.toFixed(1)} px   ·  viewBox ${vb[2]}×${vb[3]}`)
+      console.log(`        단위/px      가로 ${uw.toFixed(3)}  세로 ${uh.toFixed(3)}   (코드가 쓰는 U = 2.670)`)
+      console.log(`        U 와 차이     가로 ${pc((2.67 / uw - 1) * 100)}  세로 ${pc((2.67 / uh - 1) * 100)}`)
+      console.log(`        9px 오프셋    ${px9.toFixed(1)} 단위 → 실제 ${(px9 / uh).toFixed(1)} px  (의도 9.0 px · 오차 ${((px9 / uh) - 9).toFixed(1)} px)`)
+      console.log(`        LEG_BAND     ${band.toFixed(1)} 단위 → 실제 ${(band / uh).toFixed(1)} px  (의도 ${(pad / 2.67 + fs * 1.45).toFixed(1)} px · 오차 ${((band / uh) - (pad / 2.67 + fs * 1.45)).toFixed(1)} px)`)
+      console.log(`        마커 14px     ${(14 * 2.67).toFixed(1)} 단위 → 실제 ${((14 * 2.67) / uw).toFixed(1)} px  (의도 14.0 px)`)
+    }
     if (m.inkAudit && sl === slots[0]) {
       console.log('     글리프 대조  이름            늘어난상자   Range   max-content')
       for (const a of m.inkAudit) {
