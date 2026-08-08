@@ -313,9 +313,15 @@ for (const id of CASES) {
       console.log(`        상자        ${m.box.w.toFixed(1)} × ${m.box.h.toFixed(1)} px   ·  viewBox ${vb[2]}×${vb[3]}`)
       console.log(`        단위/px      가로 ${uw.toFixed(3)}  세로 ${uh.toFixed(3)}   (코드가 쓰는 U = 2.670)`)
       console.log(`        U 와 차이     가로 ${pc((2.67 / uw - 1) * 100)}  세로 ${pc((2.67 / uh - 1) * 100)}`)
-      console.log(`        9px 오프셋    ${px9.toFixed(1)} 단위 → 실제 ${(px9 / uh).toFixed(1)} px  (의도 9.0 px · 오차 ${((px9 / uh) - 9).toFixed(1)} px)`)
-      console.log(`        LEG_BAND     ${band.toFixed(1)} 단위 → 실제 ${(band / uh).toFixed(1)} px  (의도 ${(pad / 2.67 + fs * 1.45).toFixed(1)} px · 오차 ${((band / uh) - (pad / 2.67 + fs * 1.45)).toFixed(1)} px)`)
-      console.log(`        마커 14px     ${(14 * 2.67).toFixed(1)} 단위 → 실제 ${((14 * 2.67) / uw).toFixed(1)} px  (의도 14.0 px)`)
+      /**
+       * ⛳ **옛 공식과 새 공식을 나란히 인쇄한다** (2-z' 검산) — 「고쳤다」는 주장을
+       * 숫자로 받는다. 새 공식(측정 `uy`)이 «의도»와 일치해야 자가 선 것이다.
+       */
+      const bandNew = pad + fs * 1.45 * uh
+      const want = pad / uh + fs * 1.45
+      console.log(`        9px 오프셋    옛 ${px9.toFixed(1)}단위=${(px9 / uh).toFixed(1)}px  ·  새 ${(9 * uh).toFixed(1)}단위=9.0px  (의도 9.0)`)
+      console.log(`        LEG_BAND     옛 ${band.toFixed(1)}단위=${(band / uh).toFixed(1)}px  ·  새 ${bandNew.toFixed(1)}단위=${(bandNew / uh).toFixed(1)}px  (의도 ${want.toFixed(1)})`)
+      console.log(`        마커 14px     옛 ${(14 * 2.67).toFixed(1)}단위=${((14 * 2.67) / uw).toFixed(1)}px  ·  새 ${(14 * uw).toFixed(1)}단위=14.0px  (의도 14.0)`)
     }
     if (m.inkAudit && sl === slots[0]) {
       console.log('     글리프 대조  이름            늘어난상자   Range   max-content')

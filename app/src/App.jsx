@@ -98,6 +98,8 @@ export default class App extends React.Component {
     navHist: ['narrative'], navIdx: 0, moreOpen: false,
     leftOpen: true, rightOpen: false, rightView: 'statements', rightProfileId: 'yena', focusMode: false, settingsOpen: false,
     msg: {}, isNarrow: false,
+    /** 2-z' 도면 상자 실측 {w,h}px — 축별 단위/px 의 분모다. null 이면 폴백(2.67) */
+    planWH: null,
     /**
      * 평면도 전체화면 (2026-08-05) — 첫 테스터 보고 *"평면도가 모바일에서 뭉개진다"*
      * 에 대한 답이다 (`docs/PLAYTEST.md`).
@@ -1942,15 +1944,61 @@ export default class App extends React.Component {
     this._onResize = () => { const el = this._root && this._root.closest ? this._root.closest('.app') : null; const w = (el && el.clientWidth) || document.documentElement.clientWidth || window.innerWidth; const n = w < 820; if (n !== this.state.isNarrow) this.setState({ isNarrow: n }); };
     this._root = document.querySelector('.app');
     this._onResize(); window.addEventListener('resize', this._onResize);
-    if (window.ResizeObserver && this._root) { this._ro = new ResizeObserver(() => this._onResize()); this._ro.observe(this._root); }
+    if (window.ResizeObserver && this._root) { this._ro = new ResizeObserver(() => { this._onResize(); this.measurePlanBox(); }); this._ro.observe(this._root); }
     this._onDocClick = (e) => {
       const t = e.target;
       if (t.closest && (t.closest('.g-picker') || t.closest('.g-blank-trigger') || t.closest('.g-cell') || t.closest('.g-aids-btn') || t.closest('.g-settings') || t.closest('.g-seltoolbar') || t.closest('.g-stmt-para'))) return;
       if (this.state.openPicker || this.state.openCell || this.state.openAids || this.state.openSent || this.state.settingsOpen || this.state.sel) this.setState({ openPicker: null, openCell: null, openAids: false, openSent: null, settingsOpen: false, sel: null });
     };
     document.addEventListener('click', this._onDocClick, true);
+    this.measurePlanBox();   // 첫 렌더 뒤 한 번 — 그 뒤는 componentDidUpdate·ResizeObserver
   }
   componentWillUnmount() { clearTimeout(this._saveT); this.save(); window.removeEventListener('resize', this._onResize); if (this._ro) this._ro.disconnect(); document.removeEventListener('click', this._onDocClick, true); }
+
+  /**
+   * ─────────────────────────────────────────────────────────────
+   *  2-z' §도면 상자를 «잰다» — 상수 자를 폐기한다 (2026-08-08)
+   * ─────────────────────────────────────────────────────────────
+   *
+   * `U = 2.67`(1px ≈ 2.67 viewBox 단위)이 평면도 계산 전체의 자였는데, 실측하니
+   * **세로가 전 사건·두 화면 모두 39~59% 틀렸다**(`MEMORY.md` §「자가 틀렸다」).
+   *
+   * ```
+   * 뿌리    svg 가 preserveAspectRatio="none" — 가로·세로가 «서로 독립»으로 늘어난다
+   * 게다가  viewBox 가 사건마다 다르다 (⑨ bbox 잘라내기) — 상수로는 원리상 못 맞춘다
+   * 상자    높이를 CSS min/max/vh 가 정한다 — JS 가 «계산»으로는 알 수 없다
+   * ⇒       렌더 뒤에 «재는» 것이 유일한 길이다
+   * ```
+   *
+   * ⛳ **왜 이 오차가 여태 조용했나 — 언제나 «넉넉한» 쪽으로 틀린다.** 띠는 의도보다
+   * 40~59% 높게, 이름표는 마커에서 더 멀리 놓였다. **과잉은 겹침을 만들지 않는다** —
+   * 보수적 오차는 안전하지만 **침묵한다.** 그래서 계측이 아니라 «수리»가 먼저 걸렸다
+   * (2-0 이 있지도 않은 충돌을 피하다 진짜 충돌을 받아들였다).
+   *
+   * ⛳ **한 화면만 잰다** — 확대가 열려 있으면 확대 상자, 아니면 미리보기 상자다.
+   * 둘이 동시에 DOM 에 있지만 `lean` 이 갈라주므로 «살아 있는» 쪽은 언제나 하나다.
+   * 큰 쪽이 확대다(계측기 `--zoom` 과 같은 판정 — 갈래가 둘이면 한쪽만 고쳐진다).
+   */
+  measurePlanBox() {
+    try {
+      const svgs = [...(this._root || document).querySelectorAll('svg[preserveAspectRatio="none"]')];
+      if (!svgs.length) return;
+      let el = null, area = -1;
+      for (const s of svgs) {
+        const p = s.parentElement; if (!p) continue;
+        const r = p.getBoundingClientRect(); const A = r.width * r.height;
+        if (A > area) { area = A; el = p; }
+      }
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      const cur = this.state.planWH;
+      // 0.5px 미만 변화는 무시한다 — 안 그러면 setState 가 자기를 다시 부른다
+      if (cur && Math.abs(cur.w - r.width) < 0.5 && Math.abs(cur.h - r.height) < 0.5) return;
+      this.setState({ planWH: { w: r.width, h: r.height } });
+    } catch (e) { /* 못 재면 폴백(2.67)으로 돈다 — 오늘까지의 동작이다 */ }
+  }
+  componentDidUpdate() { this.measurePlanBox(); }
 
   applyTheme() { try { document.documentElement.setAttribute('data-theme', this.state.theme === 'light' ? 'light' : 'dark'); } catch (e) {} }
 
@@ -3715,9 +3763,25 @@ export default class App extends React.Component {
      * 올라간다. 두 곳이 각자 상수를 들면 한쪽만 고쳐지고 그것이 이 저장소의 재발
      * 부류다(`MEMORY.md` §검사와 수리가 같은 표현을 쓰면 사각도 같다 의 사촌).
      */
+    /**
+     * 2-z' **축별 자** — 상수 `U = 2.67` 을 폐기했다 (2026-08-08).
+     *
+     * `preserveAspectRatio="none"` 이라 가로·세로가 «서로 독립»으로 늘어나고,
+     * `viewBox`(=`SW`×`SH`)는 사건마다 다르다. 그래서 자는 **사건·화면·축마다** 다르다.
+     * 실측 오차: 가로 −4.4~+9.4% · **세로 +39~59%** (`MEMORY.md` §「자가 틀렸다」).
+     *
+     * `pxW`/`pxH` — **px 로 정해진 것을 viewBox 단위로** 옮긴다. 가로와 세로를
+     * 섞으면 그 자리가 곧 다음 오계수다(마커는 px 로 정사각인데 단위 공간에서는 아니다).
+     * 상자를 못 재면 2.67 로 돈다 — 오늘까지의 동작이 폴백이다.
+     */
+    const _wh = this.state.planWH;
+    const ux = _wh && _wh.w > 1 ? SW / _wh.w : 2.67;
+    const uy = _wh && _wh.h > 1 ? SH / _wh.h : 2.67;
+    const pxW = n => n * ux, pxH = n => n * uy;
+
     const LEG_LINE = 38;
     const LEG_PAD = lean ? 6 : 10;
-    const LEG_BAND = LEG_PAD + (lean ? 10 : 11) * 1.45 * 2.67; // 글꼴 px → 줄 높이 → viewBox 단위
+    const LEG_BAND = LEG_PAD + pxH((lean ? 10 : 11) * 1.45); // 글꼴 px → 줄 높이 → viewBox 세로 단위
 
     /**
      * ⑦-c **띠는 이름이 «먼저» 쓴다 — 설비는 남는 자리를 «나눠» 갖는다** (2026-08-08)
@@ -3743,7 +3807,6 @@ export default class App extends React.Component {
      * 오른쪽으로 갈 뿐이고, 실제 겹침은 계측기가 검산한다.
      * (실측 근거: '수장고' 3자 = 25.9px · '야외 조각 정원' 7자 = 56.9px · 10px 글꼴)
      */
-    const U = 2.67;                     // 375 에서 1px ≈ 2.67 viewBox 단위 (LEG_BAND 과 같은 값)
     const nameInkW = (s, fs) => {
       let w = 0;
       for (const ch of String(s || '')) w += /\s/.test(ch) ? fs * 0.3 : /[가-힣ㄱ-ㆎ一-鿿]/.test(ch) ? fs * 0.88 : fs * 0.55;
@@ -3762,9 +3825,9 @@ export default class App extends React.Component {
        */
       const anc = anchorByLoc[f.loc];
       const fi = (fxSeen[f.loc] = (fxSeen[f.loc] || 0) + 1) - 1;
-      const MARK = 14 * U, GAP = 2 * U;
-      const right = anc ? anc.x + anc.w - MARK / 2 - 2 * U : pos.x;
-      const floorX = anc ? Math.max(anc.x + MARK / 2, anc.x + 5 * U + nameInkW(ln === 'ko' ? anc.ko : anc.en, 10) * U + 3 * U + MARK / 2) : pos.x;
+      const MARK = pxW(14), MARKV = pxH(14), GAP = pxW(2);
+      const right = anc ? anc.x + anc.w - MARK / 2 - pxW(2) : pos.x;
+      const floorX = anc ? Math.max(anc.x + MARK / 2, anc.x + pxW(5) + pxW(nameInkW(ln === 'ko' ? anc.ko : anc.en, 10)) + pxW(3) + MARK / 2) : pos.x;
       /**
        * ⛔ **띠가 넘치면 «아래 줄»로 내린다** — 이름이 긴 좁은 방에서는 둘이 못 선다.
        * 극장 `분장실` 은 이름 뒤에 남는 띠가 **3.4px** 이라 둘째 마커가 첫째 위로
@@ -3775,7 +3838,8 @@ export default class App extends React.Component {
       const inBand = fi < capacity;
       const fk = inBand ? fi : fi - capacity;
       const bandX = anc ? Math.max(anc.x + MARK / 2, right - fk * (MARK + GAP)) : pos.x;
-      const bandY = anc ? (inBand ? anc.y + LEG_BAND / 2 : anc.y + anc.h - MARK / 2 - 2 * U) : pos.y;
+      // ⛳ 세로 오프셋에 «가로» 자를 쓰면 안 된다 — MARKV 가 세로판이다
+      const bandY = anc ? (inBand ? anc.y + LEG_BAND / 2 : anc.y + anc.h - MARKV / 2 - pxH(2)) : pos.y;
       const actId = f.body ? 'autopsy' : 'fixture';
       const st = this.invStatusFor(actId, f.body ? [] : [f.id]);
       const done = st === 'used', okc = st === 'ok';
@@ -3787,10 +3851,11 @@ export default class App extends React.Component {
          * 크기는 «그림»(svg) 기준이다 — 26px 상자가 아니라(⑨ 오계수 판례).
          */
         _loc: f.loc, _cx: lean ? bandX : pos.x, _cy: lean ? bandY : pos.y,
-        _ink: (f.body ? 26 : 14) * U,
-        _lw: lean ? 0 : nameInkW(ln === 'ko' ? f.ko : f.en, 9) * U,
-        _lh: lean ? 0 : 9 * 1.45 * U,
-        _loff: (f.body ? 16 : 9) * U,
+        // 마커는 px 로 «정사각»이지만 단위 공간에서는 아니다 — 가로·세로를 갈라 잡는다
+        _inkW: pxW(f.body ? 26 : 14), _inkH: pxH(f.body ? 26 : 14),
+        _lw: lean ? 0 : pxW(nameInkW(ln === 'ko' ? f.ko : f.en, 9)),
+        _lh: lean ? 0 : pxH(9 * 1.45),
+        _loff: pxH(f.body ? 16 : 9),
         // ⑤ 같은 렌즈 — 고정물·시신도 시트로 간다 (완료분 포함. §locs 주석 참조)
         onRun: (st === 'na') ? (() => {}) : (() => this.openPlanSheet(actId, f.body ? [] : [f.id], ln === 'ko' ? f.ko : f.en)),
         /**
@@ -3891,14 +3956,14 @@ export default class App extends React.Component {
     const fixedByLoc = {};
     const addFixed = (loc, r, isText) => { r.t = !!isText; (fixedByLoc[loc] = fixedByLoc[loc] || []).push(r); };
     fixtures.forEach(f => {
-      addFixed(f._loc, { x: f._cx - f._ink / 2, y: f._cy - f._ink / 2, r: f._cx + f._ink / 2, b: f._cy + f._ink / 2 }, false);
+      addFixed(f._loc, { x: f._cx - f._inkW / 2, y: f._cy - f._inkH / 2, r: f._cx + f._inkW / 2, b: f._cy + f._inkH / 2 }, false);
       if (f._lw > 0) addFixed(f._loc, { x: f._cx - f._lw / 2, y: f._cy + f._loff, r: f._cx + f._lw / 2, b: f._cy + f._loff + f._lh }, true);
     });
     areas.forEach(a => {
       if (!a.primary) return;
       const fs = lean ? 10 : 11;
-      const padT = (lean ? 4 : 8) * U, padL = (lean ? 5 : 12) * U;
-      const w = nameInkW(ln === 'ko' ? a.ko : a.en, fs) * U, h = fs * 1.45 * U;
+      const padT = pxH(lean ? 4 : 8), padL = pxW(lean ? 5 : 12);
+      const w = pxW(nameInkW(ln === 'ko' ? a.ko : a.en, fs)), h = pxH(fs * 1.45);
       addFixed(a.loc, { x: a.x + padL, y: a.y + padT, r: a.x + padL + w, b: a.y + padT + h }, true);
       /**
        * 미조사/✓ 배지도 «못 옮기는 것»이다 — 머리줄 오른쪽 끝(확대는 flex 항목,
@@ -3906,8 +3971,8 @@ export default class App extends React.Component {
        * `인물↔배지` 가 «새로» 생겼다(2 개). 넉넉히 잡는다 — 과하게 비우는 것은
        * 자리를 조금 옮길 뿐이고, 덜 잡으면 결함이 된다.
        */
-      const bw = (lean ? 16 : 42) * U, bh = (lean ? 11 : 15) * U;
-      const bTop = lean ? a.y + 3 * U : a.y + padT;
+      const bw = pxW(lean ? 16 : 42), bh = pxH(lean ? 11 : 15);
+      const bTop = lean ? a.y + pxH(3) : a.y + padT;
       addFixed(a.loc, { x: a.x + a.w - padL - bw, y: bTop, r: a.x + a.w - padL, b: bTop + bh }, true);
     });
 
@@ -3931,14 +3996,19 @@ export default class App extends React.Component {
       // vm 은 0(맨 위)~1(맨 아래) 사이의 «비율»이다 — 자리를 촘촘히 훑기 위해서다
       const cy = a.y + g.band + slack * vm + step * row + step / 2;
       const colStep = (a.w - PADX * 2) / g.cols;
-      const cap = Math.max(24, colStep - DOT * 2);
-      const lw = Math.min(cap, nameInkW(list[n].name, lean ? 8 : 9) * U);
-      const itemW = DOT * (lean ? 1.6 : 1.1) + 2 + lw;
+      /**
+       * ⛳ `DOT` 도 px 다 — 단위 좌표에 그냥 더하면 같은 가문의 오차가 된다.
+       * 아래 §이름 자리(`nameLeft`)·`maxWidth` 와 **같은 식**이라야 고른 자리가
+       * 그대로 그려진다. 셋이 갈라지면 계측이 영원히 안 맞는다.
+       */
+      const cap = Math.max(24, colStep - pxW(DOT * 2));
+      const lw = Math.min(cap, pxW(nameInkW(list[n].name, lean ? 8 : 9)));
+      const itemW = pxW(DOT * (lean ? 1.6 : 1.1) + 2) + lw;
       const cx = hm === 'left'
         ? a.x + PADX + (g.cols > 1 ? col * colStep : 0)
         : a.x + a.w - PADX - itemW - (g.cols - 1 - col) * colStep;
-      const h = (lean ? 8 : 9) * 1.45 * U;
-      return { cx, cy, x: cx - DOT / 2, y: cy - h / 2, r: cx + itemW, b: cy + h / 2 };
+      const h = pxH((lean ? 8 : 9) * 1.45);
+      return { cx, cy, x: cx - pxW(DOT) / 2, y: cy - h / 2, r: cx + itemW, b: cy + h / 2 };
     };
 
     const placeByLoc = {};
@@ -4156,14 +4226,15 @@ export default class App extends React.Component {
        * 경훈 판정: *"줄서기로 겹침이 0 이 됐으니 걷는 대신 라벨도 줄 세우는 자리"*.
        * 한 줄 목록은 이름이 점 «옆»에 오므로 세로 간격만 지키면 충돌이 원리상 0이다.
        */
-      const nameLeft = cx + dot * (lean ? 1.6 : 1.1) + 2;
+      // 2-z' px 는 «축별 자»로 옮긴다 — 위 `itemRect` 의 `itemW` 와 같은 식이다
+      const nameLeft = cx + pxW(dot * (lean ? 1.6 : 1.1) + 2);
       const labelStyle = !shown ? Object.assign({}, HIDE)
         : useList ? {
             position: 'absolute', left: px(nameLeft) + '%', top: py(cy) + '%',
             transform: 'translate(0,-50%)',
             fontSize: (lean ? 8 : 9) + 'px', fontWeight: 600,
             color: lean ? 'var(--fg-2)' : 'var(--fg)',
-                maxWidth: sx(Math.max(24, (a.w - PADX * 2) / cols - dot * 2)) + '%',
+                maxWidth: sx(Math.max(24, (a.w - PADX * 2) / cols - pxW(dot * 2))) + '%',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             opacity: 1, transition: 'left .45s var(--ease), top .45s var(--ease), opacity .3s',
             zIndex: 5, pointerEvents: 'none',
