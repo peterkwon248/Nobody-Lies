@@ -3971,7 +3971,23 @@ export default class App extends React.Component {
         // 열 안에서 세로 중앙 정렬 — 방을 벗어나지 않는 것이 이 계산의 계약이다
         const blockH = Math.min(inCol * LINE, usable);
         const step = inCol > 1 ? blockH / inCol : 0;
-        const top = a.y + band + Math.max(0, (usable - blockH) / 2);
+        /**
+         * ⛔ **띠를 포기한 방에서는 목록을 «아래로 붙인다»** (2026-08-08 경훈 판정)
+         *
+         * 미술관 중앙 로비(5인)가 `bandOK` 거짓이라 띠 없이 `usable` 전체에 «가운데»
+         * 정렬됐고, 그 결과 첫 줄이 방 이름 «위»로 올라갔다 — 경훈 실기기 캡처의
+         * 「●문하린」이 그것이다. 글리프 실측 **20.8 × 3.1px**(Range·max-content 두
+         * 방법이 0.1px 이내로 일치).
+         *
+         * ⛳ **우선순위 ③이 감수하는 것은 「띠의 생략」이지 「글리프 충돌」이 아니다.**
+         * 읽을 수 없는 텍스트 두 벌은 정보가 0이라 어느 우선순위로도 정당화되지 않는다
+         * (`MEMORY.md` §겹침 우선순위의 단서 — 같은 날 박았다).
+         *
+         * 아래로 붙이면 남는 여백이 «위»로 몰려 이름이 그 여백을 쓴다. 방을 벗어나지
+         * 않는 것은 그대로다 — 블록 높이가 `usable` 을 못 넘게 이미 잘려 있다.
+         */
+        const slack = Math.max(0, usable - blockH);
+        const top = a.y + band + (bandOK ? slack / 2 : slack);
         cy = top + step * row + step / 2;
         if (inCol === 1) cy = a.y + band + usable / 2;
         // 열 간격도 「2」가 박혀 있었다 — cols 로 나눠야 3열에서 셋째 열이 방을 안 넘는다
