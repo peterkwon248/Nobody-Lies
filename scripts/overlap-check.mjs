@@ -215,6 +215,15 @@ const MEASURE = (opt) => {
 
 let TOTAL_BAD = 0
 const ROWS = []
+/**
+ * ⛔ **쌍별 합계는 «계측기»가 낸다 — 사람이 출력을 세면 안 된다** (2026-08-08 · 열 번째 오계수)
+ *
+ * 이 파일을 쓴 당일, 내가 `Group-Object` 로 출력 줄을 세어 「확대 60 → 46」이라고
+ * 보고했다. **진짜 값은 77 → 59 였다** — 한 줄이 `설비↔설비이름 4` 처럼 여럿을
+ * 담는데 줄을 하나로 셌다. 커밋 본문에까지 틀린 값이 실렸다.
+ * 세는 일을 눈에 맡기면 계측기를 아무리 정확히 지어도 마지막 한 걸음에서 새어나간다.
+ */
+const TALLY = {}
 
 for (const id of CASES) {
   const ctx = await browser.newContext({
@@ -344,6 +353,8 @@ for (const id of CASES) {
       }
     }
 
+    for (const [k, v] of Object.entries(pairs)) if (v.length) TALLY[k] = (TALLY[k] || 0) + v.length
+    if (outside) TALLY['방 밖'] = (TALLY['방 밖'] || 0) + outside
     const bad = Object.values(pairs).reduce((s, v) => s + v.length, 0) + outside
     TOTAL_BAD += bad
     // 방마다 몇 명인가 — 「4인이 한 방」인지가 이 결함의 갈림점이다
@@ -362,6 +373,11 @@ for (const id of CASES) {
 await browser.close()
 
 console.log(`\n${'─'.repeat(58)}`)
+const ordered = Object.entries(TALLY).sort((a, b) => b[1] - a[1])
+if (ordered.length) {
+  console.log('쌍별 합계 (계측기가 «스스로» 센다 — 출력을 눈으로 세지 마라)')
+  for (const [k, n] of ordered) console.log(`   ${String(k).padEnd(18)} ${String(n).padStart(4)}`)
+}
 console.log(`합계 겹침 ${TOTAL_BAD}  ·  사건 ${CASES.length} · 판 ${ROWS.length}`)
 if (TOTAL_BAD > 0) {
   console.log('⛔ 겹침이 있다 — 위 목록이 자리다')
