@@ -3719,9 +3719,63 @@ export default class App extends React.Component {
     const LEG_PAD = lean ? 6 : 10;
     const LEG_BAND = LEG_PAD + (lean ? 10 : 11) * 1.45 * 2.67; // 글꼴 px → 줄 높이 → viewBox 단위
 
+    /**
+     * ⑦-c **띠는 이름이 «먼저» 쓴다 — 설비는 남는 자리를 «나눠» 갖는다** (2026-08-08)
+     *
+     * ⑦-b 가 좁은 폭에서 설비 마커를 이름 띠 «안»으로 올려 범례와의 충돌을 없앴다.
+     * **그런데 이름도 그 띠에 살고, 설비끼리도 그 띠에 산다.** 세로만 맞추고
+     * 가로를 아무도 안 봐서 전 사건 22판에서 둘이 같이 나왔다:
+     *
+     * ```
+     *              방이름↔설비   설비↔설비
+     * 연습실            3            0
+     * 극장              6            1  (5.8×14)
+     * 산장              3            3  ← 그중 «14×14 완전 포개짐»
+     * 미술관            3            0
+     * 공방              4            1  (14×14 완전 포개짐)
+     * ```
+     *
+     * ⛔ **완전 포개짐은 조사 대상 하나가 «안 보인다»는 뜻이다** — 미관이 아니라
+     * §페어플레이(숨기지 마라)다. 「6쌍 전수 0」이 참이었던 이유는 이 두 쌍을
+     * **안 셌기** 때문이다(`scripts/overlap-check.mjs` 가 이제 여덟 쌍을 센다).
+     *
+     * 글자 폭은 **넉넉하게 어림한다** — 정확할 필요가 없다. 넘치면 마커가 조금 더
+     * 오른쪽으로 갈 뿐이고, 실제 겹침은 계측기가 검산한다.
+     * (실측 근거: '수장고' 3자 = 25.9px · '야외 조각 정원' 7자 = 56.9px · 10px 글꼴)
+     */
+    const U = 2.67;                     // 375 에서 1px ≈ 2.67 viewBox 단위 (LEG_BAND 과 같은 값)
+    const nameInkW = (s, fs) => {
+      let w = 0;
+      for (const ch of String(s || '')) w += /\s/.test(ch) ? fs * 0.3 : /[가-힣ㄱ-ㆎ一-鿿]/.test(ch) ? fs * 0.88 : fs * 0.55;
+      return w;
+    };
+
     const revealedLocs = {}; areas.forEach(a => revealedLocs[a.loc] = true);
-    const fixtures = this.FIXTURES.filter(f => revealedLocs[f.loc]).map(f => {
+    const shownFx = this.FIXTURES.filter(f => revealedLocs[f.loc]);
+    const fxSeen = {};
+    const fixtures = shownFx.map(f => {
       const pos = G.fixtures[f.id] || { x: 500, y: 312 };
+      /**
+       * 띠 안 가로 자리 — **오른쪽 끝에서 왼쪽으로 하나씩** 놓는다.
+       * 이름 글자의 오른쪽 끝이 하한이고, 방 오른쪽 안쪽이 상한이다.
+       * 둘이 만나면 더 못 밀고 겹친다 — 그 방은 계측기가 이름으로 인쇄한다.
+       */
+      const anc = anchorByLoc[f.loc];
+      const fi = (fxSeen[f.loc] = (fxSeen[f.loc] || 0) + 1) - 1;
+      const MARK = 14 * U, GAP = 2 * U;
+      const right = anc ? anc.x + anc.w - MARK / 2 - 2 * U : pos.x;
+      const floorX = anc ? Math.max(anc.x + MARK / 2, anc.x + 5 * U + nameInkW(ln === 'ko' ? anc.ko : anc.en, 10) * U + 3 * U + MARK / 2) : pos.x;
+      /**
+       * ⛔ **띠가 넘치면 «아래 줄»로 내린다** — 이름이 긴 좁은 방에서는 둘이 못 선다.
+       * 극장 `분장실` 은 이름 뒤에 남는 띠가 **3.4px** 이라 둘째 마커가 첫째 위로
+       * 포개졌다(10.6×14). 겹쳐 세우느니 방 «아래 모서리»로 내린다 —
+       * 우선순위 ①(방 밖 금지)을 지키면서 ②(읽을 수 없게 됨)를 푸는 유일한 축이다.
+       */
+      const capacity = anc ? Math.max(1, Math.floor((right - floorX) / (MARK + GAP)) + 1) : 1;
+      const inBand = fi < capacity;
+      const fk = inBand ? fi : fi - capacity;
+      const bandX = anc ? Math.max(anc.x + MARK / 2, right - fk * (MARK + GAP)) : pos.x;
+      const bandY = anc ? (inBand ? anc.y + LEG_BAND / 2 : anc.y + anc.h - MARK / 2 - 2 * U) : pos.y;
       const actId = f.body ? 'autopsy' : 'fixture';
       const st = this.invStatusFor(actId, f.body ? [] : [f.id]);
       const done = st === 'used', okc = st === 'ok';
@@ -3745,7 +3799,7 @@ export default class App extends React.Component {
          * 확대는 `lean` 이 거짓이라 26px 그대로다.
          */
         markStyle: lean
-          ? { position: 'absolute', left: px(pos.x) + '%', top: py((anchorByLoc[f.loc] ? anchorByLoc[f.loc].y + LEG_BAND / 2 : pos.y)) + '%', transform: 'translate(-50%,-50%)', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: 'default', background: 'transparent', border: 'none', zIndex: 3 }
+          ? { position: 'absolute', left: px(bandX) + '%', top: py(bandY) + '%', transform: 'translate(-50%,-50%)', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: 'default', background: 'transparent', border: 'none', zIndex: 3 }
           : { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: (st === 'na') ? 'default' : 'pointer', background: 'transparent', border: 'none', zIndex: 3 },
         // 좁은 폭 미리보기에서는 설비 이름을 안 쓴다 — 마커와 미조사 표시만 남긴다
         labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
