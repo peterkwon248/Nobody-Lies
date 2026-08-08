@@ -3802,7 +3802,15 @@ export default class App extends React.Component {
           ? { position: 'absolute', left: px(bandX) + '%', top: py(bandY) + '%', transform: 'translate(-50%,-50%)', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: 'default', background: 'transparent', border: 'none', zIndex: 3 }
           : { position: 'absolute', left: px(pos.x) + '%', top: py(pos.y) + '%', transform: 'translate(-50%,-50%)', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, cursor: (st === 'na') ? 'default' : 'pointer', background: 'transparent', border: 'none', zIndex: 3 },
         // 좁은 폭 미리보기에서는 설비 이름을 안 쓴다 — 마커와 미조사 표시만 남긴다
-        labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + 9px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
+        /**
+         * ⑦-d **이름표는 마커 «크기»만큼 내려간다** (2026-08-08 · 확대 계측)
+         *
+         * `+9px` 이 상수로 박혀 있었는데 마커는 두 크기다 — 아이콘 14px(반 7px)과
+         * **시신 26px(반 13px)**. 시신은 이름표가 자기 그림 «위»에 얹혔다
+         * (`설비↔설비이름 15.6×4` 가 5사건 22판 전부에서 났다 — 확대 겹침 60 중 22).
+         * 상수 하나가 두 크기를 감당하려 한 자리다.
+         */
+        labelStyle: lean ? Object.assign({}, HIDE) : { position: 'absolute', left: px(pos.x) + '%', top: 'calc(' + py(pos.y) + '% + ' + (f.body ? 16 : 9) + 'px)', transform: 'translate(-50%,0)', fontSize: '9px', color: col, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 3 } };
     });
 
     /**

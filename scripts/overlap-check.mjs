@@ -80,7 +80,7 @@ const browser = await chromium.launch({ headless: true, executablePath: exe })
  * 브라우저 안에서 세면 무엇을 셌는지 안 보인다(그것이 ①~④가 난 방식이다).
  */
 const MEASURE = (opt) => {
-  const out = { err: null, planes: 0, vb: '', pick: '', people: [], rooms: [], fixtures: [], badges: [] }
+  const out = { err: null, planes: 0, vb: '', pick: '', people: [], rooms: [], fixtures: [], badges: [], fxNames: [] }
 
   // ① 도면 svg 는 preserveAspectRatio="none" 인 것 «하나»다
   const svgs = [...document.querySelectorAll('svg')].filter((s) => s.getAttribute('preserveAspectRatio') === 'none')
@@ -170,9 +170,26 @@ const MEASURE = (opt) => {
   }
 
   // 설비 마커 — 직계 span 중 svg 를 품은 것
-  for (const s of kids.filter((e) => e.tagName === 'SPAN' && e.querySelector('svg'))) {
-    const r = vis(s)
+  const markEls = kids.filter((e) => e.tagName === 'SPAN' && e.querySelector('svg'))
+  for (const s of markEls) {
+    /**
+     * ⑨ **아이콘도 상자가 아니라 «그림»을 잰다** (⑧의 사촌 · 2026-08-08)
+     * 확대의 마커 span 은 26×26 인데 안의 svg 는 14×14 다. 상자로 재면 자기
+     * 이름표(9px 아래)와 «언제나» 겹친 것으로 나온다 — 전 사건에서 똑같이 나왔고
+     * 그 균일함이 지문이었다. ⑧과 같은 부류를 다른 요소에서 또 밟았다.
+     */
+    const r = vis(s.querySelector('svg') || s)
     if (r) out.fixtures.push({ rect: r })
+  }
+  /**
+   * 설비 «이름표» — 마커 다음에 같은 수만큼 이어진다(`fixtures` 를 두 번 map 한다).
+   * 확대에서는 이것도 «보이는 글자»다. 안 세면 없는 쌍이 아니라 «안 세는 쌍»이 된다.
+   * 미리보기에서는 HIDE 라 `vis` 가 걸러낸다.
+   */
+  if (markEls.length) {
+    const afterMarks = kids.slice(kids.indexOf(markEls[markEls.length - 1]) + 1)
+    const labs = afterMarks.filter((e) => e.tagName === 'SPAN' && !e.querySelector('svg') && !e.hasAttribute('title')).slice(0, markEls.length)
+    for (const s of labs) { const r = ink(s); if (r && (s.textContent || '').trim()) out.fxNames.push({ text: (s.textContent || '').trim(), rect: r }) }
   }
 
   /**
@@ -278,21 +295,44 @@ for (const id of CASES) {
     const RN = m.rooms.filter((r) => r.nameRect).map((r) => ({ name: r.name, rect: r.nameRect, box: r.rect }))
     const FX = m.fixtures.map((f) => f.rect)
     const BG = m.badges.map((b) => b.rect)
+    const FN = m.fxNames.map((f) => ({ name: f.text, rect: f.rect }))
 
-    const pairs = {
-      '인물↔인물': [], '인물↔방이름': [], '인물↔설비': [], '인물↔배지': [],
-      '방이름↔설비': [], '방이름↔배지': [], '설비↔배지': [], '설비↔설비': [],
-    }
-    // ⛳ 마커를 «옮기는» 수리를 하면 자기들끼리 뭉친다 — 그 쌍을 안 세면 결함이 이사만 한다
+    /**
+     * ⛔ **쌍을 «손으로 나열하지 않는다»** (2026-08-08 · 세 번째 누락에서 배웠다)
+     *
+     * ```
+     * ⑦⑧        인물↔인물 하나만 셌다        → 미술관 로비의 2·4 를 못 봤다
+     * 08-08 아침  여섯을 셌다                  → 설비↔설비가 빠졌다(14×14 완전 포개짐)
+     * 08-08 저녁  다섯 분류를 적는다           → 조합 15을 «기계»가 만든다
+     * ```
+     *
+     * 열거하는 방식이 누락을 «만든다». 분류만 선언하면 전수는 정의상 보장된다 —
+     * 새 요소가 생기면 배열에 한 줄 더하는 것으로 모든 쌍이 자동으로 늘어난다.
+     */
     const roomOf = (r) => (RN.find((x) => x.box && hit(r, x.box)) || {}).name || '?'
-    for (let i = 0; i < FX.length; i++) for (let j = i + 1; j < FX.length; j++) { const o = hit(FX[i], FX[j]); if (o) pairs['설비↔설비'].push(`${roomOf(FX[i])}(${o.w}×${o.h})`) }
-    for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) { const o = hit(P[i].rect, P[j].rect); if (o) pairs['인물↔인물'].push(`${P[i].name}×${P[j].name}(${o.w}×${o.h})`) }
-    for (const p of P) for (const r of RN) { const o = hit(p.rect, r.rect); if (o) pairs['인물↔방이름'].push(`${p.name}×${r.name}(${o.w}×${o.h})`) }
-    for (const p of P) for (const f of FX) { const o = hit(p.rect, f); if (o) pairs['인물↔설비'].push(`${p.name}(${o.w}×${o.h})`) }
-    for (const p of P) for (const b of BG) { const o = hit(p.rect, b); if (o) pairs['인물↔배지'].push(`${p.name}(${o.w}×${o.h})`) }
-    for (const r of RN) for (const f of FX) { const o = hit(r.rect, f); if (o) pairs['방이름↔설비'].push(`${r.name}(${o.w}×${o.h})`) }
-    for (const r of RN) for (const b of BG) { const o = hit(r.rect, b); if (o) pairs['방이름↔배지'].push(`${r.name}(${o.w}×${o.h})`) }
-    for (const f of FX) for (const b of BG) { const o = hit(f, b); if (o) pairs['설비↔배지'].push(`(${o.w}×${o.h})`) }
+    const CLASSES = [
+      ['인물', P],
+      ['방이름', RN],
+      ['설비', FX.map((r) => ({ rect: r }))],
+      ['배지', BG.map((r) => ({ rect: r }))],
+      ['설비이름', FN],
+    ]
+    const pairs = {}
+    for (let a = 0; a < CLASSES.length; a++) {
+      for (let b = a; b < CLASSES.length; b++) {
+        const [ka, A] = CLASSES[a], [kb, B] = CLASSES[b]
+        const list = []
+        for (let i = 0; i < A.length; i++) {
+          for (let j = (a === b ? i + 1 : 0); j < B.length; j++) {
+            const o = hit(A[i].rect, B[j].rect)
+            if (!o) continue
+            const who = [A[i].name, B[j].name].filter(Boolean).join('×') || roomOf(A[i].rect)
+            list.push(`${who}(${o.w}×${o.h})`)
+          }
+        }
+        pairs[ka + '↔' + kb] = list
+      }
+    }
 
     // 방 «밖» — 인물 라벨/점이 자기 방 상자를 벗어났나 (⑦⑧ 이 닫은 결함)
     let outside = 0
