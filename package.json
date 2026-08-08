@@ -41,6 +41,7 @@
     "design-audit": "node scripts/design-audit.mjs",
     "token-audit": "node scripts/token-audit.mjs",
     "focus-check": "node scripts/focus-check.mjs",
+    "overlap-check": "node scripts/overlap-check.mjs",
     "reveal-check": "node scripts/reveal-check.mjs",
     "reveal-shots": "node scripts/reveal-shots.mjs"
   },
